@@ -624,7 +624,11 @@
           <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
           <td class="${valClass}">${valPrefix}${formatBRL(l.valor)}</td>
         `;
-        transactionsTabl    function getCardPeriod(cat) {
+        transactionsTableBody.appendChild(row);
+      });
+    }
+
+    function getCardPeriod(cat) {
       try {
          const stored = localStorage.getItem('budgetCardPeriods');
          if (stored) {
