@@ -74,6 +74,12 @@
         </a>
       </li>
       <li>
+        <a class="nav-item" data-target="panel-credit-cards">
+          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          Cartões
+        </a>
+      </li>
+      <li>
         <a class="nav-item" data-target="panel-audit">
           <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           Auditoria
@@ -259,7 +265,17 @@
       </div>
     </div>
 
-    <!-- 3B. PANEL: INVESTMENTS -->
+    <!-- 4. PANEL: CREDIT CARDS -->
+    <div id="panel-credit-cards" class="dashboard-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Resumo de Faturas</h2>
+      </div>
+      <div id="credit-cards-dashboard">
+        <!-- Resumo e Gráfico injetados aqui -->
+      </div>
+    </div>
+
+    <!-- 5. PANEL: INVESTMENTS -->
     <div id="panel-investments" class="dashboard-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Investimentos</h2>

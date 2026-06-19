@@ -249,6 +249,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       initCharts();
       renderInvestmentsDashboard();
+      renderCreditCardsDashboard();
+      renderCreditCardsDashboard();
 
       // Events listeners
       bindTabPeriodSelectors();
@@ -2105,6 +2107,207 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         };
       }
     });
+    function renderCreditCardsDashboard() {
+      const dashboardEl = document.getElementById('credit-cards-dashboard');
+      if (!dashboardEl) return;
+
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      let totalAtual = 0;
+      let totalProxima = 0;
+      let totalFuturo = 0;
+
+      const labels6Meses = [];
+      const dados6Meses = [0, 0, 0, 0, 0, 0];
+      const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+      for (let i = 0; i < 6; i++) {
+        let m = currentMonth + i;
+        let y = currentYear;
+        if (m > 11) {
+          m -= 12;
+          y++;
+        }
+        labels6Meses.push(`${monthNames[m]}/${y.toString().slice(-2)}`);
+      }
+
+      const cartoes = dadosFinanceiros.contas.filter(c => {
+        const t = (c.tipo || '').toLowerCase();
+        return t.includes('cart') || t.includes('crédito') || t.includes('credito');
+      });
+
+      if (cartoes.length === 0) {
+        dashboardEl.innerHTML = '<p style="color:var(--text-muted);">Nenhum cartão de crédito cadastrado.</p>';
+        return;
+      }
+
+      cartoes.forEach(c => {
+        const lancamentosConta = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === c.nome.toLowerCase());
+        lancamentosConta.forEach(l => {
+          const dateStr = l.vencimento || l.data;
+          if (!dateStr) return;
+          const d = parseDateString(dateStr);
+          if (!d) return;
+
+          const dM = d.getMonth();
+          const dY = d.getFullYear();
+
+          const monthsDiff = (dY - currentYear) * 12 + (dM - currentMonth);
+
+          if (monthsDiff === 0) {
+            totalAtual += l.valor;
+            dados6Meses[0] += Math.abs(l.valor);
+          } else if (monthsDiff === 1) {
+            totalProxima += l.valor;
+            dados6Meses[1] += Math.abs(l.valor);
+          } else if (monthsDiff > 1) {
+            totalFuturo += l.valor;
+            if (monthsDiff < 6) {
+              dados6Meses[monthsDiff] += Math.abs(l.valor);
+            }
+          }
+        });
+      });
+
+      let html = `
+        <div class="metrics-grid" style="margin-bottom: 2rem;">
+          <div class="card bg-card">
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Mês Atual</div>
+            <div style="font-size:1.8rem; font-weight:700; color:${totalAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalAtual)}</div>
+          </div>
+          <div class="card bg-card">
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Próximo Mês</div>
+            <div style="font-size:1.8rem; font-weight:700; color:${totalProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalProxima)}</div>
+          </div>
+          <div class="card bg-card">
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Faturas Futuras (+2 meses)</div>
+            <div style="font-size:1.8rem; font-weight:700; color:${totalFuturo < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalFuturo)}</div>
+          </div>
+        </div>
+      `;
+
+      html += `
+        <div class="card charts-container" style="margin-bottom: 2rem;">
+          <h3 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">Projeção de Faturas (Próximos 6 Meses)</h3>
+          <div style="height: 250px; position: relative;">
+            <canvas id="creditCardsProjectionChart"></canvas>
+          </div>
+        </div>
+      `;
+
+      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus Cartões</h3>`;
+      html += `<div class="accounts-grid" id="credit-cards-list-container">`;
+      
+      const iconCC = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>';
+
+      let nextMonth = currentMonth + 1;
+      let nextYear = currentYear;
+      if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+
+      cartoes.forEach(c => {
+        const cName = c.nome || c.conta || 'Cartão';
+        
+        let faturaAtualCC = 0;
+        let faturaProximaCC = 0;
+        
+        const lancamentosConta = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === c.nome.toLowerCase());
+        lancamentosConta.forEach(l => {
+           const dateStr = l.vencimento || l.data; 
+           if (!dateStr) return;
+           const d = parseDateString(dateStr);
+           if (!d) return;
+           if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) { faturaAtualCC += l.valor; } 
+           else if (d.getMonth() === nextMonth && d.getFullYear() === nextYear) { faturaProximaCC += l.valor; }
+        });
+
+        html += `
+          <div class="card expense-card clickable-card" data-conta-name="${cName}" style="cursor:pointer; border-top: 3px solid var(--color-expense);">
+            <div class="card-header">
+              <span>${cName}</span>
+              <div class="card-icon">${iconCC}</div>
+            </div>
+            <div class="card-value" style="font-size:1.6rem;">${formatBRL(c.saldo)}</div>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:0.8rem; font-size:0.75rem; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 6px;">
+              <div>
+                <div style="color:var(--text-muted); font-size:0.65rem;">Fatura Atual</div>
+                <div style="color:${faturaAtualCC < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaAtualCC)}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="color:var(--text-muted); font-size:0.65rem;">Próxima Fatura</div>
+                <div style="color:${faturaProximaCC < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaProximaCC)}</div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+              <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">Clique para ver extrato</div>
+              ${c.ultima_movimentacao ? `<div style="font-size: 0.7rem; color: var(--text-muted);"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      dashboardEl.innerHTML = html;
+
+      setTimeout(() => {
+        const listContainer = document.getElementById('credit-cards-list-container');
+        if (listContainer) {
+          listContainer.querySelectorAll('[data-conta-name]').forEach(card => {
+            card.addEventListener('click', () => {
+              window.showExtratoContaModal(card.dataset.contaName);
+            });
+          });
+        }
+
+        const ctx = document.getElementById('creditCardsProjectionChart');
+        if (ctx) {
+          if (window.creditCardsChartInstance) {
+            window.creditCardsChartInstance.destroy();
+          }
+          window.creditCardsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels6Meses,
+              datasets: [{
+                label: 'Fatura Projetada',
+                data: dados6Meses,
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) { return formatBRL(-context.raw); }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                  ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                },
+                x: {
+                  grid: { display: false },
+                  ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                }
+              }
+            }
+          });
+        }
+      }, 50);
+    }
+
 // ==========================================
     // Lógica do COPILOT FINANCEIRO (Chat IA)
     // ==========================================
