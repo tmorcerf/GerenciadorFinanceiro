@@ -650,27 +650,6 @@
       });
     }
 
-    function getCardPeriod(cat) {
-      try {
-         const stored = localStorage.getItem('budgetCardPeriods');
-         if (stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed[cat]) return parsed[cat];
-         }
-      } catch(e) {}
-      return 'current';
-    }
-
-    function saveCardPeriod(cat, period) {
-      try {
-         let parsed = {};
-         const stored = localStorage.getItem('budgetCardPeriods');
-         if (stored) parsed = JSON.parse(stored);
-         parsed[cat] = period;
-         localStorage.setItem('budgetCardPeriods', JSON.stringify(parsed));
-      } catch(e) {}
-    }
-
     function getFavorites() {
       return JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
     }
@@ -722,7 +701,7 @@
     }
 
     function buildDetailedBudgetCard(o) {
-      const cardPer = getCardPeriod(o.categoria);
+      const cardPer = getBudgetCardPeriod(o.categoria);
       const isFav = getFavorites().includes(normalizeCat(o.categoria));
       const d = getCardData(o, cardPer);
       
@@ -914,10 +893,10 @@
       modal.querySelectorAll('.card-period-menu div').forEach(opt => {
         opt.addEventListener('click', (e) => {
           e.stopPropagation();
-          saveCardPeriod(cat, opt.dataset.val);
+          setBudgetCardPeriod(cat, opt.dataset.val);
           opt.parentElement.classList.remove('show');
           openDetailedCardModal(cat);
-          renderBudgets();
+          if (typeof renderBudgets === 'function') renderBudgets();
         });
       });
       modal.querySelectorAll('.budget-star').forEach(star => {
