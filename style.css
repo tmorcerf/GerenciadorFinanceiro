@@ -1,4 +1,4 @@
-﻿:root {
+:root {
       --bg-main: #0b0c10;
       --bg-sidebar: #11141e;
       --bg-card: rgba(22, 27, 38, 0.75);
@@ -25,6 +25,22 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-main);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
     }
 
     body {

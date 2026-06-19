@@ -731,7 +731,7 @@
          const db = new Date(b.data.split('/').reverse().join('-'))||0;
          return db - da;
       });
-      const recentSliced = recent.slice(0, 6);
+      const recentSliced = recent.slice(0, 20);
       let biggestExpense = 0;
       let biggestExpenseName = "-";
       recent.forEach(tx => {
