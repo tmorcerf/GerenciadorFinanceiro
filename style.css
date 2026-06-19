@@ -1032,3 +1032,25 @@
     .extrato-table td { padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .extrato-saldo-pos { color: var(--color-income); font-weight: 600; }
     .extrato-saldo-neg { color: var(--color-expense); font-weight: 600; }
+
+.emoji-btn { cursor: pointer; background: transparent; border: none; font-size: 1.1rem; padding: 2px 4px; border-radius: 4px; transition: background 0.2s; user-select: none; }
+    .emoji-btn:hover { background: rgba(255,255,255,0.1); }
+    .emoji-dropdown-menu { display: none; position: absolute; left: 0; top: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 1000; min-width: 120px; overflow: hidden; }
+    .emoji-dropdown-menu.show { display: block; }
+    .emoji-dropdown-menu div { padding: 8px 12px; font-size: 0.85rem; color: var(--text-primary); cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .emoji-dropdown-menu div:hover { background: rgba(255,255,255,0.05); color: var(--accent-color); }
+    
+    .tx-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .tx-modal-overlay.show { display: flex; }
+    .tx-modal-content { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .tx-modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .tx-modal-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+    .tx-modal-close { cursor: pointer; font-size: 1.5rem; color: var(--text-secondary); border: none; background: transparent; line-height: 1; transition: color 0.2s; }
+    .tx-modal-close:hover { color: var(--danger-color); }
+    .tx-modal-body { padding: 0; overflow-y: auto; flex-grow: 1; }
+    .tx-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    .tx-table th { position: sticky; top: 0; background: rgba(25,25,30,0.95); backdrop-filter: blur(5px); padding: 12px 15px; color: var(--text-secondary); font-weight: 500; cursor: pointer; user-select: none; transition: color 0.2s; border-bottom: 1px solid var(--border-color); }
+    .tx-table th:hover { color: var(--text-primary); }
+    .tx-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); }
+    .tx-table tr:hover td { background: rgba(255,255,255,0.02); }
+

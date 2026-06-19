@@ -1,4 +1,4 @@
-﻿
+
 // Error Handler
     window.onerror = function(msg, url, lineNo, columnNo, error) {
       alert("ERRO NO DASHBOARD!\n\nMensagem: " + msg + "\nLinha: " + lineNo + "\nColuna: " + columnNo + "\n\nCopie essa mensagem e mande para a IA!");
@@ -624,7 +624,241 @@
           <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
           <td class="${valClass}">${valPrefix}${formatBRL(l.valor)}</td>
         `;
-        transactionsTableBody.appendChild(row);
+        transactionsTabl    function getCardPeriod(cat) {
+      try {
+         const stored = localStorage.getItem('budgetCardPeriods');
+         if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed[cat]) return parsed[cat];
+         }
+      } catch(e) {}
+      return 'current';
+    }
+
+    function saveCardPeriod(cat, period) {
+      try {
+         let parsed = {};
+         const stored = localStorage.getItem('budgetCardPeriods');
+         if (stored) parsed = JSON.parse(stored);
+         parsed[cat] = period;
+         localStorage.setItem('budgetCardPeriods', JSON.stringify(parsed));
+      } catch(e) {}
+    }
+
+    function getFavorites() {
+      return JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
+    }
+
+    function normalizeCat(c) { return (c || '').trim().toLowerCase(); }
+
+    function getCardData(o, cardPeriod) {
+      const annualLimit = Math.abs(o.orcamento);
+      const activePeriod = cardPeriod || document.getElementById('month-filter').value;
+      let periodMonths = 12;
+      if (activePeriod === 'current' || activePeriod === 'previous') periodMonths = 1;
+      else if (activePeriod === 'year') periodMonths = 12;
+      else if (activePeriod === '3months') periodMonths = 3;
+      else if (activePeriod === '6months') periodMonths = 6;
+      else if (activePeriod === 'custom') {
+         periodMonths = 1; // Simplified fallback
+      }
+      const limit = annualLimit * (periodMonths / 12);
+      let dynamicSpent = 0;
+      const catTxs = [];
+      const now = new Date();
+      const currYearStr = now.getFullYear().toString();
+      const currMonthStr = currYearStr + '-' + String(now.getMonth()+1).padStart(2,'0');
+      const prevMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+      const prevMonthStr = prevMonthDate.getFullYear() + '-' + String(prevMonthDate.getMonth()+1).padStart(2,'0');
+      
+      if(dadosFinanceiros.lancamentos) {
+        dadosFinanceiros.lancamentos.forEach(l => {
+          if ((l.categoria || '').toLowerCase().trim() !== o.categoria.toLowerCase().trim() || l.valor >= 0) return;
+          if (activePeriod !== 'all') {
+            const p = (l.data || '').split('/');
+            if (p.length === 3) {
+              const lym = p[2] + '-' + p[1].padStart(2,'0');
+              const lYear = p[2];
+              if (activePeriod === 'current' && lym !== currMonthStr) return;
+              if (activePeriod === 'previous' && lym !== prevMonthStr) return;
+              if (activePeriod === 'year' && lYear !== currYearStr) return;
+            }
+          }
+          dynamicSpent += Math.abs(l.valor);
+          catTxs.push(l);
+        });
+      }
+      const spent = dynamicSpent;
+      const remaining = limit - spent;
+      const pct = limit > 0 ? (spent / limit) * 100 : 0;
+      const isBurst = spent > limit;
+      return { limit, spent, remaining, pct, isBurst, catTxs };
+    }
+
+    function buildDetailedBudgetCard(o) {
+      const cardPer = getCardPeriod(o.categoria);
+      const isFav = getFavorites().includes(normalizeCat(o.categoria));
+      const d = getCardData(o, cardPer);
+      
+      const recent = d.catTxs.sort((a,b) => {
+         const da = new Date(a.data.split('/').reverse().join('-'))||0; 
+         const db = new Date(b.data.split('/').reverse().join('-'))||0;
+         return db - da;
+      });
+      const recentSliced = recent.slice(0, 6);
+      let biggestExpense = 0;
+      let biggestExpenseName = "-";
+      recent.forEach(tx => {
+         const val = Math.abs(tx.valor);
+         if (val > biggestExpense) {
+            biggestExpense = val;
+            biggestExpenseName = tx.obs || "-";
+         }
+      });
+      let statusText = "🟢 Dentro da Meta";
+      let statusColor = "var(--color-income)";
+      if (d.pct >= 100) {
+         statusText = "🔴 Estourado";
+         statusColor = "var(--color-expense)";
+      } else if (d.pct >= 85) {
+         statusText = "🟠 Atenção";
+         statusColor = "#f59e0b";
+      }
+
+      let txHtml = '<div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed rgba(255,255,255,0.1); flex-grow: 1;">';
+      txHtml += `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Status</span>
+            <span style="font-size: 0.9rem; font-weight: 600; color: ${statusColor};">${statusText}</span>
+          </div>
+          <div style="background: rgba(0,0,0,0.2); padding: 0.8rem; border-radius: 8px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Maior Gasto</span>
+            <span style="font-size: 0.9rem; font-weight: 600; color: var(--color-expense);" title="${biggestExpenseName}">${formatBRL(biggestExpense)}</span>
+          </div>
+        </div>
+      `;
+      txHtml += '<span style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem; display:block; font-weight:600; letter-spacing:0.5px;">Últimas Transações</span>';
+      if (recentSliced.length === 0) {
+         txHtml += '<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">Nenhum gasto neste período.</p>';
+      } else {
+         txHtml += '<ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.8rem;">';
+         recentSliced.forEach(tx => {
+           txHtml += `
+             <li style="display:flex; justify-content:space-between; font-size:0.85rem; align-items:center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
+               <span style="color:var(--text-secondary); font-size:0.75rem; min-width:45px;">${tx.data.substring(0,5)}</span>
+               <span style="color:var(--text-primary); flex:1; margin:0 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tx.obs || '-'}">${tx.obs || '-'}</span>
+               <span style="color:var(--color-expense); font-weight:500;">${formatBRL(Math.abs(tx.valor))}</span>
+             </li>
+           `;
+         });
+         txHtml += '</ul>';
+      }
+      txHtml += '</div>';
+
+      return `
+        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; background: linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95)); border: 1px solid rgba(59, 130, 246, 0.4); display: flex; flex-direction: column; min-height: 440px;">
+          <div class="budget-title-row" style="margin-bottom: 1.5rem;">
+            <div style="display:flex; align-items:center;">
+              <span class="budget-star ${isFav ? 'active' : ''}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); margin-right: 10px;">&#9733;</span>
+              <div class="emoji-dropdown">
+                <span class="emoji-btn card-period-btn" title="Alterar Período">📅</span>
+                <div class="emoji-dropdown-menu card-period-menu" data-period-cat="${o.categoria}">
+                  <div data-val="current">Mensal</div>
+                  <div data-val="3months">Trimestral</div>
+                  <div data-val="6months">Semestral</div>
+                  <div data-val="year">Anual</div>
+                  <div data-val="all">Tudo</div>
+                </div>
+              </div>
+              <span class="budget-cat-name" style="font-size: 1.2rem; color: #fff; margin-left: 10px;">${o.categoria}</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top:4px;">Teto de Gastos</span>
+              <span class="budget-limit" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">${formatBRL(d.limit)}</span>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.95rem;">
+             <span style="color:var(--text-secondary);">Realizado: <span style="color:var(--text-primary); font-weight:600;">${formatBRL(d.spent)}</span></span>
+             <span style="color:${d.remaining >= 0 ? 'var(--color-income)' : 'var(--color-expense)'}; font-weight:600;">${d.remaining >= 0 ? 'Sobra: ' : 'Estourou: '}${formatBRL(Math.abs(d.remaining))}</span>
+          </div>
+          <div class="budget-progress-bar" style="height: 12px; border-radius: 6px; background: rgba(0,0,0,0.3); margin-bottom: 1rem;">
+            <div class="budget-progress-fill ${d.isBurst ? 'over' : ''}" style="height: 100%; border-radius: 6px; width: ${Math.min(d.pct, 100)}%; background: ${d.isBurst ? 'var(--color-expense)' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)'}; box-shadow: 0 0 10px ${d.isBurst ? 'rgba(239,68,68,0.5)' : 'rgba(59,130,246,0.5)'};"></div>
+          </div>
+          ${txHtml}
+        </div>
+      `;
+    }
+
+    function buildBudgetCard(o, isFav) {
+      const cardPer = getCardPeriod(o.categoria);
+      const d = getCardData(o, cardPer);
+      const starClass = isFav ? 'active' : '';
+      return `
+        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative;">
+          <div class="budget-title-row">
+            <div style="display:flex; align-items:center; gap: 6px;">
+              <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar">&#9733;</span>
+              <span class="budget-cat-name" style="margin-left:4px;">${o.categoria}</span>
+            </div>
+            <span class="budget-limit">Teto: ${formatBRL(d.limit)}</span>
+          </div>
+          <div class="budget-progress-bar">
+            <div class="budget-progress-fill ${d.isBurst ? 'over' : ''}" style="width: ${Math.min(d.pct, 100)}%"></div>
+          </div>
+          <div class="budget-values-row">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">Realizado:</span>
+              <span class="budget-spent">${formatBRL(d.spent)}</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">${d.remaining >= 0 ? 'Sobra:' : 'Estourou:'}</span>
+              <span class="budget-remaining ${d.remaining >= 0 ? 'positive' : 'negative'}">${formatBRL(Math.abs(d.remaining))}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openDetailedCardModal(cat) {
+      const o = dadosFinanceiros.orcamento.find(x => x.categoria === cat);
+      if(!o) return;
+      const html = buildDetailedBudgetCard(o);
+      document.getElementById('detailedModalBody').innerHTML = html;
+      document.getElementById('detailedModal').classList.add('show');
+      
+      const modal = document.getElementById('detailedModal');
+      modal.querySelectorAll('.card-period-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.emoji-dropdown-menu.show').forEach(m => {
+             if(m !== btn.nextElementSibling) m.classList.remove('show');
+          });
+          btn.nextElementSibling.classList.toggle('show');
+        });
+      });
+      modal.querySelectorAll('.card-period-menu div').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          saveCardPeriod(cat, opt.dataset.val);
+          opt.parentElement.classList.remove('show');
+          openDetailedCardModal(cat);
+          renderBudgets();
+        });
+      });
+      modal.querySelectorAll('.budget-star').forEach(star => {
+        star.addEventListener('click', (e) => {
+          e.stopPropagation();
+          let favs = getFavorites();
+          if (favs.includes(normalizeCat(cat))) {
+            favs = favs.filter(f => f !== normalizeCat(cat));
+          } else {
+            favs.push(normalizeCat(cat));
+          }
+          localStorage.setItem('budgetFavorites', JSON.stringify(favs));
+          openDetailedCardModal(cat);
+          renderBudgets();
+        });
       });
     }
 
@@ -635,108 +869,51 @@
         return;
       }
 
-      const filtered = getFilteredTransactions();
-      const favorites = JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
-
-      function buildBudgetCard(o, isFav) {
-        const annualLimit = Math.abs(o.orcamento);
-        // Proportional meta based on selected period
-        let periodMonths = 12;
-        if (currentMonth === 'current') periodMonths = 1;
-        else if (currentMonth === 'previous') periodMonths = 1;
-        else if (currentMonth === 'year') periodMonths = 12;
-        else if (currentMonth === 'custom' && customDateStart && customDateEnd) {
-          const s = new Date(customDateStart);
-          const e = new Date(customDateEnd);
-          periodMonths = Math.max(1, Math.round((e - s) / (1000 * 60 * 60 * 24 * 30.44)));
-        }
-        const limit = annualLimit * (periodMonths / 12);
-        let dynamicSpent = 0;
-        filtered.forEach(l => {
-          if ((l.categoria || '').toLowerCase().trim() === o.categoria.toLowerCase().trim() && l.valor < 0) {
-            dynamicSpent += Math.abs(l.valor);
-          }
-        });
-        const spent = dynamicSpent;
-        const remaining = limit - spent;
-        const pct = limit > 0 ? (spent / limit) * 100 : 0;
-        const isBurst = spent > limit;
-        const starClass = isFav ? 'active' : '';
-
-        return `
-          <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer;">
-            <div class="budget-title-row">
-              <div style="display:flex; align-items:center;">
-                <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar">??</span>
-                <span class="budget-cat-name">${o.categoria}</span>
-              </div>
-              <span class="budget-limit">Meta: ${formatBRL(limit)}</span>
-            </div>
-            <div class="budget-progress-bar">
-              <div class="budget-progress-fill ${isBurst ? 'over' : ''}" style="width: ${Math.min(pct, 100)}%"></div>
-            </div>
-            <div class="budget-values-row">
-              <div>
-                <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">Realizado:</span>
-                <span class="budget-spent">${formatBRL(spent)}</span>
-              </div>
-              <div style="text-align: right;">
-                <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">${remaining >= 0 ? 'Sobra:' : 'Estourou:'}</span>
-                <span class="budget-remaining ${remaining >= 0 ? 'positive' : 'negative'}">${formatBRL(Math.abs(remaining))}</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      // Render favorites section
+      const favorites = getFavorites();
+      
       const favItems = dadosFinanceiros.orcamento.filter(o => 
-        o.categoria !== 'TOTAL' && o.categoria !== 'Sobra' && favorites.includes(o.categoria)
+        o.categoria !== 'TOTAL' && o.categoria !== 'Sobra' && favorites.includes(normalizeCat(o.categoria))
       );
 
       let html = '';
       if (favItems.length > 0) {
         html += `<div class="budget-favorites-section">
-          <div class="budget-favorites-title">?? Favoritos</div>
+          <div class="budget-favorites-title">⭐ Favoritos</div>
           <div class="budget-grid">`;
         favItems.forEach(o => { html += buildBudgetCard(o, true); });
         html += `</div></div>`;
       }
 
-      // Render all budgets
       html += `<div class="budget-grid">`;
       dadosFinanceiros.orcamento.forEach(o => {
         if (o.categoria === 'TOTAL' || o.categoria === 'Sobra') return;
-        const isFav = favorites.includes(o.categoria);
+        const isFav = favorites.includes(normalizeCat(o.categoria));
         html += buildBudgetCard(o, isFav);
       });
       html += `</div>`;
 
       budgetContainer.innerHTML = html;
 
-      // Attach events after rendering
       setTimeout(() => {
-        // Star toggle
         budgetContainer.querySelectorAll('.budget-star').forEach(star => {
           star.addEventListener('click', (e) => {
             e.stopPropagation();
             const cat = star.dataset.starCat;
-            let favs = JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
-            if (favs.includes(cat)) {
-              favs = favs.filter(f => f !== cat);
+            let favs = getFavorites();
+            if (favs.includes(normalizeCat(cat))) {
+              favs = favs.filter(f => f !== normalizeCat(cat));
             } else {
-              favs.push(cat);
+              favs.push(normalizeCat(cat));
             }
             localStorage.setItem('budgetFavorites', JSON.stringify(favs));
             renderBudgets();
           });
         });
 
-        // Card click -> drilldown
-        budgetContainer.querySelectorAll('.budget-card').forEach(card => {
+        budgetContainer.querySelectorAll('.clickable-card').forEach(card => {
           card.addEventListener('click', () => {
             const cat = card.dataset.budgetCat;
-            if (cat) window.showCategoryDrilldown(cat);
+            if (cat) openDetailedCardModal(cat);
           });
         });
       }, 0);

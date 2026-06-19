@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -288,7 +288,29 @@
 
 <script src="dados.js"></script>
   <script src="app.js"></script>
+  <!-- Modal Detalhado (Huge Card) -->
+  <div id="detailedModal" class="tx-modal-overlay">
+    <div class="tx-modal-content" style="max-width: 600px; padding: 2rem;">
+      <div class="tx-modal-header" style="border:none; padding-bottom:0;">
+        <button class="tx-modal-close" id="detailedModalClose" style="top: 15px; right: 15px;">&times;</button>
+      </div>
+      <div class="tx-modal-body" id="detailedModalBody" style="margin-top:0;">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('detailedModalClose')?.addEventListener('click', () => {
+        document.getElementById('detailedModal').classList.remove('show');
+      });
+      document.getElementById('detailedModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'detailedModal') document.getElementById('detailedModal').classList.remove('show');
+      });
+    });
+  </script>
 </body>
 </html>
 <!-- Versão: 11/06/2026 20:20 (Integração Gem TSV) -->
+
 
