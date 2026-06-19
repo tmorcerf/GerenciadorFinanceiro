@@ -1122,11 +1122,52 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const patrimonio = totalCC + totalInv + totalCartoes;
 
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      const contasDesatualizadas = [];
+      dadosFinanceiros.contas.forEach(c => {
+        if (!c.ultima_movimentacao) return;
+        const d = parseDateString(c.ultima_movimentacao);
+        if (d) {
+          d.setHours(0,0,0,0);
+          const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays > 30) {
+            contasDesatualizadas.push({ ...c, diffDays });
+          }
+        }
+      });
+      contasDesatualizadas.sort((a,b) => b.diffDays - a.diffDays);
+      
+      const alertaHtml = contasDesatualizadas.length > 0 
+        ? `<div style="font-size:1.8rem; font-weight:700; color:var(--color-expense);">${contasDesatualizadas.length}</div>
+           <div style="font-size:0.85rem; color:var(--color-expense); opacity:0.9;">Contas com atraso > 30 dias</div>`
+        : `<div style="font-size:1.8rem; font-weight:700; color:var(--color-income);"><i class="fas fa-check-circle"></i></div>
+           <div style="font-size:0.85rem; color:var(--text-muted);">Tudo em dia! Nenhuma conta atrasada</div>`;
+
       let html = `
-        <div class="patrimonio-card-hero" id="patrimonio-hero">
-          <div class="patrimonio-label">Patrimônio Líquido</div>
-          <div class="patrimonio-value">${formatBRL(patrimonio)}</div>
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.75rem;">Clique para ver composição</div>
+        <div class="metrics-grid" style="margin-bottom: 2rem;">
+          <div class="card bg-card" id="card-composicao-saldos" style="cursor:pointer; border-left: 4px solid var(--color-accent);">
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">Composição de Saldos</div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.9rem;">
+              <span>Correntes</span><span style="color:var(--text-primary);">${formatBRL(totalCC)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.9rem;">
+              <span>Investimentos</span><span style="color:var(--text-primary);">${formatBRL(totalInv)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
+              <span>Cartões</span><span style="color:var(--color-expense);">${formatBRL(totalCartoes)}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem; font-weight:700;">
+              <span>Total (Líquido)</span><span style="color:var(--color-income); font-size:1.1rem;">${formatBRL(patrimonio)}</span>
+            </div>
+          </div>
+          
+          <div class="card bg-card" id="card-alertas-conciliacao" style="cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-left: 4px solid ${contasDesatualizadas.length > 0 ? 'var(--color-expense)' : 'var(--color-income)'};">
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem; font-weight:600; align-self:flex-start; width:100%; text-align:left;">Status de Conciliação</div>
+            ${alertaHtml}
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:auto; padding-top:1rem;">Clique para listar contas</div>
+          </div>
         </div>
       `;
 
@@ -1235,8 +1276,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       container.innerHTML = html;
 
       setTimeout(() => {
-        const heroCard = document.getElementById('patrimonio-hero');
-        if (heroCard) heroCard.addEventListener('click', () => window.showPatrimonioModal());
+        const compCard = document.getElementById('card-composicao-saldos');
+        if (compCard) compCard.addEventListener('click', () => window.showPatrimonioModal());
+
+        const alertCard = document.getElementById('card-alertas-conciliacao');
+        if (alertCard) alertCard.addEventListener('click', () => window.showConciliacaoModal());
 
         container.querySelectorAll('[data-conta-name]').forEach(card => {
           card.addEventListener('click', () => {
@@ -1944,6 +1988,56 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     };
 
     // NEW: Show patrimônio total modal
+    window.showConciliacaoModal = function() {
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      const contasComAtraso = [];
+      dadosFinanceiros.contas.forEach(c => {
+        let diffDays = 0;
+        if (c.ultima_movimentacao) {
+          const d = parseDateString(c.ultima_movimentacao);
+          if (d) {
+            d.setHours(0,0,0,0);
+            diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          } else {
+            diffDays = 999;
+          }
+        } else {
+           diffDays = 999; // Se não tem data, assume o maior atraso possível
+        }
+        contasComAtraso.push({ ...c, diffDays });
+      });
+      
+      contasComAtraso.sort((a,b) => b.diffDays - a.diffDays);
+
+      let html = `<div style="margin-bottom:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">Acompanhamento de Conciliação Bancária</div>`;
+      html += `<table class="extrato-table"><thead><tr><th>Conta</th><th>Últ. Movimentação</th><th style="text-align:right">Status</th></tr></thead><tbody>`;
+
+      contasComAtraso.forEach(item => {
+        let atrasoText = '';
+        let color = 'var(--text-primary)';
+        if (item.diffDays === 999 || !item.ultima_movimentacao) {
+           atrasoText = 'Sem registro';
+           color = 'var(--text-muted)';
+        } else {
+           atrasoText = `${item.diffDays} dia${item.diffDays !== 1 ? 's' : ''}`;
+           if (item.diffDays > 60) color = 'var(--color-expense)';
+           else if (item.diffDays > 30) color = '#eab308';
+           else if (item.diffDays <= 10) color = 'var(--color-income)';
+        }
+
+        html += `<tr>
+          <td style="color:var(--text-primary); font-weight:500;">${item.nome || item.conta || '-'}</td>
+          <td style="color:var(--text-muted);">${item.ultima_movimentacao || '-'}</td>
+          <td style="text-align:right; font-weight:600; color:${color};">${atrasoText}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      
+      showGlassModal('Status de Conciliação', html);
+    };
+
     window.showPatrimonioModal = function() {
       let saldoCC = 0, saldoInv = 0, saldoCartoes = 0;
       dadosFinanceiros.contas.forEach(c => {
