@@ -238,7 +238,7 @@
       initCharts();
 
       // Events listeners
-      bindWidgetPeriodSelectors();
+      bindTabPeriodSelectors();
 
       if (nextPageBtn) {
         nextPageBtn.addEventListener('click', () => {
@@ -321,7 +321,7 @@
       });
     }
 
-    function getFilteredTransactions(period = 'current') {
+    function getFilteredTransactions(tabData = 'current') {
       let now = new Date();
       const currMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const currYearStr = `${now.getFullYear()}`;
@@ -329,6 +329,14 @@
       let prevNow = new Date();
       prevNow.setMonth(prevNow.getMonth() - 1);
       const prevMonthStr = `${prevNow.getFullYear()}-${String(prevNow.getMonth() + 1).padStart(2, '0')}`;
+
+      // Handle both string and object
+      let period = typeof tabData === 'string' ? tabData : (tabData.period || 'current');
+      let startStr = typeof tabData === 'object' ? tabData.start : '';
+      let endStr = typeof tabData === 'object' ? tabData.end : '';
+
+      const sD = startStr ? new Date(startStr + "T00:00:00") : new Date(0);
+      const eD = endStr ? new Date(endStr + "T23:59:59") : new Date("2100-01-01");
 
       return dadosFinanceiros.lancamentos.filter(l => {
         if (!l.data) return false;
@@ -342,7 +350,10 @@
           if (period === 'current' && yyyy_mm !== currMonthStr) return false;
           if (period === 'previous' && yyyy_mm !== prevMonthStr) return false;
           if (period === 'year' && parts[2] !== currYearStr) return false;
-          // 'custom' was removed for simplicity in individual widgets for now
+          if (period === 'custom') {
+            const d = parseDateString(l.data);
+            if (d < sD || d > eD) return false;
+          }
         }
 
         // Global search query
@@ -360,91 +371,74 @@
     }
 
     // --- Decentralized Widget Period Logic ---
-    function getWidgetPeriod(widgetId, defaultPeriod = 'current') {
+    // --- Tab Period Logic ---
+    function getTabPeriod(tabId, defaultPeriod = 'current') {
       try {
-         const stored = localStorage.getItem('dashboardWidgetPeriods');
+         const stored = localStorage.getItem('dashboardTabPeriods');
          if (stored) {
             const parsed = JSON.parse(stored);
-            return parsed[widgetId] || defaultPeriod;
+            if (parsed[tabId]) return parsed[tabId];
          }
       } catch(e) {}
-      return defaultPeriod;
+      return { period: defaultPeriod, start: '', end: '' };
     }
 
-    function saveWidgetPeriod(widgetId, period) {
+    function saveTabPeriod(tabId, data) {
       try {
          let parsed = {};
-         const stored = localStorage.getItem('dashboardWidgetPeriods');
+         const stored = localStorage.getItem('dashboardTabPeriods');
          if (stored) parsed = JSON.parse(stored);
-         parsed[widgetId] = period;
-         localStorage.setItem('dashboardWidgetPeriods', JSON.stringify(parsed));
+         parsed[tabId] = data;
+         localStorage.setItem('dashboardTabPeriods', JSON.stringify(parsed));
       } catch(e) {}
     }
 
-    function bindWidgetPeriodSelectors() {
-      const selectors = document.querySelectorAll('.widget-period-selector');
-      selectors.forEach(sel => {
-        const widgetId = sel.dataset.widget;
-        const currentPeriod = getWidgetPeriod(widgetId, 'current');
+    function bindTabPeriodSelectors() {
+      const tabs = [
+        { filterId: 'visao-geral-filter', startId: 'visao-geral-date-start', endId: 'visao-geral-date-end', customId: 'visao-geral-custom-date', tabId: 'visao-geral', updateFn: () => { updateOverview(); updateCharts(); } },
+        { filterId: 'investimentos-filter', startId: 'investimentos-date-start', endId: 'investimentos-date-end', customId: 'investimentos-custom-date', tabId: 'investimentos', updateFn: () => { if(typeof renderInvestments === 'function') renderInvestments(); } }
+      ];
+
+      tabs.forEach(tab => {
+        const sel = document.getElementById(tab.filterId);
+        const start = document.getElementById(tab.startId);
+        const end = document.getElementById(tab.endId);
+        const customContainer = document.getElementById(tab.customId);
         
-        // Setup initial active state
-        sel.querySelectorAll('.emoji-dropdown-item').forEach(item => {
-          item.classList.remove('active');
-          if (item.dataset.period === currentPeriod) {
-            item.classList.add('active');
-          }
-        });
+        if (!sel) return;
 
-        // Click event to toggle menu
-        const btn = sel.querySelector('.emoji-btn');
-        const menu = sel.querySelector('.emoji-dropdown-menu');
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          // Close others
-          document.querySelectorAll('.emoji-dropdown-menu').forEach(m => {
-            if (m !== menu) m.classList.remove('show');
-          });
-          menu.classList.toggle('show');
-        });
+        const currentData = getTabPeriod(tab.tabId);
+        sel.value = currentData.period || 'current';
+        if (start) start.value = currentData.start || '';
+        if (end) end.value = currentData.end || '';
 
-        // Click event on items
-        sel.querySelectorAll('.emoji-dropdown-item').forEach(item => {
-          item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const newPeriod = item.dataset.period;
-            
-            sel.querySelectorAll('.emoji-dropdown-item').forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            
-            saveWidgetPeriod(widgetId, newPeriod);
-            menu.classList.remove('show');
-            
-            // Dispatch custom event to trigger refresh on specific widget
-            document.dispatchEvent(new CustomEvent('widgetPeriodChanged', { detail: { widgetId, period: newPeriod } }));
-          });
-        });
-      });
+        if (sel.value === 'custom' && customContainer) {
+           customContainer.style.display = 'flex';
+        }
 
-      // Close menus when clicking outside
-      document.addEventListener('click', () => {
-        document.querySelectorAll('.emoji-dropdown-menu').forEach(m => m.classList.remove('show'));
+        const handleUpdate = () => {
+           const val = sel.value;
+           if (val === 'custom' && customContainer) {
+              customContainer.style.display = 'flex';
+           } else if (customContainer) {
+              customContainer.style.display = 'none';
+           }
+           saveTabPeriod(tab.tabId, {
+              period: val,
+              start: start ? start.value : '',
+              end: end ? end.value : ''
+           });
+           tab.updateFn();
+        };
+
+        sel.addEventListener('change', handleUpdate);
+        if (start) start.addEventListener('change', handleUpdate);
+        if (end) end.addEventListener('change', handleUpdate);
       });
     }
 
-    // Global listener to update specific widgets when their period changes
-    document.addEventListener('widgetPeriodChanged', (e) => {
-      const { widgetId } = e.detail;
-      if (widgetId === 'overview-top') updateOverview();
-      if (widgetId === 'top5') updateOverview(); // Because Top5 is tied to overview right now
-      if (widgetId === 'chart-monthly' || widgetId === 'chart-category') updateCharts();
-      if (widgetId === 'executive') renderExecutiveSummary();
-      if (widgetId === 'transactions') {
-         if (typeof renderTransactionsTable === 'function') renderTransactionsTable();
-      }
-    });
-
     function updateOverview() {
-      const filtered = getFilteredTransactions(getWidgetPeriod('overview-top'));
+      const filtered = getFilteredTransactions(getTabPeriod('visao-geral'));
       
       let income = 0;
       let expenses = 0;
@@ -478,7 +472,7 @@
       }
 
       // Render Top 5 Gastos
-      const filteredTop5 = getFilteredTransactions(getWidgetPeriod('top5'));
+      const filteredTop5 = getFilteredTransactions(getTabPeriod('visao-geral'));
       const expenseGroup = {};
       filteredTop5.forEach(l => {
         if (l.valor >= 0) return;
@@ -517,7 +511,7 @@
                 <div class="top-5-bar-fill" style="width: ${pctOfMax}%"></div>
               </div>
             `;
-            li.addEventListener('click', () => window.showCategoryDrilldown(item.name, getWidgetPeriod('top5')));
+            li.addEventListener('click', () => window.showCategoryDrilldown(item.name, getTabPeriod('visao-geral')));
             top5List.appendChild(li);
           });
         }
@@ -1102,7 +1096,7 @@
       setTimeout(() => {
         container.querySelectorAll('[data-inv-name]').forEach(card => {
           card.addEventListener('click', () => {
-            window.showExtratoContaModal(card.dataset.invName);
+            window.showExtratoContaModal(card.dataset.invName, getTabPeriod('investimentos'));
           });
         });
       }, 0);
@@ -1263,7 +1257,7 @@
     }
 
     function getChartsFilteredData() {
-      const filteredMonthly = getFilteredTransactions(getWidgetPeriod('chart-monthly', 'all'));
+      const filteredMonthly = getFilteredTransactions(getTabPeriod('visao-geral'));
       const monthlyData = {};
       
       filteredMonthly.forEach(l => {
@@ -1293,7 +1287,7 @@
       const monthlyIncome = sortedMonths.map(m => monthlyData[m].income);
       const monthlyExpense = sortedMonths.map(m => monthlyData[m].expense);
 
-      const filteredCategory = getFilteredTransactions(getWidgetPeriod('chart-category'));
+      const filteredCategory = getFilteredTransactions(getTabPeriod('visao-geral'));
       const categoryData = {};
       filteredCategory.forEach(l => {
         if (l.valor >= 0) return;
@@ -1326,7 +1320,7 @@
     }
 
     function showModalDetails(type) {
-      window.showReceitasDespesasModal(type, getWidgetPeriod('overview-top'));
+      window.showReceitasDespesasModal(type, getTabPeriod('visao-geral'));
     }
 
     document.addEventListener('DOMContentLoaded', init);
