@@ -1698,7 +1698,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         html += `
           <div class="drilldown-category" data-drill-target="${drillId}" data-icon-id="${iconId}">
             <div class="bar-chart-labels">
-              <span style="color:var(--text-primary); font-weight:500;"><span id="${iconId}" class="drilldown-expand-icon">?</span>${cat}</span>
+              <span style="color:var(--text-primary); font-weight:500;"><i id="${iconId}" class="fas fa-chevron-right drilldown-expand-icon"></i> ${cat}</span>
               <span style="color:var(--text-muted);">${formatBRL(catTotal)} (${pct}%)</span>
             </div>
             <div class="bar-chart-bar-bg">

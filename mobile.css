@@ -70,10 +70,10 @@ aside {
   margin: 0 !important;
   border-radius: 0 !important;
   color: var(--text-secondary) !important;
-  font-size: 0 !important; /* Hides the text */
+  font-size: 0.65rem !important; /* Hides the text -> Shows the text now */
   text-align: center !important;
-  line-height: 0 !important;
-  gap: 0 !important;
+  line-height: 1.2 !important;
+  gap: 3px !important;
   background: transparent !important;
   border: none !important;
   min-width: 0 !important;
