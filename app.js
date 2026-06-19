@@ -302,8 +302,7 @@
               panel.classList.add('active');
               if (targetPanel === 'panel-investments') {
                 setTimeout(() => {
-                  if(invHistoryChart) { invHistoryChart.resize(); invHistoryChart.update(); }
-                  if(invCompChart) { invCompChart.resize(); invCompChart.update(); }
+                  if (typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard();
                 }, 10);
               }
             } else {
@@ -1112,10 +1111,28 @@
             compData.push(c.saldo);
          }
       });
-      if (invCompChart) {
-         invCompChart.data.labels = compLabels;
-         invCompChart.data.datasets[0].data = compData;
-         invCompChart.update();
+      
+      const ctxInvComp = document.getElementById('inv-composition-chart');
+      if (ctxInvComp) {
+         if (invCompChart) invCompChart.destroy();
+         invCompChart = new Chart(ctxInvComp.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+               labels: compLabels,
+               datasets: [{
+                  data: compData,
+                  backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'],
+                  borderWidth: 0,
+                  hoverOffset: 4
+               }]
+            },
+            options: {
+               responsive: true,
+               maintainAspectRatio: false,
+               cutout: '70%',
+               plugins: { legend: { position: 'right', labels: { color: '#a0aec0', padding: 15, boxWidth: 12 } } }
+            }
+         });
       }
 
       // Update History Chart
@@ -1124,11 +1141,28 @@
       const histAportes = sortedKeys.map(k => monthlyData[k].aportes);
       const histRends = sortedKeys.map(k => monthlyData[k].rendimentos);
       
-      if (invHistoryChart) {
-         invHistoryChart.data.labels = histLabels;
-         invHistoryChart.data.datasets[0].data = histAportes;
-         invHistoryChart.data.datasets[1].data = histRends;
-         invHistoryChart.update();
+      const ctxInvHist = document.getElementById('inv-history-chart');
+      if (ctxInvHist) {
+         if (invHistoryChart) invHistoryChart.destroy();
+         invHistoryChart = new Chart(ctxInvHist.getContext('2d'), {
+            type: 'bar',
+            data: {
+               labels: histLabels,
+               datasets: [
+                  { label: 'Aportes (R$)', data: histAportes, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 },
+                  { label: 'Rendimentos (R$)', data: histRends, backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 4 }
+               ]
+            },
+            options: {
+               responsive: true,
+               maintainAspectRatio: false,
+               plugins: { legend: { labels: { color: '#a0aec0' } } },
+               scales: {
+                  x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } },
+                  y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } }
+               }
+            }
+         });
       }
     }
 
@@ -1251,53 +1285,6 @@
       const ctxMonthly = document.getElementById('monthly-evolution-chart').getContext('2d');
       const ctxCategory = document.getElementById('category-distribution-chart').getContext('2d');
       const chartData = getChartsFilteredData();
-
-      const ctxInvHist = document.getElementById('inv-history-chart');
-      if (ctxInvHist) {
-         invHistoryChart = new Chart(ctxInvHist.getContext('2d'), {
-            type: 'bar',
-            data: {
-               labels: [],
-               datasets: [
-                  { label: 'Aportes (R$)', data: [], backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 },
-                  { label: 'Rendimentos (R$)', data: [], backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 4 }
-               ]
-            },
-            options: {
-               responsive: true,
-               maintainAspectRatio: false,
-               plugins: { legend: { labels: { color: '#a0aec0' } } },
-               scales: {
-                  x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } },
-                  y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } }
-               }
-            }
-         });
-      }
-
-      const ctxInvComp = document.getElementById('inv-composition-chart');
-      if (ctxInvComp) {
-         invCompChart = new Chart(ctxInvComp.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-               labels: [],
-               datasets: [{
-                  data: [],
-                  backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'],
-                  borderWidth: 0,
-                  hoverOffset: 4
-               }]
-            },
-            options: {
-               responsive: true,
-               maintainAspectRatio: false,
-               cutout: '70%',
-               plugins: {
-                  legend: { position: 'right', labels: { color: '#a0aec0', padding: 15, boxWidth: 12 } }
-               }
-            }
-         });
-      }
 
       monthlyChart = new Chart(ctxMonthly, {
         type: 'bar',
