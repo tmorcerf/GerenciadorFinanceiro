@@ -235,6 +235,40 @@
           </div>
         </div>
       </div>
+      <!-- INVESTMENT DASHBOARD -->
+      <div id="investments-dashboard" style="margin-bottom: 2.5rem; display: none;">
+        <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <div class="card" style="border-top: 3px solid var(--color-income);">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do Período</span></div>
+            <div id="inv-dash-aportes" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
+          </div>
+          <div class="card" style="border-top: 3px solid #8b5cf6;">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento Líquido</span></div>
+            <div id="inv-dash-rendimento" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--color-expense);">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do Período</span></div>
+            <div id="inv-dash-resgates" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3);">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento Líquido</span></div>
+            <div id="inv-dash-crescimento" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">R$ 0,00</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
+            <div class="card-header"><span style="font-weight:600;">Evolução: Aportes vs Rendimentos</span></div>
+            <div style="flex:1; position:relative; min-height:0;"><canvas id="inv-history-chart"></canvas></div>
+          </div>
+          <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
+            <div class="card-header"><span style="font-weight:600;">Composição da Carteira</span></div>
+            <div style="flex:1; position:relative; min-height:0; display:flex; align-items:center; justify-content:center;">
+              <canvas id="inv-composition-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="investments-container">
         <!-- Content loaded via JavaScript -->
       </div>

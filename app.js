@@ -51,6 +51,8 @@
 
     let monthlyChart = null;
     let categoryChart = null;
+    let invHistoryChart = null;
+    let invCompChart = null;
 
     // Helpers
     function parseDateString(dateStr) {
@@ -231,6 +233,7 @@
       updateOverview();
       renderBudgets();
       renderAccounts();
+      renderInvestmentsDashboard();
       renderInvestments();
       renderAudit();
       // Removemos as chamadas para renderTransactionsTable pois criaremos o Executive Summary
@@ -381,7 +384,7 @@
     function bindTabPeriodSelectors() {
       const tabs = [
         { filterId: 'visao-geral-filter', startId: 'visao-geral-date-start', endId: 'visao-geral-date-end', customId: 'visao-geral-custom-date', tabId: 'visao-geral', updateFn: () => { updateOverview(); updateCharts(); } },
-        { filterId: 'investimentos-filter', startId: 'investimentos-date-start', endId: 'investimentos-date-end', customId: 'investimentos-custom-date', tabId: 'investimentos', updateFn: () => { if(typeof renderInvestments === 'function') renderInvestments(); } }
+        { filterId: 'investimentos-filter', startId: 'investimentos-date-start', endId: 'investimentos-date-end', customId: 'investimentos-custom-date', tabId: 'investimentos', updateFn: () => { if(typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard(); if(typeof renderInvestments === 'function') renderInvestments(); } }
       ];
 
       tabs.forEach(tab => {
@@ -1035,6 +1038,105 @@
       }, 0);
     }
 
+    function renderInvestmentsDashboard() {
+      const dashboardEl = document.getElementById('investments-dashboard');
+      if (!dashboardEl) return;
+
+      const filterPeriod = getTabPeriod('investimentos');
+      const lancamentosFiltrados = getFilteredTransactions(filterPeriod);
+      
+      const invAccountNames = dadosFinanceiros.contas.filter(c => {
+        const t = (c.tipo || '').toLowerCase();
+        return t.includes('investimento') || t.includes('aplicação') || t.includes('corretora');
+      }).map(c => c.nome);
+
+      if (invAccountNames.length === 0) {
+        dashboardEl.style.display = 'none';
+        return;
+      }
+      dashboardEl.style.display = 'block';
+
+      let aportesPeriodo = 0;
+      let resgatesPeriodo = 0;
+      let rendimentoPeriodo = 0;
+      
+      const monthlyData = {};
+
+      lancamentosFiltrados.forEach(l => {
+        if (!invAccountNames.includes(l.conta)) return;
+        
+        const cat = (l.categoria || '').trim().toLowerCase();
+        const v = l.valor;
+
+        if (cat === 'saldo inicial') return;
+
+        // Rendimentos
+        if (cat === 'rendimentos' || cat === 'outros') {
+          rendimentoPeriodo += v;
+          updateInvMonthly(monthlyData, l.data, v, 0);
+        } else {
+          // Aportes / Resgates
+          if (v > 0 && (cat === 'transferência' || cat === 'proventos' || cat === 'transferencia')) {
+            aportesPeriodo += v;
+            updateInvMonthly(monthlyData, l.data, 0, v);
+          } else if (v < 0 && (cat === 'transferência' || cat === 'diversos' || cat === 'transferencia')) {
+            resgatesPeriodo += Math.abs(v);
+          }
+        }
+      });
+
+      const crescimento = aportesPeriodo + rendimentoPeriodo - resgatesPeriodo;
+
+      const aEl = document.getElementById('inv-dash-aportes');
+      const rEl = document.getElementById('inv-dash-rendimento');
+      const resEl = document.getElementById('inv-dash-resgates');
+      const cEl = document.getElementById('inv-dash-crescimento');
+      
+      if(aEl) aEl.textContent = formatBRL(aportesPeriodo);
+      if(rEl) rEl.textContent = formatBRL(rendimentoPeriodo);
+      if(resEl) resEl.textContent = formatBRL(resgatesPeriodo);
+      if(cEl) cEl.textContent = formatBRL(crescimento);
+      
+      // Update Composition Chart
+      const compLabels = [];
+      const compData = [];
+      dadosFinanceiros.contas.forEach(c => {
+         if (invAccountNames.includes(c.nome) && c.saldo > 0) {
+            compLabels.push(c.nome);
+            compData.push(c.saldo);
+         }
+      });
+      if (invCompChart) {
+         invCompChart.data.labels = compLabels;
+         invCompChart.data.datasets[0].data = compData;
+         invCompChart.update();
+      }
+
+      // Update History Chart
+      const sortedKeys = Object.keys(monthlyData).sort();
+      const histLabels = sortedKeys;
+      const histAportes = sortedKeys.map(k => monthlyData[k].aportes);
+      const histRends = sortedKeys.map(k => monthlyData[k].rendimentos);
+      
+      if (invHistoryChart) {
+         invHistoryChart.data.labels = histLabels;
+         invHistoryChart.data.datasets[0].data = histAportes;
+         invHistoryChart.data.datasets[1].data = histRends;
+         invHistoryChart.update();
+      }
+    }
+
+    function updateInvMonthly(dict, dateStr, rend, aporte) {
+       if (!dateStr) return;
+       const p = dateStr.split('/');
+       if (p.length === 3) {
+          const key = p[2] + '-' + p[1];
+          if (!dict[key]) dict[key] = { rendimentos: 0, aportes: 0 };
+          dict[key].rendimentos += rend;
+          dict[key].aportes += aporte;
+       }
+    }
+
     function renderInvestments() {
       const container = document.getElementById('investments-container');
       if (!container) return;
@@ -1143,6 +1245,53 @@
       const ctxMonthly = document.getElementById('monthly-evolution-chart').getContext('2d');
       const ctxCategory = document.getElementById('category-distribution-chart').getContext('2d');
       const chartData = getChartsFilteredData();
+
+      const ctxInvHist = document.getElementById('inv-history-chart');
+      if (ctxInvHist) {
+         invHistoryChart = new Chart(ctxInvHist.getContext('2d'), {
+            type: 'bar',
+            data: {
+               labels: [],
+               datasets: [
+                  { label: 'Aportes (R$)', data: [], backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 },
+                  { label: 'Rendimentos (R$)', data: [], backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 4 }
+               ]
+            },
+            options: {
+               responsive: true,
+               maintainAspectRatio: false,
+               plugins: { legend: { labels: { color: '#a0aec0' } } },
+               scales: {
+                  x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } },
+                  y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } }
+               }
+            }
+         });
+      }
+
+      const ctxInvComp = document.getElementById('inv-composition-chart');
+      if (ctxInvComp) {
+         invCompChart = new Chart(ctxInvComp.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+               labels: [],
+               datasets: [{
+                  data: [],
+                  backgroundColor: ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'],
+                  borderWidth: 0,
+                  hoverOffset: 4
+               }]
+            },
+            options: {
+               responsive: true,
+               maintainAspectRatio: false,
+               cutout: '70%',
+               plugins: {
+                  legend: { position: 'right', labels: { color: '#a0aec0', padding: 15, boxWidth: 12 } }
+               }
+            }
+         });
+      }
 
       monthlyChart = new Chart(ctxMonthly, {
         type: 'bar',
