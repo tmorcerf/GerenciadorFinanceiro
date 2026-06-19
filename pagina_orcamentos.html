@@ -1587,17 +1587,6 @@
           <span id="privacyLabel">Ocultar</span>
         </button>
         <button class="print-btn" onclick="window.print()" title="Exportar como PDF">&#128438; Imprimir</button>
-                <div class="emoji-dropdown" style="margin-right: 10px;">
-          <button class="emoji-btn" id="global-period-btn" title="Filtro Global de Período">📅</button>
-          <div class="emoji-dropdown-menu" id="global-period-menu">
-            <div data-val="current">Mensal (Atual)</div>
-            <div data-val="previous">Mês Anterior</div>
-            <div data-val="3months">Trimestral</div>
-            <div data-val="6months">Semestral</div>
-            <div data-val="year">Anual</div>
-            <div data-val="all">Tudo</div>
-          </div>
-        </div>
         <input type="hidden" id="month-filter" value="current">
         <div id="custom-date-container" style="display: none; align-items: center; gap: 5px;">
           <input type="date" id="date-start" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
@@ -2665,6 +2654,7 @@ function renderBudgets() {
 
             function buildDetailedBudgetCard(o) {
         const cardPer = getCardPeriod(o.categoria);
+        const isFav = getFavorites().includes(normalizeCat(o.categoria));
         const d = getCardData(o, cardPer);
         
         // Sort txs by date descending
@@ -2735,8 +2725,18 @@ function renderBudgets() {
           <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; background: linear-gradient(145deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95)); border: 1px solid rgba(59, 130, 246, 0.4); display: flex; flex-direction: column; min-height: 440px;">
             <div class="budget-title-row" style="margin-bottom: 1.5rem;">
               <div style="display:flex; align-items:center;">
-                <span class="budget-star active" data-star-cat="${o.categoria}" title="Desfavoritar" style="font-size: 1.5rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);">&#9733;</span>
-                <span class="budget-cat-name" style="font-size: 1.2rem; color: #fff; margin-left: 5px;">${o.categoria}</span>
+                <span class="budget-star ${isFav ? 'active' : ''}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); margin-right: 10px;">&#9733;</span>
+                <div class="emoji-dropdown">
+                  <span class="emoji-btn card-period-btn" title="Alterar Período">📅</span>
+                  <div class="emoji-dropdown-menu card-period-menu" data-period-cat="${o.categoria}">
+                    <div data-val="current">Mensal</div>
+                    <div data-val="3months">Trimestral</div>
+                    <div data-val="6months">Semestral</div>
+                    <div data-val="year">Anual</div>
+                    <div data-val="all">Tudo</div>
+                  </div>
+                </div>
+                <span class="budget-cat-name" style="font-size: 1.2rem; color: #fff; margin-left: 10px;">${o.categoria}</span>
               </div>
               <div style="text-align: right;">
                 <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-top:4px;">Teto de Gastos</span>
