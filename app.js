@@ -1078,14 +1078,15 @@
         // Rendimentos
         if (cat === 'rendimentos' || cat === 'outros') {
           rendimentoPeriodo += v;
-          updateInvMonthly(monthlyData, l.data, v, 0);
+          updateInvMonthly(monthlyData, l.data, v, 0, 0);
         } else {
           // Aportes / Resgates
           if (v > 0 && (cat === 'transferência' || cat === 'proventos' || cat === 'transferencia')) {
             aportesPeriodo += v;
-            updateInvMonthly(monthlyData, l.data, 0, v);
+            updateInvMonthly(monthlyData, l.data, 0, v, 0);
           } else if (v < 0 && (cat === 'transferência' || cat === 'diversos' || cat === 'transferencia')) {
             resgatesPeriodo += Math.abs(v);
+            updateInvMonthly(monthlyData, l.data, 0, 0, Math.abs(v));
           }
         }
       });
@@ -1140,6 +1141,7 @@
       const histLabels = sortedKeys;
       const histAportes = sortedKeys.map(k => monthlyData[k].aportes);
       const histRends = sortedKeys.map(k => monthlyData[k].rendimentos);
+      const histResgates = sortedKeys.map(k => monthlyData[k].resgates);
       
       const ctxInvHist = document.getElementById('inv-history-chart');
       if (ctxInvHist) {
@@ -1150,7 +1152,8 @@
                labels: histLabels,
                datasets: [
                   { label: 'Aportes (R$)', data: histAportes, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 },
-                  { label: 'Rendimentos (R$)', data: histRends, backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 4 }
+                  { label: 'Rendimentos (R$)', data: histRends, backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 4 },
+                  { label: 'Resgates (R$)', data: histResgates, backgroundColor: 'rgba(244, 63, 94, 0.8)', borderRadius: 4 }
                ]
             },
             options: {
@@ -1166,14 +1169,15 @@
       }
     }
 
-    function updateInvMonthly(dict, dateStr, rend, aporte) {
+    function updateInvMonthly(dict, dateStr, rend, aporte, resgate) {
        if (!dateStr) return;
        const p = dateStr.split('/');
        if (p.length === 3) {
           const key = p[2] + '-' + p[1];
-          if (!dict[key]) dict[key] = { rendimentos: 0, aportes: 0 };
-          dict[key].rendimentos += rend;
-          dict[key].aportes += aporte;
+          if (!dict[key]) dict[key] = { rendimentos: 0, aportes: 0, resgates: 0 };
+          dict[key].rendimentos += rend || 0;
+          dict[key].aportes += aporte || 0;
+          dict[key].resgates += resgate || 0;
        }
     }
 
