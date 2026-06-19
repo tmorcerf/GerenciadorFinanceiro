@@ -1149,16 +1149,61 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <div class="metrics-grid">
         `;
 
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        let nextMonth = currentMonth + 1;
+        let nextYear = currentYear;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
+
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
+          const isCC = groupName === 'Cartões de Crédito';
+          
+          let faturaAtual = 0;
+          let faturaProxima = 0;
+          
+          if (isCC) {
+            const lancamentosConta = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === c.nome.toLowerCase());
+            lancamentosConta.forEach(l => {
+               const dateStr = l.vencimento || l.data; 
+               if (!dateStr) return;
+               const d = parseDateString(dateStr);
+               if (!d) return;
+               
+               if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                   faturaAtual += l.valor;
+               } else if (d.getMonth() === nextMonth && d.getFullYear() === nextYear) {
+                   faturaProxima += l.valor;
+               }
+            });
+          }
+
           html += `
-            <div class="card ${colorMap[groupName]}-card clickable-card" data-conta-name="${cName}" style="cursor:pointer;">
+            <div class="card ${colorMap[groupName]}-card clickable-card" data-conta-name="${cName}" style="cursor:pointer; ${isCC ? 'border-top: 3px solid var(--color-expense);' : ''}">
               <div class="card-header">
                 <span>${cName}</span>
                 <div class="card-icon">${iconMap[groupName] || ''}</div>
               </div>
               <div class="card-value" style="font-size:1.6rem;">${formatBRL(c.saldo)}</div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5rem;">
+              
+              ${isCC ? `
+                <div style="display:flex; justify-content:space-between; margin-top:0.8rem; font-size:0.75rem; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 6px;">
+                  <div>
+                    <div style="color:var(--text-muted); font-size:0.65rem;">Fatura Atual (Mês)</div>
+                    <div style="color:${faturaAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaAtual)}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div style="color:var(--text-muted); font-size:0.65rem;">Próxima Fatura</div>
+                    <div style="color:${faturaProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaProxima)}</div>
+                  </div>
+                </div>
+              ` : ''}
+
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
                 <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">Clique para ver extrato</div>
                 ${c.ultima_movimentacao ? `<div style="font-size: 0.7rem; color: var(--text-muted);"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
               </div>
