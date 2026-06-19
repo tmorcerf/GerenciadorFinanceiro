@@ -710,7 +710,7 @@
          const db = new Date(b.data.split('/').reverse().join('-'))||0;
          return db - da;
       });
-      const recentSliced = recent.slice(0, 20);
+
       let biggestExpense = 0;
       let biggestExpenseName = "-";
       recent.forEach(tx => {
@@ -744,11 +744,11 @@
         </div>
       `;
       txHtml += '<span style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem; display:block; font-weight:600; letter-spacing:0.5px;">Últimas Transações</span>';
-      if (recentSliced.length === 0) {
+      if (recent.length === 0) {
          txHtml += '<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">Nenhum gasto neste período.</p>';
       } else {
          txHtml += '<ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.8rem;">';
-         recentSliced.forEach(tx => {
+         recent.forEach(tx => {
            txHtml += `
              <li style="display:flex; justify-content:space-between; font-size:0.85rem; align-items:center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
                <span style="color:var(--text-secondary); font-size:0.75rem; min-width:45px;">${tx.data.substring(0,5)}</span>
