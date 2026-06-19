@@ -63,28 +63,41 @@ aside nav ul li {
   flex: 1 !important;
 }
 .nav-item {
+  display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
-  padding: 0.5rem 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   border-radius: 0 !important;
   color: var(--text-secondary) !important;
-  font-size: 0.65rem !important;
+  font-size: 10px !important;
+  text-align: center !important;
+  line-height: 1 !important;
   gap: 4px !important;
   background: transparent !important;
+  border: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.nav-item svg {
+  margin: 0 !important;
 }
 .nav-item i {
   font-size: 1.2rem !important;
-  margin-right: 0 !important;
+  margin: 0 !important;
 }
 .nav-item.active {
   color: var(--color-accent) !important;
+  border: none !important;
+  padding: 0 !important;
 }
 .nav-item.active::before {
   display: none !important;
 }
-.nav-item.active i {
+.nav-item.active i, .nav-item.active svg {
   color: var(--color-accent) !important;
+  stroke: var(--color-accent) !important;
 }
 
 /* Main Content adjustments */
