@@ -2289,7 +2289,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return;
       }
 
+      let faturasAtual = [];
+      let faturasProxima = [];
+
       cartoes.forEach(c => {
+        let faturaCardAtual = 0;
+        let faturaCardProxima = 0;
+        let diaVencimentoAtual = null;
+        let diaVencimentoProxima = null;
+
         const lancamentosConta = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === c.nome.toLowerCase());
         lancamentosConta.forEach(l => {
           const dateStr = l.vencimento || l.data;
@@ -2304,9 +2312,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
           if (monthsDiff === 0) {
             totalAtual += l.valor;
+            faturaCardAtual += l.valor;
+            if (!diaVencimentoAtual) diaVencimentoAtual = d.getDate();
             dados6Meses[0] += Math.abs(l.valor);
           } else if (monthsDiff === 1) {
             totalProxima += l.valor;
+            faturaCardProxima += l.valor;
+            if (!diaVencimentoProxima) diaVencimentoProxima = d.getDate();
             dados6Meses[1] += Math.abs(l.valor);
           } else if (monthsDiff > 1) {
             totalFuturo += l.valor;
@@ -2315,19 +2327,41 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             }
           }
         });
+
+        if (faturaCardAtual !== 0) {
+           faturasAtual.push({ nome: c.nome || c.conta || 'Cartão', dia: diaVencimentoAtual || 1, valor: faturaCardAtual });
+        }
+        if (faturaCardProxima !== 0) {
+           faturasProxima.push({ nome: c.nome || c.conta || 'Cartão', dia: diaVencimentoProxima || 1, valor: faturaCardProxima });
+        }
       });
 
+      faturasAtual.sort((a, b) => a.dia - b.dia);
+      faturasProxima.sort((a, b) => a.dia - b.dia);
+
+      const renderFaturasList = (list) => {
+        if (list.length === 0) return '<div style="color:var(--text-muted); font-size:0.75rem; margin-top:0.5rem;">Sem faturas</div>';
+        return '<div style="margin-top:0.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:0.5rem;">' + list.map(f => `
+          <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.3rem;">
+            <span style="color:var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 65%;"><span style="color:var(--text-muted); margin-right:4px;">Dia ${String(f.dia).padStart(2, '0')}</span> ${f.nome}</span>
+            <span style="color:${f.valor < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(f.valor)}</span>
+          </div>
+        `).join('') + '</div>';
+      };
+
       let html = `
-        <div class="metrics-grid" style="margin-bottom: 2rem;">
-          <div class="card bg-card">
+        <div class="metrics-grid" style="margin-bottom: 2rem; align-items: stretch;">
+          <div class="card bg-card" style="display:flex; flex-direction:column;">
             <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Mês Atual</div>
             <div style="font-size:1.8rem; font-weight:700; color:${totalAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalAtual)}</div>
+            <div style="margin-top:auto;">${renderFaturasList(faturasAtual)}</div>
           </div>
-          <div class="card bg-card">
+          <div class="card bg-card" style="display:flex; flex-direction:column;">
             <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Próximo Mês</div>
             <div style="font-size:1.8rem; font-weight:700; color:${totalProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalProxima)}</div>
+            <div style="margin-top:auto;">${renderFaturasList(faturasProxima)}</div>
           </div>
-          <div class="card bg-card">
+          <div class="card bg-card" style="display:flex; flex-direction:column;">
             <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Faturas Futuras (+2 meses)</div>
             <div style="font-size:1.8rem; font-weight:700; color:${totalFuturo < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalFuturo)}</div>
           </div>
