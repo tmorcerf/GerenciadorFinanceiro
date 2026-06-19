@@ -159,7 +159,7 @@
           instituicao: c['Instituição Financeira'] || '',
           tipo: c['Tipo de conta'] || '',
           saldo_inicial: parseBrlFloat(c['Saldo inicial']),
-          saldo: parseBrlFloat(c['Saldo']),
+          saldo: parseBrlFloat(c['Saldo atual'] || c['Saldo']),
           conciliado_ate: c['Conciliado até'] || '',
           saldo_lancado: parseBrlFloat(c['Saldo lançado']),
           saldo_apurado: parseBrlFloat(c['Saldo Apurado'])
