@@ -336,6 +336,14 @@
 
     .budget-card {
       padding: 1.5rem;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .budget-card.clickable-card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.4);
+      border-color: rgba(255,255,255,0.15);
+      z-index: 10;
     }
 
     .budget-title-row {
@@ -2369,6 +2377,27 @@
 
     function normalizeCat(c) { return (c || '').trim().toLowerCase(); }
 
+    function getCardPeriod(cat) {
+      try {
+         const stored = localStorage.getItem('budgetCardPeriods');
+         if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed[cat]) return parsed[cat];
+         }
+      } catch(e) {}
+      return 'current';
+    }
+
+    function saveCardPeriod(cat, period) {
+      try {
+         let parsed = {};
+         const stored = localStorage.getItem('budgetCardPeriods');
+         if (stored) parsed = JSON.parse(stored);
+         parsed[cat] = period;
+         localStorage.setItem('budgetCardPeriods', JSON.stringify(parsed));
+      } catch(e) {}
+    }
+
 function getFavorites() {
       // spreadsheet fallback
       if (!window._budgetFavorites || window._budgetFavorites.length === 0) {
@@ -2476,6 +2505,56 @@ function saveFavorites(arr) {
         });
       });
     });
+
+    function openDetailedCardModal(cat) {
+      const o = dadosFinanceiros.orcamento.find(x => x.categoria === cat);
+      if(!o) return;
+      
+      const html = buildDetailedBudgetCard(o);
+      document.getElementById('detailedModalBody').innerHTML = html;
+      document.getElementById('detailedModal').classList.add('show');
+      
+      const modal = document.getElementById('detailedModal');
+      modal.querySelectorAll('.card-period-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.emoji-dropdown-menu.show').forEach(m => {
+             if(m !== btn.nextElementSibling) m.classList.remove('show');
+          });
+          btn.nextElementSibling.classList.toggle('show');
+        });
+      });
+      modal.querySelectorAll('.card-period-menu div').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          saveCardPeriod(cat, opt.dataset.val);
+          opt.parentElement.classList.remove('show');
+          openDetailedCardModal(cat);
+          renderBudgets();
+        });
+      });
+      modal.querySelectorAll('.budget-star').forEach(star => {
+        star.addEventListener('click', (e) => {
+          e.stopPropagation();
+          let favs = getFavorites();
+          if (favs.includes(normalizeCat(cat))) {
+            favs = favs.filter(f => f !== normalizeCat(cat));
+          } else {
+            favs.push(normalizeCat(cat));
+          }
+          saveFavorites(favs);
+          openDetailedCardModal(cat);
+        });
+      });
+      modal.querySelectorAll('.card-tx-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const period = getCardPeriod(cat);
+          const d = getCardData({categoria: cat, orcamento: 0}, period);
+          openTxModal(cat, d.catTxs);
+        });
+      });
+    }
 
 function renderBudgets() {
       const budgetContainer = document.getElementById('budget-container');
@@ -2756,7 +2835,7 @@ function renderBudgets() {
         budgetContainer.querySelectorAll('.clickable-card').forEach(card => {
           card.addEventListener('click', () => {
             const cat = card.dataset.budgetCat;
-            if (cat && typeof window.showCategoryDrilldown === 'function') window.showCategoryDrilldown(cat);
+            if (cat) openDetailedCardModal(cat);
           });
         });
       }, 0);
@@ -3056,6 +3135,27 @@ function renderBudgets() {
       </div>
     </div>
   </div>
+  <!-- Modal Detalhado (Huge Card) -->
+  <div id="detailedModal" class="tx-modal-overlay">
+    <div class="tx-modal-content" style="max-width: 600px; padding: 2rem;">
+      <div class="tx-modal-header" style="border:none; padding-bottom:0;">
+        <button class="tx-modal-close" id="detailedModalClose" style="top: 15px; right: 15px;">&times;</button>
+      </div>
+      <div class="tx-modal-body" id="detailedModalBody" style="margin-top:0;">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('detailedModalClose')?.addEventListener('click', () => {
+        document.getElementById('detailedModal').classList.remove('show');
+      });
+      document.getElementById('detailedModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'detailedModal') document.getElementById('detailedModal').classList.remove('show');
+      });
+    });
+  </script>
 </body>
 </html>
 <!-- V5.7: 16/06/2026 - Bugfixes Top Dashboard, Alertas Reais, Chart Balanco, Fav Normalize -->
