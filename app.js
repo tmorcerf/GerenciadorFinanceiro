@@ -174,7 +174,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           conciliado_ate: c['Conciliado até'] || '',
           saldo_lancado: parseBrlFloat(c['Saldo lançado']),
           saldo_apurado: parseBrlFloat(c['Saldo Apurado']),
-          ultima_movimentacao: c['Data da última movimentação'] || c['Última Movimentação'] || c['Data última mov.'] || c['Ultima mov'] || c['Data da ultima movimentacao'] || ''
+          ultima_movimentacao: c['Data da última movimentação'] || c['Última Movimentação'] || c['Data última mov.'] || c['Ultima mov'] || c['Data da ultima movimentacao'] || c['Conciliado até'] || c['Conciliado ate'] || ''
         })).filter(c => c.nome !== '');
 
         dadosFinanceiros.orcamento = parsedOrc.map(o => ({
@@ -1151,20 +1151,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
-          const isCC = groupName === 'Cartões de Crédito';
           html += `
-            <div class="card account-card clickable-card" data-conta-name="${cName}" style="cursor:pointer; ${isCC ? 'border-top: 3px solid var(--color-expense);' : ''}">
-              <div class="account-header">
-                <span class="account-name">${c.nome}</span>
-                ${c.instituicao ? `<span class="account-inst">${c.instituicao}</span>` : ''}
+            <div class="card ${colorMap[groupName]}-card clickable-card" data-conta-name="${cName}" style="cursor:pointer;">
+              <div class="card-header">
+                <span>${cName}</span>
+                <div class="card-icon">${iconMap[groupName] || ''}</div>
               </div>
-              <div class="account-balance" style="color: ${isCC ? 'var(--color-expense)' : 'var(--text-primary)'}">
-                ${formatBRL(c.saldo)}
+              <div class="card-value" style="font-size:1.6rem;">${formatBRL(c.saldo)}</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.5rem;">
+                <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">Clique para ver extrato</div>
+                ${c.ultima_movimentacao ? `<div style="font-size: 0.7rem; color: var(--text-muted);"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
               </div>
-              ${c.ultima_movimentacao ? `
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.4rem;">
-                  <i class="fas fa-history" style="margin-right: 4px;"></i>Última mov: <strong style="color:var(--text-secondary);">${c.ultima_movimentacao}</strong>
-                </div>` : ''}
             </div>
           `;
         });
@@ -1800,20 +1797,39 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return (dA||0) - (dB||0);
       });
 
+      // Calcula o saldo cumulativo para TODOS os itens primeiro para ficar correto
       let saldoAcum = 0;
-      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${items.length} lançamento${items.length > 1 ? 's' : ''} no período</div>`;
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th></tr></thead><tbody>`;
-
       items.forEach(item => {
         saldoAcum += item.valor;
+        item._saldoAcum = saldoAcum;
+      });
+
+      // Limita aos 50 mais recentes
+      const totalItens = items.length;
+      let displayItems = items;
+      let warnHtml = '';
+      if (totalItens > 50) {
+        displayItems = items.slice(-50); // Pega os últimos 50 (mais recentes)
+        warnHtml = `<div style="background: rgba(239,68,68,0.1); border-left: 3px solid var(--color-expense); padding: 0.8rem; border-radius: 4px; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
+                      <i class="fas fa-exclamation-triangle" style="color: var(--color-expense); margin-right: 5px;"></i>
+                      Exibindo os 50 lançamentos mais recentes para evitar lentidão. Total no período: ${totalItens}.
+                    </div>`;
+      }
+
+      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${totalItens} lançamento${totalItens > 1 ? 's' : ''} no período</div>`;
+      html += warnHtml;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th></tr></thead><tbody>`;
+
+      // Exibe a ordem decrescente (mais recentes no topo) para que o usuário veja os últimos logo de cara
+      displayItems.reverse().forEach(item => {
         const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
-        const saldoClass = saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
+        const saldoClass = item._saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
           <td>${item.obs || '-'}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
-          <td style="text-align:right;" class="${saldoClass}">${formatBRL(saldoAcum)}</td>
+          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td>
         </tr>`;
       });
       html += `</tbody></table>`;
