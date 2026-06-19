@@ -202,7 +202,37 @@
 
     <!-- 2. PANEL: BUDGETS -->
     <div id="panel-budgets" class="dashboard-panel">
-      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Controle de Orçamentos (Metas de Gastos)</h2>
+      
+      <!-- BUDGET DASHBOARD -->
+      <div id="budgets-dashboard" style="margin-bottom: 2.5rem;">
+        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de Orçamentos</h2>
+        
+        <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <div class="card" style="border-top: 3px solid #3b82f6;">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Teto Global (Soma das Metas)</span></div>
+            <div id="budget-dash-teto" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--color-expense);">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Realizado Acumulado</span></div>
+            <div id="budget-dash-realizado" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--color-income);">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Espaço Livre Global</span></div>
+            <div id="budget-dash-livre" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
+          </div>
+          <div class="card" style="border-top: 3px solid #8b5cf6;">
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do Orçamento</span></div>
+            <div id="budget-dash-saude" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">0%</div>
+          </div>
+        </div>
+
+        <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column; margin-bottom: 2rem;">
+          <div class="card-header"><span style="font-weight:600;">Consumo por Categoria</span></div>
+          <div style="flex:1; position:relative; min-height:0;"><canvas id="budget-consumption-chart"></canvas></div>
+        </div>
+      </div>
+
+      <h2 class="chart-title" style="font-size: 1.2rem; margin-bottom: 1.5rem;"><i class="fas fa-sliders-h" style="margin-right:8px;"></i> Acompanhamento Individual</h2>
       <div id="budget-container">
         <!-- Content loaded via JavaScript -->
       </div>

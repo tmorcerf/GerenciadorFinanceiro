@@ -53,6 +53,7 @@
     let categoryChart = null;
     let invHistoryChart = null;
     let invCompChart = null;
+    let budgetConsumptionChart = null;
 
     // Helpers
     function parseDateString(dateStr) {
@@ -303,6 +304,10 @@
               if (targetPanel === 'panel-investments') {
                 setTimeout(() => {
                   if (typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard();
+                }, 10);
+              } else if (targetPanel === 'panel-budgets') {
+                setTimeout(() => {
+                  if (typeof renderBudgets === 'function') renderBudgets();
                 }, 10);
               }
             } else {
@@ -811,18 +816,44 @@
       `;
     }
 
+    function getBudgetCardPeriod(cat) {
+      const stored = localStorage.getItem('budgetCardPeriods');
+      if (stored) {
+        const dict = JSON.parse(stored);
+        if (dict[normalizeCat(cat)]) return dict[normalizeCat(cat)];
+      }
+      return 'current';
+    }
+
+    function setBudgetCardPeriod(cat, period) {
+      const stored = localStorage.getItem('budgetCardPeriods');
+      let dict = {};
+      if (stored) dict = JSON.parse(stored);
+      dict[normalizeCat(cat)] = period;
+      localStorage.setItem('budgetCardPeriods', JSON.stringify(dict));
+    }
+
     function buildBudgetCard(o, isFav) {
-      const cardPer = getCardPeriod(o.categoria);
+      const cardPer = getBudgetCardPeriod(o.categoria);
       const d = getCardData(o, cardPer);
       const starClass = isFav ? 'active' : '';
       return `
-        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative;">
-          <div class="budget-title-row">
+        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible;">
+          <div class="budget-title-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div style="display:flex; align-items:center; gap: 6px;">
               <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar">&#9733;</span>
               <span class="budget-cat-name" style="margin-left:4px;">${o.categoria}</span>
             </div>
-            <span class="budget-limit">Teto: ${formatBRL(d.limit)}</span>
+            <div style="display:flex; align-items:center; gap: 10px;">
+              <select class="budget-period-select" data-budget-cat="${o.categoria}" onclick="event.stopPropagation()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:2px 5px; font-size:0.8rem; outline:none; cursor:pointer;">
+                <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Este Mês</option>
+                <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mês Passado</option>
+                <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>Últimos 3 Meses</option>
+                <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>Últimos 6 Meses</option>
+                <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Este Ano</option>
+              </select>
+              <span class="budget-limit" style="font-weight:600;">Teto: ${formatBRL(d.limit)}</span>
+            </div>
           </div>
           <div class="budget-progress-bar">
             <div class="budget-progress-fill ${d.isBurst ? 'over' : ''}" style="width: ${Math.min(d.pct, 100)}%"></div>
@@ -884,17 +915,94 @@
     }
 
     function renderBudgets() {
+      const budgetContainer = document.getElementById('budget-container');
+      if (!budgetContainer) return;
       budgetContainer.innerHTML = '';
+
+      const favItems = [];
+      const normalItems = [];
+      const favorites = getFavorites();
+
+      let tetoGlobal = 0;
+      let gastoGlobal = 0;
+
+      const chartLabels = [];
+      const chartTeto = [];
+      const chartGasto = [];
+      const chartColors = [];
+
+      if (dadosFinanceiros.orcamento) {
+        dadosFinanceiros.orcamento.forEach(o => {
+          if (o.categoria === 'TOTAL' || o.categoria === 'Sobra') return;
+          
+          const isFav = favorites.includes(normalizeCat(o.categoria));
+          if (isFav) favItems.push(o);
+          else normalItems.push(o);
+
+          const cardPer = getBudgetCardPeriod(o.categoria);
+          const d = getCardData(o, cardPer);
+          
+          tetoGlobal += d.limit;
+          gastoGlobal += d.spent;
+
+          chartLabels.push(o.categoria);
+          chartTeto.push(d.limit);
+          chartGasto.push(d.spent);
+          chartColors.push(d.isBurst ? '#ef4444' : (d.pct > 80 ? '#f59e0b' : '#3b82f6'));
+        });
+      }
+
+      // Update Dashboard Metrics
+      const livreGlobal = tetoGlobal - gastoGlobal;
+      const saudePct = tetoGlobal > 0 ? ((gastoGlobal / tetoGlobal) * 100).toFixed(1) : 0;
+      
+      const elTeto = document.getElementById('budget-dash-teto');
+      const elRealizado = document.getElementById('budget-dash-realizado');
+      const elLivre = document.getElementById('budget-dash-livre');
+      const elSaude = document.getElementById('budget-dash-saude');
+
+      if (elTeto) elTeto.textContent = formatBRL(tetoGlobal);
+      if (elRealizado) elRealizado.textContent = formatBRL(gastoGlobal);
+      if (elLivre) {
+        elLivre.textContent = formatBRL(Math.abs(livreGlobal));
+        elLivre.style.color = livreGlobal >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+        elLivre.previousElementSibling.querySelector('span').textContent = livreGlobal >= 0 ? 'Espaço Livre Global' : 'Estouro Global';
+      }
+      if (elSaude) {
+        elSaude.textContent = saudePct + '%';
+        elSaude.style.color = saudePct > 100 ? '#ef4444' : (saudePct > 80 ? '#f59e0b' : '#10b981');
+      }
+
+      // Render Chart
+      const ctxBudget = document.getElementById('budget-consumption-chart');
+      if (ctxBudget) {
+        if (budgetConsumptionChart) budgetConsumptionChart.destroy();
+        budgetConsumptionChart = new Chart(ctxBudget.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: chartLabels,
+            datasets: [
+              { label: 'Realizado (R$)', data: chartGasto, backgroundColor: chartColors, borderRadius: 4, stack: 'Stack 0' },
+              { label: 'Limite Disponível', data: chartTeto.map((t, i) => Math.max(0, t - chartGasto[i])), backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 4, stack: 'Stack 0' }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { stacked: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } },
+              y: { stacked: true, grid: { display: false }, ticks: { color: '#a0aec0' } }
+            }
+          }
+        });
+      }
+
       if (!dadosFinanceiros.orcamento || dadosFinanceiros.orcamento.length === 0) {
         budgetContainer.innerHTML = '<p style="color: var(--text-muted);">Nenhuma meta de orçamento definida.</p>';
         return;
       }
-
-      const favorites = getFavorites();
-      
-      const favItems = dadosFinanceiros.orcamento.filter(o => 
-        o.categoria !== 'TOTAL' && o.categoria !== 'Sobra' && favorites.includes(normalizeCat(o.categoria))
-      );
 
       let html = '';
       if (favItems.length > 0) {
@@ -906,16 +1014,23 @@
       }
 
       html += `<div class="budget-grid">`;
-      dadosFinanceiros.orcamento.forEach(o => {
-        if (o.categoria === 'TOTAL' || o.categoria === 'Sobra') return;
-        const isFav = favorites.includes(normalizeCat(o.categoria));
-        html += buildBudgetCard(o, isFav);
-      });
+      normalItems.forEach(o => { html += buildBudgetCard(o, false); });
       html += `</div>`;
 
       budgetContainer.innerHTML = html;
 
       setTimeout(() => {
+        // Change event for period selects
+        budgetContainer.querySelectorAll('.budget-period-select').forEach(sel => {
+          sel.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const cat = sel.dataset.budgetCat;
+            const newPeriod = sel.value;
+            setBudgetCardPeriod(cat, newPeriod);
+            renderBudgets();
+          });
+        });
+
         budgetContainer.querySelectorAll('.budget-star').forEach(star => {
           star.addEventListener('click', (e) => {
             e.stopPropagation();
