@@ -1164,7 +1164,9 @@
       }
 
       /* Main Content adjustments */
-      .main-content {
+      main {
+        margin-left: 0 !important;
+        width: 100% !important;
         margin-top: 60px; /* Space for Top Header */
         padding-bottom: 85px; /* Space for Bottom Nav + extra */
         padding-left: 1rem;
