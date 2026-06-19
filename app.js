@@ -173,7 +173,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           saldo: parseBrlFloat(c['Saldo atual'] || c['Saldo']),
           conciliado_ate: c['Conciliado até'] || '',
           saldo_lancado: parseBrlFloat(c['Saldo lançado']),
-          saldo_apurado: parseBrlFloat(c['Saldo Apurado'])
+          saldo_apurado: parseBrlFloat(c['Saldo Apurado']),
+          ultima_movimentacao: c['Data da última movimentação'] || c['Última Movimentação'] || c['Data última mov.'] || c['Ultima mov'] || c['Data da ultima movimentacao'] || ''
         })).filter(c => c.nome !== '');
 
         dadosFinanceiros.orcamento = parsedOrc.map(o => ({
@@ -1082,7 +1083,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const groups = {
         'Contas Correntes': [],
-        'Cartões de Crédito': []
+        'Cartões de Crédito': [],
+        'Investimentos': []
       };
       let totalCC = 0, totalCartoes = 0, totalInv = 0;
 
@@ -1091,7 +1093,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (t.includes('cart') || t.includes('crédito') || t.includes('credito')) {
           groups['Cartões de Crédito'].push(c);
           totalCartoes += c.saldo;
-        } else if (t.includes('investimento') || t.includes('aplicação') || t.includes('corretora')) {
+        } else if (t.includes('investimento') || t.includes('aplicação') || t.includes('corretora') || t.includes('aplicacao') || t.includes('poupança') || t.includes('poupanca')) {
+          groups['Investimentos'].push(c);
           totalInv += c.saldo;
         } else {
           groups['Contas Correntes'].push(c);
@@ -1118,20 +1121,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const colorMap = {
         'Contas Correntes': 'income',
-        'Cartões de Crédito': 'expense'
+        'Cartões de Crédito': 'expense',
+        'Investimentos': 'accent'
       };
 
       const subtotals = {
         'Contas Correntes': totalCC,
-        'Cartões de Crédito': totalCartoes
+        'Cartões de Crédito': totalCartoes,
+        'Investimentos': totalInv
       };
 
       const subtotalColors = {
         'Contas Correntes': 'var(--color-income)',
-        'Cartões de Crédito': 'var(--color-expense)'
+        'Cartões de Crédito': 'var(--color-expense)',
+        'Investimentos': 'var(--color-accent)'
       };
 
-      for (const groupName of ['Contas Correntes', 'Cartões de Crédito']) {
+      for (const groupName of ['Contas Correntes', 'Cartões de Crédito', 'Investimentos']) {
         const contas = groups[groupName];
         if (contas.length === 0) continue;
 
@@ -1145,14 +1151,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
+          const isCC = groupName === 'Cartões de Crédito';
           html += `
-            <div class="card ${colorMap[groupName]}-card clickable-card" data-conta-name="${cName}" style="cursor:pointer;">
-              <div class="card-header">
-                <span>${cName}</span>
-                <div class="card-icon">${iconMap[groupName]}</div>
+            <div class="card account-card clickable-card" data-conta-name="${cName}" style="cursor:pointer; ${isCC ? 'border-top: 3px solid var(--color-expense);' : ''}">
+              <div class="account-header">
+                <span class="account-name">${c.nome}</span>
+                ${c.instituicao ? `<span class="account-inst">${c.instituicao}</span>` : ''}
               </div>
-              <div class="card-value" style="font-size:1.6rem;">${formatBRL(c.saldo)}</div>
-              <div class="card-trend" style="color:var(--text-muted);">Clique para ver extrato</div>
+              <div class="account-balance" style="color: ${isCC ? 'var(--color-expense)' : 'var(--text-primary)'}">
+                ${formatBRL(c.saldo)}
+              </div>
+              ${c.ultima_movimentacao ? `
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.4rem;">
+                  <i class="fas fa-history" style="margin-right: 4px;"></i>Última mov: <strong style="color:var(--text-secondary);">${c.ultima_movimentacao}</strong>
+                </div>` : ''}
             </div>
           `;
         });
