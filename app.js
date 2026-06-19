@@ -1125,25 +1125,61 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const now = new Date();
       now.setHours(0,0,0,0);
       
-      const contasDesatualizadas = [];
+      const todasContasAtraso = [];
       dadosFinanceiros.contas.forEach(c => {
         if (!c.ultima_movimentacao) return;
         const d = parseDateString(c.ultima_movimentacao);
         if (d) {
           d.setHours(0,0,0,0);
           const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-          if (diffDays > 30) {
-            contasDesatualizadas.push({ ...c, diffDays });
-          }
+          todasContasAtraso.push({ ...c, diffDays });
         }
       });
-      contasDesatualizadas.sort((a,b) => b.diffDays - a.diffDays);
+      todasContasAtraso.sort((a,b) => b.diffDays - a.diffDays);
       
-      const alertaHtml = contasDesatualizadas.length > 0 
-        ? `<div style="font-size:1.8rem; font-weight:700; color:var(--color-expense);">${contasDesatualizadas.length}</div>
-           <div style="font-size:0.85rem; color:var(--color-expense); opacity:0.9;">Contas com atraso > 30 dias</div>`
-        : `<div style="font-size:1.8rem; font-weight:700; color:var(--color-income);"><i class="fas fa-check-circle"></i></div>
-           <div style="font-size:0.85rem; color:var(--text-muted);">Tudo em dia! Nenhuma conta atrasada</div>`;
+      const count60 = todasContasAtraso.filter(c => c.diffDays > 60).length;
+      const count30 = todasContasAtraso.filter(c => c.diffDays > 30 && c.diffDays <= 60).length;
+      const count10 = todasContasAtraso.filter(c => c.diffDays > 10 && c.diffDays <= 30).length;
+      
+      const temAtraso = (count60 + count30 + count10) > 0;
+      
+      const top5 = todasContasAtraso.filter(c => c.diffDays > 10).slice(0, 5);
+      
+      let alertaHtml = '';
+      if (temAtraso) {
+        alertaHtml += `<div style="display:flex; justify-content:space-between; width:100%; margin-bottom:0.8rem;">
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <span style="font-size:1.2rem; font-weight:700; color:var(--color-expense);">${count60}</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);">> 60d</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <span style="font-size:1.2rem; font-weight:700; color:#eab308;">${count30}</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);">> 30d</span>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center;">
+            <span style="font-size:1.2rem; font-weight:700; color:var(--text-primary);">${count10}</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);">> 10d</span>
+          </div>
+        </div>`;
+        
+        alertaHtml += `<div style="width:100%; text-align:left; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem;">`;
+        top5.forEach(c => {
+          let color = 'var(--text-primary)';
+          if (c.diffDays > 60) color = 'var(--color-expense)';
+          else if (c.diffDays > 30) color = '#eab308';
+          
+          alertaHtml += `<div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.25rem;">
+            <span style="color:var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 75%;">${c.nome || c.conta || 'Conta'}</span>
+            <span style="color:${color}; font-weight:600;">${c.diffDays}d</span>
+          </div>`;
+        });
+        alertaHtml += `</div>`;
+      } else {
+        alertaHtml = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%;">
+           <div style="font-size:1.8rem; font-weight:700; color:var(--color-income); margin-bottom:0.5rem;"><i class="fas fa-check-circle"></i></div>
+           <div style="font-size:0.85rem; color:var(--text-muted);">Tudo em dia!</div>
+        </div>`;
+      }
 
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem;">
@@ -1163,7 +1199,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
           </div>
           
-          <div class="card bg-card" id="card-alertas-conciliacao" style="cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-left: 4px solid ${contasDesatualizadas.length > 0 ? 'var(--color-expense)' : 'var(--color-income)'};">
+          <div class="card bg-card" id="card-alertas-conciliacao" style="cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-left: 4px solid ${temAtraso ? 'var(--color-expense)' : 'var(--color-income)'};">
             <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem; font-weight:600; align-self:flex-start; width:100%; text-align:left;">Status de Conciliação</div>
             ${alertaHtml}
             <div style="font-size:0.75rem; color:var(--text-muted); margin-top:auto; padding-top:1rem;">Clique para listar contas</div>
