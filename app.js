@@ -1,3 +1,11 @@
+// Mobile Iframe Bypass
+if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+  const mobileLink = document.createElement('link');
+  mobileLink.rel = 'stylesheet';
+  mobileLink.href = 'mobile.css?v=' + new Date().getTime();
+  document.head.appendChild(mobileLink);
+  document.documentElement.classList.add('mobile-mode');
+}
 
 // Error Handler
     window.onerror = function(msg, url, lineNo, columnNo, error) {
