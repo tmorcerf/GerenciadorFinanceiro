@@ -300,6 +300,12 @@
           panels.forEach(panel => {
             if (panel.id === targetPanel) {
               panel.classList.add('active');
+              if (targetPanel === 'panel-investments') {
+                setTimeout(() => {
+                  if(invHistoryChart) { invHistoryChart.resize(); invHistoryChart.update(); }
+                  if(invCompChart) { invCompChart.resize(); invCompChart.update(); }
+                }, 10);
+              }
             } else {
               panel.classList.remove('active');
             }
