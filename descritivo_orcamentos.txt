@@ -1,0 +1,24 @@
+=== FUNCIONALIDADES DA ABA DE ORÇAMENTOS ===
+Arquivo: pagina_orcamentos.html
+
+1. Estrutura e Interface Premium
+- Totalmente Independente: A aba agora é um arquivo .html isolado, o que a torna mais rápida e imune a travamentos da página principal.
+- Visual "Glassmorphism" Escuro: Usa elementos semi-transparentes, sombras suaves e um tema dark focado em dados, dando aparência de aplicativo profissional.
+- Modo Privacidade: Um botão de "Ocultar" (👁️) no topo que, ao ser clicado, borra todos os valores monetários da tela. Excelente para abrir o dashboard no trabalho ou perto de outras pessoas.
+- Design Responsivo: A grade de cards e gráficos se adapta automaticamente para telas de celular ou monitores grandes.
+
+2. Visão Geral (Topo)
+- Cards de Resumo Global: Exibem rapidamente a Receita, o Total Gasto (Despesas) e o Saldo atual do período global selecionado.
+- Gráficos Dinâmicos:
+  - Um gráfico em anel (Donut) mostrando a proporção dos seus maiores gastos dentro do orçamento.
+  - Um gráfico de barras/linha mostrando a evolução comparativa.
+- Filtro Global de Período (📅): No menu superior, permite definir um filtro macro (ex: Mês Atual, Anual) que afeta o painel de resumo e todos os gráficos de cima.
+
+3. Inteligência dos Cards de Orçamento
+Cada categoria de gasto possui um "Card Inteligente" com funcionalidades próprias:
+- Barra de Progresso Dinâmica: Mostra visualmente quanto do teto já foi consumido. Fica vermelha automaticamente caso o limite seja ultrapassado.
+- Memória de Período por Card (📅): Cada card possui seu próprio seletor de período (ex: colocar "Viagem" como Anual e "Mercado" como Mensal). Essa preferência fica salva automaticamente no navegador.
+- Modal de Transações (↕️): Um botão que abre uma janela pop-up focada contendo *todas as compras/lançamentos* daquela categoria.
+- Ordenação ao Vivo: Dentro do pop-up de transações, é possível clicar no cabeçalho das colunas (Data, Descrição, Valor) para colocar a tabela em ordem crescente ou decrescente instantaneamente.
+- Favoritos Fixados (⭐): Clicar na estrela envia o card para uma seção "VIP" no topo da página, mostrando os dados em um formato expandido. Essa lista de favoritos também fica salva no navegador entre os acessos.
+- Drilldown (Clique no Card): Clicar no corpo do card se conecta com a função global de "Detalhar Categoria" (abre o modal gigantesco se configurado na página mãe).

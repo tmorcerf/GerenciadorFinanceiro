@@ -1,0 +1,275 @@
+﻿[
+    {
+        "Data":  "16/08/2025",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADOPAGO*CZCOMERCIO",
+        "Valor":  "-53.66"
+    },
+    {
+        "Data":  "09/09/2025",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*3PRODUTOS",
+        "Valor":  "-35.82"
+    },
+    {
+        "Data":  "17/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "NETFLIX.COM",
+        "Valor":  "-44.90"
+    },
+    {
+        "Data":  "18/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP *SHELLBOX",
+        "Valor":  "-190.11"
+    },
+    {
+        "Data":  "18/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP *SHELLBOX",
+        "Valor":  "-45.31"
+    },
+    {
+        "Data":  "20/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "Wellhub Esther Araujo",
+        "Valor":  "-99.99"
+    },
+    {
+        "Data":  "22/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-17.90"
+    },
+    {
+        "Data":  "23/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "PG *99 RIDE",
+        "Valor":  "-10.39"
+    },
+    {
+        "Data":  "23/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-16.50"
+    },
+    {
+        "Data":  "23/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-11.76"
+    },
+    {
+        "Data":  "23/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-11.60"
+    },
+    {
+        "Data":  "24/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-15.10"
+    },
+    {
+        "Data":  "24/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-12.88"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*GOOGLE Google",
+        "Valor":  "-96.99"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*MERCADOLIVRE (01/06)",
+        "Valor":  "-111.70"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/07/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*MERCADOLIVRE (02/06)",
+        "Valor":  "-111.70"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/08/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*MERCADOLIVRE (03/06)",
+        "Valor":  "-111.70"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/09/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*MERCADOLIVRE (04/06)",
+        "Valor":  "-111.70"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/10/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*MERCADOLIVRE (05/06)",
+        "Valor":  "-111.70"
+    },
+    {
+        "Data":  "26/05/2026",
+        "Vencimento":  "22/11/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*MERCADOLIVRE (06/06)",
+        "Valor":  "-111.70"
+    },
+    {
+        "Data":  "27/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADOLIVRE*MERCADOLIVRE",
+        "Valor":  "-96.90"
+    },
+    {
+        "Data":  "30/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*GOOGLE Prime",
+        "Valor":  "-29.90"
+    },
+    {
+        "Data":  "31/05/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*GOOGLE Globoplay",
+        "Valor":  "-30.90"
+    },
+    {
+        "Data":  "01/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*GOOGLE Grow w",
+        "Valor":  "-9.99"
+    },
+    {
+        "Data":  "02/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*GOOGLE YouTube",
+        "Valor":  "-53.90"
+    },
+    {
+        "Data":  "03/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "Wellhub",
+        "Valor":  "-149.99"
+    },
+    {
+        "Data":  "04/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADO PAGO*MERC",
+        "Valor":  "-254.90"
+    },
+    {
+        "Data":  "05/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-8.50"
+    },
+    {
+        "Data":  "06/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADOLIVRE*MERCADOLIVRE",
+        "Valor":  "-154.90"
+    },
+    {
+        "Data":  "07/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP*PARAMOUNTPLUS",
+        "Valor":  "-24.43"
+    },
+    {
+        "Data":  "07/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADOLIVRE*CASABELA",
+        "Valor":  "-31.98"
+    },
+    {
+        "Data":  "07/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADO PAGO*MERC",
+        "Valor":  "-799.99"
+    },
+    {
+        "Data":  "07/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MERCADOLIVRE*MERCADOLIVRE",
+        "Valor":  "-36.99"
+    },
+    {
+        "Data":  "08/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "MP *SHELLBOX",
+        "Valor":  "-65.00"
+    },
+    {
+        "Data":  "09/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-8.40"
+    },
+    {
+        "Data":  "10/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-8.40"
+    },
+    {
+        "Data":  "10/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-8.40"
+    },
+    {
+        "Data":  "11/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*99 RIDE",
+        "Valor":  "-8.50"
+    },
+    {
+        "Data":  "12/06/2026",
+        "Vencimento":  "22/06/2026",
+        "Conta":  "Mercado Pago Visa",
+        "Descricao":  "DL*GOOGLE Premie",
+        "Valor":  "-29.90"
+    }
+]

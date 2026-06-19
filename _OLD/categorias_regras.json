@@ -1,0 +1,40 @@
+{
+  "regras": [
+    { "keywords": ["ROTA 116", "PEDAGIO", "VIA LAGOS", "CONCESSIONARIA", "CONECTC", "PISTA 3 AUTO PISTA"], "categoria": "Transporte", "subcategoria": "Transporte - Pedágio" },
+    { "keywords": ["AUTO POSTO", "POSTO", "GASOLINA", "COMBUSTIVEL", "IPIRANGA", "SHELL", "BR", "ALELOCREDITO"], "categoria": "Transporte", "subcategoria": "Transporte - Combustivel" },
+    { "keywords": ["UBER", "99APP", "99App", "TAXI", "CABIFY", "UTIL ", "WHOOSH"], "categoria": "Transporte", "subcategoria": "Transporte - Passagens / App" },
+    { "keywords": ["ESTACIONAMENTO", "PARK", "GARAGEM", "ESTAPAR"], "categoria": "Transporte", "subcategoria": "Transporte - Estacionamento" },
+    
+    { "keywords": ["LANCHONETE", "PADARIA", "PANIFICADORA", "PONTO DE BALA", "LANCHES", "CAFE", "DOCERIA", "TORRONE", "EXCALIBUR", "CANTINHO DA ROCA", "AMERICANAS", "SORVETERIA", "PARADA MODELO", "JANELA LITERARIA"], "categoria": "Alimentação", "subcategoria": "Alimentação - Padaria e Lanchonetes" },
+    { "keywords": ["ARMAZEM DO PAO", "RESTAURANTE", "BISTRO", "CHURRASCARIA", "SAMPAIOS BAR", "JOAO PESSOA", "VR BBS RESTAURANTE", "SERRA CARIOCA"], "categoria": "Alimentação", "subcategoria": "Alimentação - Restaurante" },
+    { "keywords": ["IFOOD", "RAPPI", "ZEDELIVERY", "DELIVERY", "PIZZARIA", "BURGER", "ACAI", "SOL E NEVE", "AVALANCHE"], "categoria": "Alimentação", "subcategoria": "Alimentação - Delivery" },
+    { "keywords": ["SUPERMERCADO", "MERCADO", "ATACADAO", "ASSAI", "CARREFOUR", "HORTIFRUTI"], "categoria": "Alimentação", "subcategoria": "Alimentação - Supermercado" },
+
+    { "keywords": ["FARMACIA", "DROGARIA", "PACHECO", "RAIA 3468", "VENANCIO", "MILIGRAMA", "TAMOIO", "MEDICAMENTO"], "categoria": "Saúde", "subcategoria": "Saúde - Medicamentos" },
+    { "keywords": ["CLINICA", "HOSPITAL", "MEDICO", "EXAMES", "LABORATORIO", "CONSULTA"], "categoria": "Saúde", "subcategoria": "Saúde - Consultas" },
+    
+    { "keywords": ["PET", "VETERINARIA", "COBASI", "PETZ", "BANHO E TOSA", "PETROBRASPREMMIA", "JIM COM VETERINARI", "JIM COM HAIR"], "categoria": "Pets", "subcategoria": "Pets - Veterinário" },
+    { "keywords": ["RACAO", "PET SHOP"], "categoria": "Pets", "subcategoria": "Pets - Ração" },
+
+    { "keywords": ["NETFLIX", "SPOTIFY", "AMAZON PRIME", "DISNEY", "HBO", "CINEMA", "SYMPLA", "EVENTOS", "SHOW", "NEKAS"], "categoria": "Lazer", "subcategoria": "Lazer - Confraternizações" },
+    { "keywords": ["HOTEL", "POUSADA", "ESTADIA", "HHOTEL ATLANTICO", "VIAJANTES", "RIO SUL"], "categoria": "Viagem", "subcategoria": "Viagem - Estadia" },
+
+    { "keywords": ["ENEL", "LIGHT", "CEMIG", "AGUAS", "CONDOMINIO", "ALUGUEL", "IPTU", "CVL MODA PRAI"], "categoria": "Casa", "subcategoria": "Casa - manutenção" },
+    { "keywords": ["HZINE"], "categoria": "Casa", "subcategoria": "Casa - utensílios e decoração" },
+
+    { "keywords": ["KATIVA REP AUTOM"], "categoria": "Veiculos", "subcategoria": "Veiculos - Manutenção" },
+
+    { "keywords": ["RENNER", "C&A", "RIACHUELO", "ZARA", "CENTAURO", "MODA", "MODANAFASHION", "ROUPAS", "VESTUARIO", "MY CLOSET", "N FASHION", "BAZAAR FACTORY"], "categoria": "Vestimentas", "subcategoria": "Vestimentas - Roupas" },
+    
+    { "keywords": ["ESCOLA", "FACULDADE", "LIVRARIA", "SARAIVA", "LIVRARIALEITURA", "CURSO"], "categoria": "Educação", "subcategoria": "Educação - Material Escolar" },
+
+    { "keywords": ["TRANSFERENCIA", "PIX ENVIADO", "PIX RECEBIDO", "TED", "DOC", "Pag Fat Deb"], "categoria": "Transferência", "subcategoria": "Débito (para saídas/saques/aportes)" },
+    { "keywords": ["SALARIO", "PAGAMENTO", "RENDIMENTOS", "PROVENTOS", "ADIANTAMENTO"], "categoria": "Proventos", "subcategoria": "Salário" },
+
+    { "keywords": ["GOOGLE", "MICROSOFT", "SOFTWARE", "INTERNET", "VIVO", "CLARO", "TIM", "OI"], "categoria": "Serviços", "subcategoria": "Serviços - Internet" },
+    { "keywords": ["CHATGPT"], "categoria": "Serviços", "subcategoria": "" },
+    { "keywords": ["ANUIDADE", "TARIFAS BANCARIAS", "TAXA"], "categoria": "Serviços", "subcategoria": "Serviços - Tarifas Bancarias" },
+    
+    { "keywords": ["SEGURO", "YOUSE AUTO"], "categoria": "Seguros", "subcategoria": "Seguros - Veiculo" }
+  ]
+}
