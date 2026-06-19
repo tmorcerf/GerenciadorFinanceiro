@@ -233,12 +233,12 @@
       updateOverview();
       renderBudgets();
       renderAccounts();
-      renderInvestmentsDashboard();
       renderInvestments();
       renderAudit();
       // Removemos as chamadas para renderTransactionsTable pois criaremos o Executive Summary
       
       initCharts();
+      renderInvestmentsDashboard();
 
       // Events listeners
       bindTabPeriodSelectors();
