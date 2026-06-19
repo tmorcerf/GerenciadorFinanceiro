@@ -1592,6 +1592,57 @@
     };
 
     // NEW: Show extrato completo de uma conta
+    window.showInvestmentsModal = function(type) {
+      const period = getTabPeriod('investimentos');
+      const filtered = getFilteredTransactions(period);
+      
+      const invAccountNames = dadosFinanceiros.contas.filter(c => {
+        const t = (c.tipo || '').toLowerCase();
+        return t.includes('investimento') || t.includes('aplicação') || t.includes('corretora');
+      }).map(c => c.nome);
+
+      const items = filtered.filter(l => {
+        if (!invAccountNames.includes(l.conta)) return false;
+        const cat = (l.categoria || '').trim().toLowerCase();
+        const v = l.valor;
+        if (cat === 'saldo inicial') return false;
+
+        if (type === 'rendimentos') return (cat === 'rendimentos' || cat === 'outros');
+        if (type === 'aportes') return (v > 0 && (cat === 'transferência' || cat === 'proventos' || cat === 'transferencia'));
+        if (type === 'resgates') return (v < 0 && (cat === 'transferência' || cat === 'diversos' || cat === 'transferencia'));
+        return false;
+      });
+
+      let title = type === 'rendimentos' ? 'Rendimento Líquido' : type === 'aportes' ? 'Aportes do Período' : 'Resgates do Período';
+
+      if (items.length === 0) {
+        showGlassModal(title, '<p style="color:var(--text-muted); text-align:center;">Nenhum lançamento encontrado para este tipo no período.</p>');
+        return;
+      }
+
+      items.sort((a,b) => (parseDateString(a.data)||0) - (parseDateString(b.data)||0));
+
+      let total = 0;
+      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${items.length} lançamento${items.length > 1 ? 's' : ''}</div>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Conta</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
+
+      items.forEach(item => {
+        total += item.valor;
+        const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+        html += `<tr>
+          <td style="color:var(--text-muted); font-size:0.85rem; white-space:nowrap;">${item.data}</td>
+          <td style="font-size:0.85rem; color:var(--text-secondary);">${item.conta}</td>
+          <td style="color:var(--text-primary); font-size:0.9rem;">${item.obs || '-'}</td>
+          <td style="font-size:0.85rem;"><span class="badge" style="background:var(--bg-sidebar); border:1px solid var(--border-color); color:var(--text-secondary);">${item.categoria}</span></td>
+          <td style="text-align:right; font-weight:600; color:${valColor};">${formatBRL(item.valor)}</td>
+        </tr>`;
+      });
+
+      html += `</tbody><tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; color:var(--text-primary);">Total do Período</td><td style="text-align:right; font-weight:bold; font-size:1.1rem; color:${total >= 0 ? 'var(--color-income)' : 'var(--color-expense)'};">${formatBRL(total)}</td></tr></tfoot></table>`;
+
+      showGlassModal(title, html);
+    };
+
     window.showExtratoContaModal = function(nomeConta, period = 'all') {
       const filtered = getFilteredTransactions(period);
       const items = filtered.filter(l => (l.conta || '').toLowerCase().trim() === nomeConta.toLowerCase().trim());

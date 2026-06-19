@@ -238,15 +238,15 @@
       <!-- INVESTMENT DASHBOARD -->
       <div id="investments-dashboard" style="margin-bottom: 2.5rem; display: none;">
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-          <div class="card" style="border-top: 3px solid var(--color-income);">
+          <div class="card clickable-card" style="border-top: 3px solid var(--color-income); cursor: pointer;" onclick="showInvestmentsModal('aportes')">
             <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do Período</span></div>
             <div id="inv-dash-aportes" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
-          <div class="card" style="border-top: 3px solid #8b5cf6;">
+          <div class="card clickable-card" style="border-top: 3px solid #8b5cf6; cursor: pointer;" onclick="showInvestmentsModal('rendimentos')">
             <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento Líquido</span></div>
             <div id="inv-dash-rendimento" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
-          <div class="card" style="border-top: 3px solid var(--color-expense);">
+          <div class="card clickable-card" style="border-top: 3px solid var(--color-expense); cursor: pointer;" onclick="showInvestmentsModal('resgates')">
             <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do Período</span></div>
             <div id="inv-dash-resgates" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
