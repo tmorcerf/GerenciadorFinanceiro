@@ -227,7 +227,7 @@
       const success = await loadDataFromSheets();
       if (!success) return; // Stop if sheets are not loaded
 
-      populateFilters();
+
       updateOverview();
       renderBudgets();
       renderAccounts();
@@ -305,21 +305,6 @@
       });
     }
 
-    function populateFilters() {
-      // monthFilter HTML já possui as opções 'current', 'previous', 'year' e 'custom'
-      // O accountFilter precisa ser populado dinamicamente
-
-      const accountsSet = new Set();
-      dadosFinanceiros.lancamentos.forEach(l => {
-        if (l.conta) accountsSet.add(l.conta);
-      });
-            Array.from(accountsSet).sort().forEach(acc => {
-        const option = document.createElement('option');
-        option.value = acc;
-        option.textContent = acc;
-        accountFilter.appendChild(option);
-      });
-    }
 
     function getFilteredTransactions(tabData = 'current') {
       let now = new Date();
