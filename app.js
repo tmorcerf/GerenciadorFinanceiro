@@ -71,6 +71,22 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
     }
 
+    function getDateColor(dateStr) {
+      const d = parseDateString(dateStr);
+      if (!d) return 'var(--text-muted)';
+      
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      d.setHours(0,0,0,0);
+      
+      const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 60) return 'var(--color-expense)';
+      if (diffDays > 30) return '#eab308'; // Amarelo
+      if (diffDays <= 10) return 'var(--color-income)';
+      return 'var(--text-primary)';
+    }
+
     function formatBRL(val) {
       return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
@@ -1207,7 +1223,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
                 <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">Clique para ver extrato</div>
-                ${c.ultima_movimentacao ? `<div style="font-size: 0.7rem; color: var(--text-muted);"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
+                ${c.ultima_movimentacao ? `<div style="font-size: 0.75rem; font-weight:600; color: ${getDateColor(c.ultima_movimentacao)};"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
               </div>
             </div>
           `;
@@ -2243,7 +2259,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
               <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">Clique para ver extrato</div>
-              ${c.ultima_movimentacao ? `<div style="font-size: 0.7rem; color: var(--text-muted);"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
+              ${c.ultima_movimentacao ? `<div style="font-size: 0.75rem; font-weight:600; color: ${getDateColor(c.ultima_movimentacao)};"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.ultima_movimentacao}</div>` : ''}
             </div>
           </div>
         `;
