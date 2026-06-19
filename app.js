@@ -833,11 +833,11 @@
       localStorage.setItem('budgetCardPeriods', JSON.stringify(dict));
     }
 
-    function buildBudgetCard(o, isFav) {
+    function buildBudgetCard(o, isFav, isTopArea = false) {
       const cardPer = getBudgetCardPeriod(o.categoria);
       const d = getCardData(o, cardPer);
       const starClass = isFav ? 'active' : '';
-      return `
+      let html = `
         <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible;">
           <div class="budget-title-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div style="display:flex; align-items:center; gap: 6px;">
@@ -867,9 +867,31 @@
               <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">${d.remaining >= 0 ? 'Sobra:' : 'Estourou:'}</span>
               <span class="budget-remaining ${d.remaining >= 0 ? 'positive' : 'negative'}">${formatBRL(Math.abs(d.remaining))}</span>
             </div>
-          </div>
-        </div>
-      `;
+          </div>`;
+
+      if (isTopArea) {
+        const txs = getFilteredTransactions(cardPer).filter(l => (l.categoria || '').toLowerCase().trim() === o.categoria.toLowerCase().trim());
+        txs.sort((a,b) => Math.abs(b.valor) - Math.abs(a.valor));
+        const topTxs = txs.slice(0, 3);
+        if (topTxs.length > 0) {
+          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05);">`;
+          html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">Maiores Gastos no Período:</div>`;
+          topTxs.forEach(t => {
+            html += `
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:0.85rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;" title="${t.obs || t.conta}">${t.obs || t.conta}</span>
+                <span style="font-size:0.85rem; color:var(--color-expense); font-weight:600;">${formatBRL(Math.abs(t.valor))}</span>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        } else {
+          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); text-align:center;">Nenhum gasto no período.</div>`;
+        }
+      }
+
+      html += `</div>`;
+      return html;
     }
 
     function openDetailedCardModal(cat) {
@@ -937,7 +959,7 @@
           
           const isFav = favorites.includes(normalizeCat(o.categoria));
           if (isFav) favItems.push(o);
-          else normalItems.push(o);
+          normalItems.push(o);
 
           const cardPer = getBudgetCardPeriod(o.categoria);
           const d = getCardData(o, cardPer);
@@ -1007,14 +1029,17 @@
       let html = '';
       if (favItems.length > 0) {
         html += `<div class="budget-favorites-section">
-          <div class="budget-favorites-title">⭐ Favoritos</div>
+          <div class="budget-favorites-title">⭐ Favoritos (Em Detalhes)</div>
           <div class="budget-grid">`;
-        favItems.forEach(o => { html += buildBudgetCard(o, true); });
+        favItems.forEach(o => { html += buildBudgetCard(o, true, true); });
         html += `</div></div>`;
       }
 
       html += `<div class="budget-grid">`;
-      normalItems.forEach(o => { html += buildBudgetCard(o, false); });
+      normalItems.forEach(o => { 
+        const isFav = favorites.includes(normalizeCat(o.categoria));
+        html += buildBudgetCard(o, isFav, false); 
+      });
       html += `</div>`;
 
       budgetContainer.innerHTML = html;
