@@ -315,11 +315,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <span style="color: var(--text-primary); font-weight: bold;">R$ ${Math.abs(d.valor).toFixed(2)}</span>
           </div>
           <div style="color: var(--text-primary); font-size: 1rem; font-weight: 500;">${d.descricao}</div>
-          <div style="margin-top: 0.5rem;">
-            <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Categoria Sugerida (Confirme ou Troque):</label>
-            <select class="form-control category-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
-              ${opcoesCategoria.map(c => `<option value="${c}" ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
-            </select>
+          <div style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <div>
+              <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Categoria:</label>
+              <select class="form-control category-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+                ${opcoesCategoria.map(c => `<option value="${c}" ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Subcategoria:</label>
+              <input type="text" class="form-control subcategory-input" data-id="${d.id}" value="${d.subcategoria}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+            </div>
           </div>
         </div>
       `).join('');
@@ -350,10 +356,59 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       // Timeout para garantir que o DOM renderizou
       setTimeout(() => {
-        document.getElementById('btnSalvarRevisao').addEventListener('click', () => {
-          // Aqui leríamos os valores dos selects para atualizar o array \`resultadoIA\` e enviar para o Apps Script
-          document.getElementById('glassModal').classList.remove('active');
-          alert('Dados salvos na planilha com sucesso! (Simulação concluída)');
+        document.getElementById('btnSalvarRevisao').addEventListener('click', async () => {
+          // Atualiza as dúvidas com as edições do usuário
+          const duvidasAtualizadas = duvidas.map((d, index) => {
+            const selects = document.querySelectorAll('.category-select');
+            const inputs = document.querySelectorAll('.subcategory-input');
+            return {
+              ...d,
+              categoria: selects[index].value,
+              subcategoria: inputs[index].value
+            };
+          });
+
+          const transacoesFinais = [...certos, ...duvidasAtualizadas];
+
+          showGlassModal('Salvando...', `
+            <div style="text-align:center; padding: 3rem 1rem;">
+              <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+              <h3 style="color: var(--text-primary);">Gravando na Planilha...</h3>
+            </div>
+          `);
+
+          try {
+            const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
+            const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'salvar_ia',
+                transacoes: transacoesFinais
+              })
+            });
+
+            const json = await response.json();
+            if (json.status === 'success') {
+              showGlassModal('Sucesso!', `
+                <div style="text-align:center; padding: 2rem 1rem;">
+                  <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-income); margin-bottom: 1.5rem;"></i>
+                  <h3 style="color: var(--text-primary);">Tudo Salvo!</h3>
+                  <p style="color: var(--text-secondary);">Os lançamentos foram importados para a sua planilha e o robô aprendeu suas correções.</p>
+                </div>
+              `);
+              setTimeout(() => {
+                document.getElementById('glassModal').classList.remove('active');
+                window.location.reload();
+              }, 3000);
+            } else {
+              throw new Error(json.message);
+            }
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao salvar na planilha: " + err.message);
+            document.getElementById('glassModal').classList.remove('active');
+          }
         });
       }, 100);
     }
