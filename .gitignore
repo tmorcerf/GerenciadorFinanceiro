@@ -7,6 +7,7 @@
 !filters.js
 !current_script.js
 !dados.js
+!sw.js
 
 # Ignore sensitive files and data
 credentials.json
