@@ -398,6 +398,40 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
+    // Lógica para upload direto via botão na Web (Desktop)
+    const btnImportarIa = document.getElementById('btnImportarIa');
+    const uploadCsvIa = document.getElementById('uploadCsvIa');
+    
+    if (btnImportarIa && uploadCsvIa) {
+      btnImportarIa.addEventListener('click', () => {
+        uploadCsvIa.click();
+      });
+
+      uploadCsvIa.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const csvText = event.target.result;
+          const fileName = file.name;
+
+          showGlassModal('Processando Extrato', `
+            <div style="text-align:center; padding: 3rem 1rem;">
+              <i class="fas fa-robot fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom:0.5rem;">Analisando ${fileName}...</h3>
+              <p style="color: var(--text-secondary);">A IA está cruzando dados para categorizar suas compras.</p>
+            </div>
+          `);
+
+          const resultadoIA = await processarExtratoComIA(csvText);
+          renderizarRevisaoIA(resultadoIA);
+        };
+        reader.readAsText(file);
+      });
+    }
+
+
     async function init() {
       setupNavigation();
       

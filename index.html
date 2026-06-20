@@ -109,6 +109,12 @@
       <!-- Filters -->
       <div class="header-controls" style="display: flex; align-items: center; gap: 10px;">
 
+        <!-- Botão Importar Arquivo IA -->
+        <input type="file" id="uploadCsvIa" accept=".csv, .txt, .ofx" style="display: none;" />
+        <button id="btnImportarIa" title="Importar Extrato Inteligente" style="background: linear-gradient(135deg, var(--color-accent), #4f46e5); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; padding: 8px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(99,102,241,0.3); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Importar IA
+        </button>
 
         <button id="btnFeedback" title="Deixar Sugestão" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
           💡
