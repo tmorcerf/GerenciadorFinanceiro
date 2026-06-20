@@ -342,23 +342,31 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <i class="fas fa-check-circle" style="font-size: 2rem;"></i>
             <div>
               <h4 style="margin:0;">Processamento Concluído</h4>
-              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">A IA categorizou ${certos.length} compras com sucesso!</p>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">A IA categorizou ${certos.length} compras com certeza absoluta!</p>
             </div>
           </div>
           
-          <h4 style="color: var(--text-primary); margin-bottom: 1rem;"><i class="fas fa-question-circle" style="color: var(--color-expense);"></i> ${duvidas.length} itens requerem revisão:</h4>
-          
-          <div style="max-height: 50vh; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1.5rem;">
+          <div style="margin-bottom: 1.5rem;">
             ${linhasHTML}
           </div>
-          
-          <button class="btn btn-primary" id="btnSalvarRevisao" style="width:100%; padding: 1rem; font-size: 1.1rem;">
-            <i class="fas fa-save"></i> Salvar Lançamentos
-          </button>
         </div>
       `;
 
-      showGlassModal('Revisão Inteligente', html);
+      // Injeta o HTML no container
+      const containerList = document.getElementById('import-review-list');
+      const containerBox = document.getElementById('import-review-container');
+      const titleEl = document.getElementById('import-review-title');
+      
+      titleEl.innerHTML = `<i class="fas fa-question-circle" style="color: var(--color-expense);"></i> ${duvidas.length} itens requerem revisão:`;
+      containerList.innerHTML = html;
+      containerBox.style.display = 'block';
+
+      // Navega para o painel de importação
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      document.querySelectorAll('.dashboard-panel').forEach(panel => panel.classList.remove('active'));
+      const importNav = document.querySelector('[data-target="panel-import"]');
+      if (importNav) importNav.classList.add('active');
+      document.getElementById('panel-import').classList.add('active');
 
       // Listener para atualizar dropdowns em cascata
       setTimeout(() => {
@@ -372,7 +380,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
         });
 
-        document.getElementById('btnSalvarRevisao').addEventListener('click', async () => {
+        document.getElementById('btnSalvarRevisaoPanel').addEventListener('click', async () => {
           // Atualiza as dúvidas com as edições do usuário
           const duvidasAtualizadas = duvidas.map((d, index) => {
             const selects = document.querySelectorAll('.category-select');
@@ -385,6 +393,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
 
           const transacoesFinais = [...certos, ...duvidasAtualizadas];
+          
+          const modalAntigo = document.getElementById('glassModal');
+          if (modalAntigo) modalAntigo.classList.remove('active');
 
           showGlassModal('Salvando...', `
             <div style="text-align:center; padding: 3rem 1rem;">
@@ -406,6 +417,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             const json = await response.json();
             if (json.status === 'success') {
+              // Limpa a tela de revisão
+              containerBox.style.display = 'none';
+              containerList.innerHTML = '';
+              
               showGlassModal('Sucesso!', `
                 <div style="text-align:center; padding: 2rem 1rem;">
                   <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-income); margin-bottom: 1.5rem;"></i>
@@ -413,8 +428,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                   <p style="color: var(--text-secondary);">Os lançamentos foram importados para a sua planilha e o robô aprendeu suas correções.</p>
                 </div>
               `);
+              
               setTimeout(() => {
                 document.getElementById('glassModal').classList.remove('active');
+                
+                // Retorna para a Visão Geral e recarrega
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                document.querySelectorAll('.dashboard-panel').forEach(panel => panel.classList.remove('active'));
+                document.querySelector('[data-target="panel-overview"]').classList.add('active');
+                document.getElementById('panel-overview').classList.add('active');
+                
                 window.location.reload();
               }, 3000);
             } else {

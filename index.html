@@ -60,6 +60,18 @@
         </a>
       </li>
       <li>
+        <a class="nav-item" data-target="panel-categories">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Categorias
+        </a>
+      </li>
+      <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+        <a class="nav-item" data-target="panel-import">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Importar (IA)
+        </a>
+      </li>
+      <li>
         <a class="nav-item" data-target="panel-budgets">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           Orçamentos
@@ -108,14 +120,6 @@
 
       <!-- Filters -->
       <div class="header-controls" style="display: flex; align-items: center; gap: 10px;">
-
-        <!-- Botão Importar Arquivo IA -->
-        <input type="file" id="uploadCsvIa" accept=".csv, .txt, .ofx" style="display: none;" />
-        <button id="btnImportarIa" title="Importar Extrato Inteligente" style="background: linear-gradient(135deg, var(--color-accent), #4f46e5); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; padding: 8px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(99,102,241,0.3); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          Importar IA
-        </button>
-
         <button id="btnFeedback" title="Deixar Sugestão" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
           💡
         </button>
@@ -352,6 +356,39 @@
     </div>
 
 
+    <!-- 5. PANEL: IMPORTAÇÃO IA -->
+    <div id="panel-import" class="dashboard-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0;">Importação Inteligente (IA)</h2>
+        
+        <input type="file" id="uploadCsvIa" accept=".csv, .txt, .ofx" style="display: none;" />
+        <button id="btnImportarIa" title="Selecionar Arquivo" style="background: linear-gradient(135deg, var(--color-accent), #4f46e5); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; padding: 10px 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(99,102,241,0.4); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          Selecionar Arquivo
+        </button>
+      </div>
+
+      <div class="metric-card" style="margin-bottom: 1.5rem; text-align: left; padding: 1.5rem;">
+        <h3 style="margin-top: 0; color: var(--color-income);">Como funciona?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">1. Selecione um arquivo do seu banco (CSV, TXT ou OFX).</p>
+        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">2. Nossa IA analisará cada linha cruzando com o seu Dicionário de Categorias.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 0;">3. Você revisa apenas as dúvidas da IA nesta tela antes de salvar.</p>
+      </div>
+
+      <!-- Container onde os lançamentos em revisão serão injetados -->
+      <div id="import-review-container" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <h3 style="margin: 0;" id="import-review-title">Itens para Revisão</h3>
+          <button id="btnSalvarRevisaoPanel" style="background: var(--color-income); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+            Salvar Lançamentos
+          </button>
+        </div>
+        
+        <div id="import-review-list">
+          <!-- Transações injetadas via JS -->
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Modal Popup for Transactions -->
