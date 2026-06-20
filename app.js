@@ -260,6 +260,41 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
+    function showAILoadingModal(fileName) {
+      const msgs = [
+        "A IA está cruzando dados para categorizar suas compras...",
+        "Assustado com esse lançamento aqui... 😱",
+        "Hummm.... analisando possível compra supérflua... 🍔",
+        "Ensinando matemática financeira pro robô... 🧮",
+        "Procurando onde foi parar o seu dinheiro... 🕵️‍♂️",
+        "Escondendo essa fatura de você sabe quem... 🤫",
+        "Invocando os deuses da contabilidade... ⚡",
+        "Quase lá! O robô só parou pra tomar um cafézinho... ☕"
+      ];
+
+      showGlassModal('Processando Extrato', `
+        <div style="text-align:center; padding: 3rem 1rem;">
+          <i class="fas fa-robot fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+          <h3 style="color: var(--text-primary); margin-bottom:0.5rem;">Analisando ${fileName}...</h3>
+          <p id="funny-loading-msg" style="color: var(--text-secondary); font-size: 1.1rem; height: 3rem; display: flex; align-items: center; justify-content: center; font-style: italic;">${msgs[0]}</p>
+        </div>
+      `);
+
+      let i = 1;
+      return setInterval(() => {
+        const p = document.getElementById('funny-loading-msg');
+        if (p) {
+          p.innerText = msgs[i % msgs.length];
+          i++;
+        }
+      }, 3500);
+    }
+
+    function hideAILoadingModal(intervalId) {
+      if (intervalId) clearInterval(intervalId);
+      closeGlassModal();
+    }
+
     async function processarExtratoComIA(csvText, fileName = "extrato.csv") {
       const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
       
@@ -521,14 +556,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             // Limpa a URL para não processar de novo em F5
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            // Mostra o loading inicial
-            showGlassModal('Processando Extrato', `
-              <div style="text-align:center; padding: 3rem 1rem;">
-                <i class="fas fa-robot fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-                <h3 style="color: var(--text-primary); margin-bottom:0.5rem;">Analisando ${fileName}...</h3>
-                <p style="color: var(--text-secondary);">A IA está cruzando dados para categorizar suas compras.</p>
-              </div>
-            `);
+            // Mostra o loading inicial com mensagens dinâmicas
+            window.loadingInterval = showAILoadingModal(fileName);
 
             // Lê o texto do arquivo (na Fase 2 isso irá para o Webhook do n8n)
             const csvText = await response.text();
@@ -565,19 +594,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const csvText = event.target.result;
           const fileName = file.name;
 
-          showGlassModal('Processando Extrato', `
-            <div style="text-align:center; padding: 3rem 1rem;">
-              <i class="fas fa-robot fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-              <h3 style="color: var(--text-primary); margin-bottom:0.5rem;">Analisando ${fileName}...</h3>
-              <p style="color: var(--text-secondary);">A IA está cruzando dados para categorizar suas compras.</p>
-            </div>
-          `);
+          window.loadingInterval = showAILoadingModal(fileName);
 
           try {
             const resultadoIA = await processarExtratoComIA(csvText, fileName);
-            closeGlassModal();
+            hideAILoadingModal(window.loadingInterval);
             renderizarRevisaoIA(resultadoIA);
           } catch (err) {
+            hideAILoadingModal(window.loadingInterval);
             console.error('Erro na IA:', err);
             document.getElementById('glassModal').innerHTML = `
               <div class="glass-modal-header" style="justify-content: flex-end;">
