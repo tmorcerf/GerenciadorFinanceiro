@@ -12,28 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Orçamento">
+
 </head>
 <body>
 
-  <!-- Mobile Top Header -->
-  <div class="mobile-top-header">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <div class="logo-icon" style="width: 32px; height: 32px; min-width: 32px;">
-        <svg viewBox="0 0 24 24" style="width: 100%; height: 100%; color: var(--color-accent); fill: var(--color-accent);">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div style="display: flex; flex-direction: column;">
-        <span style="font-weight: 600; font-size: 1rem; color: var(--text-primary); line-height: 1;">Controle Financeiro</span>
-        <span style="font-size: 0.7rem; color: var(--color-income);">Sincronizado Online</span>
-      </div>
     </div>
-  </div>
 
   <!-- Loading Screen -->
   <div id="loading-screen" class="loading-overlay">
@@ -68,19 +51,13 @@
       <li>
         <a class="nav-item" data-target="panel-accounts">
           <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          Saldos
+          Contas Bancárias
         </a>
       </li>
       <li>
         <a class="nav-item" data-target="panel-investments">
           <svg viewBox="0 0 24 24"><path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
           Investimentos
-        </a>
-      </li>
-      <li>
-        <a class="nav-item" data-target="panel-credit-cards">
-          <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-          Cartões
         </a>
       </li>
       <li>
@@ -225,37 +202,7 @@
 
     <!-- 2. PANEL: BUDGETS -->
     <div id="panel-budgets" class="dashboard-panel">
-      
-      <!-- BUDGET DASHBOARD -->
-      <div id="budgets-dashboard" style="margin-bottom: 2.5rem;">
-        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de Orçamentos</h2>
-        
-        <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-          <div class="card" style="border-top: 3px solid #3b82f6;">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Teto Global (Soma das Metas)</span></div>
-            <div id="budget-dash-teto" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
-          </div>
-          <div class="card" style="border-top: 3px solid var(--color-expense);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Realizado Acumulado</span></div>
-            <div id="budget-dash-realizado" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
-          </div>
-          <div class="card" style="border-top: 3px solid var(--color-income);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Espaço Livre Global</span></div>
-            <div id="budget-dash-livre" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
-          </div>
-          <div class="card" style="border-top: 3px solid #8b5cf6;">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do Orçamento</span></div>
-            <div id="budget-dash-saude" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">0%</div>
-          </div>
-        </div>
-
-        <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column; margin-bottom: 2rem;">
-          <div class="card-header"><span style="font-weight:600;">Consumo por Categoria</span></div>
-          <div style="flex:1; position:relative; min-height:0;"><canvas id="budget-consumption-chart"></canvas></div>
-        </div>
-      </div>
-
-      <h2 class="chart-title" style="font-size: 1.2rem; margin-bottom: 1.5rem;"><i class="fas fa-sliders-h" style="margin-right:8px;"></i> Acompanhamento Individual</h2>
+      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Controle de Orçamentos (Metas de Gastos)</h2>
       <div id="budget-container">
         <!-- Content loaded via JavaScript -->
       </div>
@@ -263,23 +210,13 @@
 
     <!-- 3. PANEL: ACCOUNTS -->
     <div id="panel-accounts" class="dashboard-panel">
-      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Saldos das Contas & Investimentos</h2>
+      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Saldos das Contas & Cartões</h2>
       <div id="accounts-container" class="accounts-grid">
         <!-- Content loaded via JavaScript -->
       </div>
     </div>
 
-    <!-- 4. PANEL: CREDIT CARDS -->
-    <div id="panel-credit-cards" class="dashboard-panel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-        <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Resumo de Faturas</h2>
-      </div>
-      <div id="credit-cards-dashboard">
-        <!-- Resumo e Gráfico injetados aqui -->
-      </div>
-    </div>
-
-    <!-- 5. PANEL: INVESTMENTS -->
+    <!-- 3B. PANEL: INVESTMENTS -->
     <div id="panel-investments" class="dashboard-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Investimentos</h2>
@@ -301,15 +238,15 @@
       <!-- INVESTMENT DASHBOARD -->
       <div id="investments-dashboard" style="margin-bottom: 2.5rem; display: none;">
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-          <div class="card clickable-card" style="border-top: 3px solid var(--color-income); cursor: pointer;" onclick="showInvestmentsModal('aportes')">
+          <div class="card" style="border-top: 3px solid var(--color-income);">
             <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do Período</span></div>
             <div id="inv-dash-aportes" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
-          <div class="card clickable-card" style="border-top: 3px solid #8b5cf6; cursor: pointer;" onclick="showInvestmentsModal('rendimentos')">
+          <div class="card" style="border-top: 3px solid #8b5cf6;">
             <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento Líquido</span></div>
             <div id="inv-dash-rendimento" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
-          <div class="card clickable-card" style="border-top: 3px solid var(--color-expense); cursor: pointer;" onclick="showInvestmentsModal('resgates')">
+          <div class="card" style="border-top: 3px solid var(--color-expense);">
             <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do Período</span></div>
             <div id="inv-dash-resgates" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
@@ -321,7 +258,7 @@
 
         <div class="charts-grid">
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
-            <div class="card-header"><span style="font-weight:600;">Evolução: Aportes, Rendimentos e Resgates</span></div>
+            <div class="card-header"><span style="font-weight:600;">Evolução: Aportes vs Rendimentos</span></div>
             <div style="flex:1; position:relative; min-height:0;"><canvas id="inv-history-chart"></canvas></div>
           </div>
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
@@ -424,16 +361,6 @@
         if (e.target.id === 'detailedModal') document.getElementById('detailedModal').classList.remove('show');
       });
     });
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').then(registration => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, err => {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
-    }
   </script>
 </body>
 </html>

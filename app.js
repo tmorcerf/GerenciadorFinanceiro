@@ -249,6 +249,46 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     // App Initialize Logic
+    async function checkSharedFile() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('shared') === 'true') {
+        try {
+          const cache = await caches.open('shared-files-cache');
+          const response = await cache.match('/shared-extrato-file');
+          
+          if (response) {
+            const fileName = response.headers.get('X-Original-Name') || 'extrato_compartilhado';
+            
+            // Limpa a URL para não processar de novo em F5
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            const html = `
+              <div style="text-align:center; padding: 1rem;">
+                <div style="font-size:3rem; color:var(--color-income); margin-bottom:1rem;">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h3 style="color:var(--text-primary); margin-bottom:0.5rem;">Arquivo Recebido!</h3>
+                <p style="color:var(--text-secondary); margin-bottom:1.5rem;">O arquivo <strong>${fileName}</strong> foi capturado com sucesso.</p>
+                
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">
+                  Na Fase 1, este botão enviará o arquivo direto para o seu fluxo de IA (N8N/Google Apps Script).
+                </p>
+                
+                <button class="btn btn-primary" style="width:100%; padding:0.8rem;" onclick="alert('Em breve: Upload automático via Webhook!')">
+                  Processar Extrato (IA)
+                </button>
+              </div>
+            `;
+            showGlassModal('Compartilhamento via App', html);
+            
+            await cache.delete('/shared-extrato-file');
+          }
+        } catch (err) {
+          console.error('Erro ao ler arquivo compartilhado:', err);
+        }
+      }
+    }
+
     async function init() {
       setupNavigation();
       
@@ -266,7 +306,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       initCharts();
       renderInvestmentsDashboard();
       renderCreditCardsDashboard();
-      renderCreditCardsDashboard();
+      
+      // Captura de arquivo compartilhado nativamente
+      await checkSharedFile();
 
       // Events listeners
       bindTabPeriodSelectors();
