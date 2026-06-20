@@ -260,12 +260,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
-    async function processarExtratoComIA(csvText) {
-      // ATENÇÃO: Esta é a URL do seu Google Apps Script (Servidor Blindado)
-      // O Antigravity vai injetar a URL real aqui assim que você enviar no chat!
-      const webhookUrl = 'https://script.google.com/macros/s/AKfycbxr9YewljAU2MF9uZoV52tGVEZwFMaOD_Iyg7bxsekE8-RI4a0_8giiMbqzc_bYNDZxSQ/exec'; 
+    async function processarExtratoComIA(csvText, fileName = "extrato.csv") {
+      // Utiliza a variável global que chaveia entre Produção e Testes
+      const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
       
-      if (webhookUrl === 'AGUARDANDO_URL_DO_APPS_SCRIPT') {
+      if (!webhookUrl || webhookUrl === 'AGUARDANDO_URL_DO_APPS_SCRIPT') {
         throw new Error("A URL do servidor ainda não foi configurada no app.js");
       }
 
@@ -279,7 +278,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           body: JSON.stringify({
             action: 'process_csv',
             csvText: csvText,
-            fileName: 'extrato.csv'
+            fileName: fileName
           })
         });
 
