@@ -249,6 +249,87 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     // App Initialize Logic
+    async function processarExtratoComIA(csvText) {
+      // Simulando tempo de rede e processamento da IA (N8N / Gemini)
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // Vamos simular a resposta da IA. 
+          // 4 lançamentos certos (alta confiança) e 2 lançamentos "estranhos" (baixa confiança/dúvida).
+          resolve([
+            { id: 1, data: "10/06/2026", descricao: "UBER DO BRASIL", valor: -25.50, categoria: "Transporte", conta: "Cartão", duvida: false },
+            { id: 2, data: "11/06/2026", descricao: "PAG*SUPERMERCADO", valor: -150.00, categoria: "Alimentação", conta: "Cartão", duvida: false },
+            { id: 3, data: "12/06/2026", descricao: "POSTO IPIRANGA", valor: -100.00, categoria: "Transporte", conta: "Cartão", duvida: false },
+            { id: 4, data: "12/06/2026", descricao: "NETFLIX", valor: -39.90, categoria: "Lazer", conta: "Cartão", duvida: false },
+            // Dúvidas (O motor da IA marca duvida: true para forçar Human-in-the-loop)
+            { id: 5, data: "13/06/2026", descricao: "PIX PARA JOAO DA SILVA", valor: -80.00, categoria: "Outros", conta: "Conta Corrente", duvida: true },
+            { id: 6, data: "14/06/2026", descricao: "PAG*LIVRARIA", valor: -45.00, categoria: "Educação", conta: "Cartão", duvida: true }
+          ]);
+        }, 2500);
+      });
+    }
+
+    function renderizarRevisaoIA(resultadoIA) {
+      const duvidas = resultadoIA.filter(item => item.duvida);
+      const certos = resultadoIA.filter(item => !item.duvida);
+      
+      // Categorias hardcoded para o mock (as mesmas do app)
+      const opcoesCategoria = ["Alimentação", "Moradia", "Transporte", "Saúde", "Lazer", "Educação", "Vestuário", "Outros"];
+
+      if (duvidas.length === 0) {
+        showGlassModal('Sucesso Absoluto', `A IA processou todos os ${certos.length} lançamentos com 100% de certeza!`);
+        return;
+      }
+
+      let linhasHTML = duvidas.map(d => `
+        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; border-left: 4px solid var(--color-expense);">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-secondary); font-size: 0.85rem;">${d.data} • ${d.conta}</span>
+            <span style="color: var(--text-primary); font-weight: bold;">R$ ${Math.abs(d.valor).toFixed(2)}</span>
+          </div>
+          <div style="color: var(--text-primary); font-size: 1rem; font-weight: 500;">${d.descricao}</div>
+          <div style="margin-top: 0.5rem;">
+            <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Categoria Sugerida (Confirme ou Troque):</label>
+            <select class="form-control category-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+              ${opcoesCategoria.map(c => `<option value="${c}" ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      `).join('');
+
+      const html = `
+        <div style="padding: 0.5rem;">
+          <div style="background: rgba(34, 197, 94, 0.1); color: var(--color-income); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; gap: 1rem;">
+            <i class="fas fa-check-circle" style="font-size: 2rem;"></i>
+            <div>
+              <h4 style="margin:0;">Processamento Concluído</h4>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">A IA categorizou ${certos.length} compras com sucesso!</p>
+            </div>
+          </div>
+          
+          <h4 style="color: var(--text-primary); margin-bottom: 1rem;"><i class="fas fa-question-circle" style="color: var(--color-expense);"></i> ${duvidas.length} itens requerem revisão:</h4>
+          
+          <div style="max-height: 50vh; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1.5rem;">
+            ${linhasHTML}
+          </div>
+          
+          <button class="btn btn-primary" id="btnSalvarRevisao" style="width:100%; padding: 1rem; font-size: 1.1rem;">
+            <i class="fas fa-save"></i> Salvar Lançamentos
+          </button>
+        </div>
+      `;
+
+      showGlassModal('Revisão Inteligente', html);
+
+      // Timeout para garantir que o DOM renderizou
+      setTimeout(() => {
+        document.getElementById('btnSalvarRevisao').addEventListener('click', () => {
+          // Aqui leríamos os valores dos selects para atualizar o array \`resultadoIA\` e enviar para o Apps Script
+          document.getElementById('glassModal').classList.remove('active');
+          alert('Dados salvos na planilha com sucesso! (Simulação concluída)');
+        });
+      }, 100);
+    }
+
     async function checkSharedFile() {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('shared') === 'true') {
@@ -257,29 +338,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const response = await cache.match('/shared-extrato-file');
           
           if (response) {
-            const fileName = response.headers.get('X-Original-Name') || 'extrato_compartilhado';
+            const fileName = response.headers.get('X-Original-Name') || 'extrato_compartilhado.csv';
             
             // Limpa a URL para não processar de novo em F5
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            const html = `
-              <div style="text-align:center; padding: 1rem;">
-                <div style="font-size:3rem; color:var(--color-income); margin-bottom:1rem;">
-                  <i class="fas fa-file-invoice-dollar"></i>
-                </div>
-                <h3 style="color:var(--text-primary); margin-bottom:0.5rem;">Arquivo Recebido!</h3>
-                <p style="color:var(--text-secondary); margin-bottom:1.5rem;">O arquivo <strong>${fileName}</strong> foi capturado com sucesso.</p>
-                
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">
-                  Na Fase 1, este botão enviará o arquivo direto para o seu fluxo de IA (N8N/Google Apps Script).
-                </p>
-                
-                <button class="btn btn-primary" style="width:100%; padding:0.8rem;" onclick="alert('Em breve: Upload automático via Webhook!')">
-                  Processar Extrato (IA)
-                </button>
+            // Mostra o loading inicial
+            showGlassModal('Processando Extrato', `
+              <div style="text-align:center; padding: 3rem 1rem;">
+                <i class="fas fa-robot fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+                <h3 style="color: var(--text-primary); margin-bottom:0.5rem;">Analisando ${fileName}...</h3>
+                <p style="color: var(--text-secondary);">A IA está cruzando dados para categorizar suas compras.</p>
               </div>
-            `;
-            showGlassModal('Compartilhamento via App', html);
+            `);
+
+            // Lê o texto do arquivo (na Fase 2 isso irá para o Webhook do n8n)
+            const csvText = await response.text();
+            
+            // Chama a API de IA (Simulação por enquanto)
+            const resultadoIA = await processarExtratoComIA(csvText);
+            
+            // Renderiza a interface de Human-in-the-Loop focada nas dúvidas
+            renderizarRevisaoIA(resultadoIA);
             
             await cache.delete('/shared-extrato-file');
           }
