@@ -458,7 +458,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     
     if (btnImportarIa && uploadCsvIa) {
       btnImportarIa.addEventListener('click', () => {
-        uploadCsvIa.click();
+        const warningMessage = "ATENÇÃO:\n\nAntes de importar, certifique-se de que as Categorias, Subcategorias e Nomes de Contas que você deseja que a IA utilize estão CADASTRADAS na sua planilha oficial (abas REGRAS e CONTAS).\n\nA IA do Claude 4.8 é programada para cruzar e validar as categorias usando a sua base. Se não estiver lá, ela pode classificar como DIVERSOS.\n\nPodemos continuar e enviar o arquivo para análise?";
+        if(confirm(warningMessage)) {
+          uploadCsvIa.click();
+        }
       });
 
       uploadCsvIa.addEventListener('change', (e) => {
