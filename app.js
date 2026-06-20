@@ -295,7 +295,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       closeGlassModal();
     }
 
-    async function processarExtratoComIA(csvText, fileName = "extrato.csv") {
+    async function processarExtratoComIA(csvText, fileName = "extrato.csv", modelName = "claude-opus-4-8") {
       const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
       
       if (!webhookUrl || webhookUrl === 'AGUARDANDO_URL_DO_APPS_SCRIPT') {
@@ -345,13 +345,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (modalH3) modalH3.innerText = `Classificando ${transacoesIneditas.length} inéditas...`;
         if (modalP) modalP.innerText = `Filtro Local ignorou ${ignoradas} duplicidades. Chamando Mestre V14...`;
 
-        // PASSO 3: O Cérebro Coletivo (Opus 4.8)
+        // PASSO 3: O Cérebro Coletivo (Ou outro modelo em teste)
         const resCategorizar = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'categorize_json',
-            payload: JSON.stringify(transacoesIneditas)
+            payload: JSON.stringify(transacoesIneditas),
+            model: modelName
           })
         });
 
@@ -585,12 +586,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     // Lógica para upload direto via botão na Web (Desktop)
-    const btnImportarIa = document.getElementById('btnImportarIa');
+    let selectedIaModel = 'claude-opus-4-8';
+    const btnImportModels = document.querySelectorAll('.btn-import-model');
     const uploadCsvIa = document.getElementById('uploadCsvIa');
     
-    if (btnImportarIa && uploadCsvIa) {
-      btnImportarIa.addEventListener('click', () => {
-        uploadCsvIa.click();
+    if (btnImportModels.length > 0 && uploadCsvIa) {
+      btnImportModels.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          selectedIaModel = e.currentTarget.getAttribute('data-model');
+          uploadCsvIa.click();
+        });
       });
 
       uploadCsvIa.addEventListener('change', (e) => {
@@ -605,7 +610,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           window.loadingInterval = showAILoadingModal(fileName);
 
           try {
-            const resultadoIA = await processarExtratoComIA(csvText, fileName);
+            const resultadoIA = await processarExtratoComIA(csvText, fileName, selectedIaModel);
             hideAILoadingModal(window.loadingInterval);
             renderizarRevisaoIA(resultadoIA);
           } catch (err) {
