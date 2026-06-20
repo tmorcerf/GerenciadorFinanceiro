@@ -471,7 +471,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
         });
 
-        document.getElementById('btnSalvarRevisaoPanel').addEventListener('click', async () => {
+        const saveHandler = async () => {
           // Atualiza as dúvidas com as edições do usuário
           const duvidasAtualizadas = duvidas.map((d, index) => {
             const selects = document.querySelectorAll('.category-select');
@@ -487,6 +487,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           
           const modalAntigo = document.getElementById('glassModal');
           if (modalAntigo) modalAntigo.classList.remove('active');
+
 
           showGlassModal('Salvando...', `
             <div style="text-align:center; padding: 3rem 1rem;">
@@ -539,7 +540,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             alert("Erro ao salvar na planilha: " + err.message);
             document.getElementById('glassModal').classList.remove('active');
           }
-        });
+        };
+
+        const btnSalvarTopo = document.getElementById('btnSalvarRevisaoPanel');
+        const btnSalvarRodape = document.getElementById('btnSalvarRevisaoPanelBottom');
+        
+        if (btnSalvarTopo) btnSalvarTopo.addEventListener('click', saveHandler);
+        if (btnSalvarRodape) btnSalvarRodape.addEventListener('click', saveHandler);
+
       }, 100);
     }
 
