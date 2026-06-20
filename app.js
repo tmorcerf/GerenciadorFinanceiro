@@ -34,7 +34,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1748033613&single=true&output=csv';
       CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=2078075619&single=true&output=csv';
       CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=0&single=true&output=csv'; // Fallback na aba 0 se não existir
-      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxzj7hRbLeAv_s5ygKbQf_6FEMCGC-8X61n3_U9DcHDibAmMNxQVr-S39cgqdToTt-AMg/exec';
+      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyFU40et1-9GM0KN0HIIsjXfirk1EjdRHpAkNDenTr6B312x-8_kPb_1gHLjeh1O9zq0w/exec';
     }
 
     // Global Data State
