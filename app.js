@@ -261,7 +261,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     async function processarExtratoComIA(csvText, fileName = "extrato.csv") {
-      // Utiliza a variável global que chaveia entre Produção e Testes
       const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
       
       if (!webhookUrl || webhookUrl === 'AGUARDANDO_URL_DO_APPS_SCRIPT') {
@@ -269,29 +268,74 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       try {
-        const response = await fetch(webhookUrl, {
+        // PASSO 1: O Extrator Bruto (Haiku)
+        const resExtrair = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
-            action: 'process_csv',
+            action: 'extract_raw',
             csvText: csvText,
             fileName: fileName
           })
         });
 
-        const json = await response.json();
+        const jsonBruto = await resExtrair.json();
+        if (jsonBruto.status !== 'success') {
+          throw new Error(jsonBruto.message || "Erro na etapa de extração bruta.");
+        }
+
+        // PASSO 2: Conformador Anti-Duplicidade (Local JS)
+        const historico = window.dadosFinanceiros.lancamentos || [];
+        const transacoesExtraidas = jsonBruto.data || [];
         
-        if (json.status !== 'success') {
-          throw new Error(json.message || "Erro desconhecido da IA.");
+        const transacoesIneditas = transacoesExtraidas.filter(t => {
+          // Busca no histórico Lançamentos se existe Data e Valor idênticos
+          const isDuplicate = historico.some(h => 
+            h.data === t.data && 
+            Math.abs(h.valor - t.valor) < 0.01
+          );
+          return !isDuplicate;
+        });
+
+        const ignoradas = transacoesExtraidas.length - transacoesIneditas.length;
+
+        // Se não sobrar nenhuma inédita, não gasta token com o Opus
+        if (transacoesIneditas.length === 0) {
+          throw new Error(`Das ${transacoesExtraidas.length} transações extraídas, TODAS já constavam no seu histórico de Lançamentos. Nenhuma transação inédita encontrada.`);
+        }
+
+        // Atualiza a tela de Loading informando a economia
+        const modalH3 = document.querySelector('#glassModal h3');
+        const modalP = document.querySelector('#glassModal p');
+        if (modalH3) modalH3.innerText = `Classificando ${transacoesIneditas.length} inéditas...`;
+        if (modalP) modalP.innerText = `Filtro Local ignorou ${ignoradas} duplicidades. Chamando Mestre V14...`;
+
+        // PASSO 3: O Cérebro Coletivo (Opus 4.8)
+        const resCategorizar = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'categorize_json',
+            payload: JSON.stringify(transacoesIneditas)
+          })
+        });
+
+        const jsonCat = await resCategorizar.json();
+        
+        if (jsonCat.status !== 'success') {
+          throw new Error(jsonCat.message || "Erro desconhecido na categorização.");
         }
 
         // Armazena o dicionário globalmente para a tela de revisão
-        window.dicionarioCategorias = json.dicionario;
+        window.dicionarioCategorias = jsonCat.dicionario;
 
-        // Retorna o Array de transações
-        return json.data;
+        // Opcional: injetar quantas foram ignoradas no resultado global para mostrar no painel
+        window.resumoDuplicidades = { total: transacoesExtraidas.length, ignoradas: ignoradas };
+
+        // Retorna o Array categorizado final
+        return jsonCat.data;
       } catch (err) {
-        console.error("Erro ao chamar o backend da IA:", err);
+        console.error("Erro na Esteira V14:", err);
         throw err;
       }
     }
@@ -336,13 +380,25 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         </div>
       `}).join('');
 
+      const resumoDups = window.resumoDuplicidades || { total: 0, ignoradas: 0 };
+      const bannerDups = resumoDups.ignoradas > 0 ? `
+        <div style="background: rgba(234, 179, 8, 0.1); color: var(--color-warning); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; gap: 1rem; border: 1px solid rgba(234, 179, 8, 0.2);">
+          <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
+          <div>
+            <h4 style="margin:0;">Filtro Anti-Duplicidade Ativado</h4>
+            <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Protegemos você! Das ${resumoDups.total} transações no arquivo, <b>${resumoDups.ignoradas}</b> já existiam no seu histórico e foram sumariamente descartadas.</p>
+          </div>
+        </div>
+      ` : '';
+
       const html = `
         <div style="padding: 0.5rem;">
+          ${bannerDups}
           <div style="background: rgba(34, 197, 94, 0.1); color: var(--color-income); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; gap: 1rem;">
             <i class="fas fa-check-circle" style="font-size: 2rem;"></i>
             <div>
               <h4 style="margin:0;">Processamento Concluído</h4>
-              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">A IA categorizou ${certos.length} compras com certeza absoluta!</p>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">O Cérebro Coletivo (V14) categorizou ${certos.length} compras inéditas com certeza absoluta!</p>
             </div>
           </div>
           
