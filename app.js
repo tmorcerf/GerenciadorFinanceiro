@@ -519,6 +519,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
           try {
             const resultadoIA = await processarExtratoComIA(csvText, fileName);
+            closeGlassModal();
             renderizarRevisaoIA(resultadoIA);
           } catch (err) {
             console.error('Erro na IA:', err);
