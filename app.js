@@ -271,10 +271,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       try {
         const response = await fetch(webhookUrl, {
           method: 'POST',
-          headers: {
-            // Usamos text/plain para evitar que o navegador bloqueie a requisição por causa de CORS no Google
-            'Content-Type': 'text/plain;charset=utf-8', 
-          },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'process_csv',
             csvText: csvText,
@@ -285,10 +282,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const json = await response.json();
         
         if (json.status !== 'success') {
-          throw new Error(json.message || 'Erro desconhecido retornado pelo servidor da IA.');
+          throw new Error(json.message || "Erro desconhecido da IA.");
         }
 
-        // Retorna o Array de transações (já processadas pelo Claude no servidor)
+        // Armazena o dicionário globalmente para a tela de revisão
+        window.dicionarioCategorias = json.dicionario;
+
+        // Retorna o Array de transações
         return json.data;
       } catch (err) {
         console.error("Erro ao chamar o backend da IA:", err);
@@ -300,15 +300,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const duvidas = resultadoIA.filter(item => item.duvida);
       const certos = resultadoIA.filter(item => !item.duvida);
       
-      // Categorias hardcoded para o mock (as mesmas do app)
-      const opcoesCategoria = ["Alimentação", "Moradia", "Transporte", "Saúde", "Lazer", "Educação", "Vestuário", "Outros"];
+      const dicionario = window.dicionarioCategorias || {};
+      const opcoesCategoria = Object.keys(dicionario);
 
       if (duvidas.length === 0) {
         showGlassModal('Sucesso Absoluto', `A IA processou todos os ${certos.length} lançamentos com 100% de certeza!`);
         return;
       }
 
-      let linhasHTML = duvidas.map(d => `
+      let linhasHTML = duvidas.map(d => {
+        const catAtual = d.categoria || opcoesCategoria[0];
+        const opcoesSub = dicionario[catAtual] || [];
+        
+        return `
         <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; border-left: 4px solid var(--color-expense);">
           <div style="display: flex; justify-content: space-between;">
             <span style="color: var(--text-secondary); font-size: 0.85rem;">${d.data} • ${d.conta}</span>
@@ -324,11 +328,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
             <div>
               <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Subcategoria:</label>
-              <input type="text" class="form-control subcategory-input" data-id="${d.id}" value="${d.subcategoria}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+              <select class="form-control subcategory-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+                ${opcoesSub.map(s => `<option value="${s}" ${s === d.subcategoria ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
             </div>
           </div>
         </div>
-      `).join('');
+      `}).join('');
 
       const html = `
         <div style="padding: 0.5rem;">
@@ -354,17 +360,27 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       showGlassModal('Revisão Inteligente', html);
 
-      // Timeout para garantir que o DOM renderizou
+      // Listener para atualizar dropdowns em cascata
       setTimeout(() => {
+        document.querySelectorAll('.category-select').forEach(select => {
+          select.addEventListener('change', (e) => {
+            const cat = e.target.value;
+            const container = e.target.closest('.grid-template-columns') || e.target.parentElement.parentElement;
+            const subSelect = container.querySelector('.subcategory-select');
+            const subs = dicionario[cat] || [];
+            subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+          });
+        });
+
         document.getElementById('btnSalvarRevisao').addEventListener('click', async () => {
           // Atualiza as dúvidas com as edições do usuário
           const duvidasAtualizadas = duvidas.map((d, index) => {
             const selects = document.querySelectorAll('.category-select');
-            const inputs = document.querySelectorAll('.subcategory-input');
+            const subSelects = document.querySelectorAll('.subcategory-select');
             return {
               ...d,
               categoria: selects[index].value,
-              subcategoria: inputs[index].value
+              subcategoria: subSelects[index].value
             };
           });
 
