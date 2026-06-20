@@ -248,24 +248,41 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
-    // App Initialize Logic
     async function processarExtratoComIA(csvText) {
-      // Simulando tempo de rede e processamento da IA (N8N / Gemini)
-      return new Promise(resolve => {
-        setTimeout(() => {
-          // Vamos simular a resposta da IA. 
-          // 4 lançamentos certos (alta confiança) e 2 lançamentos "estranhos" (baixa confiança/dúvida).
-          resolve([
-            { id: 1, data: "10/06/2026", descricao: "UBER DO BRASIL", valor: -25.50, categoria: "Transporte", conta: "Cartão", duvida: false },
-            { id: 2, data: "11/06/2026", descricao: "PAG*SUPERMERCADO", valor: -150.00, categoria: "Alimentação", conta: "Cartão", duvida: false },
-            { id: 3, data: "12/06/2026", descricao: "POSTO IPIRANGA", valor: -100.00, categoria: "Transporte", conta: "Cartão", duvida: false },
-            { id: 4, data: "12/06/2026", descricao: "NETFLIX", valor: -39.90, categoria: "Lazer", conta: "Cartão", duvida: false },
-            // Dúvidas (O motor da IA marca duvida: true para forçar Human-in-the-loop)
-            { id: 5, data: "13/06/2026", descricao: "PIX PARA JOAO DA SILVA", valor: -80.00, categoria: "Outros", conta: "Conta Corrente", duvida: true },
-            { id: 6, data: "14/06/2026", descricao: "PAG*LIVRARIA", valor: -45.00, categoria: "Educação", conta: "Cartão", duvida: true }
-          ]);
-        }, 2500);
-      });
+      // ATENÇÃO: Esta é a URL do seu Google Apps Script (Servidor Blindado)
+      // O Antigravity vai injetar a URL real aqui assim que você enviar no chat!
+      const webhookUrl = 'https://script.google.com/macros/s/AKfycbxr9YewljAU2MF9uZoV52tGVEZwFMaOD_Iyg7bxsekE8-RI4a0_8giiMbqzc_bYNDZxSQ/exec'; 
+      
+      if (webhookUrl === 'AGUARDANDO_URL_DO_APPS_SCRIPT') {
+        throw new Error("A URL do servidor ainda não foi configurada no app.js");
+      }
+
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            // Usamos text/plain para evitar que o navegador bloqueie a requisição por causa de CORS no Google
+            'Content-Type': 'text/plain;charset=utf-8', 
+          },
+          body: JSON.stringify({
+            action: 'process_csv',
+            csvText: csvText,
+            fileName: 'extrato.csv'
+          })
+        });
+
+        const json = await response.json();
+        
+        if (json.status !== 'success') {
+          throw new Error(json.message || 'Erro desconhecido retornado pelo servidor da IA.');
+        }
+
+        // Retorna o Array de transações (já processadas pelo Claude no servidor)
+        return json.data;
+      } catch (err) {
+        console.error("Erro ao chamar o backend da IA:", err);
+        throw err;
+      }
     }
 
     function renderizarRevisaoIA(resultadoIA) {
