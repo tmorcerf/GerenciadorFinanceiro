@@ -423,8 +423,22 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
           `);
 
-          const resultadoIA = await processarExtratoComIA(csvText);
-          renderizarRevisaoIA(resultadoIA);
+          try {
+            const resultadoIA = await processarExtratoComIA(csvText, fileName);
+            renderizarRevisaoIA(resultadoIA);
+          } catch (err) {
+            console.error('Erro na IA:', err);
+            document.getElementById('glassModal').innerHTML = `
+              <div class="glass-modal-header" style="justify-content: flex-end;">
+                <button class="tx-modal-close" onclick="document.getElementById('glassModal').classList.remove('active')">&times;</button>
+              </div>
+              <div class="glass-modal-body" style="text-align: center; color: var(--color-expense); padding: 2rem;">
+                <p style="font-weight:600; margin-bottom:0.5rem; font-size: 1.2rem;">Falha na Inteligência Artificial</p>
+                <p style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">${err.message}</p>
+                <p style="font-size:0.8rem; margin-top: 1rem; color:var(--text-secondary);">Dica: Verifique se você configurou a sua API Key da Anthropic no Apps Script, e se fez uma Nova Implantação.</p>
+              </div>
+            `;
+          }
         };
         reader.readAsText(file);
       });
