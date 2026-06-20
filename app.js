@@ -285,7 +285,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         // PASSO 2: Conformador Anti-Duplicidade (Local JS)
-        const historico = window.dadosFinanceiros.lancamentos || [];
+        const historico = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.lancamentos) ? dadosFinanceiros.lancamentos : [];
         const transacoesExtraidas = jsonBruto.data || [];
         
         const transacoesIneditas = transacoesExtraidas.filter(t => {
