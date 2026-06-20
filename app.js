@@ -287,7 +287,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           p.innerText = msgs[i % msgs.length];
           i++;
         }
-      }, 3500);
+      }, 10000);
     }
 
     function hideAILoadingModal(intervalId) {
