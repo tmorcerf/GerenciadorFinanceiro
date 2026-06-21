@@ -635,6 +635,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     async function init() {
       setupNavigation();
+      setupSwipeNavigation();
       
       const success = await loadDataFromSheets();
       if (!success) return; // Stop if sheets are not loaded
@@ -729,6 +730,70 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
         });
       });
+    }
+
+    function setupSwipeNavigation() {
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchEndX = 0;
+      let touchEndY = 0;
+      const swipeThreshold = 80; 
+      
+      const tabs = [
+        'panel-overview', 
+        'panel-categories', 
+        'panel-import', 
+        'panel-budgets', 
+        'panel-accounts', 
+        'panel-investments', 
+        'panel-credit-cards', 
+        'panel-audit'
+      ];
+
+      document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+      }, { passive: true });
+
+      document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+      }, { passive: true });
+
+      function handleSwipe() {
+        if (window.innerWidth > 768) return;
+
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+        
+        // Assegura que o swipe foi mais horizontal do que vertical para não atrapalhar o scroll
+        if (Math.abs(diffX) > swipeThreshold && Math.abs(diffX) > Math.abs(diffY)) {
+          const activeNav = document.querySelector('.nav-item.active');
+          if (!activeNav) return;
+          
+          const currentTarget = activeNav.getAttribute('data-target');
+          const currentIndex = tabs.indexOf(currentTarget);
+          
+          if (currentIndex === -1) return;
+
+          if (diffX > 0) {
+            // Swipe Esquerda: Próxima Aba
+            if (currentIndex < tabs.length - 1) {
+              const nextTarget = tabs[currentIndex + 1];
+              const navItem = document.querySelector(`.nav-item[data-target="${nextTarget}"]`);
+              if (navItem) navItem.click();
+            }
+          } else {
+            // Swipe Direita: Aba Anterior
+            if (currentIndex > 0) {
+              const prevTarget = tabs[currentIndex - 1];
+              const navItem = document.querySelector(`.nav-item[data-target="${prevTarget}"]`);
+              if (navItem) navItem.click();
+            }
+          }
+        }
+      }
     }
 
 
