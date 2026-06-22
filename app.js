@@ -708,7 +708,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           btnConciliar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conciliando...';
           btnConciliar.disabled = true;
           
-          const res = await fetch(WEBHOOK_URL, {
+          const res = await fetch(APPS_SCRIPT_WEBAPP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'conciliar_transferencias' })
           });
@@ -930,7 +930,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             if (titleEl) titleEl.innerText = `Classificando Lote (${currentTotal} de ${todasIneditasAgrupadas.length} itens)...`;
             if (progressEl) {
               const perc = (c / todasIneditasAgrupadas.length) * 100;
-              progressEl.style.width = \`\${perc}%\`;
+              progressEl.style.width = `${perc}%`;
             }
             
             const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
