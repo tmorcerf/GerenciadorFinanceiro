@@ -767,15 +767,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
         
         const catStatusBox = document.getElementById('import-categorizer-status');
+        let funInterval;
         if (catStatusBox) {
           catStatusBox.style.display = 'block';
           catStatusBox.innerHTML = `
             <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
-              <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
-              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);" id="inline-cat-title">Classificando Lote (${todasIneditasAgrupadas.length} itens)...</h3>
-              <p style="margin: 0; color: var(--text-secondary);" id="inline-cat-desc">Filtro Local ignorou ${totalDuplicadasIgnoradas} duplicidades. Chamando IA Mestra...</p>
+              <i class="fas fa-brain fa-pulse" style="font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);" id="inline-cat-title">Classificando Lote (0 de ${todasIneditasAgrupadas.length} itens)...</h3>
+              
+              <!-- Barra de Progresso -->
+              <div style="width: 100%; max-width: 400px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 1rem auto; overflow: hidden;">
+                <div id="inline-cat-progress" style="width: 0%; height: 100%; background: var(--color-primary); border-radius: 4px; transition: width 0.3s ease;"></div>
+              </div>
+
+              <p style="margin: 0; font-style: italic; color: var(--text-secondary);" id="inline-cat-desc">Filtro Local ignorou ${totalDuplicadasIgnoradas} duplicidades. Chamando IA Mestra...</p>
             </div>
           `;
+
+          const funMessages = [
+            "Acordando os neurônios financeiros...",
+            "Lendo seu Dicionário de Regras Mágicas...",
+            "Cruzando dados com a base da NASA...",
+            "Tomando um café antes de continuar...",
+            "Identificando seus padrões de consumo...",
+            "Calculando os últimos centavos...",
+            "A Mestra está pensando forte..."
+          ];
+          let msgIdx = 0;
+          funInterval = setInterval(() => {
+            const descEl = document.getElementById('inline-cat-desc');
+            if (descEl) descEl.innerText = funMessages[msgIdx % funMessages.length];
+            msgIdx++;
+          }, 2500);
         }
 
         try {
@@ -784,16 +807,22 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           let dicionarioFinal = {};
           
           for (let c = 0; c < todasIneditasAgrupadas.length; c += CHUNK_SIZE) {
-            const chunk = todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE);
+            const currentTotal = Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length);
             const titleEl = document.getElementById('inline-cat-title');
-            if (titleEl) titleEl.innerText = `Classificando Lote (${Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length)} de ${todasIneditasAgrupadas.length} itens)...`;
+            const progressEl = document.getElementById('inline-cat-progress');
+            
+            if (titleEl) titleEl.innerText = `Classificando Lote (${currentTotal} de ${todasIneditasAgrupadas.length} itens)...`;
+            if (progressEl) {
+              const perc = (c / todasIneditasAgrupadas.length) * 100;
+              progressEl.style.width = \`\${perc}%\`;
+            }
             
             const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({
                 action: 'categorize_json',
-                payload: JSON.stringify(chunk),
+                payload: JSON.stringify(todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE)),
                 model: selectedIaModel
               })
             });
@@ -805,6 +834,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             dicionarioFinal = jsonCat.dicionario;
           }
 
+          if (document.getElementById('inline-cat-progress')) {
+            document.getElementById('inline-cat-progress').style.width = '100%';
+          }
+          if (funInterval) clearInterval(funInterval);
+
           window.dicionarioCategorias = dicionarioFinal;
           window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
 
@@ -813,6 +847,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           
           renderizarRevisaoIA(arrayFinalCategorizado);
         } catch (err) {
+          if (funInterval) clearInterval(funInterval);
           if (catStatusBox) {
             catStatusBox.innerHTML = `
               <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
