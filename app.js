@@ -326,15 +326,42 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       window.reviewSortAsc = true;
       window.reviewFilterConfianca = 'todas';
       window.reviewFilterData = 'todas';
+      window.reviewSelectedIds = new Set();
+
+      window.toggleReviewSelection = function(id, checked) {
+        if (checked) window.reviewSelectedIds.add(id);
+        else window.reviewSelectedIds.delete(id);
+      };
+
+      window.toggleAllReviewSelection = function(checked) {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => {
+          cb.checked = checked;
+          if (checked) window.reviewSelectedIds.add(cb.value);
+          else window.reviewSelectedIds.delete(cb.value);
+        });
+      };
 
       window.updateReviewData = function(id, field, value) {
         const item = window.currentReviewData.find(d => d._id === id);
         if (item) {
-          item[field] = value;
-          if (field === 'categoria') {
-            item.subcategoria = (dicionario[value] && dicionario[value].length > 0) ? dicionario[value][0] : '';
-            window.renderReviewTable(); // re-render to update cascaded subcategory dropdown
+          // Se o item alterado estiver selecionado e houver mais de 1 item selecionado, edita em lote
+          if (window.reviewSelectedIds.has(id) && window.reviewSelectedIds.size > 1) {
+            window.currentReviewData.forEach(d => {
+              if (window.reviewSelectedIds.has(d._id)) {
+                d[field] = value;
+                if (field === 'categoria') {
+                  d.subcategoria = (dicionario[value] && dicionario[value].length > 0) ? dicionario[value][0] : '';
+                }
+              }
+            });
+          } else {
+            item[field] = value;
+            if (field === 'categoria') {
+              item.subcategoria = (dicionario[value] && dicionario[value].length > 0) ? dicionario[value][0] : '';
+            }
           }
+          window.renderReviewTable(); // re-render to update UI
         }
       };
 
@@ -389,9 +416,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const catAtual = d.categoria || opcoesCategoria[0];
           const opcoesSub = dicionario[catAtual] || [];
           const corValor = d.vlrNumber >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+          const isSelected = window.reviewSelectedIds.has(d._id) ? 'checked' : '';
 
           return `
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+              <td style="padding: 0.8rem; text-align:center;">
+                <input type="checkbox" class="row-checkbox" value="${d._id}" onchange="window.toggleReviewSelection('${d._id}', this.checked)" ${isSelected} style="cursor: pointer; width: 16px; height: 16px;">
+              </td>
               <td style="padding: 0.8rem; text-align:center;">${d.statusIcon}</td>
               <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">${d.data}</td>
               <td style="padding: 0.8rem; color: var(--text-primary); font-size: 0.9rem;">${d.descricao}</td>
@@ -463,6 +494,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
+                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); width: 40px; text-align:center;">
+                  <input type="checkbox" onchange="window.toggleAllReviewSelection(this.checked)" title="Selecionar Todos Visíveis" style="cursor: pointer; width: 16px; height: 16px;">
+                </th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">Confiança ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
