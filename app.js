@@ -701,6 +701,34 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return { type: 'text', content: text };
     }
     
+    const btnConciliar = document.getElementById('btn-conciliar');
+    if (btnConciliar) {
+      btnConciliar.addEventListener('click', async () => {
+        try {
+          btnConciliar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conciliando...';
+          btnConciliar.disabled = true;
+          
+          const res = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'conciliar_transferencias' })
+          });
+          const json = await res.json();
+          
+          if (json.status === 'success') {
+            alert(`Sucesso! ${json.matchedCount} pares de transferências foram conciliados. Verifique sua aba LANÇAMENTOS.`);
+          } else {
+            alert('Erro ao conciliar transferências na planilha.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Erro de conexão ao tentar conciliar transferências.');
+        } finally {
+          btnConciliar.innerHTML = '<i class="fas fa-link"></i> Conciliar Transferências';
+          btnConciliar.disabled = false;
+        }
+      });
+    }
+    
     const btnImportSingle = document.getElementById('btn-import-single');
     if (btnImportSingle && uploadCsvIa) {
       btnImportSingle.addEventListener('click', () => {
