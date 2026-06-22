@@ -308,38 +308,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const dicionario = window.dicionarioCategorias || {};
       const opcoesCategoria = Object.keys(dicionario);
 
+      let linhasHTML = '';
       if (duvidas.length === 0) {
-        showGlassModal('Sucesso Absoluto', `A IA processou todos os ${certos.length} lançamentos com 100% de certeza!`);
-        return;
+        linhasHTML = `<div style="text-align:center; padding: 2rem; color: var(--color-income);"><i class="fas fa-check-double" style="font-size: 3rem; margin-bottom: 1rem;"></i><h3 style="margin:0;">Tudo Perfeito!</h3><p style="color: var(--text-secondary); margin-top:0.5rem;">Nenhuma transação precisa de revisão manual. A IA categorizou todas com 100% de certeza.</p></div>`;
+      } else {
+        linhasHTML = duvidas.map(d => {
+          const catAtual = d.categoria || opcoesCategoria[0];
+          const opcoesSub = dicionario[catAtual] || [];
+          
+          return `
+          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; border-left: 4px solid var(--color-expense);">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">${d.data} • ${d.conta}</span>
+              <span style="color: var(--text-primary); font-weight: bold;">R$ ${Math.abs(d.valor).toFixed(2)}</span>
+            </div>
+            <div style="color: var(--text-primary); font-size: 1rem; font-weight: 500;">${d.descricao}</div>
+            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <div>
+                <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Categoria:</label>
+                <select class="form-control category-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+                  ${opcoesCategoria.map(c => `<option value="${c}" ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Subcategoria:</label>
+                <select class="form-control subcategory-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+                  ${opcoesSub.map(s => `<option value="${s}" ${s === d.subcategoria ? 'selected' : ''}>${s}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+        `}).join('');
       }
-
-      let linhasHTML = duvidas.map(d => {
-        const catAtual = d.categoria || opcoesCategoria[0];
-        const opcoesSub = dicionario[catAtual] || [];
-        
-        return `
-        <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; border-left: 4px solid var(--color-expense);">
-          <div style="display: flex; justify-content: space-between;">
-            <span style="color: var(--text-secondary); font-size: 0.85rem;">${d.data} • ${d.conta}</span>
-            <span style="color: var(--text-primary); font-weight: bold;">R$ ${Math.abs(d.valor).toFixed(2)}</span>
-          </div>
-          <div style="color: var(--text-primary); font-size: 1rem; font-weight: 500;">${d.descricao}</div>
-          <div style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-            <div>
-              <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Categoria:</label>
-              <select class="form-control category-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
-                ${opcoesCategoria.map(c => `<option value="${c}" ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
-              </select>
-            </div>
-            <div>
-              <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Subcategoria:</label>
-              <select class="form-control subcategory-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
-                ${opcoesSub.map(s => `<option value="${s}" ${s === d.subcategoria ? 'selected' : ''}>${s}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-        </div>
-      `}).join('');
 
       const resumoDups = window.resumoDuplicidades || { total: 0, ignoradas: 0 };
       const bannerDups = resumoDups.ignoradas > 0 ? `
@@ -571,12 +571,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return { type: 'text', content: text };
     }
     
-    if (btnImportModels.length > 0 && uploadCsvIa) {
-      btnImportModels.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          selectedIaModel = e.currentTarget.getAttribute('data-model');
-          uploadCsvIa.click();
-        });
+    const btnImportSingle = document.getElementById('btn-import-single');
+    if (btnImportSingle && uploadCsvIa) {
+      btnImportSingle.addEventListener('click', () => {
+        selectedIaModel = 'claude-haiku-4-5-20251001';
+        uploadCsvIa.click();
       });
 
       uploadCsvIa.addEventListener('change', async (e) => {
@@ -725,12 +724,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           queueStatus.style.fontWeight = 'bold';
         }
         
-        window.loadingInterval = showAILoadingModal("Lote de Arquivos"); 
-        
-        const modalH3 = document.querySelector('#glassModal h3');
-        const modalP = document.querySelector('#glassModal p');
-        if (modalH3) modalH3.innerText = `Classificando Lote (${todasIneditasAgrupadas.length} itens)...`;
-        if (modalP) modalP.innerText = `Filtro Local ignorou um total de ${totalDuplicadasIgnoradas} duplicidades nos arquivos. Chamando Mestre V14...`;
+        const catStatusBox = document.getElementById('import-categorizer-status');
+        if (catStatusBox) {
+          catStatusBox.style.display = 'block';
+          catStatusBox.innerHTML = `
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
+              <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);" id="inline-cat-title">Classificando Lote (${todasIneditasAgrupadas.length} itens)...</h3>
+              <p style="margin: 0; color: var(--text-secondary);" id="inline-cat-desc">Filtro Local ignorou ${totalDuplicadasIgnoradas} duplicidades. Chamando IA Mestra...</p>
+            </div>
+          `;
+        }
 
         try {
           const CHUNK_SIZE = 40;
@@ -739,7 +743,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           
           for (let c = 0; c < todasIneditasAgrupadas.length; c += CHUNK_SIZE) {
             const chunk = todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE);
-            if (modalH3) modalH3.innerText = `Classificando Lote (${Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length)} de ${todasIneditasAgrupadas.length} itens)...`;
+            const titleEl = document.getElementById('inline-cat-title');
+            if (titleEl) titleEl.innerText = `Classificando Lote (${Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length)} de ${todasIneditasAgrupadas.length} itens)...`;
             
             const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
@@ -761,24 +766,22 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           window.dicionarioCategorias = dicionarioFinal;
           window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
 
-          hideAILoadingModal(window.loadingInterval);
+          if (catStatusBox) catStatusBox.style.display = 'none';
           if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
           
           renderizarRevisaoIA(arrayFinalCategorizado);
         } catch (err) {
-          hideAILoadingModal(window.loadingInterval);
+          if (catStatusBox) {
+            catStatusBox.innerHTML = `
+              <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                <h3 style="margin: 0 0 0.5rem 0; color: #ef4444;">Falha na Inteligência Artificial (Categorização)</h3>
+                <p style="margin: 0; color: var(--text-secondary);">${err.message}</p>
+              </div>
+            `;
+          }
           if(queueStatus) { queueStatus.innerText = '❌ Erro na categorização final.'; queueStatus.style.color = '#ef4444'; }
           console.error('Erro na IA Mestra:', err);
-          document.getElementById('glassModal').innerHTML = `
-            <div class="glass-modal-header" style="justify-content: flex-end;">
-              <button class="tx-modal-close" onclick="document.getElementById('glassModal').classList.remove('active')">&times;</button>
-            </div>
-            <div class="glass-modal-body" style="text-align: center; color: var(--color-expense); padding: 2rem;">
-              <p style="font-weight:600; margin-bottom:0.5rem; font-size: 1.2rem;">Falha na Inteligência Artificial (Categorização)</p>
-              <p style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">${err.message}</p>
-            </div>
-          `;
-          document.getElementById('glassModal').classList.add('active');
         }
       });
     }
