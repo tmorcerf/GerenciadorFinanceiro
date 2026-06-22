@@ -2683,8 +2683,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           try {
             await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
-              mode: 'no-cors',
-              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 action: 'sugestao',
                 texto: text
