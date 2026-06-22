@@ -59,12 +59,6 @@
           Visão Geral
         </a>
       </li>
-      <li>
-        <a class="nav-item" data-target="panel-categories">
-          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          Categorias
-        </a>
-      </li>
       <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
         <a class="nav-item" data-target="panel-import">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -95,12 +89,6 @@
           Cartões
         </a>
       </li>
-      <li>
-        <a class="nav-item" data-target="panel-audit">
-          <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Auditoria
-        </a>
-      </li>
 
     </ul>
 
@@ -122,6 +110,9 @@
       <div class="header-controls" style="display: flex; align-items: center; gap: 10px;">
         <button id="btnFeedback" title="Deixar Sugestão" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
           💡
+        </button>
+        <button id="btnSettings" class="nav-item" data-target="panel-settings" title="Configurações" style="background: transparent; color: var(--text-muted); border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.15)'; this.style.color='var(--text-primary)';" onmouseout="this.style.transform='scale(1)'; this.style.color='var(--text-muted)';">
+          <i class="fas fa-cog"></i>
         </button>
       </div>
     </header>
@@ -403,6 +394,42 @@
         </div>
       </div>
     </div>
+      <!-- 8. PANEL: SETTINGS -->
+      <div id="panel-settings" class="dashboard-panel">
+        <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-cog" style="color: var(--text-muted);"></i> Configurações do Sistema
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+          
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-categories\']').click();">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+              <div style="background: rgba(99, 102, 241, 0.1); color: var(--color-primary); padding: 1rem; border-radius: 12px;">
+                <i class="fas fa-tags" style="font-size: 1.5rem;"></i>
+              </div>
+              <h3 style="margin: 0; font-size: 1.2rem;">Dicionário de Categorias</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Gerencie as categorias e subcategorias utilizadas pela Inteligência Artificial. Adicione novas regras e treine o modelo.</p>
+          </div>
+
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-warning)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-audit\']').click();">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+              <div style="background: rgba(245, 158, 11, 0.1); color: var(--color-warning); padding: 1rem; border-radius: 12px;">
+                <i class="fas fa-search-dollar" style="font-size: 1.5rem;"></i>
+              </div>
+              <h3 style="margin: 0; font-size: 1.2rem;">Auditoria de Dados</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Analise inconsistências financeiras, transações não mapeadas e verifique logs avançados do sistema de importação.</p>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- Os painéis ocultados continuam no DOM para serem chamados via click interno do botão -->
+      <!-- Ocultos do menu lateral mas acessíveis -->
+      <a class="nav-item" data-target="panel-categories" style="display:none;"></a>
+      <a class="nav-item" data-target="panel-audit" style="display:none;"></a>
+
   </main>
 
   <!-- Modal Popup for Transactions -->

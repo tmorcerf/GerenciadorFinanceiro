@@ -741,13 +741,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       const tabs = [
         'panel-overview', 
-        'panel-categories', 
         'panel-import', 
         'panel-budgets', 
         'panel-accounts', 
         'panel-investments', 
-        'panel-credit-cards', 
-        'panel-audit'
+        'panel-credit-cards'
       ];
 
       document.addEventListener('touchstart', e => {
