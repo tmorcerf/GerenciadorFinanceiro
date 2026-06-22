@@ -733,26 +733,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (modalP) modalP.innerText = `Filtro Local ignorou um total de ${totalDuplicadasIgnoradas} duplicidades nos arquivos. Chamando Mestre V14...`;
 
         try {
-          const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'categorize_json',
-              payload: JSON.stringify(todasIneditasAgrupadas),
-              model: selectedIaModel
-            })
-          });
+          const CHUNK_SIZE = 40;
+          let arrayFinalCategorizado = [];
+          let dicionarioFinal = {};
+          
+          for (let c = 0; c < todasIneditasAgrupadas.length; c += CHUNK_SIZE) {
+            const chunk = todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE);
+            if (modalH3) modalH3.innerText = `Classificando Lote (${Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length)} de ${todasIneditasAgrupadas.length} itens)...`;
+            
+            const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'categorize_json',
+                payload: JSON.stringify(chunk),
+                model: selectedIaModel
+              })
+            });
 
-          const jsonCat = await resCategorizar.json();
-          if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorização.");
+            const jsonCat = await resCategorizar.json();
+            if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorização.");
+            
+            arrayFinalCategorizado.push(...jsonCat.data);
+            dicionarioFinal = jsonCat.dicionario;
+          }
 
-          window.dicionarioCategorias = jsonCat.dicionario;
+          window.dicionarioCategorias = dicionarioFinal;
           window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
 
           hideAILoadingModal(window.loadingInterval);
           if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
           
-          renderizarRevisaoIA(jsonCat.data);
+          renderizarRevisaoIA(arrayFinalCategorizado);
         } catch (err) {
           hideAILoadingModal(window.loadingInterval);
           if(queueStatus) { queueStatus.innerText = '❌ Erro na categorização final.'; queueStatus.style.color = '#ef4444'; }
