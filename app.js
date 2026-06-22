@@ -324,6 +324,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       window.reviewSortCol = 'data';
       window.reviewSortAsc = true;
+      window.reviewFilterConfianca = 'todas';
+      window.reviewFilterData = 'todas';
 
       window.updateReviewData = function(id, field, value) {
         const item = window.currentReviewData.find(d => d._id === id);
@@ -366,7 +368,24 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const tbody = document.getElementById('review-tbody');
         if (!tbody) return;
         
-        tbody.innerHTML = window.currentReviewData.map(d => {
+        let dadosFiltrados = window.currentReviewData;
+
+        if (window.reviewFilterConfianca !== 'todas') {
+          if (window.reviewFilterConfianca === 'duvidas') {
+            dadosFiltrados = dadosFiltrados.filter(d => d.confianca === 'amarelo' || d.confianca === 'vermelho');
+          } else {
+            dadosFiltrados = dadosFiltrados.filter(d => d.confianca === window.reviewFilterConfianca);
+          }
+        }
+
+        if (window.reviewFilterData !== 'todas') {
+          dadosFiltrados = dadosFiltrados.filter(d => {
+            if (d.data && d.data.length >= 10) return d.data.substring(3, 10) === window.reviewFilterData;
+            return window.reviewFilterData === 'Outros';
+          });
+        }
+
+        tbody.innerHTML = dadosFiltrados.map(d => {
           const catAtual = d.categoria || opcoesCategoria[0];
           const opcoesSub = dicionario[catAtual] || [];
           const corValor = d.vlrNumber >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
@@ -403,8 +422,43 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         </div>
       ` : '';
 
+      const periodosUnicos = [...new Set(window.currentReviewData.map(d => {
+        if (d.data && d.data.length >= 10) return d.data.substring(3, 10);
+        return 'Outros';
+      }))].sort((a,b) => {
+        if (a === 'Outros') return 1;
+        if (b === 'Outros') return -1;
+        const partsA = a.split('/'); const partsB = b.split('/');
+        const numA = parseInt(partsA[1] + partsA[0]);
+        const numB = parseInt(partsB[1] + partsB[0]);
+        return numB - numA;
+      });
+
+      const filterBarHTML = `
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+          <div style="display: flex; flex-direction: column;">
+            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;"><i class="fas fa-filter"></i> Confiança da IA</label>
+            <select onchange="window.reviewFilterConfianca = this.value; window.renderReviewTable();" style="background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem; border-radius: 4px; font-size: 0.9rem; outline: none;">
+              <option value="todas">🟡🔴🟢 Todas as Transações</option>
+              <option value="duvidas">🟡🔴 Apenas Dúvidas (Revisar)</option>
+              <option value="verde">🟢 100% de Certeza</option>
+              <option value="amarelo">🟡 Sugestão com Dúvida</option>
+              <option value="vermelho">🔴 Nenhuma Ideia</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;"><i class="far fa-calendar-alt"></i> Período (Mês/Ano)</label>
+            <select onchange="window.reviewFilterData = this.value; window.renderReviewTable();" style="background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem; border-radius: 4px; font-size: 0.9rem; outline: none;">
+              <option value="todas">Todos os Períodos</option>
+              ${periodosUnicos.map(p => `<option value="${p}">${p}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      `;
+
       const tableHTML = `
         ${bannerDups}
+        ${filterBarHTML}
         <div style="overflow-x: auto;">
           <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
