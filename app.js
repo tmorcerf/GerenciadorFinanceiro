@@ -295,85 +295,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       closeGlassModal();
     }
 
+    // Função processarExtratoComIA substituída pela lógica de fila em lote acima.
+    // Mantida temporariamente como fallback se houver referências antigas.
     async function processarExtratoComIA(csvText, fileName = "extrato.csv", modelName = "claude-opus-4-8") {
-      const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
-      
-      if (!webhookUrl || webhookUrl === 'AGUARDANDO_URL_DO_APPS_SCRIPT') {
-        throw new Error("A URL do servidor ainda não foi configurada no app.js");
-      }
-
-      try {
-        // PASSO 1: O Extrator Bruto (Haiku)
-        const resExtrair = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'extract_raw',
-            csvText: csvText,
-            fileName: fileName
-          })
-        });
-
-        const jsonBruto = await resExtrair.json();
-        if (jsonBruto.status !== 'success') {
-          throw new Error(jsonBruto.message || "Erro na etapa de extração bruta.");
-        }
-
-        // PASSO 2: Conformador Anti-Duplicidade (Local JS)
-        const historico = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.lancamentos) ? dadosFinanceiros.lancamentos : [];
-        const transacoesExtraidas = jsonBruto.data || [];
-        
-        const transacoesIneditas = transacoesExtraidas.filter(t => {
-          // Busca no histórico Lançamentos se existe Data e Valor idênticos
-          const isDuplicate = historico.some(h => 
-            h.data === t.data && 
-            Math.abs(h.valor - t.valor) < 0.01
-          );
-          return !isDuplicate;
-        });
-
-        const ignoradas = transacoesExtraidas.length - transacoesIneditas.length;
-
-        // Se não sobrar nenhuma inédita, não gasta token com o Opus
-        if (transacoesIneditas.length === 0) {
-          throw new Error(`Das ${transacoesExtraidas.length} transações extraídas, TODAS já constavam no seu histórico de Lançamentos. Nenhuma transação inédita encontrada.`);
-        }
-
-        // Atualiza a tela de Loading informando a economia
-        const modalH3 = document.querySelector('#glassModal h3');
-        const modalP = document.querySelector('#glassModal p');
-        if (modalH3) modalH3.innerText = `Classificando ${transacoesIneditas.length} inéditas...`;
-        if (modalP) modalP.innerText = `Filtro Local ignorou ${ignoradas} duplicidades. Chamando Mestre V14...`;
-
-        // PASSO 3: O Cérebro Coletivo (Ou outro modelo em teste)
-        const resCategorizar = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'categorize_json',
-            payload: JSON.stringify(transacoesIneditas),
-            model: modelName
-          })
-        });
-
-        const jsonCat = await resCategorizar.json();
-        
-        if (jsonCat.status !== 'success') {
-          throw new Error(jsonCat.message || "Erro desconhecido na categorização.");
-        }
-
-        // Armazena o dicionário globalmente para a tela de revisão
-        window.dicionarioCategorias = jsonCat.dicionario;
-
-        // Opcional: injetar quantas foram ignoradas no resultado global para mostrar no painel
-        window.resumoDuplicidades = { total: transacoesExtraidas.length, ignoradas: ignoradas };
-
-        // Retorna o Array categorizado final
-        return jsonCat.data;
-      } catch (err) {
-        console.error("Erro na Esteira V14:", err);
-        throw err;
-      }
+       throw new Error("processarExtratoComIA foi descontinuada. A lógica agora roda na fila de upload em lote.");
     }
 
     function renderizarRevisaoIA(resultadoIA) {
@@ -585,10 +510,66 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
-    // Lógica para upload direto via botão na Web (Desktop)
+    // Bibliotecas de Conhecimento por Banco
+    const BANK_LIBRARIES = {
+      "banco_do_brasil": "Regras Banco do Brasil (BB) Conta Corrente: Geralmente possui colunas 'Data', 'Dependência', 'Histórico', 'Data do Balancete', 'Número do Documento' e 'Valor'. Valores podem estar com o sinal de C (Crédito) ou D (Débito) ao lado, ou negativo para saída. Cuidado com o cabeçalho complexo.",
+      "bb_cartao": "Regras Banco do Brasil (BB) Cartão: O formato da fatura difere da conta corrente. Identifique as compras e separe entradas e saídas corretamente.",
+      "default": "Sem regras específicas mapeadas. Faça a dedução lógica do formato das colunas."
+    };
+
+    function identifyBankLibrary(fileName, csvText) {
+      const lowerName = fileName.toLowerCase();
+      const lowerText = csvText.toLowerCase().substring(0, 1000);
+
+      if ((lowerName.includes('fatura') || lowerName.includes('cartao')) && (lowerName.includes('bb') || lowerText.includes('banco do brasil'))) return BANK_LIBRARIES["bb_cartao"];
+      if (lowerName.includes('bb') || lowerText.includes('banco do brasil')) return BANK_LIBRARIES["banco_do_brasil"];
+      
+      return BANK_LIBRARIES["default"];
+    }
+
+    // Lógica para upload em LOTE (Desktop)
     let selectedIaModel = 'claude-opus-4-8';
     const btnImportModels = document.querySelectorAll('.btn-import-model');
     const uploadCsvIa = document.getElementById('uploadCsvIa');
+
+    async function extractFileContent(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      
+      if (ext === 'pdf') {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64 = e.target.result.split(',')[1];
+            resolve({ type: 'pdf', content: base64 });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      } 
+      
+      if (ext === 'xls' || ext === 'xlsx') {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, {type: 'array'});
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const csv = XLSX.utils.sheet_to_csv(worksheet);
+              resolve({ type: 'text', content: csv });
+            } catch(err) {
+              reject(err);
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+        });
+      }
+
+      const text = await file.text();
+      return { type: 'text', content: text };
+    }
     
     if (btnImportModels.length > 0 && uploadCsvIa) {
       btnImportModels.forEach(btn => {
@@ -598,37 +579,173 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
       });
 
-      uploadCsvIa.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+      uploadCsvIa.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files).slice(0, 10);
+        if (files.length === 0) return;
+        
+        e.target.value = '';
 
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const csvText = event.target.result;
-          const fileName = file.name;
+        const queueContainer = document.getElementById('batch-queue-container');
+        const queueList = document.getElementById('batch-queue-list');
+        const queueStatus = document.getElementById('batch-queue-status');
+        
+        if(queueContainer) queueContainer.style.display = 'block';
+        if(queueList) queueList.innerHTML = '';
+        if(queueStatus) queueStatus.innerText = 'Processando a fila...';
 
-          window.loadingInterval = showAILoadingModal(fileName);
+        files.forEach((f, i) => {
+          const li = document.createElement('li');
+          li.id = `queue-item-${i}`;
+          li.style.cssText = "display:flex; flex-direction:column; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+          li.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 6px;">
+              <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
+              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;">⏳ Na fila...</span>
+            </div>
+            <div id="queue-meta-${i}" style="display:none; font-size: 0.8rem; color: var(--text-secondary); background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+            </div>
+          `;
+          if(queueList) queueList.appendChild(li);
+        });
 
+        let todasIneditasAgrupadas = [];
+        let totalDuplicadasIgnoradas = 0;
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const statusSpan = document.getElementById(`queue-status-${i}`);
+          
           try {
-            const resultadoIA = await processarExtratoComIA(csvText, fileName, selectedIaModel);
-            hideAILoadingModal(window.loadingInterval);
-            renderizarRevisaoIA(resultadoIA);
+            if(statusSpan) { statusSpan.innerText = '⚙️ Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
+            
+            const fileData = await extractFileContent(file);
+            const isPdf = fileData.type === 'pdf';
+            const bankRules = identifyBankLibrary(file.name, isPdf ? "Arquivo em formato PDF (Base64)" : fileData.content);
+
+            if(statusSpan) { statusSpan.innerText = '🤖 Extraindo (Haiku)...'; }
+            const resExtrair = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'extract_raw',
+                fileContent: fileData.content,
+                fileType: fileData.type,
+                fileName: file.name,
+                bankLibraryRules: bankRules
+              })
+            });
+
+            const jsonBruto = await resExtrair.json();
+            if (jsonBruto.status !== 'success') throw new Error(jsonBruto.message || "Erro extração.");
+
+            // O novo prompt retorna um objeto: { nomeConta, tipoConta, transacoes: [] }
+            const extrato = jsonBruto.data || {};
+            const transacoesExtraidas = extrato.transacoes || extrato || []; // fallback se a IA retornar array direto
+            
+            let nomeConta = extrato.nomeConta || 'Desconhecida';
+            let tipoConta = extrato.tipoConta || 'Indefinido';
+            let periodoStr = 'N/A';
+
+            if (transacoesExtraidas.length > 0) {
+              const datas = transacoesExtraidas.map(t => {
+                if(!t.data) return NaN;
+                const parts = t.data.split('/');
+                return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+              }).filter(d => !isNaN(d));
+
+              if (datas.length > 0) {
+                const minDate = new Date(Math.min(...datas));
+                const maxDate = new Date(Math.max(...datas));
+                const formata = d => d.toLocaleDateString('pt-BR');
+                periodoStr = `${formata(minDate)} a ${formata(maxDate)}`;
+              }
+            }
+
+            const metaDiv = document.getElementById(`queue-meta-${i}`);
+            if(metaDiv) {
+              metaDiv.innerHTML = `
+                <div style="display:flex; gap: 15px; flex-wrap: wrap;">
+                  <div><strong>🏦 Conta:</strong> ${nomeConta}</div>
+                  <div><strong>🏷️ Tipo:</strong> ${tipoConta}</div>
+                  <div><strong>📅 Período:</strong> ${periodoStr}</div>
+                </div>
+              `;
+              metaDiv.style.display = 'block';
+            }
+
+            if(statusSpan) { statusSpan.innerText = '🔍 Filtrando duplicidades...'; }
+            const historico = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.lancamentos) ? dadosFinanceiros.lancamentos : [];
+            
+            const ineditasDoArquivo = transacoesExtraidas.filter(t => {
+              const isDuplicate = historico.some(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.01);
+              return !isDuplicate;
+            });
+
+            totalDuplicadasIgnoradas += (transacoesExtraidas.length - ineditasDoArquivo.length);
+            todasIneditasAgrupadas.push(...ineditasDoArquivo);
+
+            if(statusSpan) { statusSpan.innerText = `✅ ${ineditasDoArquivo.length} inéditas`; statusSpan.style.color = '#10b981'; }
           } catch (err) {
-            hideAILoadingModal(window.loadingInterval);
-            console.error('Erro na IA:', err);
-            document.getElementById('glassModal').innerHTML = `
-              <div class="glass-modal-header" style="justify-content: flex-end;">
-                <button class="tx-modal-close" onclick="document.getElementById('glassModal').classList.remove('active')">&times;</button>
-              </div>
-              <div class="glass-modal-body" style="text-align: center; color: var(--color-expense); padding: 2rem;">
-                <p style="font-weight:600; margin-bottom:0.5rem; font-size: 1.2rem;">Falha na Inteligência Artificial</p>
-                <p style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">${err.message}</p>
-                <p style="font-size:0.8rem; margin-top: 1rem; color:var(--text-secondary);">Dica: Verifique se você configurou a sua API Key da Anthropic no Apps Script, e se fez uma Nova Implantação.</p>
-              </div>
-            `;
+            console.error(err);
+            if(statusSpan) { statusSpan.innerText = `❌ Erro`; statusSpan.style.color = '#ef4444'; }
           }
-        };
-        reader.readAsText(file);
+        }
+
+        if (todasIneditasAgrupadas.length === 0) {
+          if(queueStatus) queueStatus.innerText = 'Concluído: Nenhuma transação inédita encontrada nos arquivos.';
+          alert('Processamento finalizado. Nenhuma transação nova foi encontrada nos arquivos (todas já existiam ou houve falha na leitura).');
+          return;
+        }
+
+        if(queueStatus) { 
+          queueStatus.innerText = `Categorizando ${todasIneditasAgrupadas.length} transações inéditas com a IA Mestra...`;
+          queueStatus.style.color = 'var(--color-primary)';
+          queueStatus.style.fontWeight = 'bold';
+        }
+        
+        window.loadingInterval = showAILoadingModal("Lote de Arquivos"); 
+        
+        const modalH3 = document.querySelector('#glassModal h3');
+        const modalP = document.querySelector('#glassModal p');
+        if (modalH3) modalH3.innerText = `Classificando Lote (${todasIneditasAgrupadas.length} itens)...`;
+        if (modalP) modalP.innerText = `Filtro Local ignorou um total de ${totalDuplicadasIgnoradas} duplicidades nos arquivos. Chamando Mestre V14...`;
+
+        try {
+          const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'categorize_json',
+              payload: JSON.stringify(todasIneditasAgrupadas),
+              model: selectedIaModel
+            })
+          });
+
+          const jsonCat = await resCategorizar.json();
+          if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorização.");
+
+          window.dicionarioCategorias = jsonCat.dicionario;
+          window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
+
+          hideAILoadingModal(window.loadingInterval);
+          if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
+          
+          renderizarRevisaoIA(jsonCat.data);
+        } catch (err) {
+          hideAILoadingModal(window.loadingInterval);
+          if(queueStatus) { queueStatus.innerText = '❌ Erro na categorização final.'; queueStatus.style.color = '#ef4444'; }
+          console.error('Erro na IA Mestra:', err);
+          document.getElementById('glassModal').innerHTML = `
+            <div class="glass-modal-header" style="justify-content: flex-end;">
+              <button class="tx-modal-close" onclick="document.getElementById('glassModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="glass-modal-body" style="text-align: center; color: var(--color-expense); padding: 2rem;">
+              <p style="font-weight:600; margin-bottom:0.5rem; font-size: 1.2rem;">Falha na Inteligência Artificial (Categorização)</p>
+              <p style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">${err.message}</p>
+            </div>
+          `;
+          document.getElementById('glassModal').classList.add('active');
+        }
       });
     }
 
