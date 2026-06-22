@@ -371,9 +371,18 @@
         <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center;">
           Fila de Processamento <span id="batch-queue-status" style="font-size: 0.85rem; font-weight: normal; color: var(--text-secondary);">Aguardando arquivos...</span>
         </h3>
-        <ul id="batch-queue-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-          <!-- Items inseridos via JS -->
-        </ul>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 300px; background: #f1f5f9; border-radius: 8px; padding: 1rem; min-height: 150px; border: 1px solid #cbd5e1;">
+            <h4 style="margin-top: 0; color: #475569; font-size: 0.95rem; margin-bottom: 1rem;"><i class="fas fa-inbox"></i> A Planilhar</h4>
+            <ul id="batch-queue-left" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+            </ul>
+          </div>
+          <div style="flex: 1; min-width: 300px; background: #f0fdf4; border-radius: 8px; padding: 1rem; min-height: 150px; border: 1px solid #bbf7d0;">
+            <h4 style="margin-top: 0; color: #166534; font-size: 0.95rem; margin-bottom: 1rem;"><i class="fas fa-check-circle"></i> Finalizados</h4>
+            <ul id="batch-queue-right" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div class="metric-card" style="margin-bottom: 1.5rem; text-align: left; padding: 1.5rem;">

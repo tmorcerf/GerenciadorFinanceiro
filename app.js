@@ -586,26 +586,31 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         e.target.value = '';
 
         const queueContainer = document.getElementById('batch-queue-container');
-        const queueList = document.getElementById('batch-queue-list');
+        const queueLeft = document.getElementById('batch-queue-left');
+        const queueRight = document.getElementById('batch-queue-right');
         const queueStatus = document.getElementById('batch-queue-status');
         
         if(queueContainer) queueContainer.style.display = 'block';
-        if(queueList) queueList.innerHTML = '';
+        if(queueLeft) queueLeft.innerHTML = '';
+        if(queueRight) queueRight.innerHTML = '';
         if(queueStatus) queueStatus.innerText = 'Processando a fila...';
 
         files.forEach((f, i) => {
           const li = document.createElement('li');
           li.id = `queue-item-${i}`;
-          li.style.cssText = "display:flex; flex-direction:column; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+          li.style.cssText = "display:flex; flex-direction:column; padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.3s ease;";
           li.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 6px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
               <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
               <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;">⏳ Na fila...</span>
             </div>
-            <div id="queue-meta-${i}" style="display:none; font-size: 0.8rem; color: var(--text-secondary); background: #f8fafc; padding: 8px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+            <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+              <div><strong>🏦 Banco:</strong> ????</div>
+              <div><strong>🏷️ Tipo:</strong> ????</div>
+              <div><strong>📅 Período:</strong> ????</div>
             </div>
           `;
-          if(queueList) queueList.appendChild(li);
+          if(queueLeft) queueLeft.appendChild(li);
         });
 
         let todasIneditasAgrupadas = [];
@@ -664,13 +669,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const metaDiv = document.getElementById(`queue-meta-${i}`);
             if(metaDiv) {
               metaDiv.innerHTML = `
-                <div style="display:flex; gap: 15px; flex-wrap: wrap;">
-                  <div><strong>🏦 Conta:</strong> ${nomeConta}</div>
-                  <div><strong>🏷️ Tipo:</strong> ${tipoConta}</div>
-                  <div><strong>📅 Período:</strong> ${periodoStr}</div>
-                </div>
+                <div><strong>🏦 Banco:</strong> ${nomeConta}</div>
+                <div><strong>🏷️ Tipo:</strong> ${tipoConta}</div>
+                <div><strong>📅 Período:</strong> ${periodoStr}</div>
               `;
-              metaDiv.style.display = 'block';
             }
 
             if(statusSpan) { statusSpan.innerText = '🔍 Filtrando duplicidades...'; }
@@ -685,9 +687,29 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             todasIneditasAgrupadas.push(...ineditasDoArquivo);
 
             if(statusSpan) { statusSpan.innerText = `✅ ${ineditasDoArquivo.length} inéditas`; statusSpan.style.color = '#10b981'; }
+            
+            // Move o card para a coluna "Finalizados"
+            const liItem = document.getElementById(`queue-item-${i}`);
+            const queueRight = document.getElementById('batch-queue-right');
+            if (liItem && queueRight) {
+              queueRight.appendChild(liItem);
+            }
+            
           } catch (err) {
             console.error(err);
-            if(statusSpan) { statusSpan.innerText = `❌ Erro`; statusSpan.style.color = '#ef4444'; }
+            if(statusSpan) { statusSpan.innerText = `❌ Falhou`; statusSpan.style.color = '#ef4444'; }
+            
+            // Em caso de erro, detalha no card (que continua na coluna da esquerda) e pinta borda
+            const liItem = document.getElementById(`queue-item-${i}`);
+            if(liItem) liItem.style.borderColor = '#ef4444';
+            
+            const metaDiv = document.getElementById(`queue-meta-${i}`);
+            if(metaDiv) {
+              metaDiv.innerHTML = `<div style="color: #ef4444; font-weight: bold; background: #fee2e2; padding: 8px; border-radius: 4px; margin-top: 8px;">
+                🚨 Erro do Google Apps Script:<br>
+                <span style="font-weight: normal; font-family: monospace;">${err.message}</span>
+              </div>`;
+            }
           }
         }
 
