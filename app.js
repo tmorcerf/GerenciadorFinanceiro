@@ -302,44 +302,95 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function renderizarRevisaoIA(resultadoIA) {
-      const duvidas = resultadoIA.filter(item => item.duvida);
-      const certos = resultadoIA.filter(item => !item.duvida);
-      
       const dicionario = window.dicionarioCategorias || {};
       const opcoesCategoria = Object.keys(dicionario);
 
-      let linhasHTML = '';
-      if (duvidas.length === 0) {
-        linhasHTML = `<div style="text-align:center; padding: 2rem; color: var(--color-income);"><i class="fas fa-check-double" style="font-size: 3rem; margin-bottom: 1rem;"></i><h3 style="margin:0;">Tudo Perfeito!</h3><p style="color: var(--text-secondary); margin-top:0.5rem;">Nenhuma transação precisa de revisão manual. A IA categorizou todas com 100% de certeza.</p></div>`;
-      } else {
-        linhasHTML = duvidas.map(d => {
+      // 1. Preparar dados com ID único e Semáforo de Confiança
+      window.currentReviewData = resultadoIA.map((d, i) => {
+        let confianca = 'verde';
+        let statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin:auto;" title="100% Certeza"></div>';
+        
+        if (d.duvida) {
+          if (d.categoria && d.categoria.toUpperCase() !== 'OUTROS' && d.categoria.toUpperCase() !== 'DIVERSOS') {
+            confianca = 'amarelo';
+            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#f59e0b; margin:auto;" title="Dúvida (Sugestão da IA)"></div>';
+          } else {
+            confianca = 'vermelho';
+            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;" title="A IA não teve ideia"></div>';
+          }
+        }
+        return { ...d, _id: 'tx_' + i, confianca, statusIcon, vlrNumber: parseFloat(d.valor) || 0 };
+      });
+
+      window.reviewSortCol = 'data';
+      window.reviewSortAsc = true;
+
+      window.updateReviewData = function(id, field, value) {
+        const item = window.currentReviewData.find(d => d._id === id);
+        if (item) {
+          item[field] = value;
+          if (field === 'categoria') {
+            item.subcategoria = (dicionario[value] && dicionario[value].length > 0) ? dicionario[value][0] : '';
+            window.renderReviewTable(); // re-render to update cascaded subcategory dropdown
+          }
+        }
+      };
+
+      window.sortReviewTable = function(col) {
+        if (window.reviewSortCol === col) {
+          window.reviewSortAsc = !window.reviewSortAsc;
+        } else {
+          window.reviewSortCol = col;
+          window.reviewSortAsc = true;
+        }
+        
+        window.currentReviewData.sort((a, b) => {
+          let valA = a[col];
+          let valB = b[col];
+          
+          if (col === 'valor') { valA = a.vlrNumber; valB = b.vlrNumber; }
+          else if (col === 'confianca') {
+            const peso = { 'vermelho': 0, 'amarelo': 1, 'verde': 2 };
+            valA = peso[a.confianca]; valB = peso[b.confianca];
+          }
+
+          if (valA < valB) return window.reviewSortAsc ? -1 : 1;
+          if (valA > valB) return window.reviewSortAsc ? 1 : -1;
+          return 0;
+        });
+
+        window.renderReviewTable();
+      };
+
+      window.renderReviewTable = function() {
+        const tbody = document.getElementById('review-tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = window.currentReviewData.map(d => {
           const catAtual = d.categoria || opcoesCategoria[0];
           const opcoesSub = dicionario[catAtual] || [];
-          
+          const corValor = d.vlrNumber >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+
           return `
-          <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; border-left: 4px solid var(--color-expense);">
-            <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-secondary); font-size: 0.85rem;">${d.data} • ${d.conta}</span>
-              <span style="color: var(--text-primary); font-weight: bold;">R$ ${Math.abs(d.valor).toFixed(2)}</span>
-            </div>
-            <div style="color: var(--text-primary); font-size: 1rem; font-weight: 500;">${d.descricao}</div>
-            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-              <div>
-                <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Categoria:</label>
-                <select class="form-control category-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+              <td style="padding: 0.8rem; text-align:center;">${d.statusIcon}</td>
+              <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">${d.data}</td>
+              <td style="padding: 0.8rem; color: var(--text-primary); font-size: 0.9rem;">${d.descricao}</td>
+              <td style="padding: 0.8rem; color: ${corValor}; font-weight: bold; white-space: nowrap;">R$ ${Math.abs(d.vlrNumber).toFixed(2)}</td>
+              <td style="padding: 0.8rem;">
+                <select onchange="window.updateReviewData('${d._id}', 'categoria', this.value)" style="width: 100%; min-width: 150px; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem;">
                   ${opcoesCategoria.map(c => `<option value="${c}" ${c === d.categoria ? 'selected' : ''}>${c}</option>`).join('')}
                 </select>
-              </div>
-              <div>
-                <label style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Subcategoria:</label>
-                <select class="form-control subcategory-select" data-id="${d.id}" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px;">
+              </td>
+              <td style="padding: 0.8rem;">
+                <select onchange="window.updateReviewData('${d._id}', 'subcategoria', this.value)" style="width: 100%; min-width: 150px; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem;">
                   ${opcoesSub.map(s => `<option value="${s}" ${s === d.subcategoria ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
-              </div>
-            </div>
-          </div>
-        `}).join('');
-      }
+              </td>
+            </tr>
+          `;
+        }).join('');
+      };
 
       const resumoDups = window.resumoDuplicidades || { total: 0, ignoradas: 0 };
       const bannerDups = resumoDups.ignoradas > 0 ? `
@@ -347,73 +398,56 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
           <div>
             <h4 style="margin:0;">Filtro Anti-Duplicidade Ativado</h4>
-            <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Protegemos você! Das ${resumoDups.total} transações no arquivo, <b>${resumoDups.ignoradas}</b> já existiam no seu histórico e foram sumariamente descartadas.</p>
+            <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${resumoDups.total} transações no arquivo, <b>${resumoDups.ignoradas}</b> já existiam e foram descartadas.</p>
           </div>
         </div>
       ` : '';
 
-      const html = `
-        <div style="padding: 0.5rem;">
-          ${bannerDups}
-          <div style="background: rgba(34, 197, 94, 0.1); color: var(--color-income); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; gap: 1rem;">
-            <i class="fas fa-check-circle" style="font-size: 2rem;"></i>
-            <div>
-              <h4 style="margin:0;">Processamento Concluído</h4>
-              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">O Cérebro Coletivo (V14) categorizou ${certos.length} compras inéditas com certeza absoluta!</p>
-            </div>
-          </div>
-          
-          <div style="margin-bottom: 1.5rem;">
-            ${linhasHTML}
-          </div>
+      const tableHTML = `
+        ${bannerDups}
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
+            <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
+              <tr>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">Confiança ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria ↕</th>
+              </tr>
+            </thead>
+            <tbody id="review-tbody">
+            </tbody>
+          </table>
         </div>
       `;
 
-      // Injeta o HTML no container
       const containerList = document.getElementById('import-review-list');
       const containerBox = document.getElementById('import-review-container');
       const titleEl = document.getElementById('import-review-title');
       
-      titleEl.innerHTML = `<i class="fas fa-question-circle" style="color: var(--color-expense);"></i> ${duvidas.length} itens requerem revisão:`;
-      containerList.innerHTML = html;
+      const duvidasTotais = window.currentReviewData.filter(d => d.confianca !== 'verde').length;
+      titleEl.innerHTML = `<i class="fas fa-clipboard-list" style="color: var(--color-primary);"></i> Revisão Final (${window.currentReviewData.length} itens, ${duvidasTotais} dúvidas)`;
+      
+      containerList.innerHTML = tableHTML;
+      window.sortReviewTable('confianca'); // Inicialmente ordena trazendo vermelhos e amarelos pro topo
+      
       containerBox.style.display = 'block';
 
-      // Navega para o painel de importação
       document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
       document.querySelectorAll('.dashboard-panel').forEach(panel => panel.classList.remove('active'));
       const importNav = document.querySelector('[data-target="panel-import"]');
       if (importNav) importNav.classList.add('active');
       document.getElementById('panel-import').classList.add('active');
 
-      // Listener para atualizar dropdowns em cascata
       setTimeout(() => {
-        document.querySelectorAll('.category-select').forEach(select => {
-          select.addEventListener('change', (e) => {
-            const cat = e.target.value;
-            const container = e.target.closest('.grid-template-columns') || e.target.parentElement.parentElement;
-            const subSelect = container.querySelector('.subcategory-select');
-            const subs = dicionario[cat] || [];
-            subSelect.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
-          });
-        });
-
         const saveHandler = async () => {
-          // Atualiza as dúvidas com as edições do usuário
-          const duvidasAtualizadas = duvidas.map((d, index) => {
-            const selects = document.querySelectorAll('.category-select');
-            const subSelects = document.querySelectorAll('.subcategory-select');
-            return {
-              ...d,
-              categoria: selects[index].value,
-              subcategoria: subSelects[index].value
-            };
+          // Extrai o resultado final e remove campos temporários do frontend
+          const transacoesFinais = window.currentReviewData.map(d => {
+            const { _id, confianca, statusIcon, vlrNumber, duvida, ...cleanData } = d;
+            return cleanData;
           });
-
-          const transacoesFinais = [...certos, ...duvidasAtualizadas];
-          
-          const modalAntigo = document.getElementById('glassModal');
-          if (modalAntigo) modalAntigo.classList.remove('active');
-
 
           showGlassModal('Salvando...', `
             <div style="text-align:center; padding: 3rem 1rem;">
@@ -471,8 +505,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const btnSalvarTopo = document.getElementById('btnSalvarRevisaoPanel');
         const btnSalvarRodape = document.getElementById('btnSalvarRevisaoPanelBottom');
         
-        if (btnSalvarTopo) btnSalvarTopo.addEventListener('click', saveHandler);
-        if (btnSalvarRodape) btnSalvarRodape.addEventListener('click', saveHandler);
+        if (btnSalvarTopo) {
+          const newBtn = btnSalvarTopo.cloneNode(true);
+          btnSalvarTopo.parentNode.replaceChild(newBtn, btnSalvarTopo);
+          newBtn.addEventListener('click', saveHandler);
+        }
+        if (btnSalvarRodape) {
+          const newBtn = btnSalvarRodape.cloneNode(true);
+          btnSalvarRodape.parentNode.replaceChild(newBtn, btnSalvarRodape);
+          newBtn.addEventListener('click', saveHandler);
+        }
 
       }, 100);
     }
