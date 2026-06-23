@@ -1380,6 +1380,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         try {
+          todasIneditasAgrupadas.sort((a, b) => a.descricao.localeCompare(b.descricao));
+          
           const CHUNK_SIZE = 40;
           let arrayFinalCategorizado = [];
           let dicionarioFinal = {};
