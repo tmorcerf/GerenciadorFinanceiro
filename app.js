@@ -1201,9 +1201,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const ineditasDoArquivo = [];
             
             transacoesExtraidas.forEach(t => {
-              const isDuplicate = historico.some(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.01);
+              const isDuplicate = historico.some(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.001);
               if (isDuplicate) {
-                const original = historico.find(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.01);
+                const original = historico.find(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.001);
                 window.transacoesDuplicadasPendentes.push({ novo: t, original: original });
               } else {
                 ineditasDoArquivo.push(t);
