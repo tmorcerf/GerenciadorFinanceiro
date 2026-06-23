@@ -1247,6 +1247,21 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         try {
+          const historicoFull = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.lancamentos) ? dadosFinanceiros.lancamentos : [];
+          const memoriaMap = {};
+          const memoriaArray = [];
+          for (let i = historicoFull.length - 1; i >= 0; i--) {
+            const h = historicoFull[i];
+            if (h.obs && h.categoria && h.categoria.toUpperCase() !== 'DIVERSOS' && h.categoria.toUpperCase() !== 'OUTROS') {
+              const obsUpper = h.obs.trim().toUpperCase();
+              if (!memoriaMap[obsUpper]) {
+                memoriaMap[obsUpper] = true;
+                memoriaArray.push(`"${obsUpper}" = ${h.categoria} > ${h.subcategoria || ''}`);
+                if (memoriaArray.length >= 500) break; // Limit to last 500 unique to save tokens
+              }
+            }
+          }
+
           const CHUNK_SIZE = 40;
           let arrayFinalCategorizado = [];
           let dicionarioFinal = {};
@@ -1268,6 +1283,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               body: JSON.stringify({
                 action: 'categorize_json',
                 payload: JSON.stringify(todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE)),
+                memoria: JSON.stringify(memoriaArray),
                 model: selectedIaModel
               })
             });
