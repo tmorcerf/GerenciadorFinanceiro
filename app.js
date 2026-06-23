@@ -461,16 +461,168 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }).join('');
       };
 
-      const resumoDups = window.resumoDuplicidades || { total: 0, ignoradas: 0 };
       const bannerDups = resumoDups.ignoradas > 0 ? `
-        <div style="background: rgba(234, 179, 8, 0.1); color: var(--color-warning); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; gap: 1rem; border: 1px solid rgba(234, 179, 8, 0.2);">
-          <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
-          <div>
-            <h4 style="margin:0;">Filtro Anti-Duplicidade Ativado</h4>
-            <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${resumoDups.total} transações no arquivo, <b>${resumoDups.ignoradas}</b> já existiam e foram descartadas.</p>
+        <div style="background: rgba(234, 179, 8, 0.1); color: var(--color-warning); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; justify-content:space-between; gap: 1rem; border: 1px solid rgba(234, 179, 8, 0.2);">
+          <div style="display:flex; align-items:center; gap: 1rem;">
+            <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
+            <div>
+              <h4 style="margin:0;">Filtro Anti-Duplicidade Ativado</h4>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${resumoDups.total} transações no arquivo, <b>${resumoDups.ignoradas}</b> já existiam e foram descartadas.</p>
+            </div>
           </div>
+          <button onclick="window.showReviewDuplicatesModal()" style="background: var(--color-warning); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap;">
+            ⚠️ Revisar ${resumoDups.ignoradas} Ignorados
+          </button>
         </div>
       ` : '';
+
+      window.showReviewDuplicatesModal = function() {
+        if (!window.transacoesDuplicadasPendentes || window.transacoesDuplicadasPendentes.length === 0) {
+          alert('Nenhuma transação ignorada para revisar.');
+          return;
+        }
+        
+        let modal = document.getElementById('duplicate-review-modal');
+        if (!modal) {
+          modal = document.createElement('div');
+          modal.id = 'duplicate-review-modal';
+          modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; padding:1rem; box-sizing:border-box;';
+          document.body.appendChild(modal);
+        }
+        
+        window.dupsSelectedIds = new Set();
+        
+        window.toggleDupSelection = function(index) {
+          if (window.dupsSelectedIds.has(index)) window.dupsSelectedIds.delete(index);
+          else window.dupsSelectedIds.add(index);
+          document.getElementById('dup-restore-btn').innerText = `Restaurar Selecionados (${window.dupsSelectedIds.size})`;
+        };
+        
+        window.selectAllDups = function(btn) {
+          if (window.dupsSelectedIds.size === window.transacoesDuplicadasPendentes.length) {
+            window.dupsSelectedIds.clear();
+            btn.innerText = "Selecionar Todos";
+            document.querySelectorAll('.dup-checkbox').forEach(cb => cb.checked = false);
+          } else {
+            window.transacoesDuplicadasPendentes.forEach((_, i) => window.dupsSelectedIds.add(i));
+            btn.innerText = "Desmarcar Todos";
+            document.querySelectorAll('.dup-checkbox').forEach(cb => cb.checked = true);
+          }
+          document.getElementById('dup-restore-btn').innerText = `Restaurar Selecionados (${window.dupsSelectedIds.size})`;
+        };
+        
+        window.restaurarDups = async function() {
+          if (window.dupsSelectedIds.size === 0) {
+            alert('Selecione ao menos um lançamento para restaurar.');
+            return;
+          }
+          
+          const itensRestaurar = [];
+          const novosDupsPendentes = [];
+          
+          window.transacoesDuplicadasPendentes.forEach((t, i) => {
+            if (window.dupsSelectedIds.has(i)) itensRestaurar.push(t);
+            else novosDupsPendentes.push(t);
+          });
+          
+          window.transacoesDuplicadasPendentes = novosDupsPendentes;
+          modal.style.display = 'none';
+          
+          const queueStatus = document.getElementById('queue-status');
+          const catStatusBox = document.getElementById('import-categorizer-status');
+          
+          if(queueStatus) { 
+            queueStatus.innerText = `Recategorizando ${itensRestaurar.length} transações restauradas...`;
+            queueStatus.style.color = 'var(--color-warning)';
+          }
+          
+          try {
+            const resCat = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'categorize_json',
+                transacoes: itensRestaurar
+              })
+            });
+            const jsonCat = await resCat.json();
+            if (jsonCat.status !== 'success') throw new Error(jsonCat.message);
+            
+            // Re-injeta na tabela principal
+            const dicionario = window.dicionarioCategorias || {};
+            const novosItensUI = jsonCat.data.map((d, i) => {
+              let confianca = 'verde';
+              let statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin:auto;"></div>';
+              if (d.duvida) {
+                if (d.categoria && d.categoria.toUpperCase() !== 'OUTROS' && d.categoria.toUpperCase() !== 'DIVERSOS') {
+                  confianca = 'amarelo';
+                  statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#f59e0b; margin:auto;"></div>';
+                } else {
+                  confianca = 'vermelho';
+                  statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;"></div>';
+                }
+              }
+              return { ...d, _id: 'tx_restored_' + Date.now() + '_' + i, confianca, statusIcon, descricao: d.descricao ? d.descricao.toString() : '', vlrNumber: parseFloat(d.valor) || 0 };
+            });
+            
+            window.currentReviewData.push(...novosItensUI);
+            window.resumoDuplicidades.ignoradas -= itensRestaurar.length;
+            
+            if(queueStatus) { 
+              queueStatus.innerText = '✨ Processamento em lote concluído!'; 
+              queueStatus.style.color = '#10b981'; 
+            }
+            window.renderReviewTable();
+          } catch (err) {
+            alert('Erro ao recategorizar: ' + err.message);
+            if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
+          }
+        };
+
+        const tableHTML = window.transacoesDuplicadasPendentes.map((t, index) => {
+          return `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;" onclick="const cb=document.getElementById('dup-cb-${index}'); cb.checked=!cb.checked; window.toggleDupSelection(${index});">
+              <td style="padding:0.8rem; text-align:center;"><input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onclick="event.stopPropagation(); window.toggleDupSelection(${index});" style="transform:scale(1.2);"></td>
+              <td style="padding:0.8rem;">${t.data || ''}</td>
+              <td style="padding:0.8rem;">${t.descricao || ''}</td>
+              <td style="padding:0.8rem; font-family:monospace; color:${t.valor<0?'#ef4444':'#10b981'};">${formatBRL(t.valor)}</td>
+            </tr>
+          `;
+        }).join('');
+        
+        modal.innerHTML = `
+          <div style="background:var(--bg-card); width:100%; max-width:800px; max-height:90vh; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 10px 25px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
+            <div style="padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+              <h3 style="margin:0;"><i class="fas fa-shield-alt" style="color:var(--color-warning);"></i> Revisão de Possíveis Duplicatas</h3>
+              <button onclick="document.getElementById('duplicate-review-modal').style.display='none'" style="background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:1rem; background:rgba(234,179,8,0.05); color:var(--text-secondary); font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.05);">
+              O sistema ocultou estas transações por terem a <b>mesma data e o mesmo valor</b> de lançamentos que já estão no seu histórico. Se alguma não for duplicata, selecione-a e clique em Restaurar.
+            </div>
+            <div style="flex:1; overflow-y:auto; padding:1.5rem;">
+              <table style="width:100%; border-collapse:collapse; text-align:left;">
+                <thead style="background:rgba(255,255,255,0.05);">
+                  <tr>
+                    <th style="padding:1rem; text-align:center; width:50px;">Ação</th>
+                    <th style="padding:1rem;">Data</th>
+                    <th style="padding:1rem;">Descrição</th>
+                    <th style="padding:1rem;">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>${tableHTML}</tbody>
+              </table>
+            </div>
+            <div style="padding:1.5rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; gap:1rem;">
+              <button onclick="window.selectAllDups(this)" class="btn btn-secondary">Selecionar Todos</button>
+              <div style="display:flex; gap:1rem;">
+                <button onclick="document.getElementById('duplicate-review-modal').style.display='none'" class="btn btn-secondary">Cancelar</button>
+                <button id="dup-restore-btn" onclick="window.restaurarDups()" class="btn btn-primary" style="background:var(--color-warning); color:#000;">Restaurar Selecionados (0)</button>
+              </div>
+            </div>
+          </div>
+        `;
+        modal.style.display = 'flex';
+      };
 
       const periodosUnicos = [...new Set(window.currentReviewData.map(d => {
         if (d.data && d.data.length >= 10) return d.data.substring(3, 10);
@@ -931,6 +1083,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if(queueLeft) queueLeft.appendChild(li);
         });
 
+        window.transacoesDuplicadasPendentes = [];
         let todasIneditasAgrupadas = [];
         let totalDuplicadasIgnoradas = 0;
 
@@ -996,9 +1149,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             if(statusSpan) { statusSpan.innerText = '🔍 Filtrando duplicidades...'; }
             const historico = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.lancamentos) ? dadosFinanceiros.lancamentos : [];
             
-            const ineditasDoArquivo = transacoesExtraidas.filter(t => {
+            const ineditasDoArquivo = [];
+            
+            transacoesExtraidas.forEach(t => {
               const isDuplicate = historico.some(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.01);
-              return !isDuplicate;
+              if (isDuplicate) {
+                window.transacoesDuplicadasPendentes.push(t);
+              } else {
+                ineditasDoArquivo.push(t);
+              }
             });
 
             totalDuplicadasIgnoradas += (transacoesExtraidas.length - ineditasDoArquivo.length);
