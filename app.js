@@ -319,7 +319,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;" title="A IA não teve ideia"></div>';
           }
         }
-        return { ...d, _id: 'tx_' + i, confianca, statusIcon, vlrNumber: parseFloat(d.valor) || 0 };
+        return { ...d, _id: 'tx_' + i, confianca, statusIcon, descricao: d.descricao != null ? d.descricao.toString() : '', vlrNumber: parseFloat(d.valor) || 0 };
       });
 
       window.reviewSortCol = 'data';
