@@ -450,6 +450,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               </td>
               <td style="padding: 0.8rem;">
                 <select onchange="window.updateReviewData('${d._id}', 'subcategoria', this.value)" style="width: 100%; min-width: 150px; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem;">
+                  <option value="">-- Nenhuma --</option>
                   ${opcoesSub.map(s => `<option value="${s}" ${s === d.subcategoria ? 'selected' : ''}>${s}</option>`).join('')}
                 </select>
               </td>
@@ -517,9 +518,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const itensRestaurar = [];
           const novosDupsPendentes = [];
           
-          window.transacoesDuplicadasPendentes.forEach((t, i) => {
-            if (window.dupsSelectedIds.has(i)) itensRestaurar.push(t);
-            else novosDupsPendentes.push(t);
+          window.transacoesDuplicadasPendentes.forEach((t_obj, i) => {
+            if (window.dupsSelectedIds.has(i)) itensRestaurar.push(t_obj.novo);
+            else novosDupsPendentes.push(t_obj);
           });
           
           window.transacoesDuplicadasPendentes = novosDupsPendentes;
@@ -576,13 +577,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           }
         };
 
-        const tableHTML = window.transacoesDuplicadasPendentes.map((t, index) => {
+        const tableHTML = window.transacoesDuplicadasPendentes.map((t_obj, index) => {
+          const t = t_obj.novo;
+          const orig = t_obj.original;
           return `
             <tr style="border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;" onclick="const cb=document.getElementById('dup-cb-${index}'); cb.checked=!cb.checked; window.toggleDupSelection(${index});">
-              <td style="padding:0.8rem; text-align:center;"><input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onclick="event.stopPropagation(); window.toggleDupSelection(${index});" style="transform:scale(1.2);"></td>
-              <td style="padding:0.8rem;">${t.data || ''}</td>
-              <td style="padding:0.8rem;">${t.descricao || ''}</td>
-              <td style="padding:0.8rem; font-family:monospace; color:${t.valor<0?'#ef4444':'#10b981'};">${formatBRL(t.valor)}</td>
+              <td style="padding:0.8rem; text-align:center; vertical-align:middle;"><input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onclick="event.stopPropagation(); window.toggleDupSelection(${index});" style="transform:scale(1.2);"></td>
+              <td style="padding:0.8rem;">
+                <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;"><i class="fas fa-history"></i> Original no Histórico:</div>
+                <div style="font-size:0.85rem; color:var(--text-primary);"><i class="fas fa-file-import" style="color:var(--color-warning);"></i> Importação Nova:</div>
+              </td>
+              <td style="padding:0.8rem;">
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:4px;">${orig.descricao || orig.obs || ''} (${orig.data})</div>
+                <div style="font-size:0.9rem; color:var(--text-primary); font-weight:500;">${t.descricao || t.obs || ''} (${t.data})</div>
+              </td>
+              <td style="padding:0.8rem; font-family:monospace; vertical-align:bottom;">
+                <div style="color:${t.valor<0?'#ef4444':'#10b981'}; font-size:1rem; font-weight:bold;">${formatBRL(t.valor)}</div>
+              </td>
             </tr>
           `;
         }).join('');
@@ -1151,7 +1162,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             transacoesExtraidas.forEach(t => {
               const isDuplicate = historico.some(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.01);
               if (isDuplicate) {
-                window.transacoesDuplicadasPendentes.push(t);
+                const original = historico.find(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.01);
+                window.transacoesDuplicadasPendentes.push({ novo: t, original: original });
               } else {
                 ineditasDoArquivo.push(t);
               }
