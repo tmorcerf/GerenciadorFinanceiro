@@ -294,8 +294,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       closeGlassModal();
     }
 
-    // Função processarExtratoComIA substituída pela lógica de fila em lote acima.
-    // Mantida temporariamente como fallback se houver referências antigas.
     async function processarExtratoComIA(csvText, fileName = "extrato.csv", modelName = "claude-haiku-4-5-20251001") {
        throw new Error("processarExtratoComIA foi descontinuada. A lógica agora roda na fila de upload em lote.");
     }
