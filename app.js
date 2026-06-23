@@ -891,7 +891,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              htmlParcelas += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-layer-group"></i> Compras Parceladas (Agente 3)</h4>`;
              htmlParcelas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">O Parcelador projetou suas faturas. Verifique se os vencimentos futuros estão corretos.</p>`;
              
-             htmlParcelas += `<div style="overflow-x: auto; margin-bottom: 2rem;">
+                 <div style="overflow-x: auto; margin-bottom: 2rem;">
                <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
                  <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
                    <tr>
@@ -900,17 +900,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Conta</th>
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Descrição</th>
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Valor</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;"><i class="fas fa-trash"></i></th>
                    </tr>
                  </thead>
                  <tbody>`;
                  
-             window.expandedParcelas.forEach(p => {
-                htmlParcelas += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                  <td style="padding: 0.8rem; color: var(--text-secondary);">${p.data}</td>
-                  <td style="padding: 0.8rem; color: var(--color-accent); font-weight: 600;">${p.vencimento}</td>
-                  <td style="padding: 0.8rem; color: var(--text-secondary);">${p.conta}</td>
-                  <td style="padding: 0.8rem; color: var(--text-primary);">${p.descricao}</td>
-                  <td style="padding: 0.8rem; color: var(--color-expense);">${Number(p.valor).toLocaleString('pt-BR', {style:'currency',currency:'BRL'})}</td>
+             window.expandedParcelas.forEach((p, idx) => {
+                htmlParcelas += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" id="parc-row-${idx}">
+                  <td style="padding: 0.5rem;"><input type="text" value="${p.data}" onchange="window.expandedParcelas[${idx}].data=this.value" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="text" value="${p.vencimento}" onchange="window.expandedParcelas[${idx}].vencimento=this.value" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid var(--color-accent); color:var(--color-accent); font-weight:600; padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="text" value="${p.conta}" onchange="window.expandedParcelas[${idx}].conta=this.value" style="width:100%; min-width:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="text" value="${p.descricao}" onchange="window.expandedParcelas[${idx}].descricao=this.value" style="width:100%; min-width:200px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="number" step="0.01" value="${Number(p.valor).toFixed(2)}" onchange="window.expandedParcelas[${idx}].valor=parseFloat(this.value)" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--color-expense); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem; text-align:center;"><button onclick="window.expandedParcelas.splice(${idx}, 1); this.closest('tr').remove();" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:var(--color-expense); padding:6px 10px; border-radius:4px; cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Remover Parcela"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
              });
              htmlParcelas += `</tbody></table></div>`;
