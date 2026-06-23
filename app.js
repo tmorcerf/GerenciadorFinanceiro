@@ -297,7 +297,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     // Função processarExtratoComIA substituída pela lógica de fila em lote acima.
     // Mantida temporariamente como fallback se houver referências antigas.
-    async function processarExtratoComIA(csvText, fileName = "extrato.csv", modelName = "claude-opus-4-8") {
+    async function processarExtratoComIA(csvText, fileName = "extrato.csv", modelName = "claude-3-opus-20240229") {
        throw new Error("processarExtratoComIA foi descontinuada. A lógica agora roda na fila de upload em lote.");
     }
 
@@ -997,7 +997,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     // Lógica para upload em LOTE (Desktop)
-    let selectedIaModel = 'claude-opus-4-8';
+    let selectedIaModel = 'claude-3-opus-20240229';
     const btnImportModels = document.querySelectorAll('.btn-import-model');
     const uploadCsvIa = document.getElementById('uploadCsvIa');
 
@@ -1045,7 +1045,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     const btnImportSingle = document.getElementById('btn-import-single');
     if (btnImportSingle && uploadCsvIa) {
       btnImportSingle.addEventListener('click', () => {
-        selectedIaModel = 'claude-haiku-4-5-20251001';
+        selectedIaModel = 'claude-3-5-haiku-20241022';
         uploadCsvIa.click();
       });
 
