@@ -327,19 +327,33 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       window.reviewFilterConfianca = 'todas';
       window.reviewFilterData = 'todas';
       window.reviewSelectedIds = new Set();
+      window.reviewPressTimer = null;
+
+      window.rowTouchStart = function(e, id) {
+        window.reviewPressTimer = setTimeout(() => {
+          const isSelected = window.reviewSelectedIds.has(id);
+          window.toggleReviewSelection(id, !isSelected);
+          window.renderReviewTable();
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
+      };
+
+      window.rowTouchEnd = function(e) {
+        if (window.reviewPressTimer) clearTimeout(window.reviewPressTimer);
+      };
+
+      window.rowClick = function(e, id) {
+        if (e.target.tagName.toLowerCase() === 'select') return;
+        if (e.ctrlKey || e.metaKey) {
+          const isSelected = window.reviewSelectedIds.has(id);
+          window.toggleReviewSelection(id, !isSelected);
+          window.renderReviewTable();
+        }
+      };
 
       window.toggleReviewSelection = function(id, checked) {
         if (checked) window.reviewSelectedIds.add(id);
         else window.reviewSelectedIds.delete(id);
-      };
-
-      window.toggleAllReviewSelection = function(checked) {
-        const checkboxes = document.querySelectorAll('.row-checkbox');
-        checkboxes.forEach(cb => {
-          cb.checked = checked;
-          if (checked) window.reviewSelectedIds.add(cb.value);
-          else window.reviewSelectedIds.delete(cb.value);
-        });
       };
 
       window.updateReviewData = function(id, field, value) {
@@ -416,13 +430,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const catAtual = d.categoria || opcoesCategoria[0];
           const opcoesSub = dicionario[catAtual] || [];
           const corValor = d.vlrNumber >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
-          const isSelected = window.reviewSelectedIds.has(d._id) ? 'checked' : '';
+          const isSelected = window.reviewSelectedIds.has(d._id);
+          const bgSelected = isSelected ? 'background: rgba(59,130,246,0.15) !important;' : '';
 
           return `
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-              <td style="padding: 0.8rem; text-align:center;">
-                <input type="checkbox" class="row-checkbox" value="${d._id}" onchange="window.toggleReviewSelection('${d._id}', this.checked)" ${isSelected} style="cursor: pointer; width: 16px; height: 16px;">
-              </td>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; ${bgSelected}" 
+                onmouseover="if(!${isSelected}) this.style.background='rgba(255,255,255,0.02)'" 
+                onmouseout="if(!${isSelected}) this.style.background='transparent'"
+                ontouchstart="window.rowTouchStart(event, '${d._id}')" 
+                ontouchend="window.rowTouchEnd(event)"
+                oncontextmenu="event.preventDefault();"
+                onclick="window.rowClick(event, '${d._id}')"
+                title="Use Ctrl+Click ou Toque Longo para selecionar">
               <td style="padding: 0.8rem; text-align:center;">${d.statusIcon}</td>
               <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">${d.data}</td>
               <td style="padding: 0.8rem; color: var(--text-primary); font-size: 0.9rem;">${d.descricao}</td>
@@ -494,9 +513,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
-                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); width: 40px; text-align:center;">
-                  <input type="checkbox" onchange="window.toggleAllReviewSelection(this.checked)" title="Selecionar Todos Visíveis" style="cursor: pointer; width: 16px; height: 16px;">
-                </th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">Confiança ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
