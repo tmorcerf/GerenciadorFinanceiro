@@ -1201,9 +1201,30 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const ineditasDoArquivo = [];
             
             transacoesExtraidas.forEach(t => {
-              const isDuplicate = historico.some(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.001);
+              const installmentRegex = /\b(\d{1,2})\/(\d{1,2})\b/;
+              const tInst = (t.descricao || "").match(installmentRegex);
+              
+              const isDuplicate = historico.some(h => {
+                if (h.data !== t.data || Math.abs(h.valor - t.valor) >= 0.001) return false;
+                
+                // Se a nova transação tem um indicador de parcela (ex: 01/02)
+                if (tInst) {
+                  const hInst = (h.obs || "").match(installmentRegex);
+                  // Se o histórico também tem indicador de parcela, e eles são diferentes, NÃO é duplicata
+                  if (hInst && tInst[0] !== hInst[0]) return false;
+                }
+                return true;
+              });
+
               if (isDuplicate) {
-                const original = historico.find(h => h.data === t.data && Math.abs(h.valor - t.valor) < 0.001);
+                const original = historico.find(h => {
+                  if (h.data !== t.data || Math.abs(h.valor - t.valor) >= 0.001) return false;
+                  if (tInst) {
+                    const hInst = (h.obs || "").match(installmentRegex);
+                    if (hInst && tInst[0] !== hInst[0]) return false;
+                  }
+                  return true;
+                });
                 window.transacoesDuplicadasPendentes.push({ novo: t, original: original });
               } else {
                 ineditasDoArquivo.push(t);
