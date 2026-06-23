@@ -546,13 +546,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       document.getElementById('panel-import').classList.add('active');
 
       setTimeout(() => {
-        const saveHandler = async () => {
-          // Extrai o resultado final e remove campos temporários do frontend
-          const transacoesFinais = window.currentReviewData.map(d => {
-            const { _id, confianca, statusIcon, vlrNumber, duvida, ...cleanData } = d;
-            return cleanData;
-          });
-
+        const executeFinalSave = async (transacoesFinais, updatesDb = []) => {
           showGlassModal('Salvando...', `
             <div style="text-align:center; padding: 3rem 1rem;">
               <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
@@ -567,33 +561,25 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({
                 action: 'salvar_ia',
-                transacoes: transacoesFinais
+                transacoes: transacoesFinais,
+                updatesDb: updatesDb
               })
             });
 
             const json = await response.json();
             if (json.status === 'success') {
-              // Limpa a tela de revisão
               containerBox.style.display = 'none';
               containerList.innerHTML = '';
-              
               showGlassModal('Sucesso!', `
                 <div style="text-align:center; padding: 2rem 1rem;">
                   <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-income); margin-bottom: 1.5rem;"></i>
                   <h3 style="color: var(--text-primary);">Tudo Salvo!</h3>
-                  <p style="color: var(--text-secondary);">Os lançamentos foram importados para a sua planilha e o robô aprendeu suas correções.</p>
+                  <p style="color: var(--text-secondary);">Os lançamentos foram importados para a sua planilha e as transferências conciliadas.</p>
                 </div>
               `);
               
               setTimeout(() => {
                 document.getElementById('glassModal').classList.remove('active');
-                
-                // Retorna para a Visão Geral e recarrega
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                document.querySelectorAll('.dashboard-panel').forEach(panel => panel.classList.remove('active'));
-                document.querySelector('[data-target="panel-overview"]').classList.add('active');
-                document.getElementById('panel-overview').classList.add('active');
-                
                 window.location.reload();
               }, 3000);
             } else {
@@ -603,6 +589,112 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             console.error(err);
             alert("Erro ao salvar na planilha: " + err.message);
             document.getElementById('glassModal').classList.remove('active');
+          }
+        };
+
+        const saveHandler = async () => {
+          const transacoesComIds = window.currentReviewData.map(d => {
+            const { confianca, statusIcon, vlrNumber, duvida, ...cleanData } = d;
+            return cleanData; // mantem o _id para poder reconciliar no callback visual
+          });
+
+          const temTransferencia = transacoesComIds.some(t => t.categoria === 'Transferência' || t.categoria === 'Transferencias');
+          
+          if (!temTransferencia) {
+             const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
+             executeFinalSave(transacoesLimpas);
+             return;
+          }
+
+          showGlassModal('Cruzando Transferências...', `
+            <div style="text-align:center; padding: 3rem 1rem;">
+              <i class="fas fa-link fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+              <h3 style="color: var(--text-primary);">Procurando Casamentos no Histórico...</h3>
+            </div>
+          `);
+
+          try {
+            const resSim = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+              method: 'POST',
+              body: JSON.stringify({ action: 'simular_conciliacao_transferencias', transacoes: transacoesComIds })
+            });
+            const simJson = await resSim.json();
+
+            document.getElementById('glassModal').classList.remove('active');
+
+            if (simJson.status === 'success' && simJson.pares && simJson.pares.length > 0) {
+               window.reconciliationPairs = simJson.pares;
+               
+               const titleEl = document.getElementById('import-review-title');
+               if (titleEl) titleEl.innerHTML = `<i class="fas fa-link" style="color: var(--color-primary);"></i> Casamentos Encontrados`;
+
+               const htmlPares = window.reconciliationPairs.map((p, idx) => `
+                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                      <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;"><i class="far fa-calendar-alt"></i> ${p.t1.dateStr} | <strong>R$ ${Math.abs(p.t1.valor).toFixed(2)}</strong></div>
+                      <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="color: var(--color-expense);"><i class="fas fa-arrow-up"></i> Saiu de <strong>${p.t1.valor < 0 ? p.t1.conta : p.t2.conta}</strong></span>
+                        <i class="fas fa-arrow-right" style="color: var(--text-secondary);"></i>
+                        <span style="color: var(--color-income);"><i class="fas fa-arrow-down"></i> Entrou em <strong>${p.t1.valor > 0 ? p.t1.conta : p.t2.conta}</strong></span>
+                      </div>
+                      <div style="margin-top: 0.5rem; color: var(--color-primary); font-size: 0.9rem; font-weight: 600;">
+                        Ocultar descrição original e usar: ${p.prefixo}
+                      </div>
+                    </div>
+                    <div>
+                      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-primary);">
+                        <input type="checkbox" id="cb-pair-${idx}" checked style="width: 20px; height: 20px; cursor: pointer;"> Confirmar
+                      </label>
+                    </div>
+                 </div>
+               `).join('');
+
+               containerList.innerHTML = `
+                 <div style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+                   Encontramos <strong>${window.reconciliationPairs.length}</strong> pares perfeitos. Desmarque o que não quiser conciliar.
+                 </div>
+                 ${htmlPares}
+                 <div style="text-align: right; margin-top: 2rem;">
+                   <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-income), #16a34a); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(34,197,94,0.3); transition: transform 0.2s;">
+                     <i class="fas fa-check-double"></i> Confirmar e Gravar na Planilha
+                   </button>
+                 </div>
+               `;
+
+               document.getElementById('btn-final-save-reconcile').onclick = () => {
+                  let updatesDb = [];
+                  window.reconciliationPairs.forEach((p, idx) => {
+                     const isChecked = document.getElementById(`cb-pair-${idx}`).checked;
+                     if (isChecked) {
+                        if (!p.t1.isDb) {
+                           const tNew = transacoesComIds.find(t => t._id === p.t1._id);
+                           if (tNew) tNew.descricao = `${p.prefixo} ${tNew.descricao}`;
+                        } else {
+                           updatesDb.push({ rowNum: p.t1.rowNum, desc: `${p.prefixo} ${p.t1.desc}` });
+                        }
+                        
+                        if (!p.t2.isDb) {
+                           const tNew = transacoesComIds.find(t => t._id === p.t2._id);
+                           if (tNew) tNew.descricao = `${p.prefixo} ${tNew.descricao}`;
+                        } else {
+                           updatesDb.push({ rowNum: p.t2.rowNum, desc: `${p.prefixo} ${p.t2.desc}` });
+                        }
+                     }
+                  });
+                  
+                  const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
+                  executeFinalSave(transacoesLimpas, updatesDb);
+               };
+
+            } else {
+               const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
+               executeFinalSave(transacoesLimpas);
+            }
+
+          } catch(err) {
+             console.error(err);
+             const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
+             executeFinalSave(transacoesLimpas);
           }
         };
 
@@ -717,33 +809,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return { type: 'text', content: text };
     }
     
-    const btnConciliar = document.getElementById('btn-conciliar');
-    if (btnConciliar) {
-      btnConciliar.addEventListener('click', async () => {
-        try {
-          btnConciliar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conciliando...';
-          btnConciliar.disabled = true;
-          
-          const res = await fetch(APPS_SCRIPT_WEBAPP_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'conciliar_transferencias' })
-          });
-          const json = await res.json();
-          
-          if (json.status === 'success') {
-            alert(`Sucesso! ${json.matchedCount} pares de transferências foram conciliados. Verifique sua aba LANÇAMENTOS.`);
-          } else {
-            alert('Erro ao conciliar transferências na planilha.');
-          }
-        } catch (err) {
-          console.error(err);
-          alert('Erro de conexão ao tentar conciliar transferências.');
-        } finally {
-          btnConciliar.innerHTML = '<i class="fas fa-link"></i> Conciliar Transferências';
-          btnConciliar.disabled = false;
-        }
-      });
-    }
+
     
     const btnImportSingle = document.getElementById('btn-import-single');
     if (btnImportSingle && uploadCsvIa) {
