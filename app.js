@@ -891,7 +891,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              htmlParcelas += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-layer-group"></i> Compras Parceladas (Agente 3)</h4>`;
              htmlParcelas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">O Parcelador projetou suas faturas. Verifique se os vencimentos futuros estão corretos.</p>`;
              
-                 <div style="overflow-x: auto; margin-bottom: 2rem;">
+             htmlParcelas += `<div style="overflow-x: auto; margin-bottom: 2rem;">
                <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
                  <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
                    <tr>
