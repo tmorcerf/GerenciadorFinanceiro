@@ -577,39 +577,24 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           }
         };
 
-        const cardsHTML = window.transacoesDuplicadasPendentes.map((t_obj, index) => {
+        const tableHTML = window.transacoesDuplicadasPendentes.map((t_obj, index) => {
           const t = t_obj.novo;
-          const orig = t_obj.original || {};
-          const origDesc = orig.descricao || orig.obs || orig.conta || 'Sem descrição';
-          const newDesc = t.descricao || t.obs || t.conta || 'Sem descrição';
+          const orig = t_obj.original;
           return `
-            <div class="dup-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 1rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.2s ease;" onclick="const cb=document.getElementById('dup-cb-${index}'); cb.checked=!cb.checked; window.toggleDupSelection(${index}); this.style.borderColor = cb.checked ? 'var(--color-warning)' : 'rgba(255,255,255,0.1)';">
-              <div onclick="event.stopPropagation();">
-                <input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onchange="this.closest('.dup-card').style.borderColor = this.checked ? 'var(--color-warning)' : 'rgba(255,255,255,0.1)';" onclick="window.toggleDupSelection(${index});" style="transform:scale(1.2);">
-              </div>
-              <div style="flex: 1;">
-                <!-- Original -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                  <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                    <span style="display: inline-block; width: 140px;"><i class="fas fa-history"></i> Original Histórico:</span> 
-                    <strong>${origDesc}</strong> <span style="opacity:0.7">(${orig.data || ''})</span>
-                  </div>
-                  <div style="font-size: 0.85rem; color: var(--text-secondary); font-family: monospace;">
-                    ${formatBRL(orig.valor)}
-                  </div>
-                </div>
-                <!-- Nova -->
-                <div style="display: flex; justify-content: space-between;">
-                  <div style="font-size: 0.95rem; color: var(--text-primary);">
-                    <span style="display: inline-block; width: 140px; color: var(--color-warning); font-weight: 500;"><i class="fas fa-file-import"></i> Importação Nova:</span> 
-                    <strong>${newDesc}</strong> <span style="opacity:0.7; font-size:0.85rem;">(${t.data})</span>
-                  </div>
-                  <div style="font-size: 0.95rem; font-weight: bold; font-family: monospace; color: ${t.valor < 0 ? 'var(--color-danger)' : 'var(--color-success)'}">
-                    ${formatBRL(t.valor)}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;" onclick="const cb=document.getElementById('dup-cb-${index}'); cb.checked=!cb.checked; window.toggleDupSelection(${index});">
+              <td style="padding:0.8rem; text-align:center; vertical-align:middle;"><input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onclick="event.stopPropagation(); window.toggleDupSelection(${index});" style="transform:scale(1.2);"></td>
+              <td style="padding:0.8rem;">
+                <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;"><i class="fas fa-history"></i> Original no Histórico:</div>
+                <div style="font-size:0.85rem; color:var(--text-primary);"><i class="fas fa-file-import" style="color:var(--color-warning);"></i> Importação Nova:</div>
+              </td>
+              <td style="padding:0.8rem;">
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:4px;">${orig.descricao || orig.obs || ''} (${orig.data})</div>
+                <div style="font-size:0.9rem; color:var(--text-primary); font-weight:500;">${t.descricao || t.obs || ''} (${t.data})</div>
+              </td>
+              <td style="padding:0.8rem; font-family:monospace; vertical-align:bottom;">
+                <div style="color:${t.valor<0?'#ef4444':'#10b981'}; font-size:1rem; font-weight:bold;">${formatBRL(t.valor)}</div>
+              </td>
+            </tr>
           `;
         }).join('');
         
@@ -623,7 +608,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               O sistema ocultou estas transações por terem a <b>mesma data e o mesmo valor</b> de lançamentos que já estão no seu histórico. Se alguma não for duplicata, selecione-a e clique em Restaurar.
             </div>
             <div style="flex:1; overflow-y:auto; padding:1.5rem;">
-              ${cardsHTML}
+              <table style="width:100%; border-collapse:collapse; text-align:left;">
+                <thead style="background:rgba(255,255,255,0.05);">
+                  <tr>
+                    <th style="padding:1rem; text-align:center; width:50px;">Ação</th>
+                    <th style="padding:1rem;">Data</th>
+                    <th style="padding:1rem;">Descrição</th>
+                    <th style="padding:1rem;">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>${tableHTML}</tbody>
+              </table>
             </div>
             <div style="padding:1.5rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; gap:1rem;">
               <button onclick="window.selectAllDups(this)" class="btn btn-secondary">Selecionar Todos</button>
