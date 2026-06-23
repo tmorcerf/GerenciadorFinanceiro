@@ -546,14 +546,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       document.getElementById('panel-import').classList.add('active');
 
       setTimeout(() => {
-        const executeFinalSave = async (transacoesFinais, updatesDb = []) => {
-          showGlassModal('Salvando...', `
-            <div style="text-align:center; padding: 3rem 1rem;">
-              <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-              <h3 style="color: var(--text-primary);">Gravando na Planilha...</h3>
-            </div>
-          `);
-
+        const saveTransactions = async (transacoes, updatesDb = []) => {
+          if (transacoes.length === 0 && updatesDb.length === 0) return true;
           try {
             const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
             const response = await fetch(webhookUrl, {
@@ -561,140 +555,225 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({
                 action: 'salvar_ia',
-                transacoes: transacoesFinais,
+                transacoes: transacoes,
                 updatesDb: updatesDb
               })
             });
-
             const json = await response.json();
-            if (json.status === 'success') {
-              containerBox.style.display = 'none';
-              containerList.innerHTML = '';
-              showGlassModal('Sucesso!', `
-                <div style="text-align:center; padding: 2rem 1rem;">
-                  <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-income); margin-bottom: 1.5rem;"></i>
-                  <h3 style="color: var(--text-primary);">Tudo Salvo!</h3>
-                  <p style="color: var(--text-secondary);">Os lançamentos foram importados para a sua planilha e as transferências conciliadas.</p>
-                </div>
-              `);
-              
-              setTimeout(() => {
-                document.getElementById('glassModal').classList.remove('active');
-                window.location.reload();
-              }, 3000);
-            } else {
-              throw new Error(json.message);
-            }
+            return json.status === 'success';
           } catch (err) {
             console.error(err);
-            alert("Erro ao salvar na planilha: " + err.message);
-            document.getElementById('glassModal').classList.remove('active');
+            return false;
           }
+        };
+
+        const showSuccessAndReload = () => {
+          containerBox.style.display = 'none';
+          containerList.innerHTML = '';
+          showGlassModal('Sucesso!', `
+            <div style="text-align:center; padding: 2rem 1rem;">
+              <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-income); margin-bottom: 1.5rem;"></i>
+              <h3 style="color: var(--text-primary);">Tudo Salvo!</h3>
+              <p style="color: var(--text-secondary);">As importações e transferências foram consolidadas com sucesso.</p>
+            </div>
+          `);
+          setTimeout(() => {
+            document.getElementById('glassModal').classList.remove('active');
+            window.location.reload();
+          }, 3000);
         };
 
         const saveHandler = async () => {
           const transacoesComIds = window.currentReviewData.map(d => {
             const { confianca, statusIcon, vlrNumber, duvida, ...cleanData } = d;
-            return cleanData; // mantem o _id para poder reconciliar no callback visual
+            return cleanData; 
           });
 
-          const temTransferencia = transacoesComIds.some(t => t.categoria === 'Transferência' || t.categoria === 'Transferencias');
+          const transacoesComuns = transacoesComIds.filter(t => t.categoria !== 'Transferência' && t.categoria !== 'Transferencias');
+          const transacoesTransferencias = transacoesComIds.filter(t => t.categoria === 'Transferência' || t.categoria === 'Transferencias');
           
-          if (!temTransferencia) {
-             const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
-             executeFinalSave(transacoesLimpas);
+          if (transacoesTransferencias.length === 0) {
+             showGlassModal('Salvando...', `
+               <div style="text-align:center; padding: 3rem 1rem;">
+                 <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+                 <h3 style="color: var(--text-primary);">Gravando na Planilha...</h3>
+               </div>
+             `);
+             const limpas = transacoesComuns.map(d => { const {_id, ...c} = d; return c; });
+             const success = await saveTransactions(limpas);
+             if (success) showSuccessAndReload();
+             else alert("Erro ao salvar. Tente novamente.");
              return;
           }
 
-          showGlassModal('Cruzando Transferências...', `
+          showGlassModal('Salvando...', `
             <div style="text-align:center; padding: 3rem 1rem;">
-              <i class="fas fa-link fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-              <h3 style="color: var(--text-primary);">Procurando Casamentos no Histórico...</h3>
+              <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+              <h3 style="color: var(--text-primary);">Salvando Lançamentos Comuns...</h3>
+              <p style="color: var(--text-secondary); margin-top: 1rem;">Isolando transferências para análise manual.</p>
             </div>
           `);
+
+          if (transacoesComuns.length > 0) {
+            const limpas = transacoesComuns.map(d => { const {_id, ...c} = d; return c; });
+            const success = await saveTransactions(limpas);
+            if (!success) {
+              alert("Erro ao salvar transações comuns. Verifique sua conexão.");
+              document.getElementById('glassModal').classList.remove('active');
+              return;
+            }
+          }
+
+          const h3Modal = document.querySelector('#glassModal h3');
+          const iModal = document.querySelector('#glassModal i');
+          const pModal = document.querySelector('#glassModal p');
+          if (h3Modal) h3Modal.innerText = 'Buscando Histórico de Transferências...';
+          if (iModal) iModal.className = 'fas fa-link fa-spin';
+          if (pModal) pModal.innerText = 'Isso pode levar alguns segundos.';
 
           try {
             const resSim = await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
-              body: JSON.stringify({ action: 'simular_conciliacao_transferencias', transacoes: transacoesComIds })
+              body: JSON.stringify({ action: 'simular_conciliacao_transferencias', transacoes: transacoesTransferencias })
             });
             const simJson = await resSim.json();
 
             document.getElementById('glassModal').classList.remove('active');
 
-            if (simJson.status === 'success' && simJson.pares && simJson.pares.length > 0) {
-               window.reconciliationPairs = simJson.pares;
+            if (simJson.status === 'success') {
+               window.reconciliationPairs = simJson.pares || [];
+               window.novasOrfas = simJson.novasOrfas || [];
+               const historicasOrfas = simJson.historicasOrfas || [];
                
                const titleEl = document.getElementById('import-review-title');
-               if (titleEl) titleEl.innerHTML = `<i class="fas fa-link" style="color: var(--color-primary);"></i> Casamentos Encontrados`;
+               if (titleEl) titleEl.innerHTML = `<i class="fas fa-link" style="color: var(--color-primary);"></i> Sessão de Transferências`;
 
-               const htmlPares = window.reconciliationPairs.map((p, idx) => `
-                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                      <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;"><i class="far fa-calendar-alt"></i> ${p.t1.dateStr} | <strong>R$ ${Math.abs(p.t1.valor).toFixed(2)}</strong></div>
-                      <div style="display: flex; align-items: center; gap: 1rem;">
-                        <span style="color: var(--color-expense);"><i class="fas fa-arrow-up"></i> Saiu de <strong>${p.t1.valor < 0 ? p.t1.conta : p.t2.conta}</strong></span>
-                        <i class="fas fa-arrow-right" style="color: var(--text-secondary);"></i>
-                        <span style="color: var(--color-income);"><i class="fas fa-arrow-down"></i> Entrou em <strong>${p.t1.valor > 0 ? p.t1.conta : p.t2.conta}</strong></span>
+               let htmlPares = '';
+               if (window.reconciliationPairs.length > 0) {
+                 htmlPares += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> Casamentos Perfeitos (Automático)</h4>`;
+                 htmlPares += window.reconciliationPairs.map((p, idx) => `
+                   <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                      <div>
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;"><i class="far fa-calendar-alt"></i> ${p.t1.dateStr} | <strong>R$ ${Math.abs(p.t1.valor).toFixed(2)}</strong></div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                          <span style="color: var(--color-expense);"><i class="fas fa-arrow-up"></i> Saiu de <strong>${p.t1.valor < 0 ? p.t1.conta : p.t2.conta}</strong></span>
+                          <i class="fas fa-arrow-right" style="color: var(--text-secondary);"></i>
+                          <span style="color: var(--color-income);"><i class="fas fa-arrow-down"></i> Entrou em <strong>${p.t1.valor > 0 ? p.t1.conta : p.t2.conta}</strong></span>
+                        </div>
+                        <div style="margin-top: 0.5rem; color: var(--color-primary); font-size: 0.9rem; font-weight: 600;">
+                          Ocultar descrição original e usar: ${p.prefixo}
+                        </div>
                       </div>
-                      <div style="margin-top: 0.5rem; color: var(--color-primary); font-size: 0.9rem; font-weight: 600;">
-                        Ocultar descrição original e usar: ${p.prefixo}
+                      <div>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-primary);">
+                          <input type="checkbox" id="cb-pair-${idx}" checked style="width: 20px; height: 20px; cursor: pointer;"> Confirmar
+                        </label>
                       </div>
-                    </div>
-                    <div>
-                      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-primary);">
-                        <input type="checkbox" id="cb-pair-${idx}" checked style="width: 20px; height: 20px; cursor: pointer;"> Confirmar
-                      </label>
-                    </div>
-                 </div>
-               `).join('');
+                   </div>
+                 `).join('');
+               }
+
+               let htmlOrfas = '';
+               if (window.novasOrfas.length > 0) {
+                 htmlOrfas += `<h4 style="color: var(--text-primary); margin-top: 2rem; margin-bottom: 0.5rem;"><i class="fas fa-user-edit"></i> Pareamento Manual</h4>`;
+                 htmlOrfas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">As transferências abaixo não encontraram pares perfeitos. Selecione o par correspondente no seu histórico ou deixe em branco se a outra ponta ainda não foi importada.</p>`;
+                 
+                 const optionsHistoricas = `<option value="">-- Deixar solta na planilha --</option>` + 
+                   historicasOrfas.map((h, hIdx) => `<option value='${hIdx}'>Histórico: ${h.dateStr} | R$ ${h.valor} | ${h.conta} (${h.desc})</option>`).join('');
+
+                 htmlOrfas += window.novasOrfas.map((n, idx) => `
+                   <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                      <div style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>Importação:</strong> ${n.dateStr} | R$ ${n.valor} | ${n.conta} <br><span style="font-size:0.8rem;color:var(--text-secondary)">Desc: ${n.desc}</span></div>
+                      <select id="sel-manual-${idx}" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--bg-dark); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2);">
+                        ${optionsHistoricas}
+                      </select>
+                   </div>
+                 `).join('');
+               }
 
                containerList.innerHTML = `
-                 <div style="margin-bottom: 1.5rem; color: var(--text-secondary);">
-                   Encontramos <strong>${window.reconciliationPairs.length}</strong> pares perfeitos. Desmarque o que não quiser conciliar.
+                 <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
+                   <i class="fas fa-check-circle"></i> Os demais lançamentos já foram salvos com segurança! Restam apenas as transferências.
                  </div>
                  ${htmlPares}
+                 ${htmlOrfas}
                  <div style="text-align: right; margin-top: 2rem;">
-                   <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-income), #16a34a); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(34,197,94,0.3); transition: transform 0.2s;">
-                     <i class="fas fa-check-double"></i> Confirmar e Gravar na Planilha
+                   <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
+                     <i class="fas fa-save"></i> Finalizar Pareamento
                    </button>
                  </div>
                `;
 
-               document.getElementById('btn-final-save-reconcile').onclick = () => {
+               document.getElementById('btn-final-save-reconcile').onclick = async () => {
+                  showGlassModal('Finalizando...', `
+                    <div style="text-align:center; padding: 3rem 1rem;">
+                      <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+                      <h3 style="color: var(--text-primary);">Salvando Transferências...</h3>
+                    </div>
+                  `);
+
                   let updatesDb = [];
+                  
+                  // 1. Processa pares perfeitos
                   window.reconciliationPairs.forEach((p, idx) => {
                      const isChecked = document.getElementById(`cb-pair-${idx}`).checked;
                      if (isChecked) {
                         if (!p.t1.isDb) {
-                           const tNew = transacoesComIds.find(t => t._id === p.t1._id);
+                           const tNew = transacoesTransferencias.find(t => t._id === p.t1._id);
                            if (tNew) tNew.descricao = `${p.prefixo} ${tNew.descricao}`;
                         } else {
                            updatesDb.push({ rowNum: p.t1.rowNum, desc: `${p.prefixo} ${p.t1.desc}` });
                         }
                         
                         if (!p.t2.isDb) {
-                           const tNew = transacoesComIds.find(t => t._id === p.t2._id);
+                           const tNew = transacoesTransferencias.find(t => t._id === p.t2._id);
                            if (tNew) tNew.descricao = `${p.prefixo} ${tNew.descricao}`;
                         } else {
                            updatesDb.push({ rowNum: p.t2.rowNum, desc: `${p.prefixo} ${p.t2.desc}` });
                         }
                      }
                   });
+
+                  // 2. Processa pareamento manual
+                  window.novasOrfas.forEach((n, idx) => {
+                     const selVal = document.getElementById(`sel-manual-${idx}`).value;
+                     if (selVal !== "") {
+                        const hIdx = parseInt(selVal);
+                        const h = historicasOrfas[hIdx];
+                        let contaOrigem = n.valor < 0 ? n.conta : h.conta;
+                        let contaDestino = n.valor > 0 ? n.conta : h.conta;
+                        let prefixo = `[${contaOrigem} ➔ ${contaDestino}]`;
+                        
+                        // Atualiza a nova
+                        const tNew = transacoesTransferencias.find(t => t._id === n._id);
+                        if (tNew) tNew.descricao = `${prefixo} ${tNew.descricao}`;
+                        
+                        // Atualiza a velha (histórica)
+                        updatesDb.push({ rowNum: h.rowNum, desc: `${prefixo} ${h.desc}` });
+                     }
+                  });
                   
-                  const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
-                  executeFinalSave(transacoesLimpas, updatesDb);
+                  const transacoesLimpas = transacoesTransferencias.map(d => { const {_id, ...c} = d; return c; });
+                  const success = await saveTransactions(transacoesLimpas, updatesDb);
+                  if (success) showSuccessAndReload();
+                  else {
+                     alert("Erro ao salvar as transferências.");
+                     document.getElementById('glassModal').classList.remove('active');
+                  }
                };
 
             } else {
-               const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
-               executeFinalSave(transacoesLimpas);
+               // Fallback se api retornar erro mas call nao dar exception
+               const transacoesLimpas = transacoesTransferencias.map(d => { const {_id, ...c} = d; return c; });
+               const success = await saveTransactions(transacoesLimpas);
+               if (success) showSuccessAndReload();
             }
 
           } catch(err) {
              console.error(err);
-             const transacoesLimpas = transacoesComIds.map(d => { const {_id, ...c} = d; return c; });
-             executeFinalSave(transacoesLimpas);
+             const transacoesLimpas = transacoesTransferencias.map(d => { const {_id, ...c} = d; return c; });
+             const success = await saveTransactions(transacoesLimpas);
+             if (success) showSuccessAndReload();
           }
         };
 
