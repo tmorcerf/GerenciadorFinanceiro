@@ -22,7 +22,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1019128251';
     let CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=279877792';
     let CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1791414224';
-    let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxr9YewljAU2MF9uZoV52tGVEZwFMaOD_Iyg7bxsekE8-RI4a0_8giiMbqzc_bYNDZxSQ/exec';
+    let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxqYgPYvnSn3Q6OLudeYQlucXMChQh_KJ-lFbZ1cdghX3xMyRLGMNPraFnq5mhkXs9e3w/exec';
     
     // INTERRUPTOR DE AMBIENTES (Staging vs Production)
     const isTestEnv = window.location.search.includes('teste=true');
@@ -34,7 +34,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1748033613&single=true&output=csv';
       CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=2078075619&single=true&output=csv';
       CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=0&single=true&output=csv'; // Fallback na aba 0 se não existir
-      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxr9YewljAU2MF9uZoV52tGVEZwFMaOD_Iyg7bxsekE8-RI4a0_8giiMbqzc_bYNDZxSQ/exec';
+      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxqYgPYvnSn3Q6OLudeYQlucXMChQh_KJ-lFbZ1cdghX3xMyRLGMNPraFnq5mhkXs9e3w/exec';
     }
 
     // Global Data State
@@ -3009,7 +3009,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnSubmitFeedback = document.getElementById('btnSubmitFeedback');
       const feedbackText = document.getElementById('feedbackText');
       // Necessitamos pegar o URL definido no outro script (é global)
-      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxr9YewljAU2MF9uZoV52tGVEZwFMaOD_Iyg7bxsekE8-RI4a0_8giiMbqzc_bYNDZxSQ/exec';
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxqYgPYvnSn3Q6OLudeYQlucXMChQh_KJ-lFbZ1cdghX3xMyRLGMNPraFnq5mhkXs9e3w/exec';
 
       if (btnFeedback) {
         btnFeedback.onclick = () => {
@@ -3305,7 +3305,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnChatSend = document.getElementById('btn-chat-send');
       const chatInput = document.getElementById('chat-input');
       const chatMessages = document.getElementById('chat-messages');
-      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxr9YewljAU2MF9uZoV52tGVEZwFMaOD_Iyg7bxsekE8-RI4a0_8giiMbqzc_bYNDZxSQ/exec';
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxqYgPYvnSn3Q6OLudeYQlucXMChQh_KJ-lFbZ1cdghX3xMyRLGMNPraFnq5mhkXs9e3w/exec';
       
       let historicoChat = [];
 
