@@ -3858,5 +3858,174 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (e.key === 'Enter') enviarMensagemCopilot();
         });
       }
-    });
+      
+      // --- GERENCIADOR DE CONFIGURAÇÕES (CATEGORIAS E CONTAS) ---
+      
+      window.renderEditCategories = function() {
+        const container = document.getElementById('categories-editor-container');
+        if (!container) return;
+        
+        if (!window.editCategorias) {
+          window.editCategorias = JSON.parse(JSON.stringify(window.dicionarioGeral || {}));
+        }
+        
+        let html = '';
+        Object.keys(window.editCategorias).forEach(cat => {
+          html += `<div style="min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+              <input type="text" value="${cat}" onchange="window.renameCategory('${cat}', this.value)" style="background:transparent; border:none; color:var(--text-primary); font-weight:bold; font-size:1.1rem; width:80%;">
+              <button onclick="window.removeCategory('${cat}')" style="background:transparent; border:none; color:var(--color-expense); cursor:pointer;"><i class="fas fa-trash"></i></button>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0; display:flex; flex-direction:column; gap:0.5rem;">`;
+            
+          window.editCategorias[cat].forEach((sub, idx) => {
+            html += `<li style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">
+              <input type="text" value="${sub}" onchange="window.renameSubcategory('${cat}', ${idx}, this.value)" style="background:transparent; border:none; color:var(--text-secondary); width:80%;">
+              <button onclick="window.removeSubcategory('${cat}', ${idx})" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;"><i class="fas fa-times"></i></button>
+            </li>`;
+          });
+          
+          html += `</ul>
+            <div style="margin-top: 1rem; display:flex; gap:0.5rem;">
+              <input type="text" id="new-sub-${cat.replace(/\s+/g, '')}" placeholder="Nova sub..." style="width: 100%; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:0.5rem; border-radius:4px;">
+              <button onclick="window.addSubcategory('${cat}')" class="btn btn-secondary" style="padding:0.5rem;"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>`;
+        });
+        
+        html += `<div style="min-width: 250px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 1rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1rem;">
+          <input type="text" id="new-cat-input" placeholder="Nova Categoria..." style="width: 100%; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:0.8rem; border-radius:4px; text-align:center;">
+          <button onclick="window.addCategory()" class="btn btn-primary" style="width:100%;"><i class="fas fa-plus"></i> Adicionar</button>
+        </div>`;
+        
+        container.innerHTML = html;
+      };
 
+      window.renderEditAccounts = function() {
+        const list = document.getElementById('accounts-editor-list');
+        if (!list) return;
+        
+        if (!window.editContas) {
+          window.editContas = JSON.parse(JSON.stringify(window.contasAtivas || []));
+        }
+        
+        list.innerHTML = window.editContas.map((c, idx) => `
+          <li style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 6px;">
+            <div style="display:flex; align-items:center; gap:1rem; flex:1;">
+              <i class="fas fa-wallet" style="color:var(--color-income);"></i>
+              <input type="text" value="${c.nome}" onchange="window.renameAccount(${idx}, this.value)" style="background:transparent; border:none; color:var(--text-primary); font-size:1rem; width:80%;">
+            </div>
+            <button onclick="window.removeAccount(${idx})" style="background:transparent; border:none; color:var(--color-expense); cursor:pointer;"><i class="fas fa-trash"></i></button>
+          </li>
+        `).join('');
+      };
+
+      window.renameCategory = function(oldName, newName) {
+        if (!newName.trim() || oldName === newName) return;
+        window.editCategorias[newName] = window.editCategorias[oldName];
+        delete window.editCategorias[oldName];
+        window.renderEditCategories();
+      };
+      window.removeCategory = function(cat) {
+        if (confirm('Excluir a categoria ' + cat + ' e todas as suas subcategorias?')) {
+          delete window.editCategorias[cat];
+          window.renderEditCategories();
+        }
+      };
+      window.addCategory = function() {
+        const val = document.getElementById('new-cat-input').value.trim();
+        if (val && !window.editCategorias[val]) {
+          window.editCategorias[val] = [];
+          window.renderEditCategories();
+        }
+      };
+      window.renameSubcategory = function(cat, idx, newName) {
+        if (newName.trim()) window.editCategorias[cat][idx] = newName.trim();
+        window.renderEditCategories();
+      };
+      window.removeSubcategory = function(cat, idx) {
+        window.editCategorias[cat].splice(idx, 1);
+        window.renderEditCategories();
+      };
+      window.addSubcategory = function(cat) {
+        const input = document.getElementById('new-sub-' + cat.replace(/\\s+/g, ''));
+        if (input && input.value.trim()) {
+          window.editCategorias[cat].push(input.value.trim());
+          window.renderEditCategories();
+        }
+      };
+      
+      window.renameAccount = function(idx, newName) {
+        if (newName.trim()) window.editContas[idx].nome = newName.trim();
+        window.renderEditAccounts();
+      };
+      window.removeAccount = function(idx) {
+        if (confirm("Excluir esta conta?")) {
+          window.editContas.splice(idx, 1);
+          window.renderEditAccounts();
+        }
+      };
+      window.addContaConfig = function() {
+        const val = document.getElementById('new-account-input').value.trim();
+        if (val) {
+          window.editContas.push({nome: val});
+          document.getElementById('new-account-input').value = '';
+          window.renderEditAccounts();
+        }
+      };
+
+      window.saveConfigsToServer = async function() {
+        if (!confirm("Isso irá sobrescrever as abas CATEGORIAS e CONTAS na sua planilha. Continuar?")) return;
+        
+        const catKeys = Object.keys(window.editCategorias);
+        let maxLen = 0;
+        catKeys.forEach(k => { if(window.editCategorias[k].length > maxLen) maxLen = window.editCategorias[k].length; });
+        
+        const cat2D = [];
+        cat2D.push(catKeys);
+        for (let i = 0; i < maxLen; i++) {
+          const row = [];
+          catKeys.forEach(k => {
+             row.push(window.editCategorias[k][i] || "");
+          });
+          cat2D.push(row);
+        }
+        
+        const contas2D = [["Contas"]];
+        window.editContas.forEach(c => contas2D.push([c.nome]));
+        
+        const btnHtml = event.currentTarget.innerHTML;
+        const btnEl = event.currentTarget;
+        btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        
+        try {
+          const response = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'salvar_configs',
+              categorias: cat2D,
+              contas: contas2D
+            })
+          });
+          const result = await response.json();
+          if (result.status === 'success') {
+            alert("Configurações salvas com sucesso!");
+            window.dicionarioGeral = window.editCategorias;
+            window.contasAtivas = window.editContas;
+          } else {
+            alert("Erro: " + result.message);
+          }
+        } catch(e) {
+          alert("Erro na conexão: " + e.message);
+        }
+        btnEl.innerHTML = btnHtml;
+      };
+
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.addEventListener('click', () => {
+          if (el.dataset.target === 'panel-categories') window.renderEditCategories();
+          if (el.dataset.target === 'panel-accounts-edit') window.renderEditAccounts();
+        });
+      });
+      
+    });
