@@ -1425,6 +1425,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (catStatusBox) catStatusBox.style.display = 'none';
           if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
           
+          arrayFinalCategorizado.sort((a, b) => {
+            if (!a.data || !b.data) return 0;
+            const pa = a.data.split('/');
+            const pb = b.data.split('/');
+            if (pa.length === 3 && pb.length === 3) {
+               const da = new Date(`${pa[2]}-${pa[1]}-${pa[0]}`);
+               const db = new Date(`${pb[2]}-${pb[1]}-${pb[0]}`);
+               return da - db;
+            }
+            return 0;
+          });
           renderizarRevisaoIA(arrayFinalCategorizado);
         } catch (err) {
           if (funInterval) clearInterval(funInterval);
