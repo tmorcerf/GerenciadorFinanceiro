@@ -341,11 +341,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       window.rowClick = function(e, id) {
         if (e.target.tagName.toLowerCase() === 'select') return;
+        if (e.target.tagName.toLowerCase() === 'input') return;
+        
         if (e.ctrlKey || e.metaKey) {
           const isSelected = window.reviewSelectedIds.has(id);
           window.toggleReviewSelection(id, !isSelected);
-          window.renderReviewTable();
+        } else {
+          window.reviewSelectedIds.clear();
+          window.toggleReviewSelection(id, true);
         }
+        window.renderReviewTable();
       };
 
       window.toggleReviewSelection = function(id, checked) {
@@ -723,7 +728,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <tr>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">Confiança ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
-                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferências/Parcelamentos)">Passo 3?</th>
+                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferências/Parcelamentos)">Trf / Pgto</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor ↕</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria ↕</th>
