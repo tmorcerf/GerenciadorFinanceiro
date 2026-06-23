@@ -458,17 +458,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }).join('');
       };
 
-      const bannerDups = resumoDups.ignoradas > 0 ? `
+      const bannerDups = (window.resumoDuplicidades && window.resumoDuplicidades.ignoradas > 0) ? `
         <div style="background: rgba(234, 179, 8, 0.1); color: var(--color-warning); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display:flex; align-items:center; justify-content:space-between; gap: 1rem; border: 1px solid rgba(234, 179, 8, 0.2);">
           <div style="display:flex; align-items:center; gap: 1rem;">
             <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
             <div>
               <h4 style="margin:0;">Filtro Anti-Duplicidade Ativado</h4>
-              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${resumoDups.total} transações no arquivo, <b>${resumoDups.ignoradas}</b> já existiam e foram descartadas.</p>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${window.resumoDuplicidades.total} transações no arquivo, <b>${window.resumoDuplicidades.ignoradas}</b> já existiam e foram descartadas.</p>
             </div>
           </div>
           <button onclick="window.showReviewDuplicatesModal()" style="background: var(--color-warning); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap;">
-            ⚠️ Revisar ${resumoDups.ignoradas} Ignorados
+            ⚠️ Revisar ${window.resumoDuplicidades.ignoradas} Ignorados
           </button>
         </div>
       ` : '';
@@ -1282,6 +1282,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         } catch (err) {
           if (funInterval) clearInterval(funInterval);
           if (catStatusBox) {
+            catStatusBox.style.display = 'block'; // Ensure the error is visible
             catStatusBox.innerHTML = `
               <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
