@@ -577,48 +577,89 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           }
         };
 
-        const tableHTML = window.transacoesDuplicadasPendentes.map((t_obj, index) => {
+        const cardsHTML = window.transacoesDuplicadasPendentes.map((t_obj, index) => {
           const t = t_obj.novo;
-          const orig = t_obj.original;
+          const orig = t_obj.original || {};
+          
+          // Dados Originais
+          const oData = orig.data || '-';
+          const oVencimento = orig.vencimento || '-';
+          const oConta = orig.conta || '-';
+          const oDesc = orig.descricao || orig.obs || '-';
+          const oCat = orig.categoria || '-';
+          const oSubcat = orig.subcategoria || '-';
+          const oValor = orig.valor || 0;
+
+          // Dados Novos
+          const nData = t.data || '-';
+          const nVencimento = t.vencimento || '-';
+          const nConta = t.conta || '-';
+          const nDesc = t.descricao || t.obs || '-';
+          const nCat = t.categoria || '-';
+          const nSubcat = t.subcategoria || '-';
+          const nValor = t.valor || 0;
+
           return `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;" onclick="const cb=document.getElementById('dup-cb-${index}'); cb.checked=!cb.checked; window.toggleDupSelection(${index});">
-              <td style="padding:0.8rem; text-align:center; vertical-align:middle;"><input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onclick="event.stopPropagation(); window.toggleDupSelection(${index});" style="transform:scale(1.2);"></td>
-              <td style="padding:0.8rem;">
-                <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:4px;"><i class="fas fa-history"></i> Original no Histórico:</div>
-                <div style="font-size:0.85rem; color:var(--text-primary);"><i class="fas fa-file-import" style="color:var(--color-warning);"></i> Importação Nova:</div>
-              </td>
-              <td style="padding:0.8rem;">
-                <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:4px;">${orig.descricao || orig.obs || ''} (${orig.data})</div>
-                <div style="font-size:0.9rem; color:var(--text-primary); font-weight:500;">${t.descricao || t.obs || ''} (${t.data})</div>
-              </td>
-              <td style="padding:0.8rem; font-family:monospace; vertical-align:bottom;">
-                <div style="color:${t.valor<0?'#ef4444':'#10b981'}; font-size:1rem; font-weight:bold;">${formatBRL(t.valor)}</div>
-              </td>
-            </tr>
+            <div class="dup-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 1rem; padding: 1rem; display: flex; align-items: stretch; gap: 1rem; cursor: pointer; transition: all 0.2s ease;" onclick="const cb=document.getElementById('dup-cb-${index}'); cb.checked=!cb.checked; window.toggleDupSelection(${index}); this.style.borderColor = cb.checked ? 'var(--color-warning)' : 'rgba(255,255,255,0.1)';">
+              <div style="display:flex; align-items:center;" onclick="event.stopPropagation();">
+                <input type="checkbox" id="dup-cb-${index}" class="dup-checkbox" onchange="this.closest('.dup-card').style.borderColor = this.checked ? 'var(--color-warning)' : 'rgba(255,255,255,0.1)';" onclick="window.toggleDupSelection(${index});" style="transform:scale(1.2);">
+              </div>
+              
+              <div style="flex: 1; overflow-x: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap;">
+                  <thead>
+                    <tr style="color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                      <th style="padding: 4px 8px; width: 60px;"></th>
+                      <th style="padding: 4px 8px;">DATA</th>
+                      <th style="padding: 4px 8px;">VENCIMENTO</th>
+                      <th style="padding: 4px 8px;">CONTA</th>
+                      <th style="padding: 4px 8px; width: 100%;">DESCRIÇÃO</th>
+                      <th style="padding: 4px 8px;">CATEGORIA</th>
+                      <th style="padding: 4px 8px;">SUBCATEGORIA</th>
+                      <th style="padding: 4px 8px; text-align: right;">VALOR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Original -->
+                    <tr style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                      <td style="padding: 8px; color: var(--text-secondary);"><i class="fas fa-history" title="Original no Histórico"></i> Hist.</td>
+                      <td style="padding: 8px; color: var(--text-secondary);">${oData}</td>
+                      <td style="padding: 8px; color: var(--text-secondary);">${oVencimento}</td>
+                      <td style="padding: 8px; color: var(--text-secondary);">${oConta}</td>
+                      <td style="padding: 8px; font-weight: 500; color: var(--text-secondary); white-space: normal;">${oDesc}</td>
+                      <td style="padding: 8px; color: var(--text-secondary);">${oCat}</td>
+                      <td style="padding: 8px; color: var(--text-secondary);">${oSubcat}</td>
+                      <td style="padding: 8px; text-align: right; font-family: monospace; color: var(--text-secondary);">${formatBRL(oValor)}</td>
+                    </tr>
+                    <!-- Nova Importação -->
+                    <tr>
+                      <td style="padding: 8px; color: var(--color-warning);"><i class="fas fa-file-import" title="Nova Importação"></i> Nova</td>
+                      <td style="padding: 8px; color: var(--text-primary);">${nData}</td>
+                      <td style="padding: 8px; color: var(--text-primary);">${nVencimento}</td>
+                      <td style="padding: 8px; color: var(--text-primary);">${nConta}</td>
+                      <td style="padding: 8px; color: var(--text-primary); font-weight: 500; white-space: normal;">${nDesc}</td>
+                      <td style="padding: 8px; color: var(--text-primary);">${nCat}</td>
+                      <td style="padding: 8px; color: var(--text-primary);">${nSubcat}</td>
+                      <td style="padding: 8px; text-align: right; font-family: monospace; font-weight: bold; color: ${nValor < 0 ? 'var(--color-danger)' : 'var(--color-success)'}">${formatBRL(nValor)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           `;
         }).join('');
         
         modal.innerHTML = `
-          <div style="background:var(--bg-card); width:100%; max-width:800px; max-height:90vh; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 10px 25px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
+          <div style="background:var(--bg-card); width:100%; max-width:1100px; max-height:90vh; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 10px 25px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
             <div style="padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
               <h3 style="margin:0;"><i class="fas fa-shield-alt" style="color:var(--color-warning);"></i> Revisão de Possíveis Duplicatas</h3>
               <button onclick="document.getElementById('duplicate-review-modal').style.display='none'" style="background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             <div style="padding:1rem; background:rgba(234,179,8,0.05); color:var(--text-secondary); font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.05);">
-              O sistema ocultou estas transações por terem a <b>mesma data e o mesmo valor</b> de lançamentos que já estão no seu histórico. Se alguma não for duplicata, selecione-a e clique em Restaurar.
+              O sistema ocultou estas transações por terem a <b>mesma data e valores semelhantes</b> de lançamentos que já estão no seu histórico. Muitas vezes podem ser parcelas do mesmo dia. Revise a descrição completa abaixo. Se NÃO for duplicata, selecione-a e clique em Restaurar.
             </div>
             <div style="flex:1; overflow-y:auto; padding:1.5rem;">
-              <table style="width:100%; border-collapse:collapse; text-align:left;">
-                <thead style="background:rgba(255,255,255,0.05);">
-                  <tr>
-                    <th style="padding:1rem; text-align:center; width:50px;">Ação</th>
-                    <th style="padding:1rem;">Data</th>
-                    <th style="padding:1rem;">Descrição</th>
-                    <th style="padding:1rem;">Valor</th>
-                  </tr>
-                </thead>
-                <tbody>${tableHTML}</tbody>
-              </table>
+              ${cardsHTML}
             </div>
             <div style="padding:1.5rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; gap:1rem;">
               <button onclick="window.selectAllDups(this)" class="btn btn-secondary">Selecionar Todos</button>
