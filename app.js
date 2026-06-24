@@ -13,17 +13,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return false;
     };
     // ==========================================
-    // CONFIGURAÇÃO DOS LINKS DO GOOGLE SHEETS
+    // CONFIGURAÃƒâ€¡ÃƒÆ’O DOS LINKS DO GOOGLE SHEETS
     // ==========================================
     
-    // VARIÁVEIS DE PRODUÇÃO (Seu painel intocável do dia a dia)
+    // VARIÃƒ VEIS DE PRODUÃƒâ€¡ÃƒÆ’O (Seu painel intocÃƒÂ¡vel do dia a dia)
     let CSV_URL_LANCAMENTOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=0';
     let CSV_URL_ORCAMENTO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1770446607';
     let CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1019128251';
     let CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=279877792';
     let CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1791414224';
     let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzuMebXRBYz_pwMjtNbmMRffPXxMyTni1pNlsZddLiFR-5ijuzqM5G330vPvoYD2XkaRw/exec';
-
     // INTERRUPTOR DE AMBIENTES (Staging vs Production)
     const isTestEnv = window.location.search.includes('teste=true');
     
@@ -140,9 +139,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         document.getElementById('loading-screen').style.display = 'flex';
         document.querySelector('#loading-screen div:last-child').innerHTML = `
           <div style="text-align: center; max-width: 500px; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius:12px; border: 1px solid var(--border-color);">
-            <p style="margin-bottom:1rem; font-weight:600; color:var(--text-primary);">Configuração do Google Planilhas Necessária</p>
-            <p style="font-size:0.9rem; margin-bottom:1rem; line-height:1.4;">Para exibir seus dados online, você precisa publicar as abas da sua Planilha Google na Web como CSV e colar as URLs no código deste painel.</p>
-            <p style="font-size:0.8rem; color:var(--text-muted);">Edite este arquivo HTML e substitua as variáveis <b>CSV_URL_LANCAMENTOS</b>, <b>CSV_URL_ORCAMENTO</b> e <b>CSV_URL_CONTAS</b>.</p>
+            <p style="margin-bottom:1rem; font-weight:600; color:var(--text-primary);">ConfiguraÃƒÂ§ÃƒÂ£o do Google Planilhas NecessÃƒÂ¡ria</p>
+            <p style="font-size:0.9rem; margin-bottom:1rem; line-height:1.4;">Para exibir seus dados online, vocÃƒÂª precisa publicar as abas da sua Planilha Google na Web como CSV e colar as URLs no cÃƒÂ³digo deste painel.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted);">Edite este arquivo HTML e substitua as variÃƒÂ¡veis <b>CSV_URL_LANCAMENTOS</b>, <b>CSV_URL_ORCAMENTO</b> e <b>CSV_URL_CONTAS</b>.</p>
           </div>
         `;
         document.querySelector('.spinner').style.display = 'none';
@@ -152,11 +151,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       try {
         const [resLanc, resOrc, resContas, resAudit, resImports] = await Promise.all([
           fetch(CSV_URL_LANCAMENTOS).then(r => {
-            if(!r.ok) throw new Error('Falha ao acessar Lançamentos');
+            if(!r.ok) throw new Error('Falha ao acessar LanÃƒÂ§amentos');
             return r.text();
           }),
           fetch(CSV_URL_ORCAMENTO).then(r => {
-            if(!r.ok) throw new Error('Falha ao acessar Orçamentos');
+            if(!r.ok) throw new Error('Falha ao acessar OrÃƒÂ§amentos');
             return r.text();
           }),
           fetch(CSV_URL_CONTAS).then(r => {
@@ -168,7 +167,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             return r.text();
           }),
           fetch(CSV_URL_IMPORTACOES).then(r => {
-            if(!r.ok) return ''; // Importações pode estar vazia/inexistente temporariamente
+            if(!r.ok) return ''; // ImportaÃƒÂ§ÃƒÂµes pode estar vazia/inexistente temporariamente
             return r.text();
           }).catch(() => '')
         ]);
@@ -194,25 +193,25 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         dadosFinanceiros.contas = parsedContas.map(c => ({
           cod: c['COD'] || '',
           nome: c['Nome da Conta'] || '',
-          instituicao: c['Instituição Financeira'] || '',
+          instituicao: c['InstituiÃƒÂ§ÃƒÂ£o Financeira'] || '',
           tipo: c['Tipo de conta'] || '',
           saldo_inicial: parseBrlFloat(c['Saldo inicial']),
           saldo: parseBrlFloat(c['Saldo atual'] || c['Saldo']),
-          conciliado_ate: c['Conciliado até'] || '',
-          saldo_lancado: parseBrlFloat(c['Saldo lançado']),
+          conciliado_ate: c['Conciliado atÃƒÂ©'] || '',
+          saldo_lancado: parseBrlFloat(c['Saldo lanÃƒÂ§ado']),
           saldo_apurado: parseBrlFloat(c['Saldo Apurado']),
-          ultima_movimentacao: c['Data da última movimentação'] || c['Última Movimentação'] || c['Data última mov.'] || c['Ultima mov'] || c['Data da ultima movimentacao'] || c['Conciliado até'] || c['Conciliado ate'] || ''
+          ultima_movimentacao: c['Data da ÃƒÂºltima movimentaÃƒÂ§ÃƒÂ£o'] || c['ÃƒÅ¡ltima MovimentaÃƒÂ§ÃƒÂ£o'] || c['Data ÃƒÂºltima mov.'] || c['Ultima mov'] || c['Data da ultima movimentacao'] || c['Conciliado atÃƒÂ©'] || c['Conciliado ate'] || ''
         })).filter(c => c.nome !== '');
 
         dadosFinanceiros.orcamento = parsedOrc.map(o => ({
           categoria: o['Categorias'] || '',
           inicio: o['Inicio'] || '',
           fim: o['Fim'] || '',
-          orcamento: parseBrlFloat(o['Orçamento']),
-          realizado: parseBrlFloat(o['Realizado até hoje']),
+          orcamento: parseBrlFloat(o['OrÃƒÂ§amento']),
+          realizado: parseBrlFloat(o['Realizado atÃƒÂ© hoje']),
           desvio: parseFloat((o['DESVIO'] || '0').replace('%', '').replace(',', '.')) || 0,
           sobra: parseBrlFloat(o['Sobra']),
-          ideal: parseBrlFloat(o['Orçamento Ideal'])
+          ideal: parseBrlFloat(o['OrÃƒÂ§amento Ideal'])
         })).filter(o => o.categoria !== '');
 
         const parsedAudit = Papa.parse(resAudit, parseOpts).data;
@@ -220,7 +219,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           conferencia: a['CONFERENCIA'] || '',
           status: (a['STATUS'] || '').trim(),
           resultado: a['RESULTADO'] || '',
-          descricao: a['DESCRIÇÃO'] || a['DESCRICAO'] || ''
+          descricao: a['DESCRIÃƒâ€¡ÃƒÆ’O'] || a['DESCRICAO'] || ''
         })).filter(a => a.conferencia !== '');
 
         if (resImports) {
@@ -247,11 +246,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         return true;
       } catch (err) {
-        console.error('Erro na sincronização:', err);
+        console.error('Erro na sincronizaÃƒÂ§ÃƒÂ£o:', err);
         document.querySelector('#loading-screen div:last-child').innerHTML = `
           <div style="text-align: center; color: var(--color-expense);">
-            <p style="font-weight:600; margin-bottom:0.5rem;">Erro de Sincronização</p>
-            <p style="font-size:0.9rem; color:var(--text-secondary); max-width:400px; line-height:1.4;">${err.message}. Verifique os links de publicação do Sheets e se o compartilhamento na Web está ativo.</p>
+            <p style="font-weight:600; margin-bottom:0.5rem;">Erro de SincronizaÃƒÂ§ÃƒÂ£o</p>
+            <p style="font-size:0.9rem; color:var(--text-secondary); max-width:400px; line-height:1.4;">${err.message}. Verifique os links de publicaÃƒÂ§ÃƒÂ£o do Sheets e se o compartilhamento na Web estÃƒÂ¡ ativo.</p>
           </div>
         `;
         document.querySelector('.spinner').style.display = 'none';
@@ -261,14 +260,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     function showAILoadingModal(fileName) {
       const msgs = [
-        "A IA está cruzando dados para categorizar suas compras...",
-        "Assustado com esse lançamento aqui... 😱",
-        "Hummm.... analisando possível compra supérflua... 🍔",
-        "Ensinando matemática financeira pro robô... 🧮",
-        "Procurando onde foi parar o seu dinheiro... 🕵️‍♂️",
-        "Escondendo essa fatura de você sabe quem... 🤫",
-        "Invocando os deuses da contabilidade... ⚡",
-        "Quase lá! O robô só parou pra tomar um cafézinho... ☕"
+        "A IA estÃƒÂ¡ cruzando dados para categorizar suas compras...",
+        "Assustado com esse lanÃƒÂ§amento aqui... Ã°Å¸ËœÂ±",
+        "Hummm.... analisando possÃƒÂ­vel compra supÃƒÂ©rflua... Ã°Å¸Ââ€",
+        "Ensinando matemÃƒÂ¡tica financeira pro robÃƒÂ´... Ã°Å¸Â§Â®",
+        "Procurando onde foi parar o seu dinheiro... Ã°Å¸â€¢ÂµÃ¯Â¸ÂÃ¢â‚¬ÂÃ¢â„¢â€šÃ¯Â¸Â",
+        "Escondendo essa fatura de vocÃƒÂª sabe quem... Ã°Å¸Â¤Â«",
+        "Invocando os deuses da contabilidade... Ã¢Å¡Â¡",
+        "Quase lÃƒÂ¡! O robÃƒÂ´ sÃƒÂ³ parou pra tomar um cafÃƒÂ©zinho... Ã¢Ëœâ€¢"
       ];
 
       showGlassModal('Processando Extrato', `
@@ -295,25 +294,59 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     async function processarExtratoComIA(csvText, fileName = "extrato.csv", modelName = "claude-haiku-4-5-20251001") {
-       throw new Error("processarExtratoComIA foi descontinuada. A lógica agora roda na fila de upload em lote.");
+       throw new Error("processarExtratoComIA foi descontinuada. A lÃƒÂ³gica agora roda na fila de upload em lote.");
     }
 
     function renderizarRevisaoIA(resultadoIA) {
       const dicionario = window.dicionarioCategorias || {};
       const opcoesCategoria = Object.keys(dicionario);
 
-      // 1. Preparar dados com ID único e Semáforo de Confiança
-      window.currentReviewData = resultadoIA.map((d, i) => {
+      // 1. Preparar dados com ID ÃƒÂºnico e SemÃƒÂ¡foro de ConfianÃƒÂ§a
+      const allProcessedData = resultadoIA.map((d, i) => {
+        let confianca = 'verde';
+        let statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin:auto;" title="100% Certeza"></div>';
+        if (d.duvida) {
+          if (d.categoria && d.categoria.toUpperCase() !== 'OUTROS' && d.categoria.toUpperCase() !== 'DIVERSOS') {
+            confianca = 'amarelo';
+            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#f59e0b; margin:auto;" title="DÃºvida (SugestÃ£o da IA)"></div>';
+          } else {
+            confianca = 'vermelho';
+            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;" title="A IA nÃ£o teve ideia"></div>';
+          }
+        }
+        return { ...d, _id: 'tx_' + i, confianca, statusIcon, descricao: d.descricao != null ? d.descricao.toString() : '', vlrNumber: parseFloat(d.valor) || 0 };
+      });
+
+      window.transacoesStep3 = allProcessedData.filter(d => {
+         return d.descricao.match(/\d+\/\d+/) || d.descricao.toLowerCase().includes('parc');
+      });
+
+      window.transacoesStep4 = allProcessedData.filter(d => {
+         const isParc = d.descricao.match(/\d+\/\d+/) || d.descricao.toLowerCase().includes('parc');
+         if (isParc) return false;
+         const cat = d.categoria ? d.categoria.toString().trim() : '';
+         return cat === 'TransferÃªncias' || cat === 'Investimentos' || cat === 'Pagamento de CartÃ£o' || cat === 'TransferÃªncia';
+      });
+
+      window.currentReviewData = allProcessedData.filter(d => {
+         const isParc = d.descricao.match(/\d+\/\d+/) || d.descricao.toLowerCase().includes('parc');
+         const cat = d.categoria ? d.categoria.toString().trim() : '';
+         const isStep4 = cat === 'TransferÃªncias' || cat === 'Investimentos' || cat === 'Pagamento de CartÃ£o' || cat === 'TransferÃªncia';
+         return !isParc && !isStep4;
+      });
+
+      // Dummy map to replace the original window.currentReviewData definition since we already mapped above
+      let __dummy = window.currentReviewData.map((d, i) => {
         let confianca = 'verde';
         let statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin:auto;" title="100% Certeza"></div>';
         
         if (d.duvida) {
           if (d.categoria && d.categoria.toUpperCase() !== 'OUTROS' && d.categoria.toUpperCase() !== 'DIVERSOS') {
             confianca = 'amarelo';
-            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#f59e0b; margin:auto;" title="Dúvida (Sugestão da IA)"></div>';
+            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#f59e0b; margin:auto;" title="DÃƒÂºvida (SugestÃƒÂ£o da IA)"></div>';
           } else {
             confianca = 'vermelho';
-            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;" title="A IA não teve ideia"></div>';
+            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;" title="A IA nÃƒÂ£o teve ideia"></div>';
           }
         }
         return { ...d, _id: 'tx_' + i, confianca, statusIcon, descricao: d.descricao != null ? d.descricao.toString() : '', vlrNumber: parseFloat(d.valor) || 0 };
@@ -433,27 +466,37 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const opcoesSub = dicionario[catAtual] || [];
           const corValor = d.vlrNumber >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
           const isSelected = window.reviewSelectedIds.has(d._id);
-          const bgSelected = isSelected ? 'background: rgba(59,130,246,0.15) !important;' : '';
+          
+          let gradientColor = 'transparent';
+          if (d.confianca === 'verde') gradientColor = 'rgba(16, 185, 129, 0.15)'; // Emerald
+          else if (d.confianca === 'amarelo') gradientColor = 'rgba(245, 158, 11, 0.15)'; // Amber
+          else if (d.confianca === 'vermelho') gradientColor = 'rgba(239, 68, 68, 0.15)'; // Red
+
+          let bgRow = isSelected ? 'background: rgba(59,130,246,0.2) !important;' : `background: linear-gradient(to right, ${gradientColor} 0%, transparent 50%);`;
 
           const isTransfer = (catAtual && catAtual.toLowerCase().includes('transfer'));
           const isInstallment = d.descricao && /\b0?1\s*\/\s*\d{1,2}\b/.test(d.descricao);
           const isSpecial = d.isSpecial !== undefined ? d.isSpecial : (isTransfer || isInstallment);
 
           return `
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; ${bgSelected}" 
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; ${bgRow}" 
                 onmouseover="if(!${isSelected}) this.style.background='rgba(255,255,255,0.02)'" 
-                onmouseout="if(!${isSelected}) this.style.background='transparent'"
+                onmouseout="if(!${isSelected}) this.style.background='${bgRow.replace("background: ", "").replace(";", "")}'"
                 ontouchstart="window.rowTouchStart(event, '${d._id}')" 
                 ontouchend="window.rowTouchEnd(event)"
                 oncontextmenu="event.preventDefault();"
                 onclick="window.rowClick(event, '${d._id}')"
                 title="Use Ctrl+Click ou Toque Longo para selecionar">
-              <td style="padding: 0.8rem; text-align:center;">${d.statusIcon}</td>
-              <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">${d.data}</td>
               <td style="padding: 0.8rem; text-align:center;" onclick="event.stopPropagation();">
                 <input type="checkbox" onchange="window.updateReviewData('${d._id}', 'isSpecial', this.checked)" ${isSpecial ? 'checked' : ''} style="transform: scale(1.3); cursor: pointer; accent-color: var(--color-warning);" title="Enviar para Passo 3 (Especiais)">
               </td>
-              <td style="padding: 0.8rem; color: var(--text-primary); font-size: 0.9rem;">${d.descricao}</td>
+              <td style="padding: 0.8rem; color: var(--text-secondary); font-size: 0.85rem; white-space: nowrap;">${d.data}</td>
+              <td style="padding: 0.8rem;">
+                <input type="text" value="${d.conta || ''}" onchange="window.updateReviewData('${d._id}', 'conta', this.value)" style="width: 100px; background: rgba(0,0,0,0.2); color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem;">
+              </td>
+              <td style="padding: 0.8rem; color: var(--text-primary); font-size: 0.9rem;">
+                <input type="text" value="${d.descricao || ''}" onchange="window.updateReviewData('${d._id}', 'descricao', this.value)" style="width: 100%; min-width: 180px; background: transparent; border: 1px solid transparent; color: inherit; font-size: inherit; font-family: inherit;">
+              </td>
               <td style="padding: 0.8rem; color: ${corValor}; font-weight: bold; white-space: nowrap;">R$ ${Math.abs(d.vlrNumber).toFixed(2)}</td>
               <td style="padding: 0.8rem;">
                 <select onchange="window.updateReviewData('${d._id}', 'categoria', this.value)" style="width: 100%; min-width: 150px; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 4px; font-size: 0.85rem;">
@@ -477,18 +520,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <i class="fas fa-shield-alt" style="font-size: 2rem;"></i>
             <div>
               <h4 style="margin:0;">Filtro Anti-Duplicidade Ativado</h4>
-              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${window.resumoDuplicidades.total} transações no arquivo, <b>${window.resumoDuplicidades.ignoradas}</b> já existiam e foram descartadas.</p>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">Das ${window.resumoDuplicidades.total} transaÃƒÂ§ÃƒÂµes no arquivo, <b>${window.resumoDuplicidades.ignoradas}</b> jÃƒÂ¡ existiam e foram descartadas.</p>
             </div>
           </div>
           <button onclick="window.showReviewDuplicatesModal()" style="background: var(--color-warning); color: #000; border: none; padding: 0.6rem 1.2rem; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap;">
-            ⚠️ Revisar ${window.resumoDuplicidades.ignoradas} Ignorados
+            Ã¢Å¡Â Ã¯Â¸Â Revisar ${window.resumoDuplicidades.ignoradas} Ignorados
           </button>
         </div>
       ` : '';
 
       window.showReviewDuplicatesModal = function() {
         if (!window.transacoesDuplicadasPendentes || window.transacoesDuplicadasPendentes.length === 0) {
-          alert('Nenhuma transação ignorada para revisar.');
+          alert('Nenhuma transaÃƒÂ§ÃƒÂ£o ignorada para revisar.');
           return;
         }
         
@@ -523,7 +566,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         
         window.restaurarDups = async function() {
           if (window.dupsSelectedIds.size === 0) {
-            alert('Selecione ao menos um lançamento para restaurar.');
+            alert('Selecione ao menos um lanÃƒÂ§amento para restaurar.');
             return;
           }
           
@@ -542,7 +585,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const catStatusBox = document.getElementById('import-categorizer-status');
           
           if(queueStatus) { 
-            queueStatus.innerText = `Recategorizando ${itensRestaurar.length} transações restauradas...`;
+            queueStatus.innerText = `Recategorizando ${itensRestaurar.length} transaÃƒÂ§ÃƒÂµes restauradas...`;
             queueStatus.style.color = 'var(--color-warning)';
           }
           
@@ -579,13 +622,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             window.resumoDuplicidades.ignoradas -= itensRestaurar.length;
             
             if(queueStatus) { 
-              queueStatus.innerText = '✨ Processamento em lote concluído!'; 
+              queueStatus.innerText = 'Ã¢Å“Â¨ Processamento em lote concluÃƒÂ­do!'; 
               queueStatus.style.color = '#10b981'; 
             }
             window.renderReviewTable();
           } catch (err) {
             alert('Erro ao recategorizar: ' + err.message);
-            if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
+            if(queueStatus) { queueStatus.innerText = 'Ã¢Å“Â¨ Processamento em lote concluÃƒÂ­do!'; queueStatus.style.color = '#10b981'; }
           }
         };
 
@@ -625,7 +668,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                       <th style="padding: 4px 8px;">DATA</th>
                       <th style="padding: 4px 8px;">VENCIMENTO</th>
                       <th style="padding: 4px 8px;">CONTA</th>
-                      <th style="padding: 4px 8px; width: 100%;">DESCRIÇÃO</th>
+                      <th style="padding: 4px 8px; width: 100%;">DESCRIÃƒâ€¡ÃƒÆ’O</th>
                       <th style="padding: 4px 8px;">CATEGORIA</th>
                       <th style="padding: 4px 8px;">SUBCATEGORIA</th>
                       <th style="padding: 4px 8px; text-align: right;">VALOR</th>
@@ -634,7 +677,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                   <tbody>
                     <!-- Original -->
                     <tr style="border-bottom: 1px dashed rgba(255,255,255,0.05);">
-                      <td style="padding: 8px; color: var(--text-secondary);"><i class="fas fa-history" title="Original no Histórico"></i> Hist.</td>
+                      <td style="padding: 8px; color: var(--text-secondary);"><i class="fas fa-history" title="Original no HistÃƒÂ³rico"></i> Hist.</td>
                       <td style="padding: 8px; color: var(--text-secondary);">${oData}</td>
                       <td style="padding: 8px; color: var(--text-secondary);">${oVencimento}</td>
                       <td style="padding: 8px; color: var(--text-secondary);">${oConta}</td>
@@ -643,9 +686,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                       <td style="padding: 8px; color: var(--text-secondary);">${oSubcat}</td>
                       <td style="padding: 8px; text-align: right; font-family: monospace; color: var(--text-secondary);">${formatBRL(oValor)}</td>
                     </tr>
-                    <!-- Nova Importação -->
+                    <!-- Nova ImportaÃƒÂ§ÃƒÂ£o -->
                     <tr>
-                      <td style="padding: 8px; color: var(--color-warning);"><i class="fas fa-file-import" title="Nova Importação"></i> Nova</td>
+                      <td style="padding: 8px; color: var(--color-warning);"><i class="fas fa-file-import" title="Nova ImportaÃƒÂ§ÃƒÂ£o"></i> Nova</td>
                       <td style="padding: 8px; color: var(--text-primary);">${nData}</td>
                       <td style="padding: 8px; color: var(--text-primary);">${nVencimento}</td>
                       <td style="padding: 8px; color: var(--text-primary);">${nConta}</td>
@@ -664,11 +707,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         modal.innerHTML = `
           <div style="background:var(--bg-card); width:100%; max-width:1100px; max-height:90vh; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 10px 25px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
             <div style="padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
-              <h3 style="margin:0;"><i class="fas fa-shield-alt" style="color:var(--color-warning);"></i> Revisão de Possíveis Duplicatas</h3>
+              <h3 style="margin:0;"><i class="fas fa-shield-alt" style="color:var(--color-warning);"></i> RevisÃƒÂ£o de PossÃƒÂ­veis Duplicatas</h3>
               <button onclick="document.getElementById('duplicate-review-modal').style.display='none'" style="background:transparent; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             <div style="padding:1rem; background:rgba(234,179,8,0.05); color:var(--text-secondary); font-size:0.9rem; border-bottom:1px solid rgba(255,255,255,0.05);">
-              O sistema ocultou estas transações por terem a <b>mesma data e valores semelhantes</b> de lançamentos que já estão no seu histórico. Muitas vezes podem ser parcelas do mesmo dia. Revise a descrição completa abaixo. Se NÃO for duplicata, selecione-a e clique em Restaurar.
+              O sistema ocultou estas transaÃƒÂ§ÃƒÂµes por terem a <b>mesma data e valores semelhantes</b> de lanÃƒÂ§amentos que jÃƒÂ¡ estÃƒÂ£o no seu histÃƒÂ³rico. Muitas vezes podem ser parcelas do mesmo dia. Revise a descriÃƒÂ§ÃƒÂ£o completa abaixo. Se NÃƒÆ’O for duplicata, selecione-a e clique em Restaurar.
             </div>
             <div style="flex:1; overflow-y:auto; padding:1.5rem;">
               ${cardsHTML}
@@ -700,19 +743,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const filterBarHTML = `
         <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
           <div style="display: flex; flex-direction: column;">
-            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;"><i class="fas fa-filter"></i> Confiança da IA</label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;"><i class="fas fa-filter"></i> ConfianÃƒÂ§a da IA</label>
             <select onchange="window.reviewFilterConfianca = this.value; window.renderReviewTable();" style="background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem; border-radius: 4px; font-size: 0.9rem; outline: none;">
-              <option value="todas">🟡🔴🟢 Todas as Transações</option>
-              <option value="duvidas">🟡🔴 Apenas Dúvidas (Revisar)</option>
-              <option value="verde">🟢 100% de Certeza</option>
-              <option value="amarelo">🟡 Sugestão com Dúvida</option>
-              <option value="vermelho">🔴 Nenhuma Ideia</option>
+              <option value="todas">Ã°Å¸Å¸Â¡Ã°Å¸â€Â´Ã°Å¸Å¸Â¢ Todas as TransaÃƒÂ§ÃƒÂµes</option>
+              <option value="duvidas">Ã°Å¸Å¸Â¡Ã°Å¸â€Â´ Apenas DÃƒÂºvidas (Revisar)</option>
+              <option value="verde">Ã°Å¸Å¸Â¢ 100% de Certeza</option>
+              <option value="amarelo">Ã°Å¸Å¸Â¡ SugestÃƒÂ£o com DÃƒÂºvida</option>
+              <option value="vermelho">Ã°Å¸â€Â´ Nenhuma Ideia</option>
             </select>
           </div>
           <div style="display: flex; flex-direction: column;">
-            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;"><i class="far fa-calendar-alt"></i> Período (Mês/Ano)</label>
+            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.3rem;"><i class="far fa-calendar-alt"></i> PerÃƒÂ­odo (MÃƒÂªs/Ano)</label>
             <select onchange="window.reviewFilterData = this.value; window.renderReviewTable();" style="background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem; border-radius: 4px; font-size: 0.9rem; outline: none;">
-              <option value="todas">Todos os Períodos</option>
+              <option value="todas">Todos os PerÃƒÂ­odos</option>
               ${periodosUnicos.map(p => `<option value="${p}">${p}</option>`).join('')}
             </select>
           </div>
@@ -726,13 +769,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">Confiança ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
-                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferências/Parcelamentos)">Trf / Pgto</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">ConfianÃƒÂ§a Ã¢â€ â€¢</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data Ã¢â€ â€¢</th>
+                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (TransferÃƒÂªncias/Parcelamentos)">Trf / Pgto</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">DescriÃƒÂ§ÃƒÂ£o Ã¢â€ â€¢</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor Ã¢â€ â€¢</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria Ã¢â€ â€¢</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria Ã¢â€ â€¢</th>
               </tr>
             </thead>
             <tbody id="review-tbody">
@@ -746,7 +789,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const titleEl = document.getElementById('import-review-title');
       
       const duvidasTotais = window.currentReviewData.filter(d => d.confianca !== 'verde').length;
-      titleEl.innerHTML = `<i class="fas fa-clipboard-list" style="color: var(--color-primary);"></i> Revisão Final (${window.currentReviewData.length} itens, ${duvidasTotais} dúvidas)`;
+      titleEl.innerHTML = `<i class="fas fa-clipboard-list" style="color: var(--color-primary);"></i> RevisÃƒÂ£o Final (${window.currentReviewData.length} itens, ${duvidasTotais} dÃƒÂºvidas)`;
       
       containerList.innerHTML = tableHTML;
       window.sortReviewTable('confianca'); // Inicialmente ordena trazendo vermelhos e amarelos pro topo
@@ -788,7 +831,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <div style="text-align:center; padding: 2rem 1rem;">
               <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--color-income); margin-bottom: 1.5rem;"></i>
               <h3 style="color: var(--text-primary);">Tudo Salvo!</h3>
-              <p style="color: var(--text-secondary);">As importações e transferências foram consolidadas com sucesso.</p>
+              <p style="color: var(--text-secondary);">As importaÃƒÂ§ÃƒÂµes e transferÃƒÂªncias foram consolidadas com sucesso.</p>
             </div>
           `);
           setTimeout(() => {
@@ -799,21 +842,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         const saveHandler = async () => {
           const transacoesComIds = window.currentReviewData.map(d => {
-            const isTransfer = (d.categoria && d.categoria.toLowerCase().includes('transfer'));
-            const isInstallment = d.descricao && /\b0?1\s*\/\s*\d{1,2}\b/.test(d.descricao);
-            const finalIsSpecial = d.isSpecial !== undefined ? d.isSpecial : (isTransfer || isInstallment);
-            
             const cleanData = { ...d };
             delete cleanData.vlrNumber;
             delete cleanData.statusIcon;
             delete cleanData.confianca;
-            delete cleanData.isSpecial; // clean it up before sending
-            cleanData.finalIsSpecial = finalIsSpecial; // temp flag for splitting
+            delete cleanData.isSpecial;
             return cleanData; 
           });
 
-          const transacoesTransferencias = transacoesComIds.filter(t => t.finalIsSpecial && (t.categoria === 'Transferência' || t.categoria === 'Transferencias'));
-          const transacoesParceladas = transacoesComIds.filter(t => t.finalIsSpecial && t.categoria !== 'Transferência' && t.categoria !== 'Transferencias');
+          const transacoesTransferencias = transacoesComIds.filter(t => t.finalIsSpecial && (t.categoria === 'TransferÃƒÂªncia' || t.categoria === 'Transferencias'));
+          const transacoesParceladas = transacoesComIds.filter(t => t.finalIsSpecial && t.categoria !== 'TransferÃƒÂªncia' && t.categoria !== 'Transferencias');
           const transacoesComuns = transacoesComIds.filter(t => !t.finalIsSpecial);
           
           // Cleanup the temp flag before sending
@@ -838,8 +876,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           showGlassModal('Processando...', `
             <div style="text-align:center; padding: 3rem 1rem;">
               <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-              <h3 style="color: var(--text-primary);">Acionando Agentes de Lançamentos Especiais...</h3>
-              <p style="color: var(--text-secondary); margin-top: 1rem;">Salvando lançamentos comuns e calculando projeções/transferências.</p>
+              <h3 style="color: var(--text-primary);">Acionando Agentes de LanÃƒÂ§amentos Especiais...</h3>
+              <p style="color: var(--text-secondary); margin-top: 1rem;">Salvando lanÃƒÂ§amentos comuns e calculando projeÃƒÂ§ÃƒÂµes/transferÃƒÂªncias.</p>
             </div>
           `);
 
@@ -847,7 +885,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const limpas = transacoesComuns.map(d => { const {_id, ...c} = d; return c; });
             const success = await saveTransactions(limpas);
             if (!success) {
-              alert("Erro ao salvar transações comuns. Verifique sua conexão.");
+              alert("Erro ao salvar transaÃƒÂ§ÃƒÂµes comuns. Verifique sua conexÃƒÂ£o.");
               document.getElementById('glassModal').classList.remove('active');
               return;
             }
@@ -884,12 +922,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           window.expandedParcelas = parcJson.data || [];
 
           const titleEl = document.getElementById('import-review-title');
-          if (titleEl) titleEl.innerHTML = `<i class="fas fa-star" style="color: var(--color-primary);"></i> Passo 3: Lançamentos Especiais`;
+          if (titleEl) titleEl.innerHTML = `<i class="fas fa-star" style="color: var(--color-primary);"></i> Passo 3: LanÃƒÂ§amentos Especiais`;
 
           let htmlParcelas = '';
           if (window.expandedParcelas.length > 0) {
              htmlParcelas += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-layer-group"></i> Compras Parceladas (Agente 3)</h4>`;
-             htmlParcelas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">O Parcelador projetou suas faturas. Verifique se os vencimentos futuros estão corretos.</p>`;
+             htmlParcelas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">O Parcelador projetou suas faturas. Verifique se os vencimentos futuros estÃƒÂ£o corretos.</p>`;
              
              htmlParcelas += `<div style="overflow-x: auto; margin-bottom: 2rem;">
                <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
@@ -898,7 +936,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Data da Compra</th>
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Vencimento</th>
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Conta</th>
-                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Descrição</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">DescriÃƒÂ§ÃƒÂ£o</th>
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Valor</th>
                      <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;"><i class="fas fa-trash"></i></th>
                    </tr>
@@ -918,162 +956,71 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              htmlParcelas += `</tbody></table></div>`;
           }
 
-          let htmlPares = '';
-          if (window.reconciliationPairs.length > 0) {
-             htmlPares += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-magic"></i> Transferências: Casamento Automático</h4>`;
-             htmlPares += window.reconciliationPairs.map((p, idx) => `
-               <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                  <div>
-                    <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;"><i class="far fa-calendar-alt"></i> ${p.t1.dateStr} | <strong>R$ ${Math.abs(p.t1.valor).toFixed(2)}</strong></div>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                      <span style="color: var(--color-expense);"><i class="fas fa-arrow-up"></i> Saiu de <strong>${p.t1.valor < 0 ? p.t1.conta : p.t2.conta}</strong></span>
-                      <i class="fas fa-arrow-right" style="color: var(--text-secondary);"></i>
-                      <span style="color: var(--color-income);"><i class="fas fa-arrow-down"></i> Entrou em <strong>${p.t1.valor > 0 ? p.t1.conta : p.t2.conta}</strong></span>
-                    </div>
-                    <div style="margin-top: 0.5rem; color: var(--color-primary); font-size: 0.9rem; font-weight: 600;">
-                      Ocultar descrição original e usar: ${p.prefixo}
-                    </div>
-                  </div>
-                  <div>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-primary);">
-                      <input type="checkbox" id="cb-pair-${idx}" checked style="width: 20px; height: 20px; cursor: pointer;"> Confirmar
-                    </label>
-                  </div>
-               </div>
-             `).join('');
-          }
-
-          let htmlOrfas = '';
-          if (window.novasOrfas.length > 0) {
-             htmlOrfas += `<h4 style="color: var(--text-primary); margin-top: 2rem; margin-bottom: 0.5rem;"><i class="fas fa-user-edit"></i> Transferências Órfãs (Sem Par)</h4>`;
-             htmlOrfas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Falta a outra ponta! Crie o espelho automático selecionando a conta, ou vincule ao histórico.</p>`;
+          let htmlStep4 = '';
+          if (window.transacoesProcessadasStep4 && window.transacoesProcessadasStep4.length > 0) {
+             htmlStep4 += `<h4 style="color: var(--text-primary); margin-top: 2rem; margin-bottom: 0.5rem;"><i class="fas fa-exchange-alt"></i> Passo 4: ConciliaÃ§Ã£o de TransferÃªncias (Agente 4)</h4>`;
+             htmlStep4 += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">O Agente analisou o histÃ³rico e as novas importaÃ§Ãµes, gerando as contrapartidas para zerar os saldos.</p>`;
              
-             htmlOrfas += window.novasOrfas.map((n, idx) => {
-               const selectContas = (window.contasAtivas || []).filter(c => c.nome !== n.conta).map(c => `<option value='conta|${c.nome}'>Espelhar em: ${c.nome}</option>`).join('');
-               const optionsHistoricas = `<option value="">-- Ignorar (Deixar solta) --</option>` + 
-                 `<optgroup label="Criar Espelho Instantâneo">${selectContas}</optgroup>` +
-                 `<optgroup label="Vincular ao Histórico Antigo">` + 
-                 historicasOrfas.map((h, hIdx) => `<option value='hist|${hIdx}'>Histórico: ${h.dateStr} | R$ ${h.valor} | ${h.conta} (${h.desc})</option>`).join('') +
-                 `</optgroup>`;
-
-               return `
-               <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                  <div style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>Falta Casar:</strong> ${n.dateStr} | R$ ${n.valor} | ${n.conta} <br><span style="font-size:0.8rem;color:var(--text-secondary)">Desc: ${n.desc}</span></div>
-                  <select id="sel-manual-${idx}" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--bg-dark); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2);">
-                    ${optionsHistoricas}
-                  </select>
-               </div>
-               `;
-             }).join('');
+             htmlStep4 += `<div style="overflow-x: auto; margin-bottom: 2rem;">
+               <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
+                 <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
+                   <tr>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Data</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Conta</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">DescriÃ§Ã£o</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Valor</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);">Categoria</th>
+                     <th style="padding: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;"><i class="fas fa-trash"></i></th>
+                   </tr>
+                 </thead>
+                 <tbody>`;
+                 
+             window.transacoesProcessadasStep4.forEach((t, idx) => {
+                htmlStep4 += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 0.5rem;"><input type="text" value="${t.data || t.vencimento || ''}" onchange="window.transacoesProcessadasStep4[${idx}].data=this.value" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="text" value="${t.conta || ''}" onchange="window.transacoesProcessadasStep4[${idx}].conta=this.value" style="width:100%; min-width:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="text" value="${t.descricao || ''}" onchange="window.transacoesProcessadasStep4[${idx}].descricao=this.value" style="width:100%; min-width:200px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="number" step="0.01" value="${Number(t.valor).toFixed(2)}" onchange="window.transacoesProcessadasStep4[${idx}].valor=parseFloat(this.value)" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:${t.valor < 0 ? 'var(--color-expense)' : 'var(--color-income)'}; padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;"><input type="text" value="${t.categoria || 'TransferÃªncias'}" onchange="window.transacoesProcessadasStep4[${idx}].categoria=this.value" style="width:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem; text-align:center;"><button onclick="window.transacoesProcessadasStep4.splice(${idx}, 1); this.closest('tr').remove();" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:var(--color-expense); padding:6px 10px; border-radius:4px; cursor:pointer;" title="Remover"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+             });
+             htmlStep4 += `</tbody></table></div>`;
           }
 
           containerList.innerHTML = `
              <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
-               <i class="fas fa-check-circle"></i> Os lançamentos comuns do Passo 2 já foram salvos com sucesso.
+               <i class="fas fa-check-circle"></i> Os lanÃ§amentos comuns do Passo 2 jÃ¡ foram salvos com sucesso.
              </div>
              ${htmlParcelas}
-             ${htmlPares}
-             ${htmlOrfas}
+             ${htmlStep4}
              <div style="text-align: right; margin-top: 2rem;">
                <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
-                 <i class="fas fa-save"></i> Finalizar Passo 3
+                 <i class="fas fa-save"></i> Finalizar Passo 3 e 4
                </button>
              </div>
           `;
 
           document.getElementById('btn-final-save-reconcile').onclick = async () => {
-             showGlassModal('Finalizando...', `
-               <div style="text-align:center; padding: 3rem 1rem;">
-                 <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-                 <h3 style="color: var(--text-primary);">Gravando Parcelas e Transferências...</h3>
-               </div>
-             `);
+               showGlassModal('Finalizando...', `
+                 <div style="text-align:center; padding: 3rem 1rem;">
+                   <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+                   <h3 style="color: var(--text-primary);">Gravando Parcelas e TransferÃªncias...</h3>
+                 </div>
+               `);
 
-             let updatesDb = [];
-             let finalTransacoes = [...window.expandedParcelas]; // Já insere as parcelas
-             
-             // 1. Processa pares perfeitos
-             window.reconciliationPairs.forEach((p, idx) => {
-                const isChecked = document.getElementById(`cb-pair-${idx}`).checked;
-                if (isChecked) {
-                   if (!p.t1.isDb) {
-                      const tNew = transacoesTransferencias.find(t => t._id === p.t1._id);
-                      if (tNew) {
-                         const cl = {...tNew}; cl.descricao = `${p.prefixo} ${cl.descricao}`; delete cl._id;
-                         finalTransacoes.push(cl);
-                      }
-                   } else {
-                      updatesDb.push({ rowNum: p.t1.rowNum, desc: `${p.prefixo} ${p.t1.desc}` });
-                   }
-                   
-                   if (!p.t2.isDb) {
-                      const tNew = transacoesTransferencias.find(t => t._id === p.t2._id);
-                      if (tNew) {
-                         const cl = {...tNew}; cl.descricao = `${p.prefixo} ${cl.descricao}`; delete cl._id;
-                         finalTransacoes.push(cl);
-                      }
-                   } else {
-                      updatesDb.push({ rowNum: p.t2.rowNum, desc: `${p.prefixo} ${p.t2.desc}` });
-                   }
-                } else {
-                   // Se desmarcou, salva solto
-                   if (!p.t1.isDb) {
-                      const tNew = transacoesTransferencias.find(t => t._id === p.t1._id);
-                      if (tNew) { const cl = {...tNew}; delete cl._id; finalTransacoes.push(cl); }
-                   }
-                   if (!p.t2.isDb) {
-                      const tNew = transacoesTransferencias.find(t => t._id === p.t2._id);
-                      if (tNew) { const cl = {...tNew}; delete cl._id; finalTransacoes.push(cl); }
-                   }
-                }
-             });
-
-             // 2. Processa pareamento manual
-             window.novasOrfas.forEach((n, idx) => {
-                const selVal = document.getElementById(`sel-manual-${idx}`).value;
-                const tNew = transacoesTransferencias.find(t => t._id === n._id);
-                if (!tNew) return;
-                
-                if (selVal.startsWith("hist|")) {
-                   const hIdx = parseInt(selVal.split('|')[1]);
-                   const h = historicasOrfas[hIdx];
-                   let contaOrigem = n.valor < 0 ? n.conta : h.conta;
-                   let contaDestino = n.valor > 0 ? n.conta : h.conta;
-                   let prefixo = `[${contaOrigem} ➔ ${contaDestino}]`;
-                   
-                   const cl = {...tNew}; cl.descricao = `${prefixo} ${cl.descricao}`; delete cl._id;
-                   finalTransacoes.push(cl);
-                   updatesDb.push({ rowNum: h.rowNum, desc: `${prefixo} ${h.desc}` });
-                } else if (selVal.startsWith("conta|")) {
-                   const contraParteConta = selVal.split('|')[1];
-                   let contaOrigem = n.valor < 0 ? n.conta : contraParteConta;
-                   let contaDestino = n.valor > 0 ? n.conta : contraParteConta;
-                   let prefixo = `[${contaOrigem} ➔ ${contaDestino}]`;
-                   
-                   // Adiciona a que a gente tinha
-                   const cl1 = {...tNew}; cl1.descricao = `${prefixo} ${cl1.descricao}`; delete cl1._id;
-                   finalTransacoes.push(cl1);
-                   
-                   // Cria o ESPELHO automático
-                   const cl2 = {...tNew}; 
-                   cl2.conta = contraParteConta;
-                   cl2.valor = -tNew.valor; // Inverte o sinal
-                   cl2.descricao = `${prefixo} ${cl2.descricao} (Espelho Automático)`;
-                   delete cl2._id;
-                   finalTransacoes.push(cl2);
-                } else {
-                   // Deixar solta na planilha
-                   const cl = {...tNew}; delete cl._id;
-                   finalTransacoes.push(cl);
-                }
-             });
-             
-             const success = await saveTransactions(finalTransacoes, updatesDb);
-             if (success) showSuccessAndReload();
-             else {
-                alert("Erro ao salvar as transferências/parcelas.");
-                document.getElementById('glassModal').classList.remove('active');
-             }
+               let finalTransacoes = [...window.expandedParcelas];
+               if (window.transacoesProcessadasStep4) {
+                   finalTransacoes.push(...window.transacoesProcessadasStep4);
+               }
+               
+               const success = await saveTransactions(finalTransacoes, []);
+               if (success) {
+                  showSuccessAndReload();
+               } else {
+                  alert("Erro ao salvar. Tente novamente.");
+                  document.getElementById('glassModal').classList.remove('active');
+               }
           };
         };
 
@@ -1104,19 +1051,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (response) {
             const fileName = response.headers.get('X-Original-Name') || 'extrato_compartilhado.csv';
             
-            // Limpa a URL para não processar de novo em F5
+            // Limpa a URL para nÃƒÂ£o processar de novo em F5
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            // Mostra o loading inicial com mensagens dinâmicas
+            // Mostra o loading inicial com mensagens dinÃƒÂ¢micas
             window.loadingInterval = showAILoadingModal(fileName);
 
-            // Lê o texto do arquivo (na Fase 2 isso irá para o Webhook do n8n)
+            // LÃƒÂª o texto do arquivo (na Fase 2 isso irÃƒÂ¡ para o Webhook do n8n)
             const csvText = await response.text();
             
-            // Chama a API de IA (Simulação por enquanto)
+            // Chama a API de IA (SimulaÃƒÂ§ÃƒÂ£o por enquanto)
             const resultadoIA = await processarExtratoComIA(csvText);
             
-            // Renderiza a interface de Human-in-the-Loop focada nas dúvidas
+            // Renderiza a interface de Human-in-the-Loop focada nas dÃƒÂºvidas
             renderizarRevisaoIA(resultadoIA);
             
             await cache.delete('/shared-extrato-file');
@@ -1129,9 +1076,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     // Bibliotecas de Conhecimento por Banco
     const BANK_LIBRARIES = {
-      "banco_do_brasil": "Regras Banco do Brasil (BB) Conta Corrente: Geralmente possui colunas 'Data', 'Dependência', 'Histórico', 'Data do Balancete', 'Número do Documento' e 'Valor'. Valores podem estar com o sinal de C (Crédito) ou D (Débito) ao lado, ou negativo para saída. Cuidado com o cabeçalho complexo.",
-      "bb_cartao": "Regras Banco do Brasil (BB) Cartão: O formato da fatura difere da conta corrente. Identifique as compras e separe entradas e saídas corretamente.",
-      "default": "Sem regras específicas mapeadas. Faça a dedução lógica do formato das colunas."
+      "banco_do_brasil": "Regras Banco do Brasil (BB) Conta Corrente: Geralmente possui colunas 'Data', 'DependÃƒÂªncia', 'HistÃƒÂ³rico', 'Data do Balancete', 'NÃƒÂºmero do Documento' e 'Valor'. Valores podem estar com o sinal de C (CrÃƒÂ©dito) ou D (DÃƒÂ©bito) ao lado, ou negativo para saÃƒÂ­da. Cuidado com o cabeÃƒÂ§alho complexo.",
+      "bb_cartao": "Regras Banco do Brasil (BB) CartÃƒÂ£o: O formato da fatura difere da conta corrente. Identifique as compras e separe entradas e saÃƒÂ­das corretamente.",
+      "default": "Sem regras especÃƒÂ­ficas mapeadas. FaÃƒÂ§a a deduÃƒÂ§ÃƒÂ£o lÃƒÂ³gica do formato das colunas."
     };
 
     function identifyBankLibrary(fileName, csvText) {
@@ -1144,7 +1091,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return BANK_LIBRARIES["default"];
     }
 
-    // Lógica para upload em LOTE (Desktop)
+    // LÃƒÂ³gica para upload em LOTE (Desktop)
     let selectedIaModel = 'claude-haiku-4-5-20251001';
     const btnImportModels = document.querySelectorAll('.btn-import-model');
     const uploadCsvIa = document.getElementById('uploadCsvIa');
@@ -1220,12 +1167,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           li.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
               <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
-              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;">⏳ Na fila...</span>
+              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;">Ã¢ÂÂ³ Na fila...</span>
             </div>
             <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-              <div><strong>🏦 Banco:</strong> ????</div>
-              <div><strong>🏷️ Tipo:</strong> ????</div>
-              <div><strong>📅 Período:</strong> ????</div>
+              <div><strong>Ã°Å¸ÂÂ¦ Banco:</strong> ????</div>
+              <div><strong>Ã°Å¸ÂÂ·Ã¯Â¸Â Tipo:</strong> ????</div>
+              <div><strong>Ã°Å¸â€œâ€¦ PerÃƒÂ­odo:</strong> ????</div>
             </div>
           `;
           if(queueLeft) queueLeft.appendChild(li);
@@ -1240,13 +1187,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const statusSpan = document.getElementById(`queue-status-${i}`);
           
           try {
-            if(statusSpan) { statusSpan.innerText = '⚙️ Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
+            if(statusSpan) { statusSpan.innerText = 'Ã¢Å¡â„¢Ã¯Â¸Â  Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
             
             const fileData = await extractFileContent(file);
             const isPdf = fileData.type === 'pdf';
             const bankRules = identifyBankLibrary(file.name, isPdf ? "Arquivo em formato PDF (Base64)" : fileData.content);
 
-            if(statusSpan) { statusSpan.innerText = '🤖 Extraindo (Haiku)...'; }
+            if(statusSpan) { statusSpan.innerText = 'Ã°Å¸Â¤â€“ Extraindo (Haiku)...'; }
             const resExtrair = await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1260,52 +1207,33 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             });
 
             const jsonBruto = await resExtrair.json();
-            if (jsonBruto.status !== 'success') throw new Error(jsonBruto.message || "Erro extração.");
+            if (jsonBruto.status !== 'success') throw new Error(jsonBruto.message || "Erro extraÃƒÂ§ÃƒÂ£o.");
 
-            // O novo prompt retorna um objeto: { nomeConta, tipoConta, transacoes: [] }
-            const extrato = jsonBruto.data || {};
-            const transacoesExtraidas = extrato.transacoes || extrato || []; // fallback se a IA retornar array direto
+            // O novo prompt retorna diretamente um Array com as transações já estruturadas
+            const transacoesExtraidas = jsonBruto.data || [];
             
-            let nomeConta = extrato.nomeConta || 'Desconhecida';
-            let tipoConta = extrato.tipoConta || 'Indefinido';
-            let periodoStr = 'N/A';
-
-            if (transacoesExtraidas.length > 0) {
-              const datas = transacoesExtraidas.map(t => {
-                if(!t.data) return NaN;
-                const parts = t.data.split('/');
-                return new Date(parts[2], parts[1]-1, parts[0]).getTime();
-              }).filter(d => !isNaN(d));
-
-              if (datas.length > 0) {
-                const minDate = new Date(Math.min(...datas));
-                const maxDate = new Date(Math.max(...datas));
-                const formata = d => d.toLocaleDateString('pt-BR');
-                periodoStr = `${formata(minDate)} a ${formata(maxDate)}`;
-              }
-            }
-
             const metaDiv = document.getElementById(`queue-meta-${i}`);
             if(metaDiv) {
               metaDiv.innerHTML = `
-                <div><strong>🏦 Banco:</strong> ${nomeConta}</div>
-                <div><strong>🏷️ Tipo:</strong> ${tipoConta}</div>
-                <div><strong>📅 Período:</strong> ${periodoStr}</div>
+                <div><strong>Ã°Å¸ÂÂ¦ Banco:</strong> ${nomeConta}</div>
+                <div><strong>Ã°Å¸ÂÂ·Ã¯Â¸Â Tipo:</strong> ${tipoConta}</div>
+                <div><strong>Ã°Å¸â€œâ€¦ PerÃƒÂ­odo:</strong> ${periodoStr}</div>
               `;
             }
 
-            if(statusSpan) { statusSpan.innerText = '🔍 Agrupando dados...'; }
+            if(statusSpan) { statusSpan.innerText = 'Ã°Å¸â€ Â  Agrupando dados...'; }
             
             const ineditasDoArquivo = [];
             
             transacoesExtraidas.forEach(t => {
+              // não mexe na conta, a IA já mandou certa
               ineditasDoArquivo.push(t);
             });
 
             totalDuplicadasIgnoradas += (transacoesExtraidas.length - ineditasDoArquivo.length);
             todasIneditasAgrupadas.push(...ineditasDoArquivo);
 
-            if(statusSpan) { statusSpan.innerText = `✅ ${ineditasDoArquivo.length} inéditas`; statusSpan.style.color = '#10b981'; }
+            if(statusSpan) { statusSpan.innerText = `Ã¢Å“â€¦ ${ineditasDoArquivo.length} inÃƒÂ©ditas`; statusSpan.style.color = '#10b981'; }
             
             // Move o card para a coluna "Finalizados"
             const liItem = document.getElementById(`queue-item-${i}`);
@@ -1316,7 +1244,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             
           } catch (err) {
             console.error(err);
-            if(statusSpan) { statusSpan.innerText = `❌ Falhou`; statusSpan.style.color = '#ef4444'; }
+            if(statusSpan) { statusSpan.innerText = `Ã¢ÂÅ’ Falhou`; statusSpan.style.color = '#ef4444'; }
             
             // Em caso de erro, detalha no card (que continua na coluna da esquerda) e pinta borda
             const liItem = document.getElementById(`queue-item-${i}`);
@@ -1325,7 +1253,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const metaDiv = document.getElementById(`queue-meta-${i}`);
             if(metaDiv) {
               metaDiv.innerHTML = `<div style="color: #ef4444; font-weight: bold; background: #fee2e2; padding: 8px; border-radius: 4px; margin-top: 8px;">
-                🚨 Erro do Google Apps Script:<br>
+                Ã°Å¸Å¡Â¨ Erro do Google Apps Script:<br>
                 <span style="font-weight: normal; font-family: monospace;">${err.message}</span>
               </div>`;
             }
@@ -1333,13 +1261,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         if (todasIneditasAgrupadas.length === 0) {
-          if(queueStatus) queueStatus.innerText = 'Concluído: Nenhuma transação inédita encontrada nos arquivos.';
-          alert('Processamento finalizado. Nenhuma transação nova foi encontrada nos arquivos (todas já existiam ou houve falha na leitura).');
+          if(queueStatus) queueStatus.innerText = 'ConcluÃƒÂ­do: Nenhuma transaÃƒÂ§ÃƒÂ£o inÃƒÂ©dita encontrada nos arquivos.';
+          alert('Processamento finalizado. Nenhuma transaÃƒÂ§ÃƒÂ£o nova foi encontrada nos arquivos (todas jÃƒÂ¡ existiam ou houve falha na leitura).');
           return;
         }
 
         if(queueStatus) { 
-          queueStatus.innerText = `Categorizando ${todasIneditasAgrupadas.length} transações inéditas com a IA Mestra...`;
+          queueStatus.innerText = `Categorizando ${todasIneditasAgrupadas.length} transaÃƒÂ§ÃƒÂµes inÃƒÂ©ditas com a IA Mestra...`;
           queueStatus.style.color = 'var(--color-primary)';
           queueStatus.style.fontWeight = 'bold';
         }
@@ -1363,13 +1291,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           `;
 
           const funMessages = [
-            "Acordando os neurônios financeiros...",
-            "Lendo seu Dicionário de Regras Mágicas...",
+            "Acordando os neurÃƒÂ´nios financeiros...",
+            "Lendo seu DicionÃƒÂ¡rio de Regras MÃƒÂ¡gicas...",
             "Cruzando dados com a base da NASA...",
-            "Tomando um café antes de continuar...",
-            "Identificando seus padrões de consumo...",
-            "Calculando os últimos centavos...",
-            "A Mestra está pensando forte..."
+            "Tomando um cafÃƒÂ© antes de continuar...",
+            "Identificando seus padrÃƒÂµes de consumo...",
+            "Calculando os ÃƒÂºltimos centavos...",
+            "A Mestra estÃƒÂ¡ pensando forte..."
           ];
           let msgIdx = 0;
           funInterval = setInterval(() => {
@@ -1408,7 +1336,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             });
 
             const jsonCat = await resCategorizar.json();
-            if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorização.");
+            if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorizaÃƒÂ§ÃƒÂ£o.");
             
             arrayFinalCategorizado.push(...jsonCat.data);
             dicionarioFinal = jsonCat.dicionario;
@@ -1423,7 +1351,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
 
           if (catStatusBox) catStatusBox.style.display = 'none';
-          if(queueStatus) { queueStatus.innerText = '✨ Processamento em lote concluído!'; queueStatus.style.color = '#10b981'; }
+          if(queueStatus) { queueStatus.innerText = 'Ã¢Å“Â¨ Processamento em lote concluÃƒÂ­do!'; queueStatus.style.color = '#10b981'; }
           
           arrayFinalCategorizado.sort((a, b) => {
             if (!a.data || !b.data) return 0;
@@ -1444,12 +1372,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             catStatusBox.innerHTML = `
               <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                <h3 style="margin: 0 0 0.5rem 0; color: #ef4444;">Falha na Inteligência Artificial (Categorização)</h3>
+                <h3 style="margin: 0 0 0.5rem 0; color: #ef4444;">Falha na InteligÃƒÂªncia Artificial (CategorizaÃƒÂ§ÃƒÂ£o)</h3>
                 <p style="margin: 0; color: var(--text-secondary);">${err.message}</p>
               </div>
             `;
           }
-          if(queueStatus) { queueStatus.innerText = '❌ Erro na categorização final.'; queueStatus.style.color = '#ef4444'; }
+          if(queueStatus) { queueStatus.innerText = 'Ã¢ÂÅ’ Erro na categorizaÃƒÂ§ÃƒÂ£o final.'; queueStatus.style.color = '#ef4444'; }
           console.error('Erro na IA Mestra:', err);
         }
       });
@@ -1588,7 +1516,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const diffX = touchStartX - touchEndX;
         const diffY = touchStartY - touchEndY;
         
-        // Assegura que o swipe foi mais horizontal do que vertical para não atrapalhar o scroll
+        // Assegura que o swipe foi mais horizontal do que vertical para nÃƒÂ£o atrapalhar o scroll
         if (Math.abs(diffX) > swipeThreshold && Math.abs(diffX) > Math.abs(diffY)) {
           const activeNav = document.querySelector('.nav-item.active');
           if (!activeNav) return;
@@ -1599,7 +1527,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (currentIndex === -1) return;
 
           if (diffX > 0) {
-            // Swipe Esquerda: Próxima Aba
+            // Swipe Esquerda: PrÃƒÂ³xima Aba
             if (currentIndex < tabs.length - 1) {
               const nextTarget = tabs[currentIndex + 1];
               const navItem = document.querySelector(`.nav-item[data-target="${nextTarget}"]`);
@@ -1765,7 +1693,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const savingsTrend = document.getElementById('value-savings-trend');
       if (savingsTrend) {
-        savingsTrend.textContent = net >= 0 ? 'Positivo no período' : 'Negativo no período';
+        savingsTrend.textContent = net >= 0 ? 'Positivo no perÃƒÂ­odo' : 'Negativo no perÃƒÂ­odo';
       }
 
       // Render Top 5 Gastos
@@ -1792,7 +1720,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (top5List) {
         top5List.innerHTML = '';
         if (top5.length === 0) {
-          top5List.innerHTML = '<li style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">Sem gastos no período</li>';
+          top5List.innerHTML = '<li style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">Sem gastos no perÃƒÂ­odo</li>';
         } else {
           top5.forEach(item => {
             const pctOfMax = (item.value / maxExpense) * 100;
@@ -1826,9 +1754,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       dadosFinanceiros.contas.forEach(c => {
         const tipo = (c.tipo || '').toLowerCase();
-        if (tipo.includes('cart') || tipo.includes('crédito') || tipo.includes('credito')) {
+        if (tipo.includes('cart') || tipo.includes('crÃƒÂ©dito') || tipo.includes('credito')) {
           saldoCartoes += c.saldo;
-        } else if (tipo.includes('investimento') || tipo.includes('aplicação') || tipo.includes('corretora')) {
+        } else if (tipo.includes('investimento') || tipo.includes('aplicaÃƒÂ§ÃƒÂ£o') || tipo.includes('corretora')) {
           saldoInv += c.saldo;
         } else {
           saldoCC += c.saldo;
@@ -1846,12 +1774,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <div class="exec-card-icon">??</div>
         </div>
         <div class="exec-card cartoes" data-action="cartoes">
-          <div class="exec-card-label">Cartões de Crédito</div>
+          <div class="exec-card-label">CartÃƒÂµes de CrÃƒÂ©dito</div>
           <div class="exec-card-value" style="color:var(--color-expense);">${formatBRL(Math.abs(saldoCartoes))}</div>
           <div class="exec-card-icon">??</div>
         </div>
         <div class="exec-card patrimonio" data-action="patrimonio">
-          <div class="exec-card-label">Patrimônio Total</div>
+          <div class="exec-card-label">PatrimÃƒÂ´nio Total</div>
           <div class="exec-card-value" style="background:linear-gradient(to right, var(--color-income), #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${formatBRL(patrimonio)}</div>
           <div class="exec-card-icon">??</div>
         </div>
@@ -1895,7 +1823,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const endIdx = Math.min(startIdx + rowsPerPage, filtered.length);
       const pageItems = filtered.slice(startIdx, endIdx);
 
-      pageInfo.textContent = `Página ${currentPage} de ${totalPages} (Total: ${filtered.length})`;
+      pageInfo.textContent = `PÃƒÂ¡gina ${currentPage} de ${totalPages} (Total: ${filtered.length})`;
       prevPageBtn.disabled = currentPage === 1;
       nextPageBtn.disabled = currentPage === totalPages;
 
@@ -1905,7 +1833,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         transactionsTableBody.innerHTML = `
           <tr>
             <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-              Nenhum lançamento encontrado para os filtros selecionados.
+              Nenhum lanÃƒÂ§amento encontrado para os filtros selecionados.
             </td>
           </tr>
         `;
@@ -1932,7 +1860,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         let badgeClass = 'badge-expense';
         if (cat.includes('transfer')) {
           badgeClass = 'badge-transfer';
-        } else if (cat.includes('provent') || cat.includes('salário') || cat.includes('inicial') || l.valor > 0) {
+        } else if (cat.includes('provent') || cat.includes('salÃƒÂ¡rio') || cat.includes('inicial') || l.valor > 0) {
           badgeClass = 'badge-income';
         }
 
@@ -2019,13 +1947,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             biggestExpenseName = tx.obs || "-";
          }
       });
-      let statusText = "🟢 Dentro da Meta";
+      let statusText = "Ã°Å¸Å¸Â¢ Dentro da Meta";
       let statusColor = "var(--color-income)";
       if (d.pct >= 100) {
-         statusText = "🔴 Estourado";
+         statusText = "Ã°Å¸â€Â´ Estourado";
          statusColor = "var(--color-expense)";
       } else if (d.pct >= 85) {
-         statusText = "🟠 Atenção";
+         statusText = "Ã°Å¸Å¸Â  AtenÃƒÂ§ÃƒÂ£o";
          statusColor = "#f59e0b";
       }
 
@@ -2042,14 +1970,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           </div>
         </div>
       `;
-      txHtml += '<span style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem; display:block; font-weight:600; letter-spacing:0.5px;">Últimas Transações</span>';
+      txHtml += '<span style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem; display:block; font-weight:600; letter-spacing:0.5px;">ÃƒÅ¡ltimas TransaÃƒÂ§ÃƒÂµes</span>';
       const recentSliced = recent.slice(0, 50);
       if (recentSliced.length === 0) {
-         txHtml += '<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">Nenhum gasto neste período.</p>';
+         txHtml += '<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">Nenhum gasto neste perÃƒÂ­odo.</p>';
       } else {
          txHtml += '<ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.8rem;">';
          if (recent.length > 50) {
-            txHtml += `<div style="font-size: 0.75rem; color: var(--color-warning); text-align: center; margin-bottom: 0.5rem; background: rgba(234, 179, 8, 0.1); padding: 4px; border-radius: 4px;">Exibindo as 50 mais recentes de ${recent.length} transações.</div>`;
+            txHtml += `<div style="font-size: 0.75rem; color: var(--color-warning); text-align: center; margin-bottom: 0.5rem; background: rgba(234, 179, 8, 0.1); padding: 4px; border-radius: 4px;">Exibindo as 50 mais recentes de ${recent.length} transaÃƒÂ§ÃƒÂµes.</div>`;
          }
          recentSliced.forEach(tx => {
            txHtml += `
@@ -2070,7 +1998,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <div style="display:flex; align-items:center;">
               <span class="budget-star ${isFav ? 'active' : ''}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5rem; text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); margin-right: 10px;">&#9733;</span>
               <div class="emoji-dropdown">
-                <span class="emoji-btn card-period-btn" title="Alterar Período">📅</span>
+                <span class="emoji-btn card-period-btn" title="Alterar PerÃƒÂ­odo">Ã°Å¸â€œâ€¦</span>
                 <div class="emoji-dropdown-menu card-period-menu" data-period-cat="${o.categoria}">
                   <div data-val="current">Mensal</div>
                   <div data-val="3months">Trimestral</div>
@@ -2128,10 +2056,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
             <div style="display:flex; align-items:center; gap: 10px;">
               <select class="budget-period-select" data-budget-cat="${o.categoria}" onclick="event.stopPropagation()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:2px 5px; font-size:0.8rem; outline:none; cursor:pointer;">
-                <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Este Mês</option>
-                <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mês Passado</option>
-                <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>Últimos 3 Meses</option>
-                <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>Últimos 6 Meses</option>
+                <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Este MÃƒÂªs</option>
+                <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>MÃƒÂªs Passado</option>
+                <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>ÃƒÅ¡ltimos 3 Meses</option>
+                <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>ÃƒÅ¡ltimos 6 Meses</option>
                 <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Este Ano</option>
               </select>
               <span class="budget-limit" style="font-weight:600;">Teto: ${formatBRL(d.limit)}</span>
@@ -2157,7 +2085,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const topTxs = txs.slice(0, 3);
         if (topTxs.length > 0) {
           html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05);">`;
-          html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">Maiores Gastos no Período:</div>`;
+          html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">Maiores Gastos no PerÃƒÂ­odo:</div>`;
           topTxs.forEach(t => {
             html += `
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -2168,7 +2096,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
           html += `</div>`;
         } else {
-          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); text-align:center;">Nenhum gasto no período.</div>`;
+          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); text-align:center;">Nenhum gasto no perÃƒÂ­odo.</div>`;
         }
       }
 
@@ -2270,7 +2198,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (elLivre) {
         elLivre.textContent = formatBRL(Math.abs(livreGlobal));
         elLivre.style.color = livreGlobal >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
-        elLivre.previousElementSibling.querySelector('span').textContent = livreGlobal >= 0 ? 'Espaço Livre Global' : 'Estouro Global';
+        elLivre.previousElementSibling.querySelector('span').textContent = livreGlobal >= 0 ? 'EspaÃƒÂ§o Livre Global' : 'Estouro Global';
       }
       if (elSaude) {
         elSaude.textContent = saudePct + '%';
@@ -2287,7 +2215,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             labels: chartLabels,
             datasets: [
               { label: 'Realizado (R$)', data: chartGasto, backgroundColor: chartColors, borderRadius: 4, stack: 'Stack 0' },
-              { label: 'Limite Disponível', data: chartTeto.map((t, i) => Math.max(0, t - chartGasto[i])), backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 4, stack: 'Stack 0' }
+              { label: 'Limite DisponÃƒÂ­vel', data: chartTeto.map((t, i) => Math.max(0, t - chartGasto[i])), backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 4, stack: 'Stack 0' }
             ]
           },
           options: {
@@ -2304,14 +2232,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       if (!dadosFinanceiros.orcamento || dadosFinanceiros.orcamento.length === 0) {
-        budgetContainer.innerHTML = '<p style="color: var(--text-muted);">Nenhuma meta de orçamento definida.</p>';
+        budgetContainer.innerHTML = '<p style="color: var(--text-muted);">Nenhuma meta de orÃƒÂ§amento definida.</p>';
         return;
       }
 
       let html = '';
       if (favItems.length > 0) {
         html += `<div class="budget-favorites-section">
-          <div class="budget-favorites-title">⭐ Favoritos (Em Detalhes)</div>
+          <div class="budget-favorites-title">Ã¢Â­Â Favoritos (Em Detalhes)</div>
           <div class="budget-grid">`;
         favItems.forEach(o => { html += buildBudgetCard(o, true, true); });
         html += `</div></div>`;
@@ -2367,23 +2295,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (!container) return;
 
       if (!dadosFinanceiros.contas || dadosFinanceiros.contas.length === 0) {
-        container.innerHTML = `<h2 style="margin-bottom: 1.5rem;">Contas Bancárias</h2><p style="color: var(--text-muted);">Nenhuma conta cadastrada.</p>`;
+        container.innerHTML = `<h2 style="margin-bottom: 1.5rem;">Contas BancÃƒÂ¡rias</h2><p style="color: var(--text-muted);">Nenhuma conta cadastrada.</p>`;
         return;
       }
 
       const groups = {
         'Contas Correntes': [],
-        'Cartões de Crédito': [],
+        'CartÃƒÂµes de CrÃƒÂ©dito': [],
         'Investimentos': []
       };
       let totalCC = 0, totalCartoes = 0, totalInv = 0;
 
       dadosFinanceiros.contas.forEach(c => {
         const t = (c.tipo || '').toLowerCase();
-        if (t.includes('cart') || t.includes('crédito') || t.includes('credito')) {
-          groups['Cartões de Crédito'].push(c);
+        if (t.includes('cart') || t.includes('crÃƒÂ©dito') || t.includes('credito')) {
+          groups['CartÃƒÂµes de CrÃƒÂ©dito'].push(c);
           totalCartoes += c.saldo;
-        } else if (t.includes('investimento') || t.includes('aplicação') || t.includes('corretora') || t.includes('aplicacao') || t.includes('poupança') || t.includes('poupanca')) {
+        } else if (t.includes('investimento') || t.includes('aplicaÃƒÂ§ÃƒÂ£o') || t.includes('corretora') || t.includes('aplicacao') || t.includes('poupanÃƒÂ§a') || t.includes('poupanca')) {
           groups['Investimentos'].push(c);
           totalInv += c.saldo;
         } else {
@@ -2456,7 +2384,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem;">
           <div class="card bg-card" id="card-composicao-saldos" style="cursor:pointer; border-left: 4px solid var(--color-accent);">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">Composição de Saldos</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">ComposiÃƒÂ§ÃƒÂ£o de Saldos</div>
             <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.9rem;">
               <span>Correntes</span><span style="color:var(--text-primary);">${formatBRL(totalCC)}</span>
             </div>
@@ -2464,15 +2392,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <span>Investimentos</span><span style="color:var(--text-primary);">${formatBRL(totalInv)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
-              <span>Cartões</span><span style="color:var(--color-expense);">${formatBRL(totalCartoes)}</span>
+              <span>CartÃƒÂµes</span><span style="color:var(--color-expense);">${formatBRL(totalCartoes)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem; font-weight:700;">
-              <span>Total (Líquido)</span><span style="color:var(--color-income); font-size:1.1rem;">${formatBRL(patrimonio)}</span>
+              <span>Total (LÃƒÂ­quido)</span><span style="color:var(--color-income); font-size:1.1rem;">${formatBRL(patrimonio)}</span>
             </div>
           </div>
           
           <div class="card bg-card" id="card-alertas-conciliacao" style="cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-left: 4px solid ${temAtraso ? 'var(--color-expense)' : 'var(--color-income)'};">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem; font-weight:600; align-self:flex-start; width:100%; text-align:left;">Status de Conciliação</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem; font-weight:600; align-self:flex-start; width:100%; text-align:left;">Status de ConciliaÃƒÂ§ÃƒÂ£o</div>
             ${alertaHtml}
             <div style="font-size:0.75rem; color:var(--text-muted); margin-top:auto; padding-top:1rem;">Clique para listar contas</div>
           </div>
@@ -2483,28 +2411,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       const iconMap = {
         'Contas Correntes': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11m16-11v11M8 14v3m4-3v3m4-3v3"/></svg>',
-        'Cartões de Crédito': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>'
+        'CartÃƒÂµes de CrÃƒÂ©dito': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>'
       };
 
       const colorMap = {
         'Contas Correntes': 'income',
-        'Cartões de Crédito': 'expense',
+        'CartÃƒÂµes de CrÃƒÂ©dito': 'expense',
         'Investimentos': 'accent'
       };
 
       const subtotals = {
         'Contas Correntes': totalCC,
-        'Cartões de Crédito': totalCartoes,
+        'CartÃƒÂµes de CrÃƒÂ©dito': totalCartoes,
         'Investimentos': totalInv
       };
 
       const subtotalColors = {
         'Contas Correntes': 'var(--color-income)',
-        'Cartões de Crédito': 'var(--color-expense)',
+        'CartÃƒÂµes de CrÃƒÂ©dito': 'var(--color-expense)',
         'Investimentos': 'var(--color-accent)'
       };
 
-      for (const groupName of ['Contas Correntes', 'Cartões de Crédito', 'Investimentos']) {
+      for (const groupName of ['Contas Correntes', 'CartÃƒÂµes de CrÃƒÂ©dito', 'Investimentos']) {
         const contas = groups[groupName];
         if (contas.length === 0) continue;
 
@@ -2528,7 +2456,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
-          const isCC = groupName === 'Cartões de Crédito';
+          const isCC = groupName === 'CartÃƒÂµes de CrÃƒÂ©dito';
           
           let faturaAtual = 0;
           let faturaProxima = 0;
@@ -2560,11 +2488,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               ${isCC ? `
                 <div style="display:flex; justify-content:space-between; margin-top:0.8rem; font-size:0.75rem; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 6px;">
                   <div>
-                    <div style="color:var(--text-muted); font-size:0.65rem;">Fatura Atual (Mês)</div>
+                    <div style="color:var(--text-muted); font-size:0.65rem;">Fatura Atual (MÃƒÂªs)</div>
                     <div style="color:${faturaAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaAtual)}</div>
                   </div>
                   <div style="text-align:right;">
-                    <div style="color:var(--text-muted); font-size:0.65rem;">Próxima Fatura</div>
+                    <div style="color:var(--text-muted); font-size:0.65rem;">PrÃƒÂ³xima Fatura</div>
                     <div style="color:${faturaProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaProxima)}</div>
                   </div>
                 </div>
@@ -2607,7 +2535,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       const invAccountNames = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
-        return t.includes('investimento') || t.includes('aplicação') || t.includes('corretora');
+        return t.includes('investimento') || t.includes('aplicaÃƒÂ§ÃƒÂ£o') || t.includes('corretora');
       }).map(c => c.nome);
 
       if (invAccountNames.length === 0) {
@@ -2636,10 +2564,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           updateInvMonthly(monthlyData, l.data, v, 0, 0);
         } else {
           // Aportes / Resgates
-          if (v > 0 && (cat === 'transferência' || cat === 'proventos' || cat === 'transferencia')) {
+          if (v > 0 && (cat === 'transferÃƒÂªncia' || cat === 'proventos' || cat === 'transferencia')) {
             aportesPeriodo += v;
             updateInvMonthly(monthlyData, l.data, 0, v, 0);
-          } else if (v < 0 && (cat === 'transferência' || cat === 'diversos' || cat === 'transferencia')) {
+          } else if (v < 0 && (cat === 'transferÃƒÂªncia' || cat === 'diversos' || cat === 'transferencia')) {
             resgatesPeriodo += Math.abs(v);
             updateInvMonthly(monthlyData, l.data, 0, 0, Math.abs(v));
           }
@@ -2742,7 +2670,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const investimentos = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
-        return t.includes('investimento') || t.includes('aplicação') || t.includes('corretora');
+        return t.includes('investimento') || t.includes('aplicaÃƒÂ§ÃƒÂ£o') || t.includes('corretora');
       });
 
       if (investimentos.length === 0) {
@@ -2771,7 +2699,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <div class="card-icon">${invIcon}</div>
             </div>
             <div class="card-value" style="font-size:1.6rem; color:#8b5cf6;">${formatBRL(c.saldo)}</div>
-            <div class="card-trend" style="color:var(--text-muted);">${pctOfTotal}% do total • Clique para ver extrato</div>
+            <div class="card-trend" style="color:var(--text-muted);">${pctOfTotal}% do total Ã¢â‚¬Â¢ Clique para ver extrato</div>
           </div>
         `;
       });
@@ -2827,10 +2755,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const isOk = Math.abs(transferSum) < 0.01;
         item.innerHTML = `
           <div class="audit-title">
-            <span>Verificação de Transferências Globais</span>
+            <span>VerificaÃƒÂ§ÃƒÂ£o de TransferÃƒÂªncias Globais</span>
             <span class="audit-status ${isOk ? 'ok' : 'error'}">${isOk ? 'OK' : 'ERRO'}</span>
           </div>
-          <div class="audit-desc">A soma de todos os lançamentos de transferência deve ser R$ 0,00.</div>
+          <div class="audit-desc">A soma de todos os lanÃƒÂ§amentos de transferÃƒÂªncia deve ser R$ 0,00.</div>
           <div class="audit-result" style="color: ${isOk ? 'var(--color-income)' : 'var(--color-expense)'}">
             Resultado Apurado: ${isOk ? 'R$ 0,00 (Total Conciliado)' : formatBRL(transferSum)}
           </div>
@@ -3011,7 +2939,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     document.addEventListener('DOMContentLoaded', init);
 
-    // Funções Globais de Modal
+    // FunÃƒÂ§ÃƒÂµes Globais de Modal
     window.showGlassModal = function(title, htmlContent) {
       const modal = document.getElementById('glassModal');
       document.getElementById('glassModalTitle').textContent = title;
@@ -3033,7 +2961,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
 
       if (items.length === 0) {
-        showGlassModal(isIncome ? 'Receitas' : 'Despesas', '<p style="color:var(--text-muted);">Nenhum lançamento no período.</p>');
+        showGlassModal(isIncome ? 'Receitas' : 'Despesas', '<p style="color:var(--text-muted);">Nenhum lanÃƒÂ§amento no perÃƒÂ­odo.</p>');
         return;
       }
 
@@ -3055,7 +2983,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const color = isIncome ? 'var(--color-income)' : 'var(--color-expense)';
 
       let html = `<div style="margin-bottom:1.5rem; font-size:1.8rem; font-weight:bold; color:${color}; text-align:center;">${formatBRL(total)}</div>`;
-      html += `<p style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:1.5rem;">Clique numa categoria para ver os lançamentos</p>`;
+      html += `<p style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-bottom:1.5rem;">Clique numa categoria para ver os lanÃƒÂ§amentos</p>`;
       
       sorted.forEach(([cat, catItems], idx) => {
         const catTotal = catItems.reduce((s,i) => s + Math.abs(i.valor), 0);
@@ -3114,7 +3042,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
 
       if (items.length === 0) {
-        showGlassModal(categoria, '<p style="color:var(--text-muted); text-align:center;">Nenhum lançamento encontrado para esta categoria no período.</p>');
+        showGlassModal(categoria, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanÃƒÂ§amento encontrado para esta categoria no perÃƒÂ­odo.</p>');
         return;
       }
 
@@ -3125,10 +3053,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let html = `<div style="margin-bottom:1rem; text-align:center;">
         <div style="font-size:1.6rem; font-weight:bold; color:${color};">${formatBRL(mainTotal)}</div>
-        <div style="font-size:0.8rem; color:var(--text-muted);">${items.length} lançamento${items.length > 1 ? 's' : ''}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">${items.length} lanÃƒÂ§amento${items.length > 1 ? 's' : ''}</div>
       </div>`;
 
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>DescriÃƒÂ§ÃƒÂ£o</th><th>Conta</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
       items.sort((a,b) => {
         const dA = parseDateString(a.data), dB = parseDateString(b.data);
         return (dA||0) - (dB||0);
@@ -3153,7 +3081,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       const invAccountNames = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
-        return t.includes('investimento') || t.includes('aplicação') || t.includes('corretora');
+        return t.includes('investimento') || t.includes('aplicaÃƒÂ§ÃƒÂ£o') || t.includes('corretora');
       }).map(c => c.nome);
 
       const items = filtered.filter(l => {
@@ -3163,23 +3091,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (cat === 'saldo inicial') return false;
 
         if (type === 'rendimentos') return (cat === 'rendimentos' || cat === 'outros');
-        if (type === 'aportes') return (v > 0 && (cat === 'transferência' || cat === 'proventos' || cat === 'transferencia'));
-        if (type === 'resgates') return (v < 0 && (cat === 'transferência' || cat === 'diversos' || cat === 'transferencia'));
+        if (type === 'aportes') return (v > 0 && (cat === 'transferÃƒÂªncia' || cat === 'proventos' || cat === 'transferencia'));
+        if (type === 'resgates') return (v < 0 && (cat === 'transferÃƒÂªncia' || cat === 'diversos' || cat === 'transferencia'));
         return false;
       });
 
-      let title = type === 'rendimentos' ? 'Rendimento Líquido' : type === 'aportes' ? 'Aportes do Período' : 'Resgates do Período';
+      let title = type === 'rendimentos' ? 'Rendimento LÃƒÂ­quido' : type === 'aportes' ? 'Aportes do PerÃƒÂ­odo' : 'Resgates do PerÃƒÂ­odo';
 
       if (items.length === 0) {
-        showGlassModal(title, '<p style="color:var(--text-muted); text-align:center;">Nenhum lançamento encontrado para este tipo no período.</p>');
+        showGlassModal(title, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanÃƒÂ§amento encontrado para este tipo no perÃƒÂ­odo.</p>');
         return;
       }
 
       items.sort((a,b) => (parseDateString(a.data)||0) - (parseDateString(b.data)||0));
 
       let total = 0;
-      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${items.length} lançamento${items.length > 1 ? 's' : ''}</div>`;
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Conta</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
+      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${items.length} lanÃƒÂ§amento${items.length > 1 ? 's' : ''}</div>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Conta</th><th>DescriÃƒÂ§ÃƒÂ£o</th><th>Categoria</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
 
       items.forEach(item => {
         total += item.valor;
@@ -3193,7 +3121,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         </tr>`;
       });
 
-      html += `</tbody><tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; color:var(--text-primary);">Total do Período</td><td style="text-align:right; font-weight:bold; font-size:1.1rem; color:${total >= 0 ? 'var(--color-income)' : 'var(--color-expense)'};">${formatBRL(total)}</td></tr></tfoot></table>`;
+      html += `</tbody><tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; color:var(--text-primary);">Total do PerÃƒÂ­odo</td><td style="text-align:right; font-weight:bold; font-size:1.1rem; color:${total >= 0 ? 'var(--color-income)' : 'var(--color-expense)'};">${formatBRL(total)}</td></tr></tfoot></table>`;
 
       showGlassModal(title, html);
     };
@@ -3203,7 +3131,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const items = filtered.filter(l => (l.conta || '').toLowerCase().trim() === nomeConta.toLowerCase().trim());
 
       if (items.length === 0) {
-        showGlassModal(nomeConta, '<p style="color:var(--text-muted); text-align:center;">Nenhum lançamento encontrado para esta conta no período.</p>');
+        showGlassModal(nomeConta, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanÃƒÂ§amento encontrado para esta conta no perÃƒÂ­odo.</p>');
         return;
       }
 
@@ -3224,18 +3152,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let displayItems = items;
       let warnHtml = '';
       if (totalItens > 50) {
-        displayItems = items.slice(-50); // Pega os últimos 50 (mais recentes)
+        displayItems = items.slice(-50); // Pega os ÃƒÂºltimos 50 (mais recentes)
         warnHtml = `<div style="background: rgba(239,68,68,0.1); border-left: 3px solid var(--color-expense); padding: 0.8rem; border-radius: 4px; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.85rem;">
                       <i class="fas fa-exclamation-triangle" style="color: var(--color-expense); margin-right: 5px;"></i>
-                      Exibindo os 50 lançamentos mais recentes para evitar lentidão. Total no período: ${totalItens}.
+                      Exibindo os 50 lanÃƒÂ§amentos mais recentes para evitar lentidÃƒÂ£o. Total no perÃƒÂ­odo: ${totalItens}.
                     </div>`;
       }
 
-      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${totalItens} lançamento${totalItens > 1 ? 's' : ''} no período</div>`;
+      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${totalItens} lanÃƒÂ§amento${totalItens > 1 ? 's' : ''} no perÃƒÂ­odo</div>`;
       html += warnHtml;
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>DescriÃƒÂ§ÃƒÂ£o</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th></tr></thead><tbody>`;
 
-      // Exibe a ordem decrescente (mais recentes no topo) para que o usuário veja os últimos logo de cara
+      // Exibe a ordem decrescente (mais recentes no topo) para que o usuÃƒÂ¡rio veja os ÃƒÂºltimos logo de cara
       displayItems.reverse().forEach(item => {
         const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
         const saldoClass = item._saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
@@ -3252,12 +3180,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       showGlassModal(`Extrato: ${nomeConta}`, html);
     };
 
-    // NEW: Show cartoes de crédito modal
+    // NEW: Show cartoes de crÃƒÂ©dito modal
     window.showCartoesModal = function() {
       let total = 0;
       const cartoes = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
-        if (t.includes('cart') || t.includes('crédito') || t.includes('credito')) {
+        if (t.includes('cart') || t.includes('crÃƒÂ©dito') || t.includes('credito')) {
           total += c.saldo;
           return true;
         }
@@ -3265,7 +3193,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }).sort((a,b) => a.saldo - b.saldo);
 
       if (cartoes.length === 0) {
-        showGlassModal('Cartões de Crédito', '<p style="color:var(--text-muted); text-align:center;">Nenhum cartão cadastrado.</p>');
+        showGlassModal('CartÃƒÂµes de CrÃƒÂ©dito', '<p style="color:var(--text-muted); text-align:center;">Nenhum cartÃƒÂ£o cadastrado.</p>');
         return;
       }
 
@@ -3287,7 +3215,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         `;
       });
 
-      showGlassModal('Cartões de Crédito', html);
+      showGlassModal('CartÃƒÂµes de CrÃƒÂ©dito', html);
       setTimeout(() => {
         document.querySelectorAll('[data-conta-extrato]').forEach(el => {
           el.addEventListener('click', () => window.showExtratoContaModal(el.dataset.contaExtrato));
@@ -3295,7 +3223,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }, 50);
     };
 
-    // NEW: Show patrimônio total modal
+    // NEW: Show patrimÃƒÂ´nio total modal
     window.showConciliacaoModal = function() {
       const now = new Date();
       now.setHours(0,0,0,0);
@@ -3312,15 +3240,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             diffDays = 999;
           }
         } else {
-           diffDays = 999; // Se não tem data, assume o maior atraso possível
+           diffDays = 999; // Se nÃƒÂ£o tem data, assume o maior atraso possÃƒÂ­vel
         }
         contasComAtraso.push({ ...c, diffDays });
       });
       
       contasComAtraso.sort((a,b) => b.diffDays - a.diffDays);
 
-      let html = `<div style="margin-bottom:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">Acompanhamento de Conciliação Bancária</div>`;
-      html += `<table class="extrato-table"><thead><tr><th>Conta</th><th>Últ. Movimentação</th><th style="text-align:right">Status</th></tr></thead><tbody>`;
+      let html = `<div style="margin-bottom:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">Acompanhamento de ConciliaÃƒÂ§ÃƒÂ£o BancÃƒÂ¡ria</div>`;
+      html += `<table class="extrato-table"><thead><tr><th>Conta</th><th>ÃƒÅ¡lt. MovimentaÃƒÂ§ÃƒÂ£o</th><th style="text-align:right">Status</th></tr></thead><tbody>`;
 
       contasComAtraso.forEach(item => {
         let atrasoText = '';
@@ -3343,16 +3271,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       html += `</tbody></table>`;
       
-      showGlassModal('Status de Conciliação', html);
+      showGlassModal('Status de ConciliaÃƒÂ§ÃƒÂ£o', html);
     };
 
     window.showPatrimonioModal = function() {
       let saldoCC = 0, saldoInv = 0, saldoCartoes = 0;
       dadosFinanceiros.contas.forEach(c => {
         const t = (c.tipo || '').toLowerCase();
-        if (t.includes('cart') || t.includes('crédito') || t.includes('credito')) {
+        if (t.includes('cart') || t.includes('crÃƒÂ©dito') || t.includes('credito')) {
           saldoCartoes += c.saldo;
-        } else if (t.includes('investimento') || t.includes('aplicação') || t.includes('corretora')) {
+        } else if (t.includes('investimento') || t.includes('aplicaÃƒÂ§ÃƒÂ£o') || t.includes('corretora')) {
           saldoInv += c.saldo;
         } else {
           saldoCC += c.saldo;
@@ -3362,13 +3290,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let html = `<div style="text-align:center; margin-bottom:2rem;">
         <div style="font-size:2rem; font-weight:bold; background:linear-gradient(to right, var(--color-income), #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${formatBRL(patrimonio)}</div>
-        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">Patrimônio Líquido Total</div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">PatrimÃƒÂ´nio LÃƒÂ­quido Total</div>
       </div>`;
 
       const components = [
         { label: 'Contas Correntes', value: saldoCC, color: 'var(--color-income)' },
         { label: 'Investimentos', value: saldoInv, color: '#8b5cf6' },
-        { label: 'Cartões de Crédito', value: saldoCartoes, color: 'var(--color-expense)' }
+        { label: 'CartÃƒÂµes de CrÃƒÂ©dito', value: saldoCartoes, color: 'var(--color-expense)' }
       ];
       const maxComp = Math.max(...components.map(c => Math.abs(c.value)), 1);
 
@@ -3387,7 +3315,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         `;
       });
 
-      showGlassModal('Composição do Patrimônio', html);
+      showGlassModal('ComposiÃƒÂ§ÃƒÂ£o do PatrimÃƒÂ´nio', html);
     };
 
     window.showContasModal = function(type) {
@@ -3396,9 +3324,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let total = 0;
       const items = dadosFinanceiros.contas.filter(c => {
         const cType = (c.tipo || '').toLowerCase();
-        const isInvAccount = cType.includes('investimento') || cType.includes('aplicação') || cType.includes('corretora');
+        const isInvAccount = cType.includes('investimento') || cType.includes('aplicaÃƒÂ§ÃƒÂ£o') || cType.includes('corretora');
         if (isInv && isInvAccount) { total += c.saldo; return true; }
-        if (!isInv && !isInvAccount && !cType.includes('cartão') && !cType.includes('credito')) { total += c.saldo; return true; }
+        if (!isInv && !isInvAccount && !cType.includes('cartÃƒÂ£o') && !cType.includes('credito')) { total += c.saldo; return true; }
         return false;
       }).sort((a,b) => b.saldo - a.saldo);
 
@@ -3425,23 +3353,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         `;
       });
 
-      showGlassModal(isInv ? 'Relatório de Investimentos' : 'Relatório de Contas Correntes', html);
+      showGlassModal(isInv ? 'RelatÃƒÂ³rio de Investimentos' : 'RelatÃƒÂ³rio de Contas Correntes', html);
     };
 
     window.showAuditoriaModal = function() {
       const items = dadosFinanceiros.auditoria || [];
       if (items.length === 0) {
-        showGlassModal('Auditoria', '<p style="color:var(--text-muted); text-align:center;">Tudo certo! Nenhuma pendência encontrada. ?</p>');
+        showGlassModal('Auditoria', '<p style="color:var(--text-muted); text-align:center;">Tudo certo! Nenhuma pendÃƒÂªncia encontrada. ?</p>');
         return;
       }
-      let html = `<p style="margin-bottom:1rem; color:var(--text-muted);">Os seguintes itens precisam da sua atenção:</p>`;
+      let html = `<p style="margin-bottom:1rem; color:var(--text-muted);">Os seguintes itens precisam da sua atenÃƒÂ§ÃƒÂ£o:</p>`;
       items.forEach(a => {
         html += `
           <div style="background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--color-expense); padding:1rem; margin-bottom:1rem; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
             <div style="font-weight:600; color:var(--color-expense); margin-bottom:0.3rem;"><i class="fas fa-exclamation-triangle"></i> ${a.item}</div>
             <div style="font-size:0.95rem; color:var(--text-primary); margin-bottom:0.5rem;">${a.descricao}</div>
             <div style="font-size:0.8rem; color:var(--text-muted); display:flex; justify-content:space-between;">
-              <span>Responsável: <b>${a.responsavel}</b></span>
+              <span>ResponsÃƒÂ¡vel: <b>${a.responsavel}</b></span>
               <span>Status: <b style="color:var(--color-expense)">${a.status}</b></span>
             </div>
           </div>
@@ -3461,7 +3389,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       return false;
     };
 
-    // Configurações do Feedback
+    // ConfiguraÃƒÂ§ÃƒÂµes do Feedback
     document.addEventListener('DOMContentLoaded', () => {
       const btnFeedback = document.getElementById('btnFeedback');
       const feedbackModal = document.getElementById('feedbackModal');
@@ -3479,7 +3407,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           feedbackModal.style.display = 'none';
         }
 
-        // Lógica do Modal Translúcido (Glassmorphism)
+        // LÃƒÂ³gica do Modal TranslÃƒÂºcido (Glassmorphism)
         const glassModal = document.getElementById('glassModal');
         const glassModalCloseBtn = document.getElementById('glassModalCloseBtn');
         
@@ -3510,13 +3438,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 texto: text
               })
             });
-            alert('Sugestão enviada com sucesso! Ela foi salva na aba SUGESTOES.');
+            alert('SugestÃƒÂ£o enviada com sucesso! Ela foi salva na aba SUGESTOES.');
             feedbackText.value = '';
             feedbackModal.style.display = 'none';
           } catch (e) {
-            alert('Erro ao enviar sugestão: ' + e.message);
+            alert('Erro ao enviar sugestÃƒÂ£o: ' + e.message);
           } finally {
-            btnSubmitFeedback.innerText = 'Enviar Sugestão';
+            btnSubmitFeedback.innerText = 'Enviar SugestÃƒÂ£o';
             btnSubmitFeedback.disabled = false;
           }
         };
@@ -3550,11 +3478,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const cartoes = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
-        return t.includes('cart') || t.includes('crédito') || t.includes('credito');
+        return t.includes('cart') || t.includes('crÃƒÂ©dito') || t.includes('credito');
       });
 
       if (cartoes.length === 0) {
-        dashboardEl.innerHTML = '<p style="color:var(--text-muted);">Nenhum cartão de crédito cadastrado.</p>';
+        dashboardEl.innerHTML = '<p style="color:var(--text-muted);">Nenhum cartÃƒÂ£o de crÃƒÂ©dito cadastrado.</p>';
         return;
       }
 
@@ -3598,10 +3526,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
 
         if (faturaCardAtual !== 0) {
-           faturasAtual.push({ nome: c.nome || c.conta || 'Cartão', dia: diaVencimentoAtual || 1, valor: faturaCardAtual });
+           faturasAtual.push({ nome: c.nome || c.conta || 'CartÃƒÂ£o', dia: diaVencimentoAtual || 1, valor: faturaCardAtual });
         }
         if (faturaCardProxima !== 0) {
-           faturasProxima.push({ nome: c.nome || c.conta || 'Cartão', dia: diaVencimentoProxima || 1, valor: faturaCardProxima });
+           faturasProxima.push({ nome: c.nome || c.conta || 'CartÃƒÂ£o', dia: diaVencimentoProxima || 1, valor: faturaCardProxima });
         }
       });
 
@@ -3621,12 +3549,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem; align-items: stretch;">
           <div class="card bg-card" style="display:flex; flex-direction:column;">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Mês Atual</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do MÃƒÂªs Atual</div>
             <div style="font-size:1.8rem; font-weight:700; color:${totalAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalAtual)}</div>
             <div style="margin-top:auto;">${renderFaturasList(faturasAtual)}</div>
           </div>
           <div class="card bg-card" style="display:flex; flex-direction:column;">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Próximo Mês</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">PrÃƒÂ³ximo MÃƒÂªs</div>
             <div style="font-size:1.8rem; font-weight:700; color:${totalProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalProxima)}</div>
             <div style="margin-top:auto;">${renderFaturasList(faturasProxima)}</div>
           </div>
@@ -3639,14 +3567,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       html += `
         <div class="card charts-container" style="margin-bottom: 2rem;">
-          <h3 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">Projeção de Faturas (Próximos 6 Meses)</h3>
+          <h3 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">ProjeÃƒÂ§ÃƒÂ£o de Faturas (PrÃƒÂ³ximos 6 Meses)</h3>
           <div style="height: 250px; position: relative;">
             <canvas id="creditCardsProjectionChart"></canvas>
           </div>
         </div>
       `;
 
-      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus Cartões</h3>`;
+      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus CartÃƒÂµes</h3>`;
       html += `<div class="accounts-grid" id="credit-cards-list-container">`;
       
       const iconCC = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>';
@@ -3656,7 +3584,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (nextMonth > 11) { nextMonth = 0; nextYear++; }
 
       cartoes.forEach(c => {
-        const cName = c.nome || c.conta || 'Cartão';
+        const cName = c.nome || c.conta || 'CartÃƒÂ£o';
         
         let faturaAtualCC = 0;
         let faturaProximaCC = 0;
@@ -3685,7 +3613,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 <div style="color:${faturaAtualCC < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaAtualCC)}</div>
               </div>
               <div style="text-align:right;">
-                <div style="color:var(--text-muted); font-size:0.65rem;">Próxima Fatura</div>
+                <div style="color:var(--text-muted); font-size:0.65rem;">PrÃƒÂ³xima Fatura</div>
                 <div style="color:${faturaProximaCC < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaProximaCC)}</div>
               </div>
             </div>
@@ -3758,7 +3686,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
 // ==========================================
-    // Lógica do COPILOT FINANCEIRO (Chat IA)
+    // LÃƒÂ³gica do COPILOT FINANCEIRO (Chat IA)
     // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
       const btnChatSend = document.getElementById('btn-chat-send');
@@ -3833,7 +3761,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             addMessage(respostaIA.mensagem, false);
             historicoChat.push({ role: 'assistant', content: respostaIA.mensagem });
             
-            // Aplica as alterações na tabela global
+            // Aplica as alteraÃƒÂ§ÃƒÂµes na tabela global
             if (respostaIA.alteracoes && Array.isArray(respostaIA.alteracoes)) {
               let changed = false;
               respostaIA.alteracoes.forEach(alt => {
@@ -3846,7 +3774,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                     if (alt.favorecido !== undefined) dadosFinanceiros.importacoes[idx].favorecido = alt.favorecido;
                     changed = true;
                   }
-                } catch(e) { console.error("Erro ao aplicar alteração:", e); }
+                } catch(e) { console.error("Erro ao aplicar alteraÃƒÂ§ÃƒÂ£o:", e); }
               });
               
             }
@@ -3872,7 +3800,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
       }
       
-      // --- GERENCIADOR DE CONFIGURAÇÕES (CATEGORIAS E CONTAS) ---
+      // --- GERENCIADOR DE CONFIGURAÃƒâ€¡Ãƒâ€¢ES (CATEGORIAS E CONTAS) ---
       
       window.renderEditCategories = function() {
         const container = document.getElementById('categories-editor-container');
@@ -3988,7 +3916,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       };
 
       window.saveConfigsToServer = async function() {
-        if (!confirm("Isso irá sobrescrever as abas CATEGORIAS e CONTAS na sua planilha. Continuar?")) return;
+        if (!confirm("Isso irÃƒÂ¡ sobrescrever as abas CATEGORIAS e CONTAS na sua planilha. Continuar?")) return;
         
         const catKeys = Object.keys(window.editCategorias);
         let maxLen = 0;
@@ -4022,14 +3950,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
           const result = await response.json();
           if (result.status === 'success') {
-            alert("Configurações salvas com sucesso!");
+            alert("ConfiguraÃƒÂ§ÃƒÂµes salvas com sucesso!");
             window.dicionarioGeral = window.editCategorias;
             window.contasAtivas = window.editContas;
           } else {
             alert("Erro: " + result.message);
           }
         } catch(e) {
-          alert("Erro na conexão: " + e.message);
+          alert("Erro na conexÃƒÂ£o: " + e.message);
         }
         btnEl.innerHTML = btnHtml;
       };
@@ -4042,3 +3970,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       
     });
+
+
+
+
+
+
+
+
+
+
+
