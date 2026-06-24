@@ -1241,7 +1241,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     async function checkSharedFile() {
-      const urlParames = new URLSearchParames(window.location.search);
+      const urlParames = new URLSearchParams(window.location.search);
       if (urlParames.get('shared') === 'true') {
         try {
           const cache = await caches.open('shared-files-cache');
