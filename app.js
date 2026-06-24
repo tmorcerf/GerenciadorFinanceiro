@@ -1105,7 +1105,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const lowerText = csvText.toLowerCase().substring(0, 1000);
 
       if (lowerName.includes('sicredi') || lowerText.includes('sicredi')) {
-          if (lowerName.includes('fatura') || lowerName.includes('cartao') || lowerText.includes('fatura') || lowerText.includes('cartão') || lowerText.includes('cartao')) {
+          if (lowerName.includes('fatura') || lowerName.includes('cartao') || lowerText.includes('fatura') || lowerText.includes('cartao')) {
               return BANK_LIBRARIES["sicredi_cartao"];
           }
           return BANK_LIBRARIES["sicredi"];
