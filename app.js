@@ -741,36 +741,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         </div>
       `;
 
-      const tableHTML = `
-        ${bannerDups}
-        ${filterBarHTML}
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
-            <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
-              <tr>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" onclick="window.sortReviewTable('confianca')" title="Enviar para Passo 3 (Especiais)">Parcelamento</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data </th>
-                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferencias/Parcelamentos)">Conta</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descricao </th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor </th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria </th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria </th>
-              </tr>
-            </thead>
-            <tbody id="review-tbody">
-            </tbody>
-          </table>
+      // Banner de conferencia de conta
+      const contaDetectada = window.currentReviewData.length > 0 ? (window.currentReviewData[0].conta || 'N/A') : 'N/A';
+      const contasDisponiveis = (dadosFinanceiros.contas || []).map(c => c.nome).filter(c => c);
+      let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c}" ${c === contaDetectada ? 'selected' : ''}>${c}</option>`).join('');
+      contaSelectOptions = `<option value="">-- Selecione --</option>` + contaSelectOptions;
+      
+      const bannerContaHTML = `
+        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); padding: 1rem 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; display:flex; align-items:center; justify-content:space-between; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="display:flex; align-items:center; gap: 1rem;">
+            <i class="fas fa-university" style="font-size: 1.8rem; color: var(--color-primary);"></i>
+            <div>
+              <h4 style="margin:0; color: var(--text-primary); font-size: 1rem;">Conta Detectada pelo Importador</h4>
+              <p style="margin:0; font-size:0.85rem; color:var(--text-secondary);">Confira se a conta esta correta. Se nao, selecione a conta certa abaixo.</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap: 0.8rem;">
+            <span style="font-size:0.85rem; color:var(--text-secondary); white-space:nowrap;">Sugestao: <strong style="color:var(--color-primary);">${contaDetectada}</strong></span>
+            <select id="review-conta-override" onchange="window.overrideReviewConta(this.value)" style="background: rgba(0,0,0,0.3); color: var(--text-primary); border: 2px solid var(--color-primary); padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.95rem; font-weight: 600; outline: none; min-width: 200px; cursor: pointer;">
+              ${contaSelectOptions}
+            </select>
+          </div>
         </div>
       `;
 
-      const containerList = document.getElementById('import-review-list');
-      const containerBox = document.getElementById('import-review-container');
-      const titleEl = document.getElementById('import-review-title');
-      
-      const duvidasTotais = window.currentReviewData.filter(d => d.confianca !== 'verde').length;
-      titleEl.innerHTML = `<i class="fas fa-clipboard-list" style="color: var(--color-primary);"></i> Revisao Final (${window.currentReviewData.length} itens, ${duvidasTotais} duvidas)`;
-      
-      containerList.innerHTML = tableHTML;
+      // Funcao para alterar a conta de TODAS as transacoes
+      window.overrideReviewConta = function(novaConta) {
+        if (!novaConta) return;
+        window.currentReviewData.forEach(d => { d.conta = novaConta; });
+        window.renderReviewTable();
+      };
+
+      containerList.innerHTML = bannerContaHTML + tableHTML;
       window.sortReviewTable('confianca'); // Inicialmente ordena trazendo vermelhos e amarelos pro topo
       
       containerBox.style.display = 'block';
@@ -819,7 +821,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           }, 3000);
         };
 
+        let _savingInProgress = false;
         const saveHandler = async () => {
+          if (_savingInProgress) return;
+          _savingInProgress = true;
+
+          // Desabilitar botoes imediatamente para prevenir duplo-clique
+          const btnTopo = document.getElementById('btnSalvarRevisaoPanel');
+          const btnRodape = document.getElementById('btnSalvarRevisaoPanelBottom');
+          if (btnTopo) { btnTopo.disabled = true; btnTopo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...'; }
+          if (btnRodape) { btnRodape.disabled = true; btnRodape.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...'; }
+
           const transacoesComIds = window.currentReviewData.map(d => {
             const cleanData = { ...d };
             // Recalcular isSpecial baseado no estado atual do checkbox
@@ -1088,45 +1100,127 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              htmlStep4 += `</tbody></table></div>`;
           }
 
-          containerList.innerHTML = `
-             <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
-               <i class="fas fa-check-circle"></i> Os lancamentos comuns do Passo 2 já foram salvos com sucesso.
-             </div>
-             ${htmlParcelas}
-             ${htmlStep4}
-             <div style="text-align: right; margin-top: 2rem;">
-               <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
-                 <i class="fas fa-save"></i> Finalizar Passo 3 e 4
-               </button>
-             </div>
-          `;
+          // Renderizar conforme o que existe
+          const hasParcelas = window.expandedParcelas.length > 0;
+          const hasTransfers = window.transacoesProcessadasStep4 && window.transacoesProcessadasStep4.length > 0;
 
-          document.getElementById('btn-final-save-reconcile').onclick = async function() {
+          if (hasParcelas && hasTransfers) {
+            // Mostrar Passo 3 primeiro, com botao para avancar ao Passo 4
+            if (titleEl) titleEl.innerHTML = `<i class="fas fa-layer-group" style="color: var(--color-accent);"></i> Passo 3: Projecao de Parcelas`;
+            containerList.innerHTML = `
+              <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
+                <i class="fas fa-check-circle"></i> Os lancamentos comuns do Passo 2 ja foram salvos com sucesso.
+              </div>
+              ${htmlParcelas}
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+                <span style="color: var(--text-secondary); font-size: 0.9rem;"><i class="fas fa-arrow-right"></i> Apos revisar, avance para as Transferencias (Passo 4).</span>
+                <button id="btn-avancar-step4" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
+                  <i class="fas fa-save"></i> Salvar Parcelas e Avancar <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            `;
+
+            document.getElementById('btn-avancar-step4').onclick = async function() {
+              this.disabled = true;
+              this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando parcelas...';
+              showGlassModal('Salvando Parcelas...', `
+                <div style="text-align:center; padding: 3rem 1rem;">
+                  <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
+                  <h3 style="color: var(--text-primary);">Gravando parcelas projetadas...</h3>
+                </div>
+              `);
+              const successParc = await saveTransactions(window.expandedParcelas, []);
+              document.getElementById('glassModal').classList.remove('active');
+              if (!successParc) {
+                alert('Erro ao salvar parcelas. Tente novamente.');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-save"></i> Salvar Parcelas e Avancar <i class="fas fa-arrow-right"></i>';
+                return;
+              }
+
+              // Avancar para Passo 4
+              if (titleEl) titleEl.innerHTML = `<i class="fas fa-exchange-alt" style="color: var(--color-primary);"></i> Passo 4: Transferencias e Contra-partidas`;
+              containerList.innerHTML = `
+                <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
+                  <i class="fas fa-check-circle"></i> Parcelas salvas com sucesso! Agora revise as transferencias abaixo.
+                </div>
+                ${htmlStep4}
+                <div style="text-align: right; margin-top: 2rem;">
+                  <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
+                    <i class="fas fa-save"></i> Finalizar Transferencias
+                  </button>
+                </div>
+              `;
+              window._attachFinalSaveHandler(saveTransactions, showSuccessAndReload);
+            };
+          } else if (hasParcelas && !hasTransfers) {
+            // So parcelas
+            if (titleEl) titleEl.innerHTML = `<i class="fas fa-layer-group" style="color: var(--color-accent);"></i> Passo 3: Projecao de Parcelas`;
+            containerList.innerHTML = `
+              <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
+                <i class="fas fa-check-circle"></i> Os lancamentos comuns do Passo 2 ja foram salvos com sucesso.
+              </div>
+              ${htmlParcelas}
+              <div style="text-align: right; margin-top: 2rem;">
+                <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
+                  <i class="fas fa-save"></i> Finalizar Parcelas
+                </button>
+              </div>
+            `;
+            window._attachFinalSaveHandler(saveTransactions, showSuccessAndReload);
+          } else if (!hasParcelas && hasTransfers) {
+            // So transferencias
+            if (titleEl) titleEl.innerHTML = `<i class="fas fa-exchange-alt" style="color: var(--color-primary);"></i> Passo 4: Transferencias e Contra-partidas`;
+            containerList.innerHTML = `
+              <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
+                <i class="fas fa-check-circle"></i> Os lancamentos comuns do Passo 2 ja foram salvos com sucesso.
+              </div>
+              ${htmlStep4}
+              <div style="text-align: right; margin-top: 2rem;">
+                <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
+                  <i class="fas fa-save"></i> Finalizar Transferencias
+                </button>
+              </div>
+            `;
+            window._attachFinalSaveHandler(saveTransactions, showSuccessAndReload);
+          }
+
+          // Handler generico para o botao final de salvar
+          window._attachFinalSaveHandler = function(saveTransactions, showSuccessAndReload) {
+            const btn = document.getElementById('btn-final-save-reconcile');
+            if (!btn) return;
+            btn.onclick = async function() {
                this.disabled = true;
                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
                
                showGlassModal('Finalizando...', `
                  <div style="text-align:center; padding: 3rem 1rem;">
                    <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
-                   <h3 style="color: var(--text-primary);">Gravando Parcelas e Transferencias...</h3>
+                   <h3 style="color: var(--text-primary);">Gravando lancamentos...</h3>
                  </div>
                `);
 
-               let finalTransacoes = [...window.expandedParcelas];
-               if (window.transacoesProcessadasStep4) {
-                   finalTransacoes.push(...window.transacoesProcessadasStep4);
+               let finalTransacoes = [];
+               if (window.expandedParcelas && window.expandedParcelas.length > 0) {
+                 finalTransacoes.push(...window.expandedParcelas);
+               }
+               if (window.transacoesProcessadasStep4 && window.transacoesProcessadasStep4.length > 0) {
+                 finalTransacoes.push(...window.transacoesProcessadasStep4);
                }
                
                const success = await saveTransactions(finalTransacoes, []);
                if (success) {
-                  const containerList = document.getElementById('import-review-list');
-                  if (containerList) containerList.innerHTML = '';
-                  showSuccessAndReload();
+                 const containerList = document.getElementById('import-review-list');
+                 if (containerList) containerList.innerHTML = '';
+                 showSuccessAndReload();
                } else {
-                  alert("Erro ao salvar. Tente novamente.");
-                  this.disabled = false;
-                  this.innerHTML = '<i class="fas fa-save"></i> Finalizar Passo 3 e 4';
-                  document.getElementById('glassModal').classList.remove('active');
+                 alert("Erro ao salvar. Tente novamente.");
+                 this.disabled = false;
+                 this.innerHTML = '<i class="fas fa-save"></i> Finalizar';
+                 document.getElementById('glassModal').classList.remove('active');
+               }
+            };
+          };
                }
           };
         };
