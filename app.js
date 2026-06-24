@@ -771,7 +771,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <tr>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">ConfianÃƒÂ§a Ã¢â€ â€¢</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data Ã¢â€ â€¢</th>
-                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (TransferÃƒÂªncias/Parcelamentos)">Trf / Pgto</th>
+                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (TransferÃƒÂªncias/Parcelamentos)">Conta</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">DescriÃƒÂ§ÃƒÂ£o Ã¢â€ â€¢</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor Ã¢â€ â€¢</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria Ã¢â€ â€¢</th>
@@ -843,6 +843,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const saveHandler = async () => {
           const transacoesComIds = window.currentReviewData.map(d => {
             const cleanData = { ...d };
+            cleanData.finalIsSpecial = d.isSpecial || false;
             delete cleanData.vlrNumber;
             delete cleanData.statusIcon;
             delete cleanData.confianca;
@@ -1193,7 +1194,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const isPdf = fileData.type === 'pdf';
             const bankRules = identifyBankLibrary(file.name, isPdf ? "Arquivo em formato PDF (Base64)" : fileData.content);
 
-            if(statusSpan) { statusSpan.innerText = '🤖 Extraindo (Haiku)...'; }
             const resExtrair = await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1209,19 +1209,26 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const jsonBruto = await resExtrair.json();
             if (jsonBruto.status !== 'success') throw new Error(jsonBruto.message || "Erro extraÃƒÂ§ÃƒÂ£o.");
 
-            // O novo prompt retorna diretamente um Array com as transações já estruturadas
             const transacoesExtraidas = jsonBruto.data || [];
             
-            const metaDiv = document.getElementById(`queue-meta-${i}`);
-            if(metaDiv) {
-              metaDiv.innerHTML = `
-                <div><strong>Ã°Å¸ÂÂ¦ Banco:</strong> ${nomeConta}</div>
-                <div><strong>Ã°Å¸ÂÂ·Ã¯Â¸Â Tipo:</strong> ${tipoConta}</div>
-                <div><strong>Ã°Å¸â€œâ€¦ PerÃƒÂ­odo:</strong> ${periodoStr}</div>
-              `;
+            var contaDetectada = "N/A";
+            var periodoDetectado = "N/A";
+            if (transacoesExtraidas.length > 0) {
+              contaDetectada = transacoesExtraidas[0].conta || "N/A";
+              var datasArr = [];
+              transacoesExtraidas.forEach(function(t) { if (t.data) datasArr.push(t.data); });
+              datasArr.sort();
+              if (datasArr.length > 0) periodoDetectado = datasArr[0] + " a " + datasArr[datasArr.length - 1];
             }
 
-            if(statusSpan) { statusSpan.innerText = 'Ã°Å¸â€ Â  Agrupando dados...'; }
+            var metaDiv = document.getElementById("queue-meta-" + i);
+            if(metaDiv) {
+              metaDiv.innerHTML = "<div><strong>Banco:</strong> " + contaDetectada + "</div>" +
+                "<div><strong>Qtde:</strong> " + transacoesExtraidas.length + "</div>" +
+                "<div><strong>Periodo:</strong> " + periodoDetectado + "</div>";
+            }
+
+            if(statusSpan) { statusSpan.innerText = "Agrupando dados..."; }
             
             const ineditasDoArquivo = [];
             
