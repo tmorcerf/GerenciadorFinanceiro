@@ -783,12 +783,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" onclick="window.sortReviewTable('confianca')" title="Enviar para Passo 3 (Especiais)">Parcelamento</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data Ôåò</th>
                 <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferencias/Parcelamentos)">Conta</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria ↕</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descri├º├úo Ôåò</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor Ôåò</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria Ôåò</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria Ôåò</th>
               </tr>
             </thead>
             <tbody id="review-tbody">
@@ -1367,8 +1367,163 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const text = await file.text();
       return { type: 'text', content: text };
     }
+    window.fileTransactions = {};
     
+    window.updateCardInfo = function(idx, novaContaNome) {
+      const contaObj = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? 
+        window.dadosFinanceiros.contas.find(c => c.nome === novaContaNome) : null;
+      
+      const spanInst = document.getElementById(`inst-conta-${idx}`);
+      const spanTipo = document.getElementById(`tipo-conta-${idx}`);
+      
+      if (contaObj) {
+        if (spanInst) spanInst.innerText = contaObj.instituicao || "N/A";
+        if (spanTipo) spanTipo.innerText = contaObj.tipo || "N/A";
+      } else {
+        if (spanInst) spanInst.innerText = "N/A";
+        if (spanTipo) spanTipo.innerText = "N/A";
+      }
+    };
 
+    window.categorizarArquivo = function(idx) {
+      const transacoes = window.fileTransactions[idx];
+      if (!transacoes || transacoes.length === 0) {
+        alert("Nenhuma transação inédita encontrada neste arquivo.");
+        return;
+      }
+      
+      const select = document.getElementById(`select-conta-${idx}`);
+      const novaConta = select ? select.value : "N/A";
+      
+      if (!novaConta || novaConta === "N/A" || novaConta === "") {
+        alert("Por favor, selecione uma conta válida antes de categorizar.");
+        return;
+      }
+      
+      transacoes.forEach(t => {
+        t.conta = novaConta;
+      });
+      
+      window.classificarLote(transacoes, 0);
+    };
+
+    window.classificarLote = async function(todasIneditasAgrupadas, totalDuplicadasIgnoradas = 0) {
+        const queueStatus = document.getElementById('batch-queue-status');
+        if(queueStatus) { 
+          queueStatus.innerText = `Categorizando ${todasIneditasAgrupadas.length} transacoes ineditas com a IA Mestra...`;
+          queueStatus.style.color = 'var(--color-primary)';
+          queueStatus.style.fontWeight = 'bold';
+        }
+        
+        const catStatusBox = document.getElementById('import-categorizer-status');
+        let funInterval;
+        if (catStatusBox) {
+          catStatusBox.style.display = 'block';
+          catStatusBox.innerHTML = `
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
+              <i class="fas fa-brain fa-pulse" style="font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);" id="inline-cat-title">Classificando Lote (0 de ${todasIneditasAgrupadas.length} itens)...</h3>
+              
+              <!-- Barra de Progresso -->
+              <div style="width: 100%; max-width: 400px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 1rem auto; overflow: hidden;">
+                <div id="inline-cat-progress" style="width: 0%; height: 100%; background: var(--color-primary); border-radius: 4px; transition: width 0.3s ease;"></div>
+              </div>
+
+              <p style="margin: 0; font-style: italic; color: var(--text-secondary);" id="inline-cat-desc">Filtro Local ignorou ${totalDuplicadasIgnoradas} duplicidades. Chamando IA Mestra...</p>
+            </div>
+          `;
+
+          const funMessages = [
+            "Acordando os neuronios financeiros...",
+            "Lendo seu Dicionario de Regras Magicas...",
+            "Cruzando dados com a base da NASA...",
+            "Tomando um cafe antes de continuar...",
+            "Identificando seus padroes de consumo...",
+            "Calculando os ultimos centavos...",
+            "A Mestra esta pensando forte..."
+          ];
+          let mesgIdx = 0;
+          funInterval = setInterval(() => {
+            const descEl = document.getElementById('inline-cat-desc');
+            if (descEl) descEl.innerText = funMessages[mesgIdx % funMessages.length];
+            mesgIdx++;
+          }, 2500);
+        }
+
+        try {
+          todasIneditasAgrupadas.sort((a, b) => a.descricao.localeCompare(b.descricao));
+          
+          const CHUNK_SIZE = 40;
+          let arrayFinalCategorizado = [];
+          let dicionarioFinal = {};
+          
+          for (let c = 0; c < todasIneditasAgrupadas.length; c += CHUNK_SIZE) {
+            const currentTotal = Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length);
+            const titleEl = document.getElementById('inline-cat-title');
+            const progressEl = document.getElementById('inline-cat-progress');
+            
+            if (titleEl) titleEl.innerText = `Classificando Lote (${currentTotal} de ${todasIneditasAgrupadas.length} itens)...`;
+            if (progressEl) {
+              const perc = (c / todasIneditasAgrupadas.length) * 100;
+              progressEl.style.width = `${perc}%`;
+            }
+            
+            const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'categorize_json',
+                payload: JSON.stringify(todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE)),
+                model: selectedIaModel
+              })
+            });
+
+            const jsonCat = await resCategorizar.json();
+            if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorizacao.");
+            
+            arrayFinalCategorizado.push(...jsonCat.data);
+            dicionarioFinal = jsonCat.dicionario;
+          }
+
+          if (document.getElementById('inline-cat-progress')) {
+            document.getElementById('inline-cat-progress').style.width = '100%';
+          }
+          if (funInterval) clearInterval(funInterval);
+
+          window.dicionarioCategorias = dicionarioFinal;
+          window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
+
+          if (catStatusBox) catStatusBox.style.display = 'none';
+          if(queueStatus) { queueStatus.innerText = ' Processamento concluido!'; queueStatus.style.color = '#10b981'; }
+          
+          arrayFinalCategorizado.sort((a, b) => {
+            if (!a.data || !b.data) return 0;
+            const pa = a.data.split('/');
+            const pb = b.data.split('/');
+            if (pa.length === 3 && pb.length === 3) {
+               const da = new Date(`${pa[2]}-${pa[1]}-${pa[0]}`);
+               const db = new Date(`${pb[2]}-${pb[1]}-${pb[0]}`);
+               return da - db;
+            }
+            return 0;
+          });
+          renderizarRevisaoIA(arrayFinalCategorizado);
+        } catch (err) {
+          if (funInterval) clearInterval(funInterval);
+          if (catStatusBox) {
+            catStatusBox.style.display = 'block'; 
+            catStatusBox.innerHTML = `
+              <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
+                <h3 style="margin: 0 0 0.5rem 0; color: #ef4444;">Falha na Inteligncia Artificial (Categorizao)</h3>
+                <p style="margin: 0; color: var(--text-secondary);">${err.message}</p>
+              </div>
+            `;
+          }
+          if(queueStatus) { queueStatus.innerText = ' Erro na categorizacao final.'; queueStatus.style.color = '#ef4444'; }
+          console.error('Erro na IA Mestra:', err);
+        }
+    };
     
     const btnImportSingle = document.getElementById('btn-import-single');
     if (btnImportSingle && uploadCsvIa) {
@@ -1382,6 +1537,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (files.length === 0) return;
         
         e.target.value = '';
+        window.fileTransactions = {};
 
         const queueContainer = document.getElementById('batch-queue-container');
         const queueLeft = document.getElementById('batch-queue-left');
@@ -1471,13 +1627,26 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               }
             }
 
+            const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+            let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome === contaDetectada ? 'selected' : ''}>${c.nome}</option>`).join('');
+            contaSelectOptions = `<option value="">-- Selecione --</option>` + contaSelectOptions;
+
             var metaDiv = document.getElementById("queue-meta-" + i);
             if(metaDiv) {
-              metaDiv.innerHTML = "<div><strong>Nome da conta:</strong> " + contaDetectada + "</div>" +
-                "<div><strong>Instituicao Financeira:</strong> " + instituicaoStr + "</div>" +
-                "<div><strong>Tipo de conta:</strong> " + tipoStr + "</div>" +
-                "<div><strong>Qtde:</strong> " + transacoesExtraidas.length + "</div>" +
-                "<div><strong>Periodo:</strong> " + periodoDetectado + "</div>";
+              metaDiv.innerHTML = `
+                <div style="margin-bottom: 8px;"><strong>Nome da conta:</strong> 
+                  <select id="select-conta-${i}" onchange="window.updateCardInfo(${i}, this.value)" style="margin-top: 4px; display: block; width: 100%; background: rgba(0,0,0,0.05); border: 1px solid #ccc; padding: 6px; border-radius: 4px; font-size: 0.9rem;">
+                    ${contaSelectOptions}
+                  </select>
+                </div>
+                <div><strong>Instituição Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
+                <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
+                <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
+                <div><strong>Periodo:</strong> ${periodoDetectado}</div>
+                <div style="margin-top: 15px; text-align: center;">
+                  <button onclick="window.categorizarArquivo(${i})" style="background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;"><i class="fas fa-brain"></i> Categorizar Lote IA</button>
+                </div>
+              `;
             }
 
             if(statusSpan) { statusSpan.innerText = "Agrupando dados..."; }
@@ -1491,6 +1660,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             totalDuplicadasIgnoradas += (transacoesExtraidas.length - ineditasDoArquivo.length);
             todasIneditasAgrupadas.push(...ineditasDoArquivo);
+            window.fileTransactions[i] = ineditasDoArquivo;
 
             if(statusSpan) { statusSpan.innerText = ` ${ineditasDoArquivo.length} ineditas`; statusSpan.style.color = '#10b981'; }
             
@@ -1526,118 +1696,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         if(queueStatus) { 
-          queueStatus.innerText = `Categorizando ${todasIneditasAgrupadas.length} transacoes ineditas com a IA Mestra...`;
+          queueStatus.innerText = `Pronto! Verifique as contas e clique em "Categorizar Lote IA" nos cards à direita.`;
           queueStatus.style.color = 'var(--color-primary)';
           queueStatus.style.fontWeight = 'bold';
-        }
-        
-        const catStatusBox = document.getElementById('import-categorizer-status');
-        let funInterval;
-        if (catStatusBox) {
-          catStatusBox.style.display = 'block';
-          catStatusBox.innerHTML = `
-            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
-              <i class="fas fa-brain fa-pulse" style="font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem;"></i>
-              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);" id="inline-cat-title">Classificando Lote (0 de ${todasIneditasAgrupadas.length} itens)...</h3>
-              
-              <!-- Barra de Progresso -->
-              <div style="width: 100%; max-width: 400px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 1rem auto; overflow: hidden;">
-                <div id="inline-cat-progress" style="width: 0%; height: 100%; background: var(--color-primary); border-radius: 4px; transition: width 0.3s ease;"></div>
-              </div>
-
-              <p style="margin: 0; font-style: italic; color: var(--text-secondary);" id="inline-cat-desc">Filtro Local ignorou ${totalDuplicadasIgnoradas} duplicidades. Chamando IA Mestra...</p>
-            </div>
-          `;
-
-          const funMessages = [
-            "Acordando os neurnios financeiros...",
-            "Lendo seu Dicionario de Regras Mgicas...",
-            "Cruzando dados com a base da NASA...",
-            "Tomando um caf antes de continuar...",
-            "Identificando seus padres de consumo...",
-            "Calculando os ultimos centavos...",
-            "A Mestra est pensando forte..."
-          ];
-          let mesgIdx = 0;
-          funInterval = setInterval(() => {
-            const descEl = document.getElementById('inline-cat-desc');
-            if (descEl) descEl.innerText = funMessages[mesgIdx % funMessages.length];
-            mesgIdx++;
-          }, 2500);
-        }
-
-        try {
-          todasIneditasAgrupadas.sort((a, b) => a.descricao.localeCompare(b.descricao));
-          
-          const CHUNK_SIZE = 40;
-          let arrayFinalCategorizado = [];
-          let dicionarioFinal = {};
-          
-          for (let c = 0; c < todasIneditasAgrupadas.length; c += CHUNK_SIZE) {
-            const currentTotal = Math.min(c + CHUNK_SIZE, todasIneditasAgrupadas.length);
-            const titleEl = document.getElementById('inline-cat-title');
-            const progressEl = document.getElementById('inline-cat-progress');
-            
-            if (titleEl) titleEl.innerText = `Classificando Lote (${currentTotal} de ${todasIneditasAgrupadas.length} itens)...`;
-            if (progressEl) {
-              const perc = (c / todasIneditasAgrupadas.length) * 100;
-              progressEl.style.width = `${perc}%`;
-            }
-            
-            const resCategorizar = await fetch(APPS_SCRIPT_WEBAPP_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({
-                action: 'categorize_json',
-                payload: JSON.stringify(todasIneditasAgrupadas.slice(c, c + CHUNK_SIZE)),
-                model: selectedIaModel
-              })
-            });
-
-            const jsonCat = await resCategorizar.json();
-            if (jsonCat.status !== 'success') throw new Error(jsonCat.message || "Erro desconhecido na categorizacao.");
-            
-            arrayFinalCategorizado.push(...jsonCat.data);
-            dicionarioFinal = jsonCat.dicionario;
-          }
-
-          if (document.getElementById('inline-cat-progress')) {
-            document.getElementById('inline-cat-progress').style.width = '100%';
-          }
-          if (funInterval) clearInterval(funInterval);
-
-          window.dicionarioCategorias = dicionarioFinal;
-          window.resumoDuplicidades = { total: todasIneditasAgrupadas.length + totalDuplicadasIgnoradas, ignoradas: totalDuplicadasIgnoradas };
-
-          if (catStatusBox) catStatusBox.style.display = 'none';
-          if(queueStatus) { queueStatus.innerText = ' Processamento em lote concluido!'; queueStatus.style.color = '#10b981'; }
-          
-          arrayFinalCategorizado.sort((a, b) => {
-            if (!a.data || !b.data) return 0;
-            const pa = a.data.split('/');
-            const pb = b.data.split('/');
-            if (pa.length === 3 && pb.length === 3) {
-               const da = new Date(`${pa[2]}-${pa[1]}-${pa[0]}`);
-               const db = new Date(`${pb[2]}-${pb[1]}-${pb[0]}`);
-               return da - db;
-            }
-            return 0;
-          });
-          renderizarRevisaoIA(arrayFinalCategorizado);
-        } catch (err) {
-          if (funInterval) clearInterval(funInterval);
-          if (catStatusBox) {
-            catStatusBox.style.display = 'block'; // Ensure the error is visible
-            catStatusBox.innerHTML = `
-              <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                <h3 style="margin: 0 0 0.5rem 0; color: #ef4444;">Falha na Inteligncia Artificial (Categorizao)</h3>
-                <p style="margin: 0; color: var(--text-secondary);">${err.message}</p>
-              </div>
-            `;
-          }
-          if(queueStatus) { queueStatus.innerText = ' Erro na categorizacao final.'; queueStatus.style.color = '#ef4444'; }
-          console.error('Erro na IA Mestra:', err);
         }
       });
     }
