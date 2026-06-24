@@ -190,18 +190,29 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           subcategoria: l['SUB CATEGORIA'] || ''
         })).filter(l => l.valor !== 0);
 
-        dadosFinanceiros.contas = parsedContas.map(c => ({
-          cod: c['COD'] || '',
-          nome: c['Nome da Conta'] || '',
-          instituicao: c['Instituio Financeira'] || '',
-          tipo: c['Tipo de conta'] || '',
-          saldo_inicial: parseBrlFloat(c['Saldo inicial']),
-          saldo: parseBrlFloat(c['Saldo atual'] || c['Saldo']),
-          conciliado_ate: c['Conciliado at'] || '',
-          saldo_lancado: parseBrlFloat(c['Saldo lanado']),
-          saldo_apurado: parseBrlFloat(c['Saldo Apurado']),
-          uultima_movimentacao: c['Data da ultima movimentao'] || c['ultima Movimentao'] || c['Data ultima mov.'] || c['Uultima mov'] || c['Data da uultima movimentacao'] || c['Conciliado at'] || c['Conciliado ate'] || ''
-        })).filter(c => c.nome !== '');
+        dadosFinanceiros.contas = parsedContas.map(c => {
+          // Coluna E (sem cabecalho) contem o dia do vencimento da fatura para cartoes de credito
+          // PapaParse com header vazio gera key '' ou coloca em __parsed_extra
+          let diaVenc = 0;
+          if (c[''] !== undefined && c[''] !== '') {
+            diaVenc = parseInt(c['']) || 0;
+          } else if (c.__parsed_extra && c.__parsed_extra.length > 0) {
+            diaVenc = parseInt(c.__parsed_extra[0]) || 0;
+          }
+          return {
+            cod: c['COD'] || '',
+            nome: c['Nome da Conta'] || '',
+            instituicao: c['Instituio Financeira'] || c['Instituicao Financeira'] || '',
+            tipo: c['Tipo de conta'] || '',
+            dia_vencimento: diaVenc,
+            saldo_inicial: parseBrlFloat(c['Saldo inicial']),
+            saldo: parseBrlFloat(c['Saldo atual'] || c['Saldo']),
+            conciliado_ate: c['Conciliado at'] || '',
+            saldo_lancado: parseBrlFloat(c['Saldo lanado']),
+            saldo_apurado: parseBrlFloat(c['Saldo Apurado']),
+            uultima_movimentacao: c['Data da ultima movimentao'] || c['ultima Movimentao'] || c['Data ultima mov.'] || c['Uultima mov'] || c['Data da uultima movimentacao'] || c['Conciliado at'] || c['Conciliado ate'] || ''
+          };
+        }).filter(c => c.nome !== '');
 
         dadosFinanceiros.orcamento = parsedOrc.map(o => ({
           categoria: o['Categorias'] || '',
@@ -317,40 +328,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return { ...d, _id: 'tx_' + i, confianca, statusIcon, descricao: d.descricao != null ? d.descricao.toString() : '', vlrNumber: parseFloat(d.valor) || 0 };
       });
 
-      window.transacoesStep3 = allProcessedData.filter(d => {
-         return d.descricao.match(/\d+\/\d+/) || d.descricao.toLowerCase().includes('parc');
-      });
-
-      window.transacoesStep4 = allProcessedData.filter(d => {
-         const isParc = d.descricao.match(/\d+\/\d+/) || d.descricao.toLowerCase().includes('parc');
-         if (isParc) return false;
-         const cat = d.categoria ? d.categoria.toString().trim() : '';
-         return cat === 'Transferencias' || cat === 'Investimentos' || cat === 'Pagamento de Cartao' || cat === 'Transferencia';
-      });
-
-      window.currentReviewData = allProcessedData.filter(d => {
-         const isParc = d.descricao.match(/\d+\/\d+/) || d.descricao.toLowerCase().includes('parc');
-         const cat = d.categoria ? d.categoria.toString().trim() : '';
-         const isStep4 = cat === 'Transferencias' || cat === 'Investimentos' || cat === 'Pagamento de Cartao' || cat === 'Transferencia';
-         return !isParc && !isStep4;
-      });
-
-      // Dummy map to replace the original window.currentReviewData definition since we already mapped above
-      let __dummy = window.currentReviewData.map((d, i) => {
-        let confianca = 'verde';
-        let statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin:auto;" title="100% Certeza"></div>';
-        
-        if (d.duvida) {
-          if (d.categoria && d.categoria.toUpperCase() !== 'OUTROS' && d.categoria.toUpperCase() !== 'DIVERSOS') {
-            confianca = 'amarelo';
-            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#f59e0b; margin:auto;" title="Duvida (Sugesto da IA)"></div>';
-          } else {
-            confianca = 'vermelho';
-            statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#ef4444; margin:auto;" title="A IA nao teve ideia"></div>';
-          }
-        }
-        return { ...d, _id: 'tx_' + i, confianca, statusIcon, descricao: d.descricao != null ? d.descricao.toString() : '', vlrNumber: parseFloat(d.valor) || 0 };
-      });
+      // TODAS as transacoes vao para o Passo 2. A checkbox isSpecial separa na hora do "Confirmar".
+      window.currentReviewData = allProcessedData;
 
       window.reviewSortCol = 'data';
       window.reviewSortAsc = true;
@@ -843,7 +822,29 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const saveHandler = async () => {
           const transacoesComIds = window.currentReviewData.map(d => {
             const cleanData = { ...d };
-            cleanData.finalIsSpecial = d.isSpecial || false;
+            // Recalcular isSpecial baseado no estado atual do checkbox
+            const catAtual = d.categoria || '';
+            const isTransferCat = catAtual.toLowerCase().includes('transfer') || catAtual === 'Investimentos' || catAtual === 'Pagamento de Cartao';
+            const isInstallment = d.descricao && /\b\d{1,2}\s*\/\s*\d{1,2}\b/.test(d.descricao);
+            const computedSpecial = d.isSpecial !== undefined ? d.isSpecial : (isTransferCat || isInstallment);
+            cleanData.finalIsSpecial = computedSpecial;
+            cleanData.isParcelaNova = false;
+            cleanData.isTransfer = false;
+            
+            if (computedSpecial) {
+              // Classificar: e parcela 01/XX? -> parcelamento novo
+              const parcMatch = d.descricao && d.descricao.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+              if (parcMatch && parseInt(parcMatch[1]) === 1 && parseInt(parcMatch[2]) > 1) {
+                cleanData.isParcelaNova = true;
+              } else if (isTransferCat) {
+                cleanData.isTransfer = true;
+              }
+              // Parcelas que NAO sao 01/XX (ex: 02/05) -> salvar como comuns
+              if (parcMatch && parseInt(parcMatch[1]) !== 1) {
+                cleanData.finalIsSpecial = false;
+              }
+            }
+            
             delete cleanData.vlrNumber;
             delete cleanData.statusIcon;
             delete cleanData.confianca;
@@ -851,14 +852,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             return cleanData; 
           });
 
-          const transacoesTransferencias = transacoesComIds.filter(t => t.finalIsSpecial && (t.categoria === 'Transferencia' || t.categoria === 'Transferencias'));
-          const transacoesParceladas = transacoesComIds.filter(t => t.finalIsSpecial && t.categoria !== 'Transferencia' && t.categoria !== 'Transferencias');
+          const transacoesTransferencias = transacoesComIds.filter(t => t.finalIsSpecial && t.isTransfer);
+          const transacoesParceladas = transacoesComIds.filter(t => t.finalIsSpecial && t.isParcelaNova);
           const transacoesComuns = transacoesComIds.filter(t => !t.finalIsSpecial);
           
-          // Cleanup the temp flag before sending
-          transacoesTransferencias.forEach(t => delete t.finalIsSpecial);
-          transacoesParceladas.forEach(t => delete t.finalIsSpecial);
-          transacoesComuns.forEach(t => delete t.finalIsSpecial);
+          // Cleanup the temp flags before sending
+          [...transacoesTransferencias, ...transacoesParceladas, ...transacoesComuns].forEach(t => {
+            delete t.finalIsSpecial;
+            delete t.isParcelaNova;
+            delete t.isTransfer;
+          });
 
           if (transacoesTransferencias.length === 0 && transacoesParceladas.length === 0) {
              showGlassModal('Salvando...', `
@@ -892,27 +895,71 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             }
           }
 
-          let parcJson = { status: 'success', data: [] };
-
-          const tasks = [];
+          // ===== PASSO 3: Projecao Local de Parcelas =====
+          window.expandedParcelas = [];
           if (transacoesParceladas.length > 0) {
-             tasks.push(fetch(APPS_SCRIPT_WEBAPP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'parcelador', payload: JSON.stringify(transacoesParceladas), model: window.currentModel || 'claude-haiku-4-5-20251001' })
-             }).then(r => r.json()).then(j => parcJson = j));
+            transacoesParceladas.forEach(t => {
+              // Detectar o padrao de parcela na descricao (ex: 01/03, 1/12)
+              const parcMatch = t.descricao.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+              if (!parcMatch) return; // Sem padrao, nao projeta
+              
+              const parcAtual = parseInt(parcMatch[1]);
+              const parcTotal = parseInt(parcMatch[2]);
+              
+              // So projeta parcelas NOVAS (01/xx)
+              if (parcAtual !== 1 || parcTotal <= 1) return;
+              
+              // Buscar o dia_vencimento da conta do cartao
+              const contaObj = (dadosFinanceiros.contas || []).find(c => c.nome === t.conta);
+              const diaVenc = (contaObj && contaObj.dia_vencimento) ? contaObj.dia_vencimento : 15;
+              
+              // Encontrar a data base para calcular vencimentos futuros
+              let dataBase = null;
+              const dateStr = t.vencimento || t.data;
+              if (dateStr) {
+                const parts = dateStr.split('/');
+                if (parts.length === 3) {
+                  dataBase = new Date(parseInt(parts[2].length === 2 ? '20' + parts[2] : parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                }
+              }
+              if (!dataBase || isNaN(dataBase.getTime())) dataBase = new Date();
+              
+              // Gerar parcelas 02/xx ate xx/xx
+              for (let p = 2; p <= parcTotal; p++) {
+                const mesOffset = p - 1; // meses a frente da parcela 01
+                const vencDate = new Date(dataBase.getFullYear(), dataBase.getMonth() + mesOffset, diaVenc);
+                const vencStr = String(vencDate.getDate()).padStart(2, '0') + '/' + String(vencDate.getMonth() + 1).padStart(2, '0') + '/' + vencDate.getFullYear();
+                
+                // Substituir 01/XX por PP/XX na descricao
+                const novaDescricao = t.descricao.replace(/(\d{1,2})\s*\/\s*(\d{1,2})/, String(p).padStart(2, '0') + '/' + String(parcTotal).padStart(2, '0'));
+                
+                window.expandedParcelas.push({
+                  data: t.data || '',
+                  vencimento: vencStr,
+                  conta: t.conta,
+                  descricao: novaDescricao,
+                  categoria: t.categoria,
+                  subcategoria: t.subcategoria || '',
+                  valor: t.valor
+                });
+              }
+            });
           }
 
-          try {
-             await Promise.all(tasks);
-          } catch(err) {
-             console.error(err);
+          // ===== PASSO 4: Contra-partidas para Transferencias =====
+          // Funcao para adivinhar a conta da contra-partida
+          function guessContraPartidaConta(contaOriginal) {
+            const contas = dadosFinanceiros.contas || [];
+            const original = contas.find(c => c.nome === contaOriginal);
+            if (!original) return '';
+            // Se e Cartao de Credito, buscar Conta Corrente da mesma instituicao
+            if (original.tipo && (original.tipo.toLowerCase().includes('cart') || original.tipo.toLowerCase().includes('credito'))) {
+              const corrente = contas.find(c => c.instituicao === original.instituicao && c.tipo === 'Corrente');
+              return corrente ? corrente.nome : '';
+            }
+            return '';
           }
 
-          document.getElementById('glassModal').classList.remove('active');
-
-          window.expandedParcelas = parcJson.data || [];
-
-          // Geração Local de Contra-partidas para Transferências
           window.transacoesProcessadasStep4 = [];
           if (transacoesTransferencias.length > 0) {
             transacoesTransferencias.forEach(t => {
@@ -922,30 +969,52 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                    conta: t.conta,
                    descricao: t.descricao,
                    categoria: t.categoria,
-                   subcategoria: t.subcategoria,
+                   subcategoria: t.subcategoria || '',
                    valor: t.valor
                 });
                 
-                // Perna 2: Contra-partida
+                // Perna 2: Contra-partida com pre-selecao inteligente
                 let contraValor = Number(t.valor) * -1;
+                let contraConta = guessContraPartidaConta(t.conta);
                 window.transacoesProcessadasStep4.push({
                    data: t.data || t.vencimento,
-                   conta: '', // O usuário deve selecionar
+                   conta: contraConta,
                    descricao: "Contra-partida: " + t.descricao,
                    categoria: t.categoria,
-                   subcategoria: t.subcategoria,
+                   subcategoria: t.subcategoria || '',
                    valor: contraValor
                 });
             });
           }
 
+          document.getElementById('glassModal').classList.remove('active');
+
           const titleEl = document.getElementById('import-review-title');
-          if (titleEl) titleEl.innerHTML = `<i class="fas fa-star" style="color: var(--color-primary);"></i> Passo 3: Lancamentos Especiais e Contra-partidas`;
+          if (titleEl) titleEl.innerHTML = `<i class="fas fa-star" style="color: var(--color-primary);"></i> Passo 3 e 4: Parcelamentos e Transferencias`;
+
+          // Incluir as parcelas originais (01/XX) NO INICIO da tabela para revisao
+          let parcelasOriginais = [];
+          transacoesParceladas.forEach(t => {
+            const parcMatch = t.descricao.match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
+            if (parcMatch && parseInt(parcMatch[1]) === 1 && parseInt(parcMatch[2]) > 1) {
+              parcelasOriginais.push({
+                data: t.data || '',
+                vencimento: t.vencimento || t.data || '',
+                conta: t.conta,
+                descricao: t.descricao,
+                categoria: t.categoria,
+                subcategoria: t.subcategoria || '',
+                valor: t.valor
+              });
+            }
+          });
+          // Juntar: originais + projetadas
+          window.expandedParcelas = [...parcelasOriginais, ...window.expandedParcelas];
 
           let htmlParcelas = '';
           if (window.expandedParcelas.length > 0) {
-             htmlParcelas += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-layer-group"></i> Compras Parceladas (Agente 3)</h4>`;
-             htmlParcelas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">O Parcelador projetou suas faturas. Verifique se os vencimentos futuros esto corretos.</p>`;
+             htmlParcelas += `<h4 style="color: var(--text-primary); margin-top: 1rem; margin-bottom: 0.5rem;"><i class="fas fa-layer-group"></i> Passo 3: Projecao de Parcelas</h4>`;
+             htmlParcelas += `<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">As parcelas 01/XX foram copiadas e projetadas ate o final. Verifique se os vencimentos futuros estao corretos.</p>`;
              
              htmlParcelas += `<div style="overflow-x: auto; margin-bottom: 2rem;">
                <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
@@ -993,7 +1062,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                  </thead>
                  <tbody>`;
                  
-             const contasConhecidas = [...new Set((window.dadosFinanceiros || []).map(d => d.Conta || d.conta).filter(c => c))];
+             const contasConhecidas = (dadosFinanceiros.contas || []).map(c => c.nome).filter(c => c);
 
              window.transacoesProcessadasStep4.forEach((t, idx) => {
                 let isContra = t.descricao && t.descricao.startsWith("Contra-partida");
