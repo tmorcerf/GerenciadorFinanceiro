@@ -1370,8 +1370,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     window.fileTransactions = {};
     
     window.updateCardInfo = function(idx, novaContaNome) {
-      const contaObj = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? 
-        window.dadosFinanceiros.contas.find(c => c.nome === novaContaNome) : null;
+      const contasArr = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
+      const contaObj = contasArr.find(c => c.nome === novaContaNome);
       
       const spanInst = document.getElementById(`inst-conta-${idx}`);
       const spanTipo = document.getElementById(`tipo-conta-${idx}`);
