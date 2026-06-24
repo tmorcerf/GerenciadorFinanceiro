@@ -1380,7 +1380,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
               <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;"> Na fila...</span>
             </div>
-            <div id=\"queue-meta-${i}\" style=\"font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;\">
+            <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
               <div><strong> Nome da conta:</strong> ????</div>
               <div><strong> Instituicao Financeira:</strong> ????</div>
               <div><strong> Tipo de conta:</strong> ????</div>
@@ -1433,23 +1433,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               if (datasArr.length > 0) periodoDetectado = datasArr[0] + " a " + datasArr[datasArr.length - 1];
             }
 
-            let instituicaoStr = \"N/A\";
-            let tipoStr = \"N/A\";
-            if (contaDetectada !== \"N/A\" && window._currentDadosFinanceiros && window._currentDadosFinanceiros.contas) {
+            let instituicaoStr = "N/A";
+            let tipoStr = "N/A";
+            if (contaDetectada !== "N/A" && window._currentDadosFinanceiros && window._currentDadosFinanceiros.contas) {
               const contaObj = window._currentDadosFinanceiros.contas.find(c => c.nome === contaDetectada);
               if (contaObj) {
-                instituicaoStr = contaObj.instituicao || \"N/A\";
-                tipoStr = contaObj.tipo || \"N/A\";
+                instituicaoStr = contaObj.instituicao || "N/A";
+                tipoStr = contaObj.tipo || "N/A";
               }
             }
 
-            var metaDiv = document.getElementById(\"queue-meta-\" + i);
+            var metaDiv = document.getElementById("queue-meta-" + i);
             if(metaDiv) {
-              metaDiv.innerHTML = \"<div><strong>Nome da conta:</strong> \" + contaDetectada + \"</div>\" +
-                \"<div><strong>Instituicao Financeira:</strong> \" + instituicaoStr + \"</div>\" +
-                \"<div><strong>Tipo de conta:</strong> \" + tipoStr + \"</div>\" +
-                \"<div><strong>Qtde:</strong> \" + transacoesExtraidas.length + \"</div>\" +
-                \"<div><strong>Periodo:</strong> \" + periodoDetectado + \"</div>\";
+              metaDiv.innerHTML = "<div><strong>Nome da conta:</strong> " + contaDetectada + "</div>" +
+                "<div><strong>Instituicao Financeira:</strong> " + instituicaoStr + "</div>" +
+                "<div><strong>Tipo de conta:</strong> " + tipoStr + "</div>" +
+                "<div><strong>Qtde:</strong> " + transacoesExtraidas.length + "</div>" +
+                "<div><strong>Periodo:</strong> " + periodoDetectado + "</div>";
             }
 
             if(statusSpan) { statusSpan.innerText = "Agrupando dados..."; }
