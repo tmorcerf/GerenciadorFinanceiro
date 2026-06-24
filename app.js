@@ -892,16 +892,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             }
           }
 
-          let simJson = { status: 'success', pares: [], novasOrfas: [], historicasOrfas: [] };
           let parcJson = { status: 'success', data: [] };
 
           const tasks = [];
-          if (transacoesTransferencias.length > 0) {
-             tasks.push(fetch(APPS_SCRIPT_WEBAPP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'simular_conciliacao_transferencias', transacoes: transacoesTransferencias })
-             }).then(r => r.json()).then(j => simJson = j));
-          }
           if (transacoesParceladas.length > 0) {
              tasks.push(fetch(APPS_SCRIPT_WEBAPP_URL, {
                 method: 'POST',
@@ -917,13 +910,37 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
           document.getElementById('glassModal').classList.remove('active');
 
-          window.reconciliationPairs = simJson.pares || [];
-          window.novasOrfas = simJson.novasOrfas || [];
-          const historicasOrfas = simJson.historicasOrfas || [];
           window.expandedParcelas = parcJson.data || [];
 
+          // Geração Local de Contra-partidas para Transferências
+          window.transacoesProcessadasStep4 = [];
+          if (transacoesTransferencias.length > 0) {
+            transacoesTransferencias.forEach(t => {
+                // Perna 1: Original
+                window.transacoesProcessadasStep4.push({
+                   data: t.data || t.vencimento,
+                   conta: t.conta,
+                   descricao: t.descricao,
+                   categoria: t.categoria,
+                   subcategoria: t.subcategoria,
+                   valor: t.valor
+                });
+                
+                // Perna 2: Contra-partida
+                let contraValor = Number(t.valor) * -1;
+                window.transacoesProcessadasStep4.push({
+                   data: t.data || t.vencimento,
+                   conta: '', // O usuário deve selecionar
+                   descricao: "Contra-partida: " + t.descricao,
+                   categoria: t.categoria,
+                   subcategoria: t.subcategoria,
+                   valor: contraValor
+                });
+            });
+          }
+
           const titleEl = document.getElementById('import-review-title');
-          if (titleEl) titleEl.innerHTML = `<i class="fas fa-star" style="color: var(--color-primary);"></i> Passo 3: Lancamentos Especiais`;
+          if (titleEl) titleEl.innerHTML = `<i class="fas fa-star" style="color: var(--color-primary);"></i> Passo 3: Lancamentos Especiais e Contra-partidas`;
 
           let htmlParcelas = '';
           if (window.expandedParcelas.length > 0) {
@@ -976,33 +993,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                  </thead>
                  <tbody>`;
                  
+             const contasConhecidas = [...new Set((window.dadosFinanceiros || []).map(d => d.Conta || d.conta).filter(c => c))];
+
              window.transacoesProcessadasStep4.forEach((t, idx) => {
-                htmlStep4 += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                let isContra = t.descricao && t.descricao.startsWith("Contra-partida");
+                
+                let contaOptions = `<option value="">-- Selecione --</option>`;
+                contasConhecidas.forEach(c => {
+                   contaOptions += `<option value="${c}" ${t.conta === c ? 'selected' : ''}>${c}</option>`;
+                });
+
+                htmlStep4 += `<tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${isContra ? 'background: rgba(59, 130, 246, 0.05);' : ''}">
                   <td style="padding: 0.5rem;"><input type="text" value="${t.data || t.vencimento || ''}" onchange="window.transacoesProcessadasStep4[${idx}].data=this.value" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
-                  <td style="padding: 0.5rem;"><input type="text" value="${t.conta || ''}" onchange="window.transacoesProcessadasStep4[${idx}].conta=this.value" style="width:100%; min-width:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
+                  <td style="padding: 0.5rem;">
+                     <select onchange="window.transacoesProcessadasStep4[${idx}].conta=this.value" style="width:100%; min-width:120px; background:rgba(0,0,0,0.2); border:1px solid ${isContra && !t.conta ? 'var(--color-warning)' : 'rgba(255,255,255,0.1)'}; color:var(--text-primary); padding:6px; border-radius:4px; font-size:0.85rem;">
+                        ${contaOptions}
+                     </select>
+                  </td>
                   <td style="padding: 0.5rem;"><input type="text" value="${t.descricao || ''}" onchange="window.transacoesProcessadasStep4[${idx}].descricao=this.value" style="width:100%; min-width:200px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-primary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
-                  <td style="padding: 0.5rem;"><input type="number" step="0.01" value="${Number(t.valor).toFixed(2)}" onchange="window.transacoesProcessadasStep4[${idx}].valor=parseFloat(this.value)" style="width:90px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:${t.valor < 0 ? 'var(--color-expense)' : 'var(--color-income)'}; padding:6px; border-radius:4px; font-size:0.85rem;"></td>
-                  <td style="padding: 0.5rem;"><input type="text" value="${t.categoria || 'Transferencias'}" onchange="window.transacoesProcessadasStep4[${idx}].categoria=this.value" style="width:120px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); padding:6px; border-radius:4px; font-size:0.85rem;"></td>
-                  <td style="padding: 0.5rem; text-align:center;"><button onclick="window.transacoesProcessadasStep4.splice(${idx}, 1); this.closest('tr').remove();" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:var(--color-expense); padding:6px 10px; border-radius:4px; cursor:pointer;" title="Remover"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
-             });
-             htmlStep4 += `</tbody></table></div>`;
-          }
-
-          containerList.innerHTML = `
-             <div style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--color-income);">
-               <i class="fas fa-check-circle"></i> Os lancamentos comuns do Passo 2 j foram salvos com sucesso.
-             </div>
-             ${htmlParcelas}
-             ${htmlStep4}
-             <div style="text-align: right; margin-top: 2rem;">
-               <button id="btn-final-save-reconcile" style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 1.1rem; padding: 15px 30px; cursor: pointer; display: inline-flex; align-itemes: center; gap: 10px; box-shadow: 0 4px 15px rgba(59,130,246,0.3); transition: transform 0.2s;">
-                 <i class="fas fa-save"></i> Finalizar Passo 3 e 4
-               </button>
-             </div>
-          `;
-
-          document.getElementById('btn-final-save-reconcile').onclick = async () => {
+          document.getElementById('btn-final-save-reconcile').onclick = async function() {
+               this.disabled = true;
+               this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+               
                showGlassModal('Finalizando...', `
                  <div style="text-align:center; padding: 3rem 1rem;">
                    <i class="fas fa-spinner fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
@@ -1017,9 +1029,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                
                const success = await saveTransactions(finalTransacoes, []);
                if (success) {
+                  const containerList = document.getElementById('import-review-list');
+                  if (containerList) containerList.innerHTML = '';
                   showSuccessAndReload();
                } else {
                   alert("Erro ao salvar. Tente novamente.");
+                  this.disabled = false;
+                  this.innerHTML = '<i class="fas fa-save"></i> Finalizar Passo 3 e 4';
                   document.getElementById('glassModal').classList.remove('active');
                }
           };
