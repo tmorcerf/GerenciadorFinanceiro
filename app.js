@@ -475,7 +475,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           let bgRow = isSelected ? 'background: rgba(59,130,246,0.2) !important;' : `background: linear-gradient(to right, ${gradientColor} 0%, transparent 50%);`;
 
           const isTransfer = (catAtual && catAtual.toLowerCase().includes('transfer'));
-          const isInstallment = d.descricao && /\b0?1\s*\/\s*\d{1,2}\b/.test(d.descricao);
+          const isInstallment = d.descricao && /\b\d{1,2}\s*\/\s*\d{1,2}\b/.test(d.descricao);
           const isSpecial = d.isSpecial !== undefined ? d.isSpecial : (isTransfer || isInstallment);
 
           return `
@@ -769,7 +769,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center;" onclick="window.sortReviewTable('confianca')">Confiana </th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" onclick="window.sortReviewTable('confianca')" title="Enviar para Passo 3 (Especiais)">Parcelamento</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data </th>
                 <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferencias/Parcelamentos)">Conta</th>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descricao </th>
@@ -1095,12 +1095,21 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     const BANK_LIBRARIES = {
       "banco_do_brasil": "Regras Banco do Brasil (BB) Conta Corrente: Geralmente possui colunas 'Data', 'Dependncia', 'Historico', 'Data do Balancete', 'Numero do Documento' e 'Valor'. Valores podem estar com o sinal de C (Credito) ou D (Debito) ao lado, ou negativo para sada. Cuidado com o cabecalho complexo.",
       "bb_cartao": "Regras Banco do Brasil (BB) Cartao: O formato da fatura difere da conta corrente. Identifique as compras e separe entradas e sadas corretamente.",
-      "default": "Sem regras especficas mapeadas. Faa a deduo logica do formato das colunas."
+      "sicredi_cartao": "Regras Cartao Sicredi: Fique muito atento! A informacao da parcela da compra (ex: 01/03, 02/05) fica em uma coluna separada chamada 'Parcela', geralmente apos a Descricao. Voce DEVE EXTRITAMENTE concatenar essa parcela na 'descricao' final da transacao (ex: 'Loja XYZ 01/03') para que o sistema saiba que e parcelado. Nao perca esse dado!",
+      "sicredi": "Regras Banco Sicredi Conta: Atente-se as colunas de data e historico.",
+      "default": "Sem regras especficas mapeadas. Faa a deduo logica do formato das colunas. IMPORTANTE: Se houver uma coluna de 'Parcela' (ex: 01/05), voce DEVE anexar isso na descricao da transacao."
     };
 
     function identifyBankLibrary(fileName, csvText) {
       const lowerName = fileName.toLowerCase();
       const lowerText = csvText.toLowerCase().substring(0, 1000);
+
+      if (lowerName.includes('sicredi') || lowerText.includes('sicredi')) {
+          if (lowerName.includes('fatura') || lowerName.includes('cartao') || lowerText.includes('fatura') || lowerText.includes('cartão') || lowerText.includes('cartao')) {
+              return BANK_LIBRARIES["sicredi_cartao"];
+          }
+          return BANK_LIBRARIES["sicredi"];
+      }
 
       if ((lowerName.includes('fatura') || lowerName.includes('cartao')) && (lowerName.includes('bb') || lowerText.includes('banco do brasil'))) return BANK_LIBRARIES["bb_cartao"];
       if (lowerName.includes('bb') || lowerText.includes('banco do brasil')) return BANK_LIBRARIES["banco_do_brasil"];
