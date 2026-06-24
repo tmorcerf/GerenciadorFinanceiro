@@ -1541,12 +1541,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         const queueContainer = document.getElementById('batch-queue-container');
         const queueLeft = document.getElementById('batch-queue-left');
-        const queueRight = document.getElementById('batch-queue-right');
         const queueStatus = document.getElementById('batch-queue-status');
         
         if(queueContainer) queueContainer.style.display = 'block';
         if(queueLeft) queueLeft.innerHTML = '';
-        if(queueRight) queueRight.innerHTML = '';
         if(queueStatus) queueStatus.innerText = 'Processando a fila...';
 
         files.forEach((f, i) => {
@@ -1556,7 +1554,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           li.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-itemes:flex-start; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
               <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
-              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;"> Na fila...</span>
+              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;"><i class="fas fa-spinner fa-spin"></i> Processando...</span>
             </div>
             <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
               <div><strong> Nome da conta:</strong> ????</div>
@@ -1627,7 +1625,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               }
             }
 
-            const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+            const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
             let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome === contaDetectada ? 'selected' : ''}>${c.nome}</option>`).join('');
             contaSelectOptions = `<option value="">-- Selecione --</option>` + contaSelectOptions;
 
@@ -1664,12 +1662,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             if(statusSpan) { statusSpan.innerText = ` ${ineditasDoArquivo.length} ineditas`; statusSpan.style.color = '#10b981'; }
             
-            // Move o card para a coluna "Finalizados"
-            const liItem = document.getElementById(`queue-item-${i}`);
-            const queueRight = document.getElementById('batch-queue-right');
-            if (liItem && queueRight) {
-              queueRight.appendChild(liItem);
-            }
+            // O card continua na mesma coluna (esquerda), pois o layout agora é unificado.
             
           } catch (err) {
             console.error(err);

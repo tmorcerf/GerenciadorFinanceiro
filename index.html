@@ -368,37 +368,35 @@
         </div>
       </div>
 
-      <div id="batch-queue-container" style="display: none; background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-        <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center;">
-          Fila de Processamento <span id="batch-queue-status" style="font-size: 0.85rem; font-weight: normal; color: var(--text-secondary);">Aguardando arquivos...</span>
-        </h3>
-        <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 300px; background: #f1f5f9; border-radius: 8px; padding: 1rem; min-height: 150px; border: 1px solid #cbd5e1;">
-            <h4 style="margin-top: 0; color: #475569; font-size: 0.95rem; margin-bottom: 1rem;"><i class="fas fa-inbox"></i> A Planilhar</h4>
-            <ul id="batch-queue-left" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-            </ul>
+      <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        
+        <!-- Left Column (1/3): Fila de Arquivos -->
+        <div id="batch-queue-container" style="display: none; flex: 1; min-width: 300px; background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+          <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+            Fila de Arquivos <span id="batch-queue-status" style="font-size: 0.85rem; font-weight: normal; color: var(--text-secondary);"></span>
+          </h3>
+          <ul id="batch-queue-left" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- Cards will be injected here -->
+          </ul>
+        </div>
+
+        <!-- Right Column (2/3): Instruções e Status da IA -->
+        <div style="flex: 2; min-width: 400px; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="metric-card" style="text-align: left; padding: 1.5rem; height: fit-content; margin-bottom: 0;">
+            <h3 style="margin-top: 0; color: var(--color-income);">O Escritório</h3>
+            <p style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem;">
+              O sistema de importação em lote utiliza <strong>Bibliotecas de Regras de Bancos</strong>. 
+              Selecione até 10 arquivos CSV ou OFX simultaneamente. O agente irá processá-los um a um na fila, 
+              identificar de qual banco se trata, e aplicar regras rigorosas antes de pedir a dedução da IA, economizando tokens e reduzindo falhas.
+            </p>
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">1. Selecione um arquivo do seu banco (CSV, TXT ou OFX).</p>
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">2. Nossa IA analisará cada linha cruzando com o seu Dicionário de Categorias.</p>
+            <p style="color: var(--text-secondary); margin-bottom: 0;">3. Você revisa apenas as dúvidas da IA nesta tela antes de salvar.</p>
           </div>
-          <div style="flex: 1; min-width: 300px; background: #f0fdf4; border-radius: 8px; padding: 1rem; min-height: 150px; border: 1px solid #bbf7d0;">
-            <h4 style="margin-top: 0; color: #166534; font-size: 0.95rem; margin-bottom: 1rem;"><i class="fas fa-check-circle"></i> Finalizados</h4>
-            <ul id="batch-queue-right" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-            </ul>
-          </div>
+
+          <div id="import-categorizer-status" style="display: none;"></div>
         </div>
       </div>
-
-      <div class="metric-card" style="margin-bottom: 1.5rem; text-align: left; padding: 1.5rem;">
-        <h3 style="margin-top: 0; color: var(--color-income);">O Escritório</h3>
-        <p style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem;">
-          O sistema de importação em lote utiliza <strong>Bibliotecas de Regras de Bancos</strong>. 
-          Selecione até 10 arquivos CSV ou OFX simultaneamente. O agente irá processá-los um a um na fila, 
-          identificar de qual banco se trata, e aplicar regras rigorosas antes de pedir a dedução da IA, economizando tokens e reduzindo falhas.
-        </p>
-        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">1. Selecione um arquivo do seu banco (CSV, TXT ou OFX).</p>
-        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">2. Nossa IA analisará cada linha cruzando com o seu Dicionário de Categorias.</p>
-        <p style="color: var(--text-secondary); margin-bottom: 0;">3. Você revisa apenas as dúvidas da IA nesta tela antes de salvar.</p>
-      </div>
-
-      <div id="import-categorizer-status" style="display: none;"></div>
 
       <!-- Container onde os lançamentos em revisão serão injetados -->
       <div id="import-review-container" style="display: none;">
