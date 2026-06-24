@@ -775,6 +775,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const containerBox = document.getElementById('import-review-container') || document.getElementById('import-review-box');
       if (!containerList || !containerBox) return;
 
+      const tableHTML = `
+        ${bannerDups}
+        ${filterBarHTML}
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: left;">
+            <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
+              <tr>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" onclick="window.sortReviewTable('confianca')" title="Enviar para Passo 3 (Especiais)">Parcelamento</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ↕</th>
+                <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferencias/Parcelamentos)">Conta</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descrição ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria ↕</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria ↕</th>
+              </tr>
+            </thead>
+            <tbody id="review-tbody">
+            </tbody>
+          </table>
+        </div>
+      `;
+
       containerList.innerHTML = bannerContaHTML + tableHTML;
       window.sortReviewTable('confianca'); // Inicialmente ordena trazendo vermelhos e amarelos pro topo
       
@@ -1435,8 +1457,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             let instituicaoStr = "N/A";
             let tipoStr = "N/A";
-            if (contaDetectada !== "N/A" && window._currentDadosFinanceiros && window._currentDadosFinanceiros.contas) {
-              const contaObj = window._currentDadosFinanceiros.contas.find(c => c.nome === contaDetectada);
+            if (contaDetectada !== "N/A" && window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+              const contaObj = window.dadosFinanceiros.contas.find(c => c.nome === contaDetectada);
+              if (contaObj) {
+                instituicaoStr = contaObj.instituicao || "N/A";
+                tipoStr = contaObj.tipo || "N/A";
+              }
+            } else if (contaDetectada !== "N/A" && typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) {
+              const contaObj = dadosFinanceiros.contas.find(c => c.nome === contaDetectada);
               if (contaObj) {
                 instituicaoStr = contaObj.instituicao || "N/A";
                 tipoStr = contaObj.tipo || "N/A";
