@@ -1611,21 +1611,39 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             let instituicaoStr = "N/A";
             let tipoStr = "N/A";
-            if (contaDetectada !== "N/A" && window.dadosFinanceiros && window.dadosFinanceiros.contas) {
-              const contaObj = window.dadosFinanceiros.contas.find(c => c.nome === contaDetectada);
-              if (contaObj) {
-                instituicaoStr = contaObj.instituicao || "N/A";
-                tipoStr = contaObj.tipo || "N/A";
+            
+            const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
+            
+            // Lógica inteligente (Fuzzy Match) para deduzir a conta baseada na resposta da IA
+            if (contaDetectada !== "N/A" && contasDisponiveis.length > 0) {
+              const sug = contaDetectada.toLowerCase().trim();
+              
+              // 1. Tenta match exato ignorando case
+              let contaObj = contasDisponiveis.find(c => c.nome.toLowerCase().trim() === sug);
+              
+              // 2. Se falhar, tenta ver se a sugestão da IA está contida no nome da conta (ex: IA disse "Sicredi", e a conta é "Sicredi Mastercard")
+              if (!contaObj) {
+                contaObj = contasDisponiveis.find(c => c.nome.toLowerCase().includes(sug) || sug.includes(c.nome.toLowerCase()));
               }
-            } else if (contaDetectada !== "N/A" && typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) {
-              const contaObj = dadosFinanceiros.contas.find(c => c.nome === contaDetectada);
+              
+              // 3. Se falhar, tenta buscar pelo nome da Instituição (se a IA retornou só o banco)
+              if (!contaObj) {
+                contaObj = contasDisponiveis.find(c => (c.instituicao || '').toLowerCase().includes(sug) && (c.instituicao || '').trim() !== '');
+              }
+              
+              // 4. Se a IA retornou "Cartão" e só tem 1 cartão de crédito cadastrado, tenta deduzir
+              if (!contaObj && sug.includes("cart") || sug.includes("credit")) {
+                const cartoes = contasDisponiveis.filter(c => (c.tipo || '').toLowerCase() === 'cartão de crédito');
+                if (cartoes.length === 1) contaObj = cartoes[0];
+              }
+
               if (contaObj) {
+                contaDetectada = contaObj.nome; // Corrige a detecção para o nome oficial da conta
                 instituicaoStr = contaObj.instituicao || "N/A";
                 tipoStr = contaObj.tipo || "N/A";
               }
             }
 
-            const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
             let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome === contaDetectada ? 'selected' : ''}>${c.nome}</option>`).join('');
             contaSelectOptions = `<option value="">-- Selecione --</option>` + contaSelectOptions;
 
