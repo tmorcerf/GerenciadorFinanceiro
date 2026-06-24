@@ -22,7 +22,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1019128251';
     let CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=279877792';
     let CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1791414224';
-    let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzuMebXRBYz_pwMjtNbmMRffPXxMyTni1pNlsZddLiFR-5ijuzqM5G330vPvoYD2XkaRw/exec';
+    let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosyIAqKYOdkNPUV_19WaoYCe6NTCZ4Xn2f_xE1y7f_bYI5T1mXuKCnZJtkju5fGLg/exec';
     // INTERRUPTOR DE AMBIENTES (Staging vs Production)
     const isTestEnv = window.location.search.includes('teste=true');
     
