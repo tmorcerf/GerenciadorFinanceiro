@@ -32,7 +32,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1748033613&single=true&output=csv';
       CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=2078075619&single=true&output=csv';
       CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=987130312&single=true&output=csv';
-      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzuMebXRBYz_pwMjtNbmMRffPXxMyTni1pNlsZddLiFR-5ijuzqM5G330vPvoYD2XkaRw/exec';
+      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosyIAqKYOdkNPUV_19WaoYCe6NTCZ4Xn2f_xE1y7f_bYI5T1mXuKCnZJtkju5fGLg/exec';
     }
 
     // Global Data State
@@ -3403,7 +3403,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnCloseFeedback = document.getElementById('btnCloseFeedback');
       const btnSubmitFeedback = document.getElementById('btnSubmitFeedback');
       const feedbackText = document.getElementById('feedbackText');
-      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzuMebXRBYz_pwMjtNbmMRffPXxMyTni1pNlsZddLiFR-5ijuzqM5G330vPvoYD2XkaRw/exec';
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosyIAqKYOdkNPUV_19WaoYCe6NTCZ4Xn2f_xE1y7f_bYI5T1mXuKCnZJtkju5fGLg/exec';
 
       if (btnFeedback) {
         btnFeedback.onclick = () => {
@@ -3699,7 +3699,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnChatSend = document.getElementById('btn-chat-send');
       const chatInput = document.getElementById('chat-input');
       const chatMessages = document.getElementById('chat-messages');
-      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzuMebXRBYz_pwMjtNbmMRffPXxMyTni1pNlsZddLiFR-5ijuzqM5G330vPvoYD2XkaRw/exec';
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosyIAqKYOdkNPUV_19WaoYCe6NTCZ4Xn2f_xE1y7f_bYI5T1mXuKCnZJtkju5fGLg/exec';
       
       let historicoChat = [];
 
