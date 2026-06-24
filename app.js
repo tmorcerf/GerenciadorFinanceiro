@@ -771,6 +771,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         window.currentReviewData.forEach(d => { d.conta = novaConta; });
         window.renderReviewTable();
       };
+      const containerList = document.getElementById('import-review-list');
+      const containerBox = document.getElementById('import-review-container') || document.getElementById('import-review-box');
+      if (!containerList || !containerBox) return;
 
       containerList.innerHTML = bannerContaHTML + tableHTML;
       window.sortReviewTable('confianca'); // Inicialmente ordena trazendo vermelhos e amarelos pro topo
