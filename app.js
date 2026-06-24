@@ -1167,12 +1167,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           li.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
               <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
-              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;">Ã¢ÂÂ³ Na fila...</span>
+              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;">⏳ Na fila...</span>
             </div>
             <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-              <div><strong>Ã°Å¸ÂÂ¦ Banco:</strong> ????</div>
-              <div><strong>Ã°Å¸ÂÂ·Ã¯Â¸Â Tipo:</strong> ????</div>
-              <div><strong>Ã°Å¸â€œâ€¦ PerÃƒÂ­odo:</strong> ????</div>
+              <div><strong>🏦 Banco:</strong> ????</div>
+              <div><strong>💳 Tipo:</strong> ????</div>
+              <div><strong>📅 Período:</strong> ????</div>
             </div>
           `;
           if(queueLeft) queueLeft.appendChild(li);
@@ -1187,13 +1187,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const statusSpan = document.getElementById(`queue-status-${i}`);
           
           try {
-            if(statusSpan) { statusSpan.innerText = 'Ã¢Å¡â„¢Ã¯Â¸Â  Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
+            if(statusSpan) { statusSpan.innerText = '⚙️ Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
             
             const fileData = await extractFileContent(file);
             const isPdf = fileData.type === 'pdf';
             const bankRules = identifyBankLibrary(file.name, isPdf ? "Arquivo em formato PDF (Base64)" : fileData.content);
 
-            if(statusSpan) { statusSpan.innerText = 'Ã°Å¸Â¤â€“ Extraindo (Haiku)...'; }
+            if(statusSpan) { statusSpan.innerText = '🤖 Extraindo (Haiku)...'; }
             const resExtrair = await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -3970,6 +3970,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       
     });
+
 
 
 
