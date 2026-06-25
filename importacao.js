@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
             <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
               <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                <th style="padding:8px; text-align:center;">PARCEL.</th>
+                <th style="padding:8px;">COD</th>
                 <th style="padding:8px;">DATA</th>
                 <th style="padding:8px;">VENCIMENTO</th>
                 <th style="padding:8px;">CONTA</th>
@@ -187,6 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <th style="padding:8px;">VALOR</th>
                 <th style="padding:8px;">CATEGORIA</th>
                 <th style="padding:8px;">SUBCATEGORIA</th>
+                <th style="padding:8px; text-align:center;">CONFIANCA</th>
+                <th style="padding:8px; text-align:center;">PARCEL.</th>
               </tr>
             </thead>
             <tbody>
@@ -213,12 +215,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isParcel = (t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim') ? 'checked' : '';
+        
+        // Confiança badge color
+        let confColor = 'var(--text-muted)';
+        let confText = t.confianca || '';
+        if (confText) {
+          const lowerConf = confText.toLowerCase();
+          if (lowerConf.includes('alta') || lowerConf.includes('verde')) confColor = 'var(--color-income)';
+          else if (lowerConf.includes('media') || lowerConf.includes('amarela')) confColor = 'var(--color-warning)';
+          else if (lowerConf.includes('baixa') || lowerConf.includes('vermelha')) confColor = 'var(--color-expense)';
+        }
 
         html += `
           <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-            <td style="padding:12px 8px; text-align:center;">
-              <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${isParcel} style="cursor:pointer; transform:scale(1.2);">
-            </td>
+            <td style="padding:12px 8px; color: var(--text-muted);">${t.cod || ''}</td>
             <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
             <td style="padding:12px 8px; white-space: nowrap;">${t.vencimento || ''}</td>
             <td style="padding:12px 8px; font-size: 0.8rem;">
@@ -237,6 +247,12 @@ document.addEventListener('DOMContentLoaded', () => {
               <select class="import-sel-subcat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width: 150px;">
                 ${subcatOptions}
               </select>
+            </td>
+            <td style="padding:12px 8px; text-align:center;">
+              ${confText ? `<span style="display:inline-block; padding:3px 8px; border-radius:12px; border:1px solid ${confColor}; color:${confColor}; font-size:0.75rem;">${confText}</span>` : ''}
+            </td>
+            <td style="padding:12px 8px; text-align:center;">
+              <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${isParcel} style="cursor:pointer; transform:scale(1.2);">
             </td>
           </tr>
         `;
