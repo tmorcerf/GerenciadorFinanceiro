@@ -109,9 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
         cabecalho = dataIA.cabecalho;
       }
 
+      // Limpa a tentativa de categorização do Passo 1 para não confundir o usuário
+      transacoes.forEach(t => {
+        t.categoria = '';
+        t.subcategoria = '';
+      });
+
       transacoesParaSalvar = transacoes;
       cabecalhoAtual = cabecalho;
-
       // Renderiza a Tabela de Debug
       renderizarTabelaDebug(transacoes, cabecalho);
 
