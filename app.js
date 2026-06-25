@@ -1597,7 +1597,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const jsonBruto = await resExtrair.json();
             if (jsonBruto.status !== 'success') throw new Error(jsonBruto.message || "Erro extracao.");
 
-            const transacoesExtraidas = jsonBruto.data || [];
+            // O retorno (Haiku ou Opus/Sonnet) pode ser um Array (formato antigo) ou um Objeto (formato novo com cabecalho)
+            let transacoesExtraidas = [];
+            let cabecalhoIA = null;
+            
+            if (Array.isArray(jsonBruto.data)) {
+              transacoesExtraidas = jsonBruto.data;
+            } else if (jsonBruto.data && Array.isArray(jsonBruto.data.transacoes)) {
+              transacoesExtraidas = jsonBruto.data.transacoes;
+              cabecalhoIA = jsonBruto.data.cabecalho;
+            } else if (jsonBruto.data) {
+              // Fallback se a IA retornar algo estranho
+              transacoesExtraidas = [jsonBruto.data];
+            }
             
             var contaDetectada = "N/A";
             var periodoDetectado = "N/A";
