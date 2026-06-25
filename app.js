@@ -1668,7 +1668,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                     ${contaSelectOptions}
                   </select>
                 </div>
-                <div><strong>InstituiÃ§Ã£o Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
+                <div><strong>Instituicao Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
                 <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
                 <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
                 <div><strong>Periodo:</strong> ${periodoDetectado}</div>
