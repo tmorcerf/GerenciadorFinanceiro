@@ -1,4 +1,4 @@
-﻿// Mobile Iframe Bypass
+// Mobile Iframe Bypass
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
   const mobileLink = document.createElement('link');
   mobileLink.rel = 'stylesheet';
@@ -202,7 +202,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           return {
             cod: c['COD'] || '',
             nome: c['Nome da Conta'] || '',
-            Institui&ccedil;&atilde;o: c['Institui&ccedil;&atilde;o Financeira'] || c['Institui&ccedil;&atilde;o Financeira'] || '',
+            instituicao: c['Instituio Financeira'] || c['Instituicao Financeira'] || '',
             tipo: c['Tipo de conta'] || '',
             dia_vencimento: diaVenc,
             saldo_inicial: parseBrlFloat(c['Saldo inicial']),
@@ -783,12 +783,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" onclick="window.sortReviewTable('confianca')" title="Enviar para Passo 3 (Especiais)">Parcelamento</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data Ã”Ã¥Ã²</th>
                 <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferencias/Parcelamentos)">Conta</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">DescriÃ¢â€Å“Ã‚ÂºÃ¢â€Å“ÃƒÂºo Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">Descriâ”œÂºâ”œÃºo Ã”Ã¥Ã²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor Ã”Ã¥Ã²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria Ã”Ã¥Ã²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria Ã”Ã¥Ã²</th>
               </tr>
             </thead>
             <tbody id="review-tbody">
@@ -989,9 +989,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const contas = dadosFinanceiros.contas || [];
             const original = contas.find(c => c.nome === contaOriginal);
             if (!original) return '';
-            // Se e Cartao de Credito, buscar Conta Corrente da mesma Institui&ccedil;&atilde;o
+            // Se e Cartao de Credito, buscar Conta Corrente da mesma instituicao
             if (original.tipo && (original.tipo.toLowerCase().includes('cart') || original.tipo.toLowerCase().includes('credito'))) {
-              const corrente = contas.find(c => c.Institui&ccedil;&atilde;o === original.Institui&ccedil;&atilde;o && c.tipo === 'Corrente');
+              const corrente = contas.find(c => c.instituicao === original.instituicao && c.tipo === 'Corrente');
               return corrente ? corrente.nome : '';
             }
             return '';
@@ -1377,7 +1377,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const spanTipo = document.getElementById(`tipo-conta-${idx}`);
       
       if (contaObj) {
-        if (spanInst) spanInst.innerText = contaObj.Institui&ccedil;&atilde;o || "N/A";
+        if (spanInst) spanInst.innerText = contaObj.instituicao || "N/A";
         if (spanTipo) spanTipo.innerText = contaObj.tipo || "N/A";
       } else {
         if (spanInst) spanInst.innerText = "N/A";
@@ -1388,7 +1388,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     window.categorizarArquivo = function(idx) {
       const transacoes = window.fileTransactions[idx];
       if (!transacoes || transacoes.length === 0) {
-        alert("Nenhuma transaÃƒÂ§ÃƒÂ£o inÃƒÂ©dita encontrada neste arquivo.");
+        alert("Nenhuma transaÃ§Ã£o inÃ©dita encontrada neste arquivo.");
         return;
       }
       
@@ -1396,7 +1396,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const novaConta = select ? select.value : "N/A";
       
       if (!novaConta || novaConta === "N/A" || novaConta === "") {
-        alert("Por favor, selecione uma conta vÃƒÂ¡lida antes de categorizar.");
+        alert("Por favor, selecione uma conta vÃ¡lida antes de categorizar.");
         return;
       }
       
@@ -1558,7 +1558,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
             <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
               <div><strong> Nome da conta:</strong> ????</div>
-              <div><strong> Institui&ccedil;&atilde;o Financeira:</strong> ????</div>
+              <div><strong> Instituicao Financeira:</strong> ????</div>
               <div><strong> Tipo de conta:</strong> ????</div>
               <div><strong> Qtde:</strong> ????</div>
               <div><strong> Periodo:</strong> ????</div>
@@ -1616,7 +1616,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             
             let contaDetectada = "N/A";
             let periodoDetectado = "N/A";
-            let Institui&ccedil;&atilde;oStr = "N/A";
+            let instituicaoStr = "N/A";
             let tipoStr = "N/A";
 
             if (transacoesExtraidas.length > 0) {
@@ -1628,7 +1628,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             
             const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
             
-            // Nova LÃƒÂ³gica Precisa: LÃƒÂª diretamente do CabeÃƒÂ§alho da IA
+            // Nova LÃ³gica Precisa: LÃª diretamente do CabeÃ§alho da IA
             if (cabecalhoIA) {
                const getKey = (obj, keyword) => {
                   const key = Object.keys(obj).find(k => k.toLowerCase().includes(keyword.toLowerCase()));
@@ -1640,20 +1640,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                let tipoIA = getKey(cabecalhoIA, 'tipo de conta');
 
                if (nomeIA && nomeIA !== "N/A" && nomeIA !== "") contaDetectada = nomeIA;
-               if (instIA && instIA !== "N/A" && instIA !== "") Institui&ccedil;&atilde;oStr = instIA;
+               if (instIA && instIA !== "N/A" && instIA !== "") instituicaoStr = instIA;
                if (tipoIA && tipoIA !== "N/A" && tipoIA !== "") tipoStr = tipoIA;
             }
 
-            // Fallback se o cabeÃƒÂ§alho nÃƒÂ£o trouxe a conta, tentamos pegar da primeira transaÃƒÂ§ÃƒÂ£o
+            // Fallback se o cabeÃ§alho nÃ£o trouxe a conta, tentamos pegar da primeira transaÃ§Ã£o
             if (contaDetectada === "N/A" && transacoesExtraidas.length > 0 && transacoesExtraidas[0].conta && transacoesExtraidas[0].conta !== "N/A") {
                 contaDetectada = transacoesExtraidas[0].conta;
             }
 
-            // Garante que se o nome detectado existe na lista oficial, os combos vÃƒÂ£o bater perfeitamente
+            // Garante que se o nome detectado existe na lista oficial, os combos vÃ£o bater perfeitamente
             let contaObjExact = contasDisponiveis.find(c => c.nome.trim().toLowerCase() === contaDetectada.trim().toLowerCase());
             if (contaObjExact) {
                 contaDetectada = contaObjExact.nome;
-                if (Institui&ccedil;&atilde;oStr === "N/A") Institui&ccedil;&atilde;oStr = contaObjExact.Institui&ccedil;&atilde;o || "N/A";
+                if (instituicaoStr === "N/A") instituicaoStr = contaObjExact.instituicao || "N/A";
                 if (tipoStr === "N/A") tipoStr = contaObjExact.tipo || "N/A";
             }
 
@@ -1668,7 +1668,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                     ${contaSelectOptions}
                   </select>
                 </div>
-                <div><strong>InstituiÃƒÂ§ÃƒÂ£o Financeira:</strong> <span id="inst-conta-${i}">${Institui&ccedil;&atilde;oStr}</span></div>
+                <div><strong>InstituiÃ§Ã£o Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
                 <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
                 <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
                 <div><strong>Periodo:</strong> ${periodoDetectado}</div>
@@ -1693,7 +1693,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             if(statusSpan) { statusSpan.innerText = ` ${ineditasDoArquivo.length} ineditas`; statusSpan.style.color = '#10b981'; }
             
-            // O card continua na mesma coluna (esquerda), pois o layout agora ÃƒÂ© unificado.
+            // O card continua na mesma coluna (esquerda), pois o layout agora Ã© unificado.
             
           } catch (err) {
             console.error(err);
@@ -1720,7 +1720,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         if(queueStatus) { 
-          queueStatus.innerText = `Pronto! Verifique as contas e clique em "Categorizar Lote IA" nos cards ÃƒÂ  direita.`;
+          queueStatus.innerText = `Pronto! Verifique as contas e clique em "Categorizar Lote IA" nos cards Ã  direita.`;
           queueStatus.style.color = 'var(--color-primary)';
           queueStatus.style.fontWeight = 'bold';
         }
@@ -4314,7 +4314,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       
     });
-
 
 
 
