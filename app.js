@@ -1629,35 +1629,51 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             // Lógica inteligente (Fuzzy Match) para deduzir a conta baseada na resposta da IA
             // Tenta pegar a conta da primeira transação, ou usar a instituição do cabeçalho como fallback
             let sug = "";
+            let isCartao = false;
+
             if (contaDetectada !== "N/A") {
               sug = contaDetectada.toLowerCase().trim();
             } else if (cabecalhoIA && cabecalhoIA.instituicao) {
               sug = cabecalhoIA.instituicao.toLowerCase().trim();
             }
+
+            if (cabecalhoIA && cabecalhoIA.tipo_documento) {
+               const tipoDoc = cabecalhoIA.tipo_documento.toLowerCase();
+               if (tipoDoc.includes('fatura') || tipoDoc.includes('cartão') || tipoDoc.includes('cartao')) {
+                  isCartao = true;
+               }
+            }
+            if (sug.includes('cart') || sug.includes('credit')) isCartao = true;
             
             if (sug !== "" && contasDisponiveis.length > 0) {
+              let candidatos = contasDisponiveis;
+              // Se tivermos certeza que é cartão, filtramos os candidatos primeiro
+              if (isCartao) {
+                 const soCartoes = contasDisponiveis.filter(c => (c.tipo || '').toLowerCase().includes('cart'));
+                 if (soCartoes.length > 0) candidatos = soCartoes;
+              }
+
               // 1. Tenta match exato ignorando case
-              let contaObj = contasDisponiveis.find(c => c.nome.toLowerCase().trim() === sug);
+              let contaObj = candidatos.find(c => c.nome.toLowerCase().trim() === sug);
               
-              // 2. Se falhar, tenta ver se a sugestão da IA está contida no nome da conta (ex: IA disse "Sicredi", e a conta é "Sicredi Mastercard")
-              if (!contaObj) {
-                contaObj = contasDisponiveis.find(c => c.nome.toLowerCase().includes(sug) || sug.includes(c.nome.toLowerCase()));
-              }
-              
-              // 3. Se falhar, tenta buscar pelo nome da Instituição
-              if (!contaObj) {
-                contaObj = contasDisponiveis.find(c => (c.instituicao || '').toLowerCase().includes(sug) && (c.instituicao || '').trim() !== '');
-              }
-              
-              // 4. Se a IA retornou "Cartão" e só tem 1 cartão de crédito cadastrado, tenta deduzir
-              if (!contaObj && sug.includes("cart") || sug.includes("credit")) {
-                const cartoes = contasDisponiveis.filter(c => (c.tipo || '').toLowerCase() === 'cartão de crédito');
-                if (cartoes.length === 1) contaObj = cartoes[0];
-              }
-              
-              // 5. Novo: Usa o final do cartão do cabeçalho para tentar achar a conta correta
+              // 2. Tenta usar o final do cartão do cabeçalho (match mais forte)
               if (!contaObj && cabecalhoIA && cabecalhoIA.cartao_final) {
-                 contaObj = contasDisponiveis.find(c => c.nome.includes(cabecalhoIA.cartao_final));
+                 contaObj = candidatos.find(c => c.nome.includes(cabecalhoIA.cartao_final));
+              }
+
+              // 3. Se a sugestão da IA está contida no nome da conta
+              if (!contaObj) {
+                contaObj = candidatos.find(c => c.nome.toLowerCase().includes(sug) || sug.includes(c.nome.toLowerCase()));
+              }
+              
+              // 4. Busca pelo nome da Instituição
+              if (!contaObj) {
+                contaObj = candidatos.find(c => (c.instituicao || '').toLowerCase().includes(sug) && (c.instituicao || '').trim() !== '');
+              }
+              
+              // 5. Fallback final se era cartão e sobrou só 1
+              if (!contaObj && isCartao && candidatos.length === 1) {
+                contaObj = candidatos[0];
               }
 
               if (contaObj) {
@@ -1672,15 +1688,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             var metaDiv = document.getElementById("queue-meta-" + i);
             if(metaDiv) {
-              let htmlCabecalho = '';
-              if (cabecalhoIA) {
-                let infos = Object.keys(cabecalhoIA).map(k => `<strong>${k}</strong>: ${cabecalhoIA[k]}`).join('<br>');
-                htmlCabecalho = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.05); border-radius:4px; font-size:0.8rem;">
-                  <div style="font-weight:bold; margin-bottom:4px; color:var(--color-primary);">Cabeçalho Extraído (IA)</div>
-                  ${infos}
-                </div>`;
-              }
-              
               metaDiv.innerHTML = `
                 <div style="margin-bottom: 8px;"><strong>Nome da conta:</strong> 
                   <select id="select-conta-${i}" onchange="window.updateCardInfo(${i}, this.value)" style="margin-top: 4px; display: block; width: 100%; background: rgba(0,0,0,0.05); border: 1px solid #ccc; padding: 6px; border-radius: 4px; font-size: 0.9rem;">
@@ -1691,7 +1698,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
                 <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
                 <div><strong>Período:</strong> ${periodoDetectado}</div>
-                ${htmlCabecalho}
                 <div style="margin-top: 15px; text-align: center;">
                   <button onclick="window.categorizarArquivo(${i})" style="background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;"><i class="fas fa-brain"></i> Categorizar Lote IA</button>
                 </div>
