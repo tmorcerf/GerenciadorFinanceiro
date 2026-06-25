@@ -21,3 +21,4 @@ credentials.json
 # Keep HTML and CSS
 !*.html
 !style.css
+!importacao.js
