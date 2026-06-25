@@ -22,7 +22,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1019128251';
     let CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=279877792';
     let CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1791414224';
-    let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosylAqKYOdKNPUV_19WaOYCe6NTCZ4Xn2f_xE1y7F_bYl5T1mXuKCnZJtkju5fGLg/exec';
+    let APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzWk-r3LKLpHVb0lBcClI-d057_uVKxxqHruszjwT5XxWkAhLlvGbmQTR7GVq_6Z8XotA/exec';
     window.APPS_SCRIPT_WEBAPP_URL = APPS_SCRIPT_WEBAPP_URL;
     // INTERRUPTOR DE AMBIENTES (Staging vs Production)
     const isTestEnv = window.location.search.includes('teste=true');
@@ -33,7 +33,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1748033613&single=true&output=csv';
       CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=2078075619&single=true&output=csv';
       CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=987130312&single=true&output=csv';
-      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosylAqKYOdKNPUV_19WaOYCe6NTCZ4Xn2f_xE1y7F_bYl5T1mXuKCnZJtkju5fGLg/exec';
+      APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzWk-r3LKLpHVb0lBcClI-d057_uVKxxqHruszjwT5XxWkAhLlvGbmQTR7GVq_6Z8XotA/exec';
       window.APPS_SCRIPT_WEBAPP_URL = APPS_SCRIPT_WEBAPP_URL;
     }
 
@@ -3405,7 +3405,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnCloseFeedback = document.getElementById('btnCloseFeedback');
       const btnSubmitFeedback = document.getElementById('btnSubmitFeedback');
       const feedbackText = document.getElementById('feedbackText');
-      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosylAqKYOdKNPUV_19WaOYCe6NTCZ4Xn2f_xE1y7F_bYl5T1mXuKCnZJtkju5fGLg/exec';
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzWk-r3LKLpHVb0lBcClI-d057_uVKxxqHruszjwT5XxWkAhLlvGbmQTR7GVq_6Z8XotA/exec';
 
       if (btnFeedback) {
         btnFeedback.onclick = () => {
@@ -3701,7 +3701,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnChatSend = document.getElementById('btn-chat-send');
       const chatInput = document.getElementById('chat-input');
       const chatMessages = document.getElementById('chat-messages');
-      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz4IosylAqKYOdKNPUV_19WaOYCe6NTCZ4Xn2f_xE1y7F_bYl5T1mXuKCnZJtkju5fGLg/exec';
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzWk-r3LKLpHVb0lBcClI-d057_uVKxxqHruszjwT5XxWkAhLlvGbmQTR7GVq_6Z8XotA/exec';
       
       let historicoChat = [];
 
