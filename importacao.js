@@ -1,4 +1,4 @@
-﻿// importacao.js
+// importacao.js
 // LÃ³gica simplificada para a nova aba de ImportaÃ§Ã£o
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -93,24 +93,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cabecalho) {
       html += `
-        <div style="margin-bottom:15px; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; font-family:monospace; font-size:0.8rem; overflow-x:auto;">
-          <strong style="color:var(--color-primary); display:block; margin-bottom: 6px;">CabeÃ§alho Retornado:</strong>
-          <pre style="margin:0;">${JSON.stringify(cabecalho, null, 2)}</pre>
+        <div style="margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:6px; border:1px solid var(--border-color); font-family:monospace; font-size:0.8rem; overflow-x:auto;">
+          <strong style="color:var(--color-accent); display:block; margin-bottom: 6px;">Cabeçalho Retornado:</strong>
+          <pre style="margin:0; color:var(--text-primary);">${JSON.stringify(cabecalho, null, 2)}</pre>
         </div>
       `;
     }
 
     if (transacoes.length === 0) {
-      html += `<p>Nenhuma transaÃ§Ã£o encontrada.</p>`;
+      html += `<p style="color:var(--text-secondary);">Nenhuma transação encontrada.</p>`;
     } else {
       html += `
-        <strong style="color:var(--text-secondary); display:block; margin-bottom: 6px;">TransaÃ§Ãµes ExtraÃ­das (${transacoes.length}):</strong>
-        <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
-          <table style="width:100%; border-collapse: collapse; font-size: 0.8rem;">
-            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
-              <tr style="border-bottom: 1px solid #cbd5e1; text-align:left;">
+        <strong style="color:var(--text-secondary); display:block; margin-bottom: 6px;">Transações Extraídas (${transacoes.length}):</strong>
+        <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+          <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
+            <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
+              <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
                 <th style="padding:8px;">Data</th>
-                <th style="padding:8px;">DescriÃ§Ã£o</th>
+                <th style="padding:8px;">Descrição</th>
                 <th style="padding:8px;">Valor</th>
                 <th style="padding:8px;">Conta/Categoria (Se houver)</th>
               </tr>
@@ -121,11 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
       transacoes.forEach(t => {
         let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
         html += `
-          <tr style="border-bottom: 1px solid #f1f5f9;">
+          <tr style="border-bottom: 1px solid var(--border-color);">
             <td style="padding:8px; white-space: nowrap;">${t.data || ''}</td>
             <td style="padding:8px;">${t.descricao || ''}</td>
             <td style="padding:8px; white-space: nowrap; color: ${valColor}; font-weight: 500;">${t.valor || ''}</td>
-            <td style="padding:8px; font-size: 0.75rem; color: #64748b;">
+            <td style="padding:8px; font-size: 0.75rem; color: var(--text-muted);">
               ${t.conta ? `C: ${t.conta}` : ''} <br>
               ${t.categoria ? `Cat: ${t.categoria}` : ''}
             </td>

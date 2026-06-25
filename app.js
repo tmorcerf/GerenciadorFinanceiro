@@ -1,4 +1,4 @@
-﻿// Mobile Iframe Bypass
+// Mobile Iframe Bypass
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
   const mobileLink = document.createElement('link');
   mobileLink.rel = 'stylesheet';
@@ -1367,7 +1367,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
       }
 
-      const text = await file.text();
+      const text = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(file, 'ISO-8859-1'); // Fix for Brazilian bank accents
+      });
       return { type: 'text', content: text };
     }
     window.fileTransactions = {};
