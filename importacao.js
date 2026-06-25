@@ -7,10 +7,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultContainer = document.getElementById('import-result-container');
   const resultContent = document.getElementById('import-result-content');
   const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
+  const uploadZone = document.getElementById('upload-zone-container');
 
   if (!uploadInput) return;
 
-  // VariÃ¡vel para guardar o resultado temporÃ¡rio antes de salvar
+  // Drag and drop magic
+  if (uploadZone) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadZone.addEventListener(eventName, () => {
+        uploadZone.style.borderColor = 'var(--color-accent)';
+        uploadZone.style.boxShadow = '0 0 20px var(--color-accent-glow)';
+        uploadZone.style.transform = 'scale(1.02)';
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploadZone.addEventListener(eventName, () => {
+        uploadZone.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+        uploadZone.style.boxShadow = 'none';
+        uploadZone.style.transform = 'scale(1)';
+      }, false);
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      let dt = e.dataTransfer;
+      let files = dt.files;
+      if (files && files.length > 0) {
+        uploadInput.files = files;
+        uploadInput.dispatchEvent(new Event('change'));
+      }
+    }, false);
+  }
+
+  // Variável para guardar o resultado temporário antes de salvar
   let transacoesParaSalvar = [];
 
   uploadInput.addEventListener('change', async (e) => {
@@ -21,16 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
     resultContainer.style.display = 'none';
     btnSalvar.style.display = 'none';
     resultContent.innerHTML = '';
+    statusBox.style.display = 'flex';
     
     try {
-      statusBox.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Lendo arquivo localmente...';
-      statusBox.style.color = 'var(--color-primary)';
+      statusBox.innerHTML = '<i class="fas fa-sync-alt fa-spin" style="color: var(--color-primary);"></i> Lendo arquivo localmente...';
+      statusBox.style.borderLeftColor = 'var(--color-primary)';
       
-      // Utiliza a funÃ§Ã£o global existente no app.js para ler o arquivo (PDF/CSV)
+      // Utiliza a função global existente no app.js para ler o arquivo (PDF/CSV)
       const fileData = await window.extractFileContent(file);
 
-      statusBox.innerHTML = '<i class="fas fa-paper-plane"></i> Enviando para a IA (Isso pode levar atÃ© 30 segundos)...';
-      statusBox.style.color = 'var(--color-warning)';
+      statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-warning);"></i> Extraindo inteligência dos dados (aguarde até 30s)...';
+      statusBox.style.borderLeftColor = 'var(--color-warning)';
 
       // RequisiÃ§Ã£o para o backend
       // APPS_SCRIPT_WEBAPP_URL is defined in app.js (global)
@@ -51,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(json.message || "Erro desconhecido na IA.");
       }
 
-      statusBox.innerHTML = '<i class="fas fa-check-circle"></i> Retorno recebido com sucesso!';
-      statusBox.style.color = 'var(--color-income)';
+      statusBox.innerHTML = '<i class="fas fa-check-circle" style="color: var(--color-income);"></i> Mágica concluída com sucesso!';
+      statusBox.style.borderLeftColor = 'var(--color-income)';
 
       // Processa a resposta
       const dataIA = json.data;
@@ -80,8 +119,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      statusBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro: ${err.message}`;
-      statusBox.style.color = 'var(--color-expense)';
+      statusBox.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--color-expense);"></i> Erro: ${err.message}`;
+      statusBox.style.borderLeftColor = 'var(--color-expense)';
     } finally {
       // Limpa o input para permitir enviar o mesmo arquivo novamente se necessÃ¡rio
       uploadInput.value = '';
@@ -121,13 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
       transacoes.forEach(t => {
         let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
         html += `
-          <tr style="border-bottom: 1px solid var(--border-color);">
-            <td style="padding:8px; white-space: nowrap;">${t.data || ''}</td>
-            <td style="padding:8px;">${t.descricao || ''}</td>
-            <td style="padding:8px; white-space: nowrap; color: ${valColor}; font-weight: 500;">${t.valor || ''}</td>
-            <td style="padding:8px; font-size: 0.75rem; color: var(--text-muted);">
-              ${t.conta ? `C: ${t.conta}` : ''} <br>
-              ${t.categoria ? `Cat: ${t.categoria}` : ''}
+          <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+            <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
+            <td style="padding:12px 8px;">${t.descricao || ''}</td>
+            <td style="padding:12px 8px; white-space: nowrap; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+            <td style="padding:12px 8px; font-size: 0.8rem;">
+              <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary); margin-bottom:4px; margin-right:4px;">
+                <i class="fas fa-university"></i> ${t.conta || 'N/A'}
+              </span>
+              <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-muted);">
+                <i class="fas fa-tag"></i> ${t.categoria || 'S/ Cat'}
+              </span>
             </td>
           </tr>
         `;
