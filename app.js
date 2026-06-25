@@ -1,4 +1,4 @@
-﻿// Mobile Iframe Bypass
+// Mobile Iframe Bypass
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
   const mobileLink = document.createElement('link');
   mobileLink.rel = 'stylesheet';
@@ -1671,7 +1671,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 <div><strong>InstituiÃ§Ã£o Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
                 <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
                 <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
-                <div><strong>PerÃ­odo:</strong> ${periodoDetectado}</div>
+                <div><strong>Periodo:</strong> ${periodoDetectado}</div>
                 <div style="margin-top: 15px; text-align: center;">
                   <button onclick="window.categorizarArquivo(${i})" style="background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;"><i class="fas fa-brain"></i> Categorizar Lote IA</button>
                 </div>
