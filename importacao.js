@@ -380,14 +380,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const json = await res.json();
-        if (json.status !== 'success') {
-          throw new Error(json.message || "Erro desconhecido ao categorizar.");
+        
+        if (json.status === 'error' || json.error) {
+          alert("Erro: " + (json.message || json.error));
+        } else {
+          transacoesParaSalvar = json.data;
+          renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
+          statusBox.innerHTML = '<i class="fas fa-check-circle" style="color: var(--color-income);"></i> Categorização inteligente aplicada!';
+          statusBox.style.borderLeftColor = 'var(--color-income)';
         }
-
-        transacoesParaSalvar = json.data;
-        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
-        statusBox.innerHTML = '<i class="fas fa-check-circle" style="color: var(--color-income);"></i> Categorização inteligente aplicada!';
-        statusBox.style.borderLeftColor = 'var(--color-income)';
       } catch(err) {
         alert("Erro ao categorizar: " + err.message);
       } finally {
