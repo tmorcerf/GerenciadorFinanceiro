@@ -178,31 +178,90 @@ document.addEventListener('DOMContentLoaded', () => {
     if (transacoes.length === 0) {
       html += `<p style="color:var(--text-secondary);">Nenhuma transação encontrada.</p>`;
     } else {
-      html += `
-        <strong style="color:var(--text-secondary); display:block; margin-bottom: 6px;">Transações Extraídas (${transacoes.length}):</strong>
-        <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
-          <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
-            <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
-              <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                <th style="padding:8px;">COD</th>
-                <th style="padding:8px;">DATA</th>
-                <th style="padding:8px;">VENCIMENTO</th>
-                <th style="padding:8px;">CONTA</th>
-                <th style="padding:8px;">DESCRICAO</th>
-                <th style="padding:8px;">VALOR</th>
-                <th style="padding:8px;">CATEGORIA</th>
-                <th style="padding:8px;">SUBCATEGORIA</th>
-                <th style="padding:8px; text-align:center;">CONFIANCA</th>
-                <th style="padding:8px; text-align:center;">PARCEL.</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-
       const dic = window.dicionarioGeral || {};
       const catKeys = Object.keys(dic).sort();
 
+      const duplicadas = [];
+      const unicas = [];
+      
       transacoes.forEach((t, index) => {
+        t.duplicado = (t.duplicado === true || String(t.duplicado).toLowerCase() === 'sim');
+        if (t.duplicado) {
+          duplicadas.push({t, index});
+        } else {
+          unicas.push({t, index});
+        }
+      });
+
+      if (duplicadas.length > 0) {
+        html += `
+          <details style="margin-bottom: 1.5rem; background: rgba(220, 53, 69, 0.05); border: 1px solid var(--color-expense); border-radius: 6px; padding: 10px;">
+            <summary style="cursor: pointer; color: var(--color-expense); font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-exclamation-triangle"></i> Lançamentos Duplicados (${duplicadas.length}) - Expanda para ver
+            </summary>
+            <div style="margin-top: 10px; overflow-x:auto; max-height: 250px; overflow-y: auto;">
+              <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
+                <thead style="position: sticky; top: 0; background: rgba(30, 37, 51, 0.95); z-index: 1;">
+                  <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
+                    <th style="padding:8px;">COD</th>
+                    <th style="padding:8px;">DATA</th>
+                    <th style="padding:8px;">VENCIMENTO</th>
+                    <th style="padding:8px;">CONTA</th>
+                    <th style="padding:8px;">DESCRICAO</th>
+                    <th style="padding:8px;">VALOR</th>
+                    <th style="padding:8px; text-align:center;">DUPLICADO?</th>
+                  </tr>
+                </thead>
+                <tbody>
+        `;
+        duplicadas.forEach((item) => {
+          const t = item.t;
+          const index = item.index;
+          let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
+          
+          html += `
+            <tr style="border-bottom: 1px solid var(--border-color); opacity: 0.8;">
+              <td style="padding:8px; color: var(--text-muted);">${t.cod || ''}</td>
+              <td style="padding:8px; white-space: nowrap;">${t.data || ''}</td>
+              <td style="padding:8px; white-space: nowrap;">${t.vencimento || ''}</td>
+              <td style="padding:8px;"><span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);"><i class="fas fa-university"></i> ${t.conta || ''}</span></td>
+              <td style="padding:8px;">${t.descricao || ''}</td>
+              <td style="padding:8px; white-space: nowrap; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+              <td style="padding:8px; text-align:center;">
+                <input type="checkbox" class="import-chk-duplicado" data-index="${index}" checked style="cursor:pointer; transform:scale(1.2);">
+              </td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table></div></details>`;
+      }
+
+      if (unicas.length > 0) {
+        html += `
+          <strong style="color:var(--text-secondary); display:block; margin-bottom: 6px;">Transações Únicas (${unicas.length}):</strong>
+          <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+            <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
+              <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
+                <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
+                  <th style="padding:8px;">COD</th>
+                  <th style="padding:8px;">DATA</th>
+                  <th style="padding:8px;">VENCIMENTO</th>
+                  <th style="padding:8px;">CONTA</th>
+                  <th style="padding:8px;">DESCRICAO</th>
+                  <th style="padding:8px;">VALOR</th>
+                  <th style="padding:8px;">CATEGORIA</th>
+                  <th style="padding:8px;">SUBCATEGORIA</th>
+                  <th style="padding:8px; text-align:center;">CONFIANCA</th>
+                  <th style="padding:8px; text-align:center;">PARCEL.</th>
+                  <th style="padding:8px; text-align:center;">DUPLICADO?</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        unicas.forEach((item) => {
+          const t = item.t;
+          const index = item.index;
         // Sanitize and match IA output with dictionary (case-insensitive and trim)
         if (t.categoria) {
           const matchedCat = catKeys.find(k => k.trim().toLowerCase() === String(t.categoria).trim().toLowerCase());
@@ -283,11 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <td style="padding:12px 8px; text-align:center;">
               <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${isParcel} style="cursor:pointer; transform:scale(1.2);">
             </td>
+            <td style="padding:12px 8px; text-align:center;">
+              <input type="checkbox" class="import-chk-duplicado" data-index="${index}" style="cursor:pointer; transform:scale(1.2);">
+            </td>
           </tr>
         `;
-      });
-
-      html += `</tbody></table></div>`;
+        });
+        html += `</tbody></table></div>`;
+      }
     }
 
     resultContent.innerHTML = html;
@@ -329,6 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
         transacoesParaSalvar[idx].parcelamento = e.target.checked;
       });
     });
+
+    document.querySelectorAll('.import-chk-duplicado').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const idx = e.target.getAttribute('data-index');
+        transacoesParaSalvar[idx].duplicado = e.target.checked;
+        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
+      });
+    });
   }
 
   // AÃ§Ã£o de Salvar LanÃ§amentos
@@ -346,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'salvar_ia',
-          transacoes: transacoesParaSalvar
+          transacoes: transacoesParaSalvar.filter(t => !t.duplicado)
         })
       });
 
@@ -389,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'categorizar_v2',
-            transacoes: transacoesParaSalvar,
+            transacoes: transacoesParaSalvar.filter(t => !t.duplicado),
             categoriasTree: window.dicionarioGeral || {}
           })
         });
