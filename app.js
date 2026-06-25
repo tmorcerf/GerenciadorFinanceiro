@@ -1,4 +1,4 @@
-﻿// Mobile Iframe Bypass
+// Mobile Iframe Bypass
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
   const mobileLink = document.createElement('link');
   mobileLink.rel = 'stylesheet';
@@ -1554,7 +1554,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           li.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-itemes:flex-start; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
               <span style="font-weight:600; color:var(--text-primary);"><i class="fas fa-file-alt" style="color:var(--color-primary); margin-right:6px;"></i>${f.name}</span>
-              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;"><i class="fas fa-spinner fa-spin"></i> Processando...</span>
+              <span id="queue-status-${i}" style="color:var(--text-secondary); font-weight:bold; font-size: 0.85rem;"><i class="fas fa-sync-alt fa-spin"></i> Processando...</span>
             </div>
             <div id="queue-meta-${i}" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
               <div><strong> Nome da conta:</strong> ????</div>
@@ -1689,7 +1689,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             todasIneditasAgrupadas.push(...ineditasDoArquivo);
             window.fileTransactions[i] = ineditasDoArquivo;
 
-            if(statusSpan) { statusSpan.innerText = ` ${ineditasDoArquivo.length} ineditas`; statusSpan.style.color = '#10b981'; }
+            if(statusSpan) { statusSpan.innerHTML = `<i class="fas fa-arrow-circle-right"></i> ${ineditasDoArquivo.length} ineditas`; statusSpan.style.color = '#10b981'; }
             
             // O card continua na mesma coluna (esquerda), pois o layout agora ÃƒÂ© unificado.
             
