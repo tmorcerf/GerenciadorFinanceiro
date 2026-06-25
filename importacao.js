@@ -215,17 +215,27 @@ document.addEventListener('DOMContentLoaded', () => {
         let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
         
         let catOptions = '<option value="">-- Selecione --</option>';
+        let catFound = false;
         catKeys.forEach(k => {
           const selected = (t.categoria === k) ? 'selected' : '';
+          if (selected) catFound = true;
           catOptions += `<option value="${k}" ${selected}>${k}</option>`;
         });
+        if (t.categoria && !catFound) {
+          catOptions += `<option value="${t.categoria}" selected>⚠️ ${t.categoria} (Não encontrada na lista)</option>`;
+        }
 
         let subcatOptions = '<option value="">-- Selecione --</option>';
+        let subcatFound = false;
         if (t.categoria && dic[t.categoria]) {
           dic[t.categoria].forEach(sub => {
             const selected = (t.subcategoria === sub) ? 'selected' : '';
+            if (selected) subcatFound = true;
             subcatOptions += `<option value="${sub}" ${selected}>${sub}</option>`;
           });
+        }
+        if (t.subcategoria && !subcatFound) {
+          subcatOptions += `<option value="${t.subcategoria}" selected>⚠️ ${t.subcategoria} (Não encontrada na lista)</option>`;
         }
 
         const isParcel = (t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim') ? 'checked' : '';

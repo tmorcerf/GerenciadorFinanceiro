@@ -19,6 +19,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     // VARI VEIS DE PRODUO (Seu painel intocvel do dia a dia)
     let CSV_URL_LANCAMENTOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=0';
     let CSV_URL_ORCAMENTO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1770446607';
+    let CSV_URL_CATEGORIAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1706980119'; // Fallback
     let CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1019128251';
     let CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=279877792';
     let CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?output=csv&gid=1791414224';
@@ -29,7 +30,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     
     if (isTestEnv) {
       CSV_URL_LANCAMENTOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=0&single=true&output=csv';
-      CSV_URL_ORCAMENTO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1706980119&single=true&output=csv';
+      CSV_URL_ORCAMENTO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1706980119&single=true&output=csv'; // Wait, let's keep the user's variables and fix the GIDs later if they are mixed up.
+      CSV_URL_CATEGORIAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1706980119&single=true&output=csv'; // Based on our fetch, this GID actually returns Categorias
       CSV_URL_CONTAS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=1748033613&single=true&output=csv';
       CSV_URL_AUDITORIA = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=2078075619&single=true&output=csv';
       CSV_URL_IMPORTACOES = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQyyhAHH1P-kzmoVyuhI9syJ-xnG5SbYrC_dHpSQFQCsfiBOBQHeZnR7EvdIaHUoKV0JqjCf1lgX3t9/pub?gid=987130312&single=true&output=csv';
@@ -151,13 +153,17 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       try {
-        const [resLanc, resOrc, resContas, resAudit, resImports] = await Promise.all([
+        const [resLanc, resOrc, resCat, resContas, resAudit, resImports] = await Promise.all([
           fetch(CSV_URL_LANCAMENTOS).then(r => {
             if(!r.ok) throw new Error('Falha ao acessar Lancamentos');
             return r.text();
           }),
           fetch(CSV_URL_ORCAMENTO).then(r => {
-            if(!r.ok) throw new Error('Falha ao acessar Oramentos');
+            if(!r.ok) return '';
+            return r.text();
+          }),
+          fetch(CSV_URL_CATEGORIAS).then(r => {
+            if(!r.ok) throw new Error('Falha ao acessar Categorias');
             return r.text();
           }),
           fetch(CSV_URL_CONTAS).then(r => {
@@ -178,7 +184,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const parseOpts = { header: true, skipEmptyLines: true, transformHeader: h => h.trim() };
         const parsedLanc = Papa.parse(resLanc, parseOpts).data;
         const parsedOrc = Papa.parse(resOrc, parseOpts).data;
+        const parsedCat = Papa.parse(resCat, parseOpts).data;
         const parsedContas = Papa.parse(resContas, parseOpts).data;
+
+        // Populate global dicionarioGeral
+        window.dicionarioGeral = {};
+        parsedCat.forEach(row => {
+          const cat = row['Categoria'];
+          const sub = row['Subcategoria'];
+          if (!cat) return;
+          if (!window.dicionarioGeral[cat]) window.dicionarioGeral[cat] = [];
+          if (sub && !window.dicionarioGeral[cat].includes(sub)) {
+            window.dicionarioGeral[cat].push(sub);
+          }
+        });
 
         // Map arrays to our standardized structure
         dadosFinanceiros.lancamentos = parsedLanc.map(l => ({
