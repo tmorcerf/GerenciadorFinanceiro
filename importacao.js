@@ -148,10 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
           <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
             <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
               <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                <th style="padding:8px;">Data</th>
-                <th style="padding:8px;">Descrição</th>
-                <th style="padding:8px;">Valor</th>
-                <th style="padding:8px;">Conta/Categoria (Se houver)</th>
+                <th style="padding:8px;">COD</th>
+                <th style="padding:8px;">DATA</th>
+                <th style="padding:8px;">VENCIMENTO</th>
+                <th style="padding:8px;">CONTA</th>
+                <th style="padding:8px;">DESCRICAO</th>
+                <th style="padding:8px;">VALOR</th>
+                <th style="padding:8px;">CATEGORIA</th>
+                <th style="padding:8px;">SUBCATEGORIA</th>
               </tr>
             </thead>
             <tbody>
@@ -161,17 +165,18 @@ document.addEventListener('DOMContentLoaded', () => {
         let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
         html += `
           <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+            <td style="padding:12px 8px; color: var(--text-muted);"></td>
             <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
-            <td style="padding:12px 8px;">${t.descricao || ''}</td>
-            <td style="padding:12px 8px; white-space: nowrap; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+            <td style="padding:12px 8px; white-space: nowrap;"></td>
             <td style="padding:12px 8px; font-size: 0.8rem;">
-              <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary); margin-bottom:4px; margin-right:4px;">
-                <i class="fas fa-university"></i> ${t.conta || 'N/A'}
-              </span>
-              <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-muted);">
-                <i class="fas fa-tag"></i> ${t.categoria || 'S/ Cat'}
+              <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);">
+                <i class="fas fa-university"></i> ${t.conta || ''}
               </span>
             </td>
+            <td style="padding:12px 8px;">${t.descricao || ''}</td>
+            <td style="padding:12px 8px; white-space: nowrap; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+            <td style="padding:12px 8px;"></td>
+            <td style="padding:12px 8px;"></td>
           </tr>
         `;
       });
