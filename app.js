@@ -1661,6 +1661,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             var metaDiv = document.getElementById("queue-meta-" + i);
             if(metaDiv) {
+              let htmlCabecalho = '';
+              if (cabecalhoIA) {
+                let infos = Object.keys(cabecalhoIA).map(k => `<strong>${k}</strong>: ${cabecalhoIA[k]}`).join('<br>');
+                htmlCabecalho = `<div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.05); border-radius:4px; font-size:0.8rem;">
+                  <div style="font-weight:bold; margin-bottom:4px; color:var(--color-primary);">Cabeçalho Extraído (IA)</div>
+                  ${infos}
+                </div>`;
+              }
+              
               metaDiv.innerHTML = `
                 <div style="margin-bottom: 8px;"><strong>Nome da conta:</strong> 
                   <select id="select-conta-${i}" onchange="window.updateCardInfo(${i}, this.value)" style="margin-top: 4px; display: block; width: 100%; background: rgba(0,0,0,0.05); border: 1px solid #ccc; padding: 6px; border-radius: 4px; font-size: 0.9rem;">
@@ -1670,7 +1679,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 <div><strong>Instituição Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
                 <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
                 <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
-                <div><strong>Periodo:</strong> ${periodoDetectado}</div>
+                <div><strong>Período:</strong> ${periodoDetectado}</div>
+                ${htmlCabecalho}
                 <div style="margin-top: 15px; text-align: center;">
                   <button onclick="window.categorizarArquivo(${i})" style="background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;"><i class="fas fa-brain"></i> Categorizar Lote IA</button>
                 </div>
