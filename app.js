@@ -1,4 +1,4 @@
-﻿// Mobile Iframe Bypass
+// Mobile Iframe Bypass
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
   const mobileLink = document.createElement('link');
   mobileLink.rel = 'stylesheet';
@@ -1649,7 +1649,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 contaDetectada = transacoesExtraidas[0].conta;
             }
 
-            // Garante que se o nome detectado existe na lista oficial, os combos vÃƒÆ’Ã‚Â£o bater perfeitamente
+            // Garante que se o nome detectado existe na lista oficial, os combos vão bater perfeitamente
             let contaObjExact = contasDisponiveis.find(c => c.nome.trim().toLowerCase() === contaDetectada.trim().toLowerCase());
             if (contaObjExact) {
                 contaDetectada = contaObjExact.nome;
@@ -1657,24 +1657,44 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 if (tipoStr === "N/A") tipoStr = contaObjExact.tipo || "N/A";
             }
 
-            let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome.trim().toLowerCase() === contaDetectada.trim().toLowerCase() ? 'selected' : ''}>${c.nome}</option>`).join('');
-            contaSelectOptions = `<option value="">-- Selecione --</option>` + contaSelectOptions;
-
             var metaDiv = document.getElementById("queue-meta-" + i);
             if(metaDiv) {
-              metaDiv.innerHTML = `
-                <div style="margin-bottom: 8px;"><strong>Nome da conta:</strong> 
-                  <span id="conta-detectada-${i}" style="color:var(--color-primary); font-weight:bold; margin-left: 5px;">${contaDetectada}</span>
-                </div>
-                <div><strong>Instituicao Financeira:</strong> <span id="inst-conta-${i}">${instituicaoStr}</span></div>
-                <div><strong>Tipo de conta:</strong> <span id="tipo-conta-${i}">${tipoStr}</span></div>
-                <div><strong>Qtde:</strong> ${transacoesExtraidas.length}</div>
-                <div><strong>Periodo:</strong> ${periodoDetectado}</div>
-                <div style="margin-top: 15px; text-align: center;">
-                  <button onclick="window.categorizarArquivo(${i})" style="background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;"><i class="fas fa-brain"></i> Categorizar Lote IA</button>
-                </div>
-              `;
-            }
+              let tableHTML = `<div style="overflow-x:auto; margin-bottom: 15px; max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <table style="width:100%; border-collapse: collapse; font-size: 0.75rem;">
+                <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 1;">
+                  <tr style="border-bottom: 1px solid #cbd5e1; text-align:left;">
+                    <th style="padding:6px; min-width: 65px;">Data</th>
+                    <th style="padding:6px;">Descricao</th>
+                    <th style="padding:6px;">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>`;
+
+                transacoesExtraidas.forEach(t => {
+                  let valColor = (t.valor && t.valor.includes('-')) ? '#ef4444' : '#10b981';
+                  tableHTML += `<tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding:6px; white-space: nowrap;">${t.data || ''}</td>
+                    <td style="padding:6px; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${t.descricao || ''}">${t.descricao || ''}</td>
+                    <td style="padding:6px; white-space: nowrap; color: ${valColor}; font-weight: 500;">${t.valor || ''}</td>
+                  </tr>`;
+                });
+
+                tableHTML += `</tbody></table></div>`;
+
+                let cabecalhoHTML = `<div style="margin-bottom:10px; background:#f8fafc; padding:8px; border-radius:4px; border:1px solid #e2e8f0; font-family:monospace; font-size:0.75rem; overflow-x:auto; max-height: 150px; overflow-y: auto;">
+                  <strong style="color:var(--color-primary); display:block; margin-bottom: 4px;">Cabecalho Retornado:</strong>
+                  <pre style="margin:0;">${cabecalhoIA ? JSON.stringify(cabecalhoIA, null, 2) : 'Nenhum cabecalho retornado'}</pre>
+                </div>`;
+
+                metaDiv.innerHTML = `
+                  ${cabecalhoHTML}
+                  <strong style="color:var(--text-secondary); display:block; margin-bottom: 4px; font-size: 0.8rem;">Transacoes Extraidas (${transacoesExtraidas.length}):</strong>
+                  ${tableHTML}
+                  <div style="margin-top: 15px; text-align: center;">
+                    <button onclick="window.categorizarArquivo(${i})" style="background: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;"><i class="fas fa-brain"></i> Categorizar Lote IA</button>
+                  </div>
+                `;
+              }
 
             if(statusSpan) { statusSpan.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Agrupando dados...'; }
             
