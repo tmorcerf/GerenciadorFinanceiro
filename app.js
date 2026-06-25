@@ -1603,84 +1603,58 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             
             if (Array.isArray(jsonBruto.data)) {
               transacoesExtraidas = jsonBruto.data;
+            } else if (jsonBruto.data && Array.isArray(jsonBruto.data.lancamentos)) {
+              transacoesExtraidas = jsonBruto.data.lancamentos;
+              cabecalhoIA = jsonBruto.data.cabecalho;
             } else if (jsonBruto.data && Array.isArray(jsonBruto.data.transacoes)) {
-              transacoesExtraidas = jsonBruto.data.transacoes;
+              transacoesExtraidas = jsonBruto.data.transacoes; // Fallback legacy
               cabecalhoIA = jsonBruto.data.cabecalho;
             } else if (jsonBruto.data) {
               // Fallback se a IA retornar algo estranho
               transacoesExtraidas = [jsonBruto.data];
             }
             
-            var contaDetectada = "N/A";
-            var periodoDetectado = "N/A";
+            let contaDetectada = "N/A";
+            let periodoDetectado = "N/A";
+            let instituicaoStr = "N/A";
+            let tipoStr = "N/A";
+
             if (transacoesExtraidas.length > 0) {
-              contaDetectada = transacoesExtraidas[0].conta || "N/A";
               var datasArr = [];
               transacoesExtraidas.forEach(function(t) { if (t.data) datasArr.push(t.data); });
               datasArr.sort();
               if (datasArr.length > 0) periodoDetectado = datasArr[0] + " a " + datasArr[datasArr.length - 1];
             }
-
-            let instituicaoStr = "N/A";
-            let tipoStr = "N/A";
             
             const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
             
-            // Lógica inteligente (Fuzzy Match) para deduzir a conta baseada na resposta da IA
-            // Tenta pegar a conta da primeira transação, ou usar a instituição do cabeçalho como fallback
-            let sug = "";
-            let isCartao = false;
+            // Nova Lógica Precisa: Lê diretamente do Cabeçalho da IA
+            if (cabecalhoIA) {
+               const getKey = (obj, keyword) => {
+                  const key = Object.keys(obj).find(k => k.toLowerCase().includes(keyword.toLowerCase()));
+                  return key ? obj[key] : null;
+               };
+               
+               let nomeIA = getKey(cabecalhoIA, 'nome da conta');
+               let instIA = getKey(cabecalhoIA, 'institui');
+               let tipoIA = getKey(cabecalhoIA, 'tipo de conta');
 
-            if (contaDetectada !== "N/A") {
-              sug = contaDetectada.toLowerCase().trim();
-            } else if (cabecalhoIA && cabecalhoIA.instituicao) {
-              sug = cabecalhoIA.instituicao.toLowerCase().trim();
+               if (nomeIA && nomeIA !== "N/A" && nomeIA !== "") contaDetectada = nomeIA;
+               if (instIA && instIA !== "N/A" && instIA !== "") instituicaoStr = instIA;
+               if (tipoIA && tipoIA !== "N/A" && tipoIA !== "") tipoStr = tipoIA;
             }
 
-            if (cabecalhoIA && cabecalhoIA.tipo_documento) {
-               const tipoDoc = cabecalhoIA.tipo_documento.toLowerCase();
-               if (tipoDoc.includes('fatura') || tipoDoc.includes('cartão') || tipoDoc.includes('cartao')) {
-                  isCartao = true;
-               }
+            // Fallback se o cabeçalho não trouxe a conta, tentamos pegar da primeira transação
+            if (contaDetectada === "N/A" && transacoesExtraidas.length > 0 && transacoesExtraidas[0].conta && transacoesExtraidas[0].conta !== "N/A") {
+                contaDetectada = transacoesExtraidas[0].conta;
             }
-            if (sug.includes('cart') || sug.includes('credit')) isCartao = true;
-            
-            if (sug !== "" && contasDisponiveis.length > 0) {
-              let candidatos = contasDisponiveis;
-              // Se tivermos certeza que é cartão, filtramos os candidatos primeiro
-              if (isCartao) {
-                 const soCartoes = contasDisponiveis.filter(c => (c.tipo || '').toLowerCase().includes('cart'));
-                 if (soCartoes.length > 0) candidatos = soCartoes;
-              }
 
-              // 1. Tenta match exato ignorando case
-              let contaObj = candidatos.find(c => c.nome.toLowerCase().trim() === sug);
-              
-              // 2. Tenta usar o final do cartão do cabeçalho (match mais forte)
-              if (!contaObj && cabecalhoIA && cabecalhoIA.cartao_final) {
-                 contaObj = candidatos.find(c => c.nome.includes(cabecalhoIA.cartao_final));
-              }
-
-              // 3. Se a sugestão da IA está contida no nome da conta
-              if (!contaObj) {
-                contaObj = candidatos.find(c => c.nome.toLowerCase().includes(sug) || sug.includes(c.nome.toLowerCase()));
-              }
-              
-              // 4. Busca pelo nome da Instituição
-              if (!contaObj) {
-                contaObj = candidatos.find(c => (c.instituicao || '').toLowerCase().includes(sug) && (c.instituicao || '').trim() !== '');
-              }
-              
-              // 5. Fallback final se era cartão e sobrou só 1
-              if (!contaObj && isCartao && candidatos.length === 1) {
-                contaObj = candidatos[0];
-              }
-
-              if (contaObj) {
-                contaDetectada = contaObj.nome; // Corrige a detecção para o nome oficial da conta
-                instituicaoStr = contaObj.instituicao || "N/A";
-                tipoStr = contaObj.tipo || "N/A";
-              }
+            // Garante que se o nome detectado existe na lista oficial, os combos vão bater perfeitamente
+            let contaObjExact = contasDisponiveis.find(c => c.nome.trim() === contaDetectada.trim());
+            if (contaObjExact) {
+                contaDetectada = contaObjExact.nome;
+                if (instituicaoStr === "N/A") instituicaoStr = contaObjExact.instituicao || "N/A";
+                if (tipoStr === "N/A") tipoStr = contaObjExact.tipo || "N/A";
             }
 
             let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome === contaDetectada ? 'selected' : ''}>${c.nome}</option>`).join('');
