@@ -1650,14 +1650,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             }
 
             // Garante que se o nome detectado existe na lista oficial, os combos vÃ£o bater perfeitamente
-            let contaObjExact = contasDisponiveis.find(c => c.nome.trim() === contaDetectada.trim());
+            let contaObjExact = contasDisponiveis.find(c => c.nome.trim().toLowerCase() === contaDetectada.trim().toLowerCase());
             if (contaObjExact) {
                 contaDetectada = contaObjExact.nome;
                 if (instituicaoStr === "N/A") instituicaoStr = contaObjExact.instituicao || "N/A";
                 if (tipoStr === "N/A") tipoStr = contaObjExact.tipo || "N/A";
             }
 
-            let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome === contaDetectada ? 'selected' : ''}>${c.nome}</option>`).join('');
+            let contaSelectOptions = contasDisponiveis.map(c => `<option value="${c.nome}" ${c.nome.trim().toLowerCase() === contaDetectada.trim().toLowerCase() ? 'selected' : ''}>${c.nome}</option>`).join('');
             contaSelectOptions = `<option value="">-- Selecione --</option>` + contaSelectOptions;
 
             var metaDiv = document.getElementById("queue-meta-" + i);
@@ -4314,6 +4314,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       
     });
+
 
 
 
