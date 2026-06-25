@@ -198,6 +198,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const catKeys = Object.keys(dic).sort();
 
       transacoes.forEach((t, index) => {
+        // Sanitize and match IA output with dictionary (case-insensitive and trim)
+        if (t.categoria) {
+          const matchedCat = catKeys.find(k => k.trim().toLowerCase() === String(t.categoria).trim().toLowerCase());
+          if (matchedCat) {
+            t.categoria = matchedCat;
+            if (t.subcategoria && dic[matchedCat]) {
+               const matchedSub = dic[matchedCat].find(s => s.trim().toLowerCase() === String(t.subcategoria).trim().toLowerCase());
+               if (matchedSub) {
+                 t.subcategoria = matchedSub;
+               }
+            }
+          }
+        }
+
         let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
         
         let catOptions = '<option value="">-- Selecione --</option>';
