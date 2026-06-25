@@ -1627,9 +1627,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
             
             // Lógica inteligente (Fuzzy Match) para deduzir a conta baseada na resposta da IA
-            if (contaDetectada !== "N/A" && contasDisponiveis.length > 0) {
-              const sug = contaDetectada.toLowerCase().trim();
-              
+            // Tenta pegar a conta da primeira transação, ou usar a instituição do cabeçalho como fallback
+            let sug = "";
+            if (contaDetectada !== "N/A") {
+              sug = contaDetectada.toLowerCase().trim();
+            } else if (cabecalhoIA && cabecalhoIA.instituicao) {
+              sug = cabecalhoIA.instituicao.toLowerCase().trim();
+            }
+            
+            if (sug !== "" && contasDisponiveis.length > 0) {
               // 1. Tenta match exato ignorando case
               let contaObj = contasDisponiveis.find(c => c.nome.toLowerCase().trim() === sug);
               
@@ -1638,7 +1644,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 contaObj = contasDisponiveis.find(c => c.nome.toLowerCase().includes(sug) || sug.includes(c.nome.toLowerCase()));
               }
               
-              // 3. Se falhar, tenta buscar pelo nome da Instituição (se a IA retornou só o banco)
+              // 3. Se falhar, tenta buscar pelo nome da Instituição
               if (!contaObj) {
                 contaObj = contasDisponiveis.find(c => (c.instituicao || '').toLowerCase().includes(sug) && (c.instituicao || '').trim() !== '');
               }
@@ -1647,6 +1653,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               if (!contaObj && sug.includes("cart") || sug.includes("credit")) {
                 const cartoes = contasDisponiveis.filter(c => (c.tipo || '').toLowerCase() === 'cartão de crédito');
                 if (cartoes.length === 1) contaObj = cartoes[0];
+              }
+              
+              // 5. Novo: Usa o final do cartão do cabeçalho para tentar achar a conta correta
+              if (!contaObj && cabecalhoIA && cabecalhoIA.cartao_final) {
+                 contaObj = contasDisponiveis.find(c => c.nome.includes(cabecalhoIA.cartao_final));
               }
 
               if (contaObj) {
