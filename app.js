@@ -1331,7 +1331,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     const btnImportModels = document.querySelectorAll('.btn-import-model');
     const uploadCsvIa = document.getElementById('uploadCsvIa');
 
-    window.extractFileContent = extractFileContent;`n  async function extractFileContent(file) {
+    window.extractFileContent = extractFileContent;
+  async function extractFileContent(file) {
       const ext = file.name.split('.').pop().toLowerCase();
       
       if (ext === 'pdf') {
@@ -3973,6 +3974,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       
     });
+
 
 
 
