@@ -130,11 +130,38 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderizarTabelaDebug(transacoes, cabecalho) {
     let html = '';
 
-    if (cabecalho) {
+    if (cabecalho && Object.keys(cabecalho).length > 0) {
       html += `
-        <div style="margin-bottom:15px; background:var(--bg-card); padding:10px; border-radius:6px; border:1px solid var(--border-color); font-family:monospace; font-size:0.8rem; overflow-x:auto;">
-          <strong style="color:var(--color-accent); display:block; margin-bottom: 6px;">Cabeçalho Retornado:</strong>
-          <pre style="margin:0; color:var(--text-primary);">${JSON.stringify(cabecalho, null, 2)}</pre>
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <h4 style="margin: 0 0 1.2rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+            <i class="fas fa-file-invoice-dollar" style="color: var(--color-accent); font-size: 1.3rem;"></i> Resumo da Extração
+          </h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+      `;
+      
+      for (const [key, value] of Object.entries(cabecalho)) {
+        // Ignora propriedades que não devem aparecer como cards
+        if (typeof value === 'object') continue;
+        
+        let icon = 'fa-info-circle';
+        const keyLower = key.toLowerCase();
+        if (keyLower.includes('conta')) icon = 'fa-university';
+        else if (keyLower.includes('institui')) icon = 'fa-building-columns';
+        else if (keyLower.includes('periodo') || keyLower.includes('data')) icon = 'fa-calendar-alt';
+        else if (keyLower.includes('quantidade') || keyLower.includes('total')) icon = 'fa-hashtag';
+        
+        html += `
+            <div style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 1.2rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;">
+                <i class="fas ${icon}" style="color: rgba(255,255,255,0.3);"></i> ${key}
+              </div>
+              <div style="font-size: 1.15rem; font-weight: 600; color: var(--color-primary); word-break: break-word;">${value || '-'}</div>
+            </div>
+        `;
+      }
+      
+      html += `
+          </div>
         </div>
       `;
     }
