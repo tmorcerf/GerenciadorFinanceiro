@@ -1,4 +1,4 @@
-// Mobile Iframe Bypass
+﻿// Mobile Iframe Bypass
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
   const mobileLink = document.createElement('link');
   mobileLink.rel = 'stylesheet';
@@ -783,12 +783,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <thead style="background: rgba(255,255,255,0.05); color: var(--text-secondary); font-size: 0.85rem;">
               <tr>
                 <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" onclick="window.sortReviewTable('confianca')" title="Enviar para Passo 3 (Especiais)">Parcelamento</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('data')">Data ÃƒÆ’Ã¢â‚¬ÂÃƒÆ’Ã‚Â¥ÃƒÆ’Ã‚Â²</th>
                 <th style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align:center; color: var(--color-warning);" title="Marcar para o Passo 3 (Transferencias/Parcelamentos)">Conta</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">DescriÃ¢â€Å“Ã‚ÂºÃ¢â€Å“ÃƒÂºo Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
-                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria Ãƒâ€ÃƒÂ¥ÃƒÂ²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('descricao')">DescriÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒâ€šÃ‚ÂºÃƒÂ¢Ã¢â‚¬ÂÃ…â€œÃƒÆ’Ã‚Âºo ÃƒÆ’Ã¢â‚¬ÂÃƒÆ’Ã‚Â¥ÃƒÆ’Ã‚Â²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('valor')">Valor ÃƒÆ’Ã¢â‚¬ÂÃƒÆ’Ã‚Â¥ÃƒÆ’Ã‚Â²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('categoria')">Categoria ÃƒÆ’Ã¢â‚¬ÂÃƒÆ’Ã‚Â¥ÃƒÆ’Ã‚Â²</th>
+                <th style="padding: 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1);" onclick="window.sortReviewTable('subcategoria')">Subcategoria ÃƒÆ’Ã¢â‚¬ÂÃƒÆ’Ã‚Â¥ÃƒÆ’Ã‚Â²</th>
               </tr>
             </thead>
             <tbody id="review-tbody">
@@ -1388,7 +1388,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     window.categorizarArquivo = function(idx) {
       const transacoes = window.fileTransactions[idx];
       if (!transacoes || transacoes.length === 0) {
-        alert("Nenhuma transaÃƒÂ§ÃƒÂ£o inÃƒÂ©dita encontrada neste arquivo.");
+        alert("Nenhuma transaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o inÃƒÆ’Ã‚Â©dita encontrada neste arquivo.");
         return;
       }
       
@@ -1396,7 +1396,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const novaConta = select ? select.value : "N/A";
       
       if (!novaConta || novaConta === "N/A" || novaConta === "") {
-        alert("Por favor, selecione uma conta vÃƒÂ¡lida antes de categorizar.");
+        alert("Por favor, selecione uma conta vÃƒÆ’Ã‚Â¡lida antes de categorizar.");
         return;
       }
       
@@ -1576,7 +1576,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           const statusSpan = document.getElementById(`queue-status-${i}`);
           
           try {
-            if(statusSpan) { statusSpan.innerText = ' Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
+            if(statusSpan) { statusSpan.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Lendo arquivo...'; statusSpan.style.color = '#3b82f6'; }
             
             const fileData = await extractFileContent(file);
             const isPdf = fileData.type === 'pdf';
@@ -1628,7 +1628,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             
             const contasDisponiveis = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas ? dadosFinanceiros.contas : []);
             
-            // Nova LÃƒÂ³gica Precisa: LÃƒÂª diretamente do CabeÃƒÂ§alho da IA
+            // Nova LÃƒÆ’Ã‚Â³gica Precisa: LÃƒÆ’Ã‚Âª diretamente do CabeÃƒÆ’Ã‚Â§alho da IA
             if (cabecalhoIA) {
                const getKey = (obj, keyword) => {
                   const key = Object.keys(obj).find(k => k.toLowerCase().includes(keyword.toLowerCase()));
@@ -1644,12 +1644,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                if (tipoIA && tipoIA !== "N/A" && tipoIA !== "") tipoStr = tipoIA;
             }
 
-            // Fallback se o cabeÃƒÂ§alho nÃƒÂ£o trouxe a conta, tentamos pegar da primeira transaÃƒÂ§ÃƒÂ£o
+            // Fallback se o cabeÃƒÆ’Ã‚Â§alho nÃƒÆ’Ã‚Â£o trouxe a conta, tentamos pegar da primeira transaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
             if (contaDetectada === "N/A" && transacoesExtraidas.length > 0 && transacoesExtraidas[0].conta && transacoesExtraidas[0].conta !== "N/A") {
                 contaDetectada = transacoesExtraidas[0].conta;
             }
 
-            // Garante que se o nome detectado existe na lista oficial, os combos vÃƒÂ£o bater perfeitamente
+            // Garante que se o nome detectado existe na lista oficial, os combos vÃƒÆ’Ã‚Â£o bater perfeitamente
             let contaObjExact = contasDisponiveis.find(c => c.nome.trim().toLowerCase() === contaDetectada.trim().toLowerCase());
             if (contaObjExact) {
                 contaDetectada = contaObjExact.nome;
@@ -1676,7 +1676,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               `;
             }
 
-            if(statusSpan) { statusSpan.innerText = "Agrupando dados..."; }
+            if(statusSpan) { statusSpan.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Agrupando dados...'; }
             
             const ineditasDoArquivo = [];
             
@@ -1691,7 +1691,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
             if(statusSpan) { statusSpan.innerHTML = `<i class="fas fa-arrow-circle-right"></i> ${ineditasDoArquivo.length} ineditas`; statusSpan.style.color = '#10b981'; }
             
-            // O card continua na mesma coluna (esquerda), pois o layout agora ÃƒÂ© unificado.
+            // O card continua na mesma coluna (esquerda), pois o layout agora ÃƒÆ’Ã‚Â© unificado.
             
           } catch (err) {
             console.error(err);
@@ -1718,7 +1718,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         if(queueStatus) { 
-          queueStatus.innerText = `Pronto! Verifique as contas e clique em "Categorizar Lote IA" nos cards ÃƒÂ  direita.`;
+          queueStatus.innerText = `Pronto! Verifique as contas e clique em "Categorizar Lote IA" nos cards ÃƒÆ’Ã‚Â  direita.`;
           queueStatus.style.color = 'var(--color-primary)';
           queueStatus.style.fontWeight = 'bold';
         }
@@ -4312,6 +4312,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       
     });
+
 
 
 
