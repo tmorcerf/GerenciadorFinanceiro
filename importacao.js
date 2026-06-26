@@ -115,29 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Limpa a tentativa de categorização do Passo 1 para não confundir o usuário
-      const historico = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.lancamentos) ? dadosFinanceiros.lancamentos : (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos ? window.dadosFinanceiros.lancamentos : []);
-      
       transacoes.forEach(t => {
         t.categoria = '';
         t.subcategoria = '';
-        
-        if (t.duplicado === true || String(t.duplicado).toLowerCase() === 'sim') {
-           t.duplicado = true;
-        } else {
-           const parseValor = v => parseFloat(String(v || '0').replace(/[^\d,-]/g,'').replace(',','.'));
-           const valT = parseValor(t.valor);
-           
-           const isDup = historico.some(h => {
-              // Compara data e valor (com margem de erro de 1 centavo)
-              return h.data === t.data && Math.abs(parseValor(h.valor) - valT) < 0.01;
-           });
-           
-           if (isDup) {
-              t.duplicado = true;
-           } else {
-              t.duplicado = false;
-           }
-        }
+        t.duplicado = (t.duplicado === true || String(t.duplicado).toLowerCase() === 'sim');
       });
 
       transacoesParaSalvar = transacoes;
