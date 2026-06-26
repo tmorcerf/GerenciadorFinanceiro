@@ -616,8 +616,9 @@ function renderizarPasso3(txs) {
   }
   
   let contasOptions = '<option value="">-- Selecione a Contrapartida --</option>';
-  if (window.contasAtivas && Array.isArray(window.contasAtivas)) {
-     window.contasAtivas.forEach(c => {
+  const contasArr = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+  if (contasArr && Array.isArray(contasArr)) {
+     contasArr.forEach(c => {
         contasOptions += `<option value="` + c.nome + `">` + c.nome + `</option>`;
      });
   }
