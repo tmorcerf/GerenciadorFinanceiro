@@ -1,5 +1,5 @@
 // importacao.js
-// LÃ³gica simplificada para a nova aba de ImportaÃ§Ã£o
+// LÃƒÂ³gica simplificada para a nova aba de ImportaÃƒÂ§ÃƒÂ£o
 
 document.addEventListener('DOMContentLoaded', () => {
   const uploadInput = document.getElementById('uploadFileImportacao');
@@ -51,6 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Variável para guardar o resultado temporário antes de salvar
   let transacoesParaSalvar = [];
   let cabecalhoAtual = null;
+  let isPasso2Concluido = false;
+  let isPasso3Ativo = false;
+  let transacoesPasso3 = [];
+  let transacoesNormais = [];
 
   uploadInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -61,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSalvar.style.display = 'none';
     resultContent.innerHTML = '';
     statusBox.style.display = 'flex';
+    btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
     
     try {
       statusBox.innerHTML = '<i class="fas fa-sync-alt fa-spin" style="color: var(--color-primary);"></i> Lendo arquivo localmente...';
@@ -72,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-warning);"></i> Extraindo inteligência dos dados (aguarde até 30s)...';
       statusBox.style.borderLeftColor = 'var(--color-warning)';
 
-      // RequisiÃ§Ã£o para o backend
+      // Requisição para o backend
       // APPS_SCRIPT_WEBAPP_URL is defined in app.js (global)
       const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
         method: 'POST',
@@ -117,8 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       transacoesParaSalvar = transacoes;
       cabecalhoAtual = cabecalho;
+      isPasso2Concluido = false;
+      isPasso3Ativo = false;
+      if (document.getElementById('passo3-container')) document.getElementById('passo3-container').style.display = 'none';
+      
       // Renderiza a Tabela de Debug
       renderizarTabelaDebug(transacoes, cabecalho);
+      
 
       if (transacoes.length > 0) {
         btnSalvar.style.display = 'inline-block';
@@ -131,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statusBox.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--color-expense);"></i> Erro: ${err.message}`;
       statusBox.style.borderLeftColor = 'var(--color-expense)';
     } finally {
-      // Limpa o input para permitir enviar o mesmo arquivo novamente se necessÃ¡rio
+      // Limpa o input para permitir enviar o mesmo arquivo novamente se necessário
       uploadInput.value = '';
     }
   });
@@ -203,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
                 <thead style="position: sticky; top: 0; background: rgba(30, 37, 51, 0.95); z-index: 1;">
                   <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                    <th style="padding:8px;">COD</th>
+                    <th style="padding:8px; display:none;">COD</th>
                     <th style="padding:8px;">DATA</th>
                     <th style="padding:8px;">VENCIMENTO</th>
                     <th style="padding:8px;">CONTA</th>
@@ -221,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
           html += `
             <tr style="border-bottom: 1px solid var(--border-color); opacity: 0.8;">
-              <td style="padding:8px; color: var(--text-muted);">${t.cod || ''}</td>
+              <td style="padding:8px; color: var(--text-muted); display:none;">${t.cod || ''}</td>
               <td style="padding:8px; white-space: nowrap;">${t.data || ''}</td>
               <td style="padding:8px; white-space: nowrap;">${t.vencimento || ''}</td>
               <td style="padding:8px;"><span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);"><i class="fas fa-university"></i> ${t.conta || ''}</span></td>
@@ -243,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
               <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
                 <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                  <th style="padding:8px;">COD</th>
+                  <th style="padding:8px; display:none;">COD</th>
                   <th style="padding:8px;">DATA</th>
                   <th style="padding:8px;">VENCIMENTO</th>
                   <th style="padding:8px;">CONTA</th>
@@ -253,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <th style="padding:8px;">SUBCATEGORIA</th>
                   <th style="padding:8px; text-align:center;">CONFIANCA</th>
                   <th style="padding:8px; text-align:center;">PARCEL.</th>
-                  <th style="padding:8px; text-align:center;">DUPLICADO?</th>
+                  ${!isPasso2Concluido ? '<th style="padding:8px; text-align:center;">DUPLICADO?</th>' : ''}
                 </tr>
               </thead>
               <tbody>
@@ -262,91 +272,89 @@ document.addEventListener('DOMContentLoaded', () => {
         unicas.forEach((item) => {
           const t = item.t;
           const index = item.index;
-        // Sanitize and match IA output with dictionary (case-insensitive and trim)
-        if (t.categoria) {
-          const matchedCat = catKeys.find(k => k.trim().toLowerCase() === String(t.categoria).trim().toLowerCase());
-          if (matchedCat) {
-            t.categoria = matchedCat;
-            if (t.subcategoria && dic[matchedCat]) {
-               const matchedSub = dic[matchedCat].find(s => s.trim().toLowerCase() === String(t.subcategoria).trim().toLowerCase());
-               if (matchedSub) {
-                 t.subcategoria = matchedSub;
-               }
+          // Sanitize and match IA output with dictionary (case-insensitive and trim)
+          if (t.categoria) {
+            const matchedCat = catKeys.find(k => k.trim().toLowerCase() === String(t.categoria).trim().toLowerCase());
+            if (matchedCat) {
+              t.categoria = matchedCat;
+              if (t.subcategoria && dic[matchedCat]) {
+                 const matchedSub = dic[matchedCat].find(s => s.trim().toLowerCase() === String(t.subcategoria).trim().toLowerCase());
+                 if (matchedSub) {
+                   t.subcategoria = matchedSub;
+                 }
+              }
             }
           }
-        }
 
-        let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
-        
-        let catOptions = '<option value="">-- Selecione --</option>';
-        let catFound = false;
-        catKeys.forEach(k => {
-          const selected = (t.categoria === k) ? 'selected' : '';
-          if (selected) catFound = true;
-          catOptions += `<option value="${k}" ${selected}>${k}</option>`;
-        });
-        if (t.categoria && !catFound) {
-          catOptions += `<option value="${t.categoria}" selected>⚠️ ${t.categoria} (Não encontrada na lista)</option>`;
-        }
-
-        let subcatOptions = '<option value="">-- Selecione --</option>';
-        let subcatFound = false;
-        if (t.categoria && dic[t.categoria]) {
-          dic[t.categoria].forEach(sub => {
-            const selected = (t.subcategoria === sub) ? 'selected' : '';
-            if (selected) subcatFound = true;
-            subcatOptions += `<option value="${sub}" ${selected}>${sub}</option>`;
+          let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
+          
+          let catOptions = '<option value="">-- Selecione --</option>';
+          let catFound = false;
+          catKeys.forEach(k => {
+            const selected = (t.categoria === k) ? 'selected' : '';
+            if (selected) catFound = true;
+            catOptions += `<option value="${k}" ${selected}>${k}</option>`;
           });
-        }
-        if (t.subcategoria && !subcatFound) {
-          subcatOptions += `<option value="${t.subcategoria}" selected>⚠️ ${t.subcategoria} (Não encontrada na lista)</option>`;
-        }
+          if (t.categoria && !catFound) {
+            catOptions += `<option value="${t.categoria}" selected>⚠️ ${t.categoria} (Não encontrada na lista)</option>`;
+          }
 
-        const isParcel = (t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim') ? 'checked' : '';
-        
-        // Confiança badge color
-        let confColor = 'var(--text-muted)';
-        let confText = t.confianca || '';
-        if (confText) {
-          const lowerConf = confText.toLowerCase();
-          if (lowerConf.includes('alta') || lowerConf.includes('verde')) confColor = 'var(--color-income)';
-          else if (lowerConf.includes('media') || lowerConf.includes('amarela')) confColor = 'var(--color-warning)';
-          else if (lowerConf.includes('baixa') || lowerConf.includes('vermelha')) confColor = 'var(--color-expense)';
-        }
+          let subcatOptions = '<option value="">-- Selecione --</option>';
+          let subcatFound = false;
+          if (t.categoria && dic[t.categoria]) {
+            dic[t.categoria].forEach(sub => {
+              const selected = (t.subcategoria === sub) ? 'selected' : '';
+              if (selected) subcatFound = true;
+              subcatOptions += `<option value="${sub}" ${selected}>${sub}</option>`;
+            });
+          }
+          if (t.subcategoria && !subcatFound) {
+            subcatOptions += `<option value="${t.subcategoria}" selected>⚠️ ${t.subcategoria} (Não encontrada na lista)</option>`;
+          }
 
-        html += `
-          <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-            <td style="padding:12px 8px; color: var(--text-muted);">${t.cod || ''}</td>
-            <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
-            <td style="padding:12px 8px; white-space: nowrap;">${t.vencimento || ''}</td>
-            <td style="padding:12px 8px; font-size: 0.8rem;">
-              <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);">
-                <i class="fas fa-university"></i> ${t.conta || ''}
-              </span>
-            </td>
-            <td style="padding:12px 8px;">${t.descricao || ''}</td>
-            <td style="padding:12px 8px; white-space: nowrap; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
-            <td style="padding:12px 8px;">
-              <select class="import-sel-cat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width: 150px;">
-                ${catOptions}
-              </select>
-            </td>
-            <td style="padding:12px 8px;">
-              <select class="import-sel-subcat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width: 150px;">
-                ${subcatOptions}
-              </select>
-            </td>
-            <td style="padding:12px 8px; text-align:center;">
-              ${confText ? `<span style="display:inline-block; padding:3px 8px; border-radius:12px; border:1px solid ${confColor}; color:${confColor}; font-size:0.75rem;">${confText}</span>` : ''}
-            </td>
-            <td style="padding:12px 8px; text-align:center;">
-              <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${isParcel} style="cursor:pointer; transform:scale(1.2);">
-            </td>
-            <td style="padding:12px 8px; text-align:center;">
-              <input type="checkbox" class="import-chk-duplicado" data-index="${index}" style="cursor:pointer; transform:scale(1.2);">
-            </td>
-          </tr>
-        `;
+          // Confiança badge color
+          let corConfianca = 'var(--text-muted)';
+          if (t.confianca) {
+            const lowerConf = String(t.confianca).toLowerCase();
+            if (lowerConf.includes('alta') || lowerConf.includes('verde')) corConfianca = 'var(--color-income)';
+            else if (lowerConf.includes('media') || lowerConf.includes('amarela')) corConfianca = 'var(--color-warning)';
+            else if (lowerConf.includes('baixa') || lowerConf.includes('vermelha')) corConfianca = 'var(--color-expense)';
+          }
+
+          html += `
+            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:12px 8px; color: var(--text-muted); display:none;">${t.cod || ''}</td>
+              <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
+              <td style="padding:12px 8px; white-space: nowrap;">${t.vencimento || ''}</td>
+              <td style="padding:12px 8px; font-size: 0.8rem;">
+                <span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);">
+                  <i class="fas fa-university"></i> ${t.conta || ''}
+                </span>
+              </td>
+              <td style="padding:12px 8px;">${t.descricao || ''}</td>
+              <td style="padding:12px 8px; white-space: nowrap; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+              <td style="padding:12px 8px;">
+                <select class="import-sel-cat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width: 150px;">
+                  ${catOptions}
+                </select>
+              </td>
+              <td style="padding:12px 8px;">
+                <select class="import-sel-subcat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width: 150px;">
+                  ${subcatOptions}
+                </select>
+              </td>
+              <td style="padding:8px; text-align:center;">
+                <span style="font-weight:bold; color: ${corConfianca};">${t.confianca || '-'}</span>
+              </td>
+              <td style="padding:8px; text-align:center;">
+                <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${t.parcelamento ? 'checked' : ''} style="cursor:pointer; transform:scale(1.2);">
+              </td>
+              ${!isPasso2Concluido ? `
+              <td style="padding:8px; text-align:center;">
+                <input type="checkbox" class="import-chk-duplicado" data-index="${index}" ${t.duplicado ? 'checked' : ''} style="cursor:pointer; transform:scale(1.2);">
+              </td>` : ''}
+            </tr>
+          `;
         });
         html += `</tbody></table></div>`;
       }
@@ -361,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = e.target.getAttribute('data-index');
         const newCat = e.target.value;
         transacoesParaSalvar[idx].categoria = newCat;
+        
         transacoesParaSalvar[idx].subcategoria = ''; // reset subcat
         
         // Atualizar options do subcat correspondente
@@ -389,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         transacoesParaSalvar[idx].parcelamento = e.target.checked;
+        
       });
     });
 
@@ -397,13 +407,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = e.target.getAttribute('data-index');
         transacoesParaSalvar[idx].duplicado = e.target.checked;
         renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
+        
       });
     });
   }
 
-  // AÃ§Ã£o de Salvar LanÃ§amentos
+  // Ação de Salvar Lançamentos
   btnSalvar.addEventListener('click', async () => {
     if (transacoesParaSalvar.length === 0) return;
+    
+    if (!isPasso3Ativo) {
+      const txNormais = [];
+      const txPasso3 = [];
+      transacoesParaSalvar.filter(t => !t.duplicado).forEach(t => {
+        const cat = (t.categoria || '').toLowerCase();
+        const isTransfer = cat.includes('transfer') || cat.includes('pagamento de cart') || cat.includes('investimento') || cat.includes('aplica');
+        const isParcel = t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim';
+        
+        if (isTransfer || isParcel) {
+           txPasso3.push(t);
+        } else {
+           txNormais.push(t);
+        }
+      });
+
+      if (txPasso3.length > 0) {
+        isPasso3Ativo = true;
+        transacoesNormais = txNormais;
+        transacoesPasso3 = processarPasso3(txPasso3);
+        
+        resultContent.style.display = 'none';
+        renderizarPasso3(transacoesPasso3);
+        
+        btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar TUDO';
+        return; 
+      }
+    }
+    
+    let transacoesFinais = isPasso3Ativo ? [...transacoesNormais, ...transacoesPasso3] : transacoesParaSalvar.filter(t => !t.duplicado);
     
     // Mostra feedback de carregamento
     const btnOriginalText = btnSalvar.innerHTML;
@@ -416,13 +457,13 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'salvar_ia',
-          transacoes: transacoesParaSalvar.filter(t => !t.duplicado)
+          transacoes: transacoesFinais
         })
       });
 
       const result = await res.json();
       if (result.status === 'success') {
-        alert("LanÃ§amentos salvos com sucesso!");
+        alert("Lançamentos salvos com sucesso!");
         // Limpa a tela
         resultContainer.style.display = 'none';
         transacoesParaSalvar = [];
@@ -470,7 +511,12 @@ document.addEventListener('DOMContentLoaded', () => {
           alert("Erro: " + (json.message || json.error));
         } else {
           transacoesParaSalvar = json.data;
+          isPasso2Concluido = true;
           renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
+        
+          
+          btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
+          
           statusBox.innerHTML = '<i class="fas fa-check-circle" style="color: var(--color-income);"></i> Categorização inteligente aplicada!';
           statusBox.style.borderLeftColor = 'var(--color-income)';
         }
@@ -484,4 +530,172 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+function processarPasso3(txs) {
+  let result = [];
+  txs.forEach(t => {
+     const cat = (t.categoria || '').toLowerCase();
+     const isTransfer = cat.includes('transfer') || cat.includes('pagamento de cart') || cat.includes('investimento') || cat.includes('aplica');
+     const isParcel = t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim';
+
+     if (isTransfer) {
+        // Row 1: Original
+        result.push({ ...t, isPasso3Original: true });
+        
+        // Row 2: Counterpart
+        let valStr = String(t.valor).replace(',', '.');
+        let numVal = parseFloat(valStr) || 0;
+        let mirroredVal = (numVal * -1).toFixed(2).replace('.', ',');
+        if (mirroredVal.indexOf('-') === -1 && parseFloat(valStr) < 0) {
+           mirroredVal = '+' + mirroredVal;
+        }
+        
+        result.push({
+           ...t,
+           valor: mirroredVal,
+           conta: '', 
+           isPasso3Mirror: true,
+           originalCod: t.cod 
+        });
+     }
+
+     if (isParcel && !isTransfer) {
+        let currentParcel = 1;
+        let totalParcel = 1;
+        const match = (t.descricao || '').match(/(\d+)\s*\/\s*(\d+)/);
+        if (match) {
+           currentParcel = parseInt(match[1], 10);
+           totalParcel = parseInt(match[2], 10);
+        }
+        
+        result.push({ ...t, isPasso3ParcelaOriginal: true, parcelaAtual: currentParcel, totalParcelas: totalParcel });
+        
+        if (totalParcel > currentParcel) {
+           for (let i = currentParcel + 1; i <= totalParcel; i++) {
+              let newVenc = addMonthsStr(t.vencimento, i - currentParcel);
+              let newDesc = t.descricao.replace(/(\d+)\s*\/\s*(\d+)/, i + '/' + totalParcel);
+              
+              result.push({
+                 ...t,
+                 vencimento: newVenc,
+                 descricao: newDesc,
+                 isPasso3ParcelaFutura: true,
+                 parcelaAtual: i,
+                 totalParcelas: totalParcel
+              });
+           }
+        }
+     }
+  });
+  return result;
+}
+
+function addMonthsStr(dateStr, months) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+     let d = parseInt(parts[0], 10);
+     let m = parseInt(parts[1], 10) - 1;
+     let y = parseInt(parts[2], 10);
+     let date = new Date(y, m + months, d);
+     let dd = String(date.getDate()).padStart(2, '0');
+     let mm = String(date.getMonth() + 1).padStart(2, '0');
+     let yyyy = date.getFullYear();
+     return dd + '/' + mm + '/' + yyyy;
+  }
+  return dateStr;
+}
+
+function renderizarPasso3(txs) {
+  let passo3Div = document.getElementById('passo3-container');
+  if (!passo3Div) {
+    passo3Div = document.createElement('div');
+    passo3Div.id = 'passo3-container';
+    passo3Div.style.marginTop = '2rem';
+    document.getElementById('import-result-container').appendChild(passo3Div);
+  }
+  
+  let contasOptions = '<option value="">-- Selecione a Contrapartida --</option>';
+  if (window.contasAtivas && Array.isArray(window.contasAtivas)) {
+     window.contasAtivas.forEach(c => {
+        contasOptions += `<option value="` + c.nome + `">` + c.nome + `</option>`;
+     });
+  }
+
+  let html = `<div style="padding: 1.5rem; background: linear-gradient(145deg, rgba(30,37,51,0.6) 0%, var(--bg-card) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+      <h4 style="margin: 0 0 1.2rem 0; color: var(--color-accent); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+        <i class="fas fa-random"></i> Passo 3: TransferÃªncias e Parcelamentos
+      </h4>
+      <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.9rem;">
+        Abaixo estÃ£o os lanÃ§amentos que exigem sua atenÃ§Ã£o especial. Para transferÃªncias, selecione a conta de destino/origem. 
+        Para parcelamentos, as faturas futuras jÃ¡ foram projetadas.
+      </p>
+      
+      <div style="overflow-x:auto; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+        <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
+          <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
+            <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
+              <th style="padding:8px;">TIPO</th>
+              <th style="padding:8px;">DATA</th>
+              <th style="padding:8px;">VENCIMENTO</th>
+              <th style="padding:8px;">CONTA</th>
+              <th style="padding:8px;">DESCRICAO</th>
+              <th style="padding:8px;">VALOR</th>
+              <th style="padding:8px;">CATEGORIA</th>
+            </tr>
+          </thead>
+          <tbody>`;
+          
+  txs.forEach((t, index) => {
+      let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
+      
+      let tipoBadge = '';
+      let bgStyle = "transparent";
+      
+      if (t.isPasso3Original) {
+          tipoBadge = '<span style="background:var(--color-accent); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Origem (TR)</span>';
+      } else if (t.isPasso3Mirror) {
+          tipoBadge = '<span style="background:var(--color-warning); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Destino (TR)</span>';
+          bgStyle = "rgba(255,193,7,0.05)";
+      } else if (t.isPasso3ParcelaOriginal) {
+          tipoBadge = `<span style="background:var(--color-income); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Parcela ${t.parcelaAtual}/${t.totalParcelas}</span>`;
+      } else if (t.isPasso3ParcelaFutura) {
+          tipoBadge = `<span style="background:var(--text-muted); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">ProjeÃ§Ã£o ${t.parcelaAtual}/${t.totalParcelas}</span>`;
+          bgStyle = "rgba(255,255,255,0.02)";
+      }
+
+      let contaContent = t.conta || '';
+      if (t.isPasso3Mirror) {
+          contaContent = `<select class="import-passo3-conta" data-index="` + index + `" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width:150px;">
+              ` + contasOptions + `
+          </select>`;
+      } else {
+          contaContent = `<span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);"><i class="fas fa-university"></i> ` + (t.conta||'') + `</span>`;
+      }
+
+      html += `<tr style="border-bottom: 1px solid var(--border-color); background:`+bgStyle+`;">
+          <td style="padding:12px 8px;">` + tipoBadge + `</td>
+          <td style="padding:12px 8px;">` + (t.data || '') + `</td>
+          <td style="padding:12px 8px;">` + (t.vencimento || '') + `</td>
+          <td style="padding:12px 8px;">` + contaContent + `</td>
+          <td style="padding:12px 8px;">` + (t.descricao || '') + `</td>
+          <td style="padding:12px 8px; color: `+valColor+`; font-weight: 600;">` + (t.valor || '') + `</td>
+          <td style="padding:12px 8px;">` + (t.categoria || '') + `</td>
+      </tr>`;
+  });
+  
+  html += `</tbody></table></div></div>`;
+  passo3Div.innerHTML = html;
+  passo3Div.style.display = 'block';
+  
+  // Attach events
+  document.querySelectorAll('.import-passo3-conta').forEach(sel => {
+      sel.addEventListener('change', (e) => {
+          const idx = e.target.getAttribute('data-index');
+          txs[idx].conta = e.target.value;
+      });
+  });
+}
+
+
 

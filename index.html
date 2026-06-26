@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" href="icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="OrÃ§amento">
+  <meta name="apple-mobile-web-app-title" content="OrÃƒÂ§amento">
   <style>
     select option {
       background: var(--bg-card);
@@ -56,14 +56,14 @@
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <span class="logo-text">FinanÃ§as Home</span>
+      <span class="logo-text">FinanÃƒÂ§as Home</span>
     </div>
 
     <ul class="nav-links">
       <li>
         <a class="nav-item active" data-target="panel-overview">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-          VisÃ£o Geral
+          VisÃƒÂ£o Geral
         </a>
       </li>
       <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
@@ -75,7 +75,7 @@
       <li>
         <a class="nav-item" data-target="panel-budgets">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          OrÃ§amentos
+          OrÃƒÂ§amentos
         </a>
       </li>
       <li>
@@ -93,7 +93,7 @@
       <li>
         <a class="nav-item" data-target="panel-credit-cards">
           <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-          CartÃµes
+          CartÃƒÂµes
         </a>
       </li>
 
@@ -110,15 +110,15 @@
     <header>
       <div class="header-title">
         <h1 id="dashboard-title">Dashboard Financeiro</h1>
-        <p>Acompanhamento mensal de gastos e poupanÃ§a</p>
+        <p>Acompanhamento mensal de gastos e poupanÃƒÂ§a</p>
       </div>
 
       <!-- Filters -->
       <div class="header-controls" style="display: flex; align-items: center; gap: 10px;">
-        <button id="btnFeedback" title="Deixar SugestÃ£o" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
-          ðŸ’¡
+        <button id="btnFeedback" title="Deixar SugestÃƒÂ£o" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+          Ã°Å¸â€™Â¡
         </button>
-        <button id="btnSettings" class="nav-item" data-target="panel-settings" title="ConfiguraÃ§Ãµes" style="background: transparent; color: var(--text-muted); border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.15)'; this.style.color='var(--text-primary)';" onmouseout="this.style.transform='scale(1)'; this.style.color='var(--text-muted)';">
+        <button id="btnSettings" class="nav-item" data-target="panel-settings" title="ConfiguraÃƒÂ§ÃƒÂµes" style="background: transparent; color: var(--text-muted); border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.15)'; this.style.color='var(--text-primary)';" onmouseout="this.style.transform='scale(1)'; this.style.color='var(--text-muted)';">
           <i class="fas fa-cog"></i>
         </button>
       </div>
@@ -127,18 +127,18 @@
     <!-- 1. PANEL: OVERVIEW -->
     <div id="panel-overview" class="dashboard-panel active">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-        <h2 style="margin: 0;">VisÃ£o Geral</h2>
+        <h2 style="margin: 0;">VisÃƒÂ£o Geral</h2>
         <div style="display: flex; align-items: center; gap: 10px;">
           <select id="visao-geral-filter" class="date-filter-select">
-            <option value="current">MÃªs Atual</option>
-            <option value="previous">MÃªs Anterior</option>
+            <option value="current">MÃƒÂªs Atual</option>
+            <option value="previous">MÃƒÂªs Anterior</option>
             <option value="year">Este Ano</option>
-            <option value="all">Todo o PerÃ­odo</option>
-            <option value="custom">PerÃ­odo...</option>
+            <option value="all">Todo o PerÃƒÂ­odo</option>
+            <option value="custom">PerÃƒÂ­odo...</option>
           </select>
           <div id="visao-geral-custom-date" style="display: none; align-items: center; gap: 5px;">
             <input type="date" id="visao-geral-date-start" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
-            <span style="font-size: 0.8rem; color: var(--text-secondary);">atÃ©</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">atÃƒÂ©</span>
             <input type="date" id="visao-geral-date-end" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
           </div>
         </div>
@@ -148,7 +148,7 @@
         <!-- Income -->
         <div class="card income-card clickable-card" id="card-income">
           <div class="card-header">
-            <span>Receitas do PerÃ­odo</span>
+            <span>Receitas do PerÃƒÂ­odo</span>
             <div class="card-icon">
               <svg viewBox="0 0 24 24"><path d="M12 19V5m-7 7l7-7 7 7"/></svg>
             </div>
@@ -162,7 +162,7 @@
         <!-- Expenses -->
         <div class="card expense-card clickable-card" id="card-expense">
           <div class="card-header">
-            <span>Despesas do PerÃ­odo</span>
+            <span>Despesas do PerÃƒÂ­odo</span>
             <div class="card-icon">
               <svg viewBox="0 0 24 24"><path d="M12 5v14m-7-7l7 7 7-7"/></svg>
             </div>
@@ -190,7 +190,7 @@
         <!-- Top 5 Gastos Card -->
         <div class="card expense-card">
           <div class="card-header">
-            <span>Top 5 Gastos do PerÃ­odo</span>
+            <span>Top 5 Gastos do PerÃƒÂ­odo</span>
             <div class="card-icon" style="background-color: var(--color-expense-glow); color: var(--color-expense);">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M17 17H7m10-4H7m6-4H7"/></svg>
             </div>
@@ -205,7 +205,7 @@
       <div class="charts-grid">
         <!-- Monthly Chart -->
         <div class="card chart-card">
-          <div class="chart-title">EvoluÃ§Ã£o de Receitas vs Despesas</div>
+          <div class="chart-title">EvoluÃƒÂ§ÃƒÂ£o de Receitas vs Despesas</div>
           <div class="chart-container">
             <canvas id="monthly-evolution-chart"></canvas>
           </div>
@@ -213,7 +213,7 @@
 
         <!-- Category Chart -->
         <div class="card chart-card">
-          <div class="chart-title">DistribuiÃ§Ã£o de Gastos</div>
+          <div class="chart-title">DistribuiÃƒÂ§ÃƒÂ£o de Gastos</div>
           <div class="chart-container">
             <canvas id="category-distribution-chart"></canvas>
           </div>
@@ -236,7 +236,7 @@
       
       <!-- BUDGET DASHBOARD -->
       <div id="budgets-dashboard" style="margin-bottom: 2.5rem;">
-        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de OrÃ§amentos</h2>
+        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de OrÃƒÂ§amentos</h2>
         
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div class="card" style="border-top: 3px solid #3b82f6;">
@@ -248,11 +248,11 @@
             <div id="budget-dash-realizado" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="border-top: 3px solid var(--color-income);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">EspaÃ§o Livre Global</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">EspaÃƒÂ§o Livre Global</span></div>
             <div id="budget-dash-livre" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="border-top: 3px solid #8b5cf6;">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do OrÃ§amento</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do OrÃƒÂ§amento</span></div>
             <div id="budget-dash-saude" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">0%</div>
           </div>
         </div>
@@ -283,7 +283,7 @@
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Resumo de Faturas</h2>
       </div>
       <div id="credit-cards-dashboard">
-        <!-- Resumo e GrÃ¡fico injetados aqui -->
+        <!-- Resumo e GrÃƒÂ¡fico injetados aqui -->
       </div>
     </div>
 
@@ -293,15 +293,15 @@
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Investimentos</h2>
         <div style="display: flex; align-items: center; gap: 10px;">
           <select id="investimentos-filter" class="date-filter-select">
-            <option value="current">MÃªs Atual</option>
-            <option value="previous">MÃªs Anterior</option>
+            <option value="current">MÃƒÂªs Atual</option>
+            <option value="previous">MÃƒÂªs Anterior</option>
             <option value="year">Este Ano</option>
-            <option value="all">Todo o PerÃ­odo</option>
-            <option value="custom">PerÃ­odo...</option>
+            <option value="all">Todo o PerÃƒÂ­odo</option>
+            <option value="custom">PerÃƒÂ­odo...</option>
           </select>
           <div id="investimentos-custom-date" style="display: none; align-items: center; gap: 5px;">
             <input type="date" id="investimentos-date-start" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
-            <span style="font-size: 0.8rem; color: var(--text-secondary);">atÃ©</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">atÃƒÂ©</span>
             <input type="date" id="investimentos-date-end" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
           </div>
         </div>
@@ -310,30 +310,30 @@
       <div id="investments-dashboard" style="margin-bottom: 2.5rem; display: none;">
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div class="card clickable-card" style="border-top: 3px solid var(--color-income); cursor: pointer;" onclick="showInvestmentsModal('aportes')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do PerÃ­odo</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do PerÃƒÂ­odo</span></div>
             <div id="inv-dash-aportes" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card clickable-card" style="border-top: 3px solid #8b5cf6; cursor: pointer;" onclick="showInvestmentsModal('rendimentos')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento LÃ­quido</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento LÃƒÂ­quido</span></div>
             <div id="inv-dash-rendimento" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card clickable-card" style="border-top: 3px solid var(--color-expense); cursor: pointer;" onclick="showInvestmentsModal('resgates')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do PerÃ­odo</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do PerÃƒÂ­odo</span></div>
             <div id="inv-dash-resgates" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento LÃ­quido</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento LÃƒÂ­quido</span></div>
             <div id="inv-dash-crescimento" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">R$ 0,00</div>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
-            <div class="card-header"><span style="font-weight:600;">EvoluÃ§Ã£o: Aportes, Rendimentos e Resgates</span></div>
+            <div class="card-header"><span style="font-weight:600;">EvoluÃƒÂ§ÃƒÂ£o: Aportes, Rendimentos e Resgates</span></div>
             <div style="flex:1; position:relative; min-height:0;"><canvas id="inv-history-chart"></canvas></div>
           </div>
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
-            <div class="card-header"><span style="font-weight:600;">ComposiÃ§Ã£o da Carteira</span></div>
+            <div class="card-header"><span style="font-weight:600;">ComposiÃƒÂ§ÃƒÂ£o da Carteira</span></div>
             <div style="flex:1; position:relative; min-height:0; display:flex; align-items:center; justify-content:center;">
               <canvas id="inv-composition-chart"></canvas>
             </div>
@@ -347,18 +347,18 @@
 
     <!-- 4. PANEL: AUDIT -->
     <div id="panel-audit" class="dashboard-panel">
-      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de ConsistÃªncia</h2>
+      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de ConsistÃƒÂªncia</h2>
       <div id="audit-container" class="audit-container">
         <!-- Content loaded via JavaScript -->
       </div>
     </div>
     
-    <!-- 5. PANEL: IMPORTAÃ‡ÃƒO SIMPLIFICADA -->
+    <!-- 5. PANEL: IMPORTAÃƒâ€¡ÃƒÆ’O SIMPLIFICADA -->
     <div id="panel-import" class="dashboard-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
-          <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">Importação com Inteligência Artificial</h2>
-          <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Faça upload do seu extrato e deixe a IA categorizar magicamente.</p>
+          <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">ImportaÃ§Ã£o com InteligÃªncia Artificial</h2>
+          <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">FaÃ§a upload do seu extrato e deixe a IA categorizar magicamente.</p>
         </div>
       </div>
 
@@ -382,7 +382,7 @@
 
       <div id="import-result-container" style="display: none; padding: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color);">
-          <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-list-check" style="color: var(--color-income);"></i> Resultado da Extração</h3>
+          <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-list-check" style="color: var(--color-income);"></i> Resultado da ExtraÃ§Ã£o</h3>
           <div style="display: flex; gap: 10px;">
             <button id="btnCategorizarIA" style="background: linear-gradient(135deg, var(--color-accent), #3b82f6); color: #fff; border: none; padding: 10px 24px; border-radius: 50px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: none; align-items: center; gap: 8px; box-shadow: 0 6px 20px var(--color-accent-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
               <i class="fas fa-magic"></i> Categorizar com IA
@@ -392,7 +392,7 @@
         <div id="import-result-content" style="padding: 1.5rem;"></div>
         <div style="display: flex; justify-content: flex-end; padding: 1.5rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
           <button id="btnSalvarImportacaoNova" style="background: linear-gradient(135deg, var(--color-income), #059669); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-income-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-            <i class="fas fa-save"></i> Salvar Lançamentos
+            Ir para o Passo 3 <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
@@ -401,7 +401,7 @@
       <!-- 8. PANEL: SETTINGS -->
       <div id="panel-settings" class="dashboard-panel">
         <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
-          <i class="fas fa-cog" style="color: var(--text-muted);"></i> ConfiguraÃ§Ãµes do Sistema
+          <i class="fas fa-cog" style="color: var(--text-muted);"></i> ConfiguraÃƒÂ§ÃƒÂµes do Sistema
         </h2>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
@@ -411,9 +411,9 @@
               <div style="background: rgba(99, 102, 241, 0.1); color: var(--color-primary); padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-tags" style="font-size: 1.5rem;"></i>
               </div>
-              <h3 style="margin: 0; font-size: 1.2rem;">DicionÃ¡rio de Categorias</h3>
+              <h3 style="margin: 0; font-size: 1.2rem;">DicionÃƒÂ¡rio de Categorias</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Gerencie as categorias e subcategorias utilizadas pela InteligÃªncia Artificial. Adicione novas regras e treine o modelo.</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Gerencie as categorias e subcategorias utilizadas pela InteligÃƒÂªncia Artificial. Adicione novas regras e treine o modelo.</p>
           </div>
 
           <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-warning)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-audit\']').click();">
@@ -423,7 +423,7 @@
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Auditoria de Dados</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Analise inconsistÃªncias financeiras, transaÃ§Ãµes nÃ£o mapeadas e verifique logs avanÃ§ados do sistema de importaÃ§Ã£o.</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Analise inconsistÃƒÂªncias financeiras, transaÃƒÂ§ÃƒÂµes nÃƒÂ£o mapeadas e verifique logs avanÃƒÂ§ados do sistema de importaÃƒÂ§ÃƒÂ£o.</p>
           </div>
 
           <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-income)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-accounts-edit\']').click();">
@@ -433,7 +433,7 @@
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Gerenciador de Contas</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Adicione, edite ou remova as contas bancÃ¡rias e cartÃµes de crÃ©dito reconhecidos pela InteligÃªncia Artificial.</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Adicione, edite ou remova as contas bancÃƒÂ¡rias e cartÃƒÂµes de crÃƒÂ©dito reconhecidos pela InteligÃƒÂªncia Artificial.</p>
           </div>
           
         </div>
@@ -443,7 +443,7 @@
       <div id="panel-categories" class="dashboard-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-tags" style="color: var(--color-primary);"></i> DicionÃ¡rio de Categorias
+            <i class="fas fa-tags" style="color: var(--color-primary);"></i> DicionÃƒÂ¡rio de Categorias
           </h2>
           <div style="display: flex; gap: 1rem;">
             <button class="btn btn-secondary" onclick="document.querySelector('.nav-item[data-target=\'panel-settings\']').click();"><i class="fas fa-arrow-left"></i> Voltar</button>
@@ -468,7 +468,7 @@
             <button class="btn btn-primary" onclick="window.saveConfigsToServer()"><i class="fas fa-cloud-upload-alt"></i> Salvar na Nuvem</button>
           </div>
         </div>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Adicione ou remova contas bancÃ¡rias e cartÃµes. Estas contas servem como opÃ§Ãµes para a IA e para os filtros do dashboard.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Adicione ou remova contas bancÃƒÂ¡rias e cartÃƒÂµes. Estas contas servem como opÃƒÂ§ÃƒÂµes para a IA e para os filtros do dashboard.</p>
         
         <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; max-width: 600px;">
           <ul id="accounts-editor-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.8rem;">
@@ -481,8 +481,8 @@
         </div>
       </div>
       
-      <!-- Os painÃ©is ocultados continuam no DOM para serem chamados via click interno do botÃ£o -->
-      <!-- Ocultos do menu lateral mas acessÃ­veis -->
+      <!-- Os painÃƒÂ©is ocultados continuam no DOM para serem chamados via click interno do botÃƒÂ£o -->
+      <!-- Ocultos do menu lateral mas acessÃƒÂ­veis -->
       <a class="nav-item" data-target="panel-categories" style="display:none;"></a>
       <a class="nav-item" data-target="panel-accounts-edit" style="display:none;"></a>
       <a class="nav-item" data-target="panel-audit" style="display:none;"></a>
@@ -493,7 +493,7 @@
   <div id="transaction-modal" class="modal-overlay">
     <div class="modal-content card">
       <div class="modal-header">
-        <h3 id="modal-title">TransaÃ§Ãµes</h3>
+        <h3 id="modal-title">TransaÃƒÂ§ÃƒÂµes</h3>
         <button id="modal-close-btn" class="modal-close">&times;</button>
       </div>
       <div class="modal-table-container">
@@ -502,7 +502,7 @@
             <tr>
               <th>Data</th>
               <th>Conta</th>
-              <th>DescriÃ§Ã£o</th>
+              <th>DescriÃƒÂ§ÃƒÂ£o</th>
               <th>Categoria</th>
               <th>Valor</th>
             </tr>
@@ -531,12 +531,12 @@
   <!-- Feedback Modal -->
   <div id="feedbackModal" style="display: none; position: fixed; bottom: 85px; right: 20px; width: 320px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; overflow: hidden; animation: slideUp 0.3s ease-out;">
     <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; padding: 12px 15px; font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-      <span>Caixinha de Ideias ðŸ’¡</span>
+      <span>Caixinha de Ideias Ã°Å¸â€™Â¡</span>
       <i class="fas fa-times" id="btnCloseFeedback" style="cursor: pointer; color: #e2e8f0; transition: color 0.2s;" onmouseover="this.style.color='#ffffff';" onmouseout="this.style.color='#e2e8f0';"></i>
     </div>
     <div style="padding: 15px; background: #1e293b;">
       <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 0; margin-bottom: 12px; line-height: 1.4;">Tem alguma ideia genial para melhorar o sistema? Conta pra mim, eu leio tudo!</p>
-      <textarea id="feedbackText" placeholder="Digite sua sugestÃ£o aqui..." style="width: 100%; height: 90px; padding: 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: #0f172a; color: #f8fafc; resize: none; font-size: 0.9rem; margin-bottom: 15px; font-family: inherit; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#818cf8';" onblur="this.style.borderColor='rgba(255,255,255,0.15)';"></textarea>
+      <textarea id="feedbackText" placeholder="Digite sua sugestÃƒÂ£o aqui..." style="width: 100%; height: 90px; padding: 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: #0f172a; color: #f8fafc; resize: none; font-size: 0.9rem; margin-bottom: 15px; font-family: inherit; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#818cf8';" onblur="this.style.borderColor='rgba(255,255,255,0.15)';"></textarea>
       <button id="btnSubmitFeedback" style="width: 100%; padding: 12px; background: #818cf8; color: #0f172a; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.95rem; transition: background 0.2s, transform 0.1s;" onmouseover="this.style.background='#6366f1';" onmouseout="this.style.background='#818cf8';" onmousedown="this.style.transform='scale(0.98)';" onmouseup="this.style.transform='scale(1)';">
         Enviar Ideia
       </button>
@@ -579,7 +579,9 @@
   </script>
 </body>
 </html>
-<!-- VersÃ£o: 11/06/2026 20:20 (IntegraÃ§Ã£o Gem TSV) -->
+<!-- VersÃƒÂ£o: 11/06/2026 20:20 (IntegraÃƒÂ§ÃƒÂ£o Gem TSV) -->
+
+
 
 
 
