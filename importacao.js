@@ -118,7 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
       transacoes.forEach(t => {
         t.categoria = '';
         t.subcategoria = '';
-        t.duplicado = (t.duplicado === true || String(t.duplicado).toLowerCase() === 'sim');
+        let dupVal = t.duplicado !== undefined ? t.duplicado : (t.DUPLICADO !== undefined ? t.DUPLICADO : t.Duplicado);
+        t.duplicado = (dupVal === true || String(dupVal).toLowerCase() === 'sim');
       });
 
       transacoesParaSalvar = transacoes;
@@ -196,7 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const unicas = [];
       
       transacoes.forEach((t, index) => {
-        t.duplicado = (t.duplicado === true || String(t.duplicado).toLowerCase() === 'sim');
+        let dupVal = t.duplicado !== undefined ? t.duplicado : (t.DUPLICADO !== undefined ? t.DUPLICADO : t.Duplicado);
+        t.duplicado = (dupVal === true || String(dupVal).toLowerCase() === 'sim');
         if (t.duplicado) {
           duplicadas.push({t, index});
         } else {
