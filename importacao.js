@@ -380,6 +380,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+      html += `
+        <details style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
+          <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-code"></i> Inspecionar JSON bruto da IA (Debug)
+          </summary>
+          <pre style="margin-top: 10px; padding: 10px; background: #000; color: #0f0; font-size: 0.75rem; overflow-x: auto; max-height: 200px;">${JSON.stringify(transacoes, null, 2)}</pre>
+        </details>
+      `;
+
     resultContent.innerHTML = html;
     resultContainer.style.display = 'block';
 
@@ -725,6 +734,15 @@ function renderizarPasso3(txs) {
   html += generateTable(txsTransfers, 'Transferências (Origem e Destino)', 'var(--color-warning)', 'fa-exchange-alt');
   html += generateTable(txsParcels, 'Projeção de Parcelamentos', 'var(--color-income)', 'fa-layer-group');
   
+  html += `
+        <details style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
+          <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-code"></i> Inspecionar JSON bruto recebido da IA (Debug)
+          </summary>
+          <pre style="margin-top: 10px; padding: 10px; background: #000; color: #0f0; font-size: 0.75rem; overflow-x: auto; max-height: 200px;">${JSON.stringify(txs, null, 2)}</pre>
+        </details>
+      `;
+
   html += `</div>`;
   passo3Div.innerHTML = html;
   passo3Div.style.display = 'block';
