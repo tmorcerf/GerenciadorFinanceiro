@@ -616,26 +616,37 @@ function renderizarPasso3(txs) {
   }
   
   let contasOptions = '<option value="">-- Selecione a Contrapartida --</option>';
-  const contasArr = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+  const contasArr = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : (window.dadosFinanceiros && window.dadosFinanceiros.contas ? window.dadosFinanceiros.contas : []);
   if (contasArr && Array.isArray(contasArr)) {
      contasArr.forEach(c => {
-        contasOptions += `<option value="` + c.nome + `">` + c.nome + `</option>`;
+        if (c.nome) {
+           contasOptions += `<option value="` + c.nome + `">` + c.nome + `</option>`;
+        }
      });
   }
 
+  const txsTransfers = txs.filter(t => t.isPasso3Original || t.isPasso3Mirror);
+  const txsParcels = txs.filter(t => t.isPasso3ParcelaOriginal || t.isPasso3ParcelaFutura);
+
   let html = `<div style="padding: 1.5rem; background: linear-gradient(145deg, rgba(30,37,51,0.6) 0%, var(--bg-card) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
       <h4 style="margin: 0 0 1.2rem 0; color: var(--color-accent); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
-        <i class="fas fa-random"></i> Passo 3: TransferÃªncias e Parcelamentos
+        <i class="fas fa-random"></i> Passo 3: Revisão Final
       </h4>
       <p style="color:var(--text-secondary); margin-bottom:1rem; font-size:0.9rem;">
-        Abaixo estÃ£o os lanÃ§amentos que exigem sua atenÃ§Ã£o especial. Para transferÃªncias, selecione a conta de destino/origem. 
-        Para parcelamentos, as faturas futuras jÃ¡ foram projetadas.
-      </p>
-      
-      <div style="overflow-x:auto; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+        Abaixo estão os lançamentos que exigem sua atenção especial.
+      </p>`;
+
+  const generateTable = (list, title, titleColor, icon) => {
+      if (list.length === 0) return '';
+      let tableHtml = `
+      <h5 style="margin: 1.5rem 0 1rem 0; color: ` + titleColor + `; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
+        <i class="fas ` + icon + `"></i> ` + title + `
+      </h5>
+      <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 2rem;">
         <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
           <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
             <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
+              <th style="padding:8px; display:none;">COD</th>
               <th style="padding:8px;">TIPO</th>
               <th style="padding:8px;">DATA</th>
               <th style="padding:8px;">VENCIMENTO</th>
@@ -647,45 +658,54 @@ function renderizarPasso3(txs) {
           </thead>
           <tbody>`;
           
-  txs.forEach((t, index) => {
-      let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
+      list.forEach((t) => {
+          const idxOriginal = txs.indexOf(t);
+          let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
+          
+          let tipoBadge = '';
+          let bgStyle = "transparent";
+          
+          if (t.isPasso3Original) {
+              tipoBadge = '<span style="background:var(--color-accent); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Origem (TR)</span>';
+          } else if (t.isPasso3Mirror) {
+              tipoBadge = '<span style="background:var(--color-warning); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Destino (TR)</span>';
+              bgStyle = "rgba(255,193,7,0.05)";
+          } else if (t.isPasso3ParcelaOriginal) {
+              tipoBadge = `<span style="background:var(--color-income); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Parcela ` + t.parcelaAtual + `/` + t.totalParcelas + `</span>`;
+          } else if (t.isPasso3ParcelaFutura) {
+              tipoBadge = `<span style="background:var(--text-muted); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Projeção ` + t.parcelaAtual + `/` + t.totalParcelas + `</span>`;
+              bgStyle = "rgba(255,255,255,0.02)";
+          }
+    
+          let contaContent = t.conta || '';
+          if (t.isPasso3Mirror) {
+              contaContent = `<select class="import-passo3-conta" data-index="` + idxOriginal + `" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width:150px;">
+                  ` + contasOptions + `
+              </select>`;
+          } else {
+              contaContent = `<span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);"><i class="fas fa-university"></i> ` + (t.conta||'') + `</span>`;
+          }
+    
+          tableHtml += `<tr style="border-bottom: 1px solid var(--border-color); background:`+bgStyle+`;">
+              <td style="padding:12px 8px; display:none;">` + (t.originalCod || t.cod || '') + `</td>
+              <td style="padding:12px 8px;">` + tipoBadge + `</td>
+              <td style="padding:12px 8px;">` + (t.data || '') + `</td>
+              <td style="padding:12px 8px;">` + (t.vencimento || '') + `</td>
+              <td style="padding:12px 8px;">` + contaContent + `</td>
+              <td style="padding:12px 8px;">` + (t.descricao || '') + `</td>
+              <td style="padding:12px 8px; color: `+valColor+`; font-weight: 600;">` + (t.valor || '') + `</td>
+              <td style="padding:12px 8px;">` + (t.categoria || '') + `</td>
+          </tr>`;
+      });
       
-      let tipoBadge = '';
-      let bgStyle = "transparent";
-      
-      if (t.isPasso3Original) {
-          tipoBadge = '<span style="background:var(--color-accent); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Origem (TR)</span>';
-      } else if (t.isPasso3Mirror) {
-          tipoBadge = '<span style="background:var(--color-warning); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Destino (TR)</span>';
-          bgStyle = "rgba(255,193,7,0.05)";
-      } else if (t.isPasso3ParcelaOriginal) {
-          tipoBadge = `<span style="background:var(--color-income); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">Parcela ${t.parcelaAtual}/${t.totalParcelas}</span>`;
-      } else if (t.isPasso3ParcelaFutura) {
-          tipoBadge = `<span style="background:var(--text-muted); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">ProjeÃ§Ã£o ${t.parcelaAtual}/${t.totalParcelas}</span>`;
-          bgStyle = "rgba(255,255,255,0.02)";
-      }
+      tableHtml += `</tbody></table></div>`;
+      return tableHtml;
+  };
 
-      let contaContent = t.conta || '';
-      if (t.isPasso3Mirror) {
-          contaContent = `<select class="import-passo3-conta" data-index="` + index + `" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:4px; width:150px;">
-              ` + contasOptions + `
-          </select>`;
-      } else {
-          contaContent = `<span style="display:inline-block; padding:3px 8px; border-radius:12px; background:rgba(255,255,255,0.05); color:var(--text-secondary);"><i class="fas fa-university"></i> ` + (t.conta||'') + `</span>`;
-      }
-
-      html += `<tr style="border-bottom: 1px solid var(--border-color); background:`+bgStyle+`;">
-          <td style="padding:12px 8px;">` + tipoBadge + `</td>
-          <td style="padding:12px 8px;">` + (t.data || '') + `</td>
-          <td style="padding:12px 8px;">` + (t.vencimento || '') + `</td>
-          <td style="padding:12px 8px;">` + contaContent + `</td>
-          <td style="padding:12px 8px;">` + (t.descricao || '') + `</td>
-          <td style="padding:12px 8px; color: `+valColor+`; font-weight: 600;">` + (t.valor || '') + `</td>
-          <td style="padding:12px 8px;">` + (t.categoria || '') + `</td>
-      </tr>`;
-  });
+  html += generateTable(txsTransfers, 'Transferências (Origem e Destino)', 'var(--color-warning)', 'fa-exchange-alt');
+  html += generateTable(txsParcels, 'Projeção de Parcelamentos', 'var(--color-income)', 'fa-layer-group');
   
-  html += `</tbody></table></div></div>`;
+  html += `</div>`;
   passo3Div.innerHTML = html;
   passo3Div.style.display = 'block';
   
