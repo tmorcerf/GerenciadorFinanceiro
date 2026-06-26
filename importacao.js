@@ -118,8 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
       transacoes.forEach(t => {
         t.categoria = '';
         t.subcategoria = '';
-        let dupVal = t.duplicado !== undefined ? t.duplicado : (t.DUPLICADO !== undefined ? t.DUPLICADO : t.Duplicado);
-        t.duplicado = (dupVal === true || String(dupVal).toLowerCase() === 'sim');
+        let dupVal = false;
+        if (t) {
+          for (let key in t) {
+            if (key.toLowerCase().includes('duplicad')) {
+              dupVal = t[key];
+              break;
+            }
+          }
+        }
+        t.duplicado = (dupVal === true || String(dupVal).toLowerCase().trim() === 'sim');
       });
 
       transacoesParaSalvar = transacoes;
@@ -197,8 +205,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const unicas = [];
       
       transacoes.forEach((t, index) => {
-        let dupVal = t.duplicado !== undefined ? t.duplicado : (t.DUPLICADO !== undefined ? t.DUPLICADO : t.Duplicado);
-        t.duplicado = (dupVal === true || String(dupVal).toLowerCase() === 'sim');
+        let dupVal = false;
+        if (t) {
+          for (let key in t) {
+            if (key.toLowerCase().includes('duplicad')) {
+              dupVal = t[key];
+              break;
+            }
+          }
+        }
+        t.duplicado = (dupVal === true || String(dupVal).toLowerCase().trim() === 'sim');
+        
         if (t.duplicado) {
           duplicadas.push({t, index});
         } else {
