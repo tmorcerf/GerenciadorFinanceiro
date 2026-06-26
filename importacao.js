@@ -74,8 +74,21 @@ document.addEventListener('DOMContentLoaded', () => {
       // Utiliza a função global existente no app.js para ler o arquivo (PDF/CSV)
       const fileData = await window.extractFileContent(file);
 
-      statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-warning);"></i> Extraindo inteligência dos dados (aguarde até 30s)...';
+      const phrases = [
+        "Extraindo inteligência dos dados (aguarde até 30s)...",
+        "Assustado com esse gasto aqui...",
+        "Identificando uma compra suspeita...",
+        "Tirando tudo que deu errado, o resto deu certo...",
+        "Alguém segura a IA que ela alucinou..."
+      ];
+      let pIdx = 0;
+      statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-warning);"></i> ' + phrases[pIdx];
       statusBox.style.borderLeftColor = 'var(--color-warning)';
+      
+      window.loadingIntervalIA = setInterval(() => {
+        pIdx = (pIdx + 1) % phrases.length;
+        statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-warning);"></i> ' + phrases[pIdx];
+      }, 3500);
 
       // Requisição para o backend
       // APPS_SCRIPT_WEBAPP_URL is defined in app.js (global)
@@ -140,17 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
       renderizarTabelaDebug(transacoes, cabecalho);
       
 
-      if (transacoes.length > 0) {
-        btnSalvar.style.display = 'inline-block';
-        const btnCategorizar = document.getElementById('btnCategorizarIA');
-        if (btnCategorizar) btnCategorizar.style.display = 'inline-block';
-      }
-
     } catch (err) {
       console.error(err);
       statusBox.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--color-expense);"></i> Erro: ${err.message}`;
       statusBox.style.borderLeftColor = 'var(--color-expense)';
     } finally {
+      if (window.loadingIntervalIA) {
+        clearInterval(window.loadingIntervalIA);
+        window.loadingIntervalIA = null;
+      }
       // Limpa o input para permitir enviar o mesmo arquivo novamente se necessário
       uploadInput.value = '';
     }
@@ -268,7 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (unicas.length > 0) {
         html += `
-          <strong style="color:var(--text-secondary); display:block; margin-bottom: 6px;">Transações Únicas (${unicas.length}):</strong>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;" class="import-unicas-header">
+            <strong style="color:var(--text-secondary);">Transações Únicas (${unicas.length}):</strong>
+          </div>
           <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
             <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
               <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
@@ -390,6 +403,44 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
     resultContent.innerHTML = html;
+    
+    // Relocate btnCategorizarIA next to Transações Únicas
+    const unicasHeader = resultContent.querySelector('.import-unicas-header');
+    const btnCat = document.getElementById('btnCategorizarIA');
+    if (unicasHeader && btnCat) {
+      btnCat.style.display = 'inline-flex';
+      unicasHeader.appendChild(btnCat);
+    }
+
+    // Add btnSalvar (Ir para Passo 3) to the bottom of Passo 2
+    if (btnSalvar) {
+      btnSalvar.style.display = 'inline-block';
+      const actionsFooter = document.createElement('div');
+      actionsFooter.style.marginTop = '20px';
+      actionsFooter.style.textAlign = 'right';
+      actionsFooter.appendChild(btnSalvar);
+      resultContent.appendChild(actionsFooter);
+    }
+
+    function validarPasso2() {
+      const selectCats = document.querySelectorAll('.import-sel-cat');
+      let todosPreenchidos = true;
+      selectCats.forEach(s => {
+        if (!s.value) todosPreenchidos = false;
+      });
+      if (btnSalvar && btnSalvar.innerHTML.includes('Passo 3')) {
+        btnSalvar.disabled = !todosPreenchidos;
+        if (!todosPreenchidos) {
+          btnSalvar.style.opacity = '0.5';
+          btnSalvar.style.cursor = 'not-allowed';
+        } else {
+          btnSalvar.style.opacity = '1';
+          btnSalvar.style.cursor = 'pointer';
+        }
+      }
+    }
+    validarPasso2();
+
     resultContainer.style.display = 'block';
 
     // Adicionar listener para atualizar subcategorias dinamicamente se o usuario mudar a categoria
@@ -398,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idx = e.target.getAttribute('data-index');
         const newCat = e.target.value;
         transacoesParaSalvar[idx].categoria = newCat;
+        validarPasso2();
         
         transacoesParaSalvar[idx].subcategoria = ''; // reset subcat
         
@@ -745,6 +797,37 @@ function renderizarPasso3(txs) {
 
   html += `</div>`;
   passo3Div.innerHTML = html;
+
+  function validarPasso3() {
+    const selectContas = document.querySelectorAll('.import-passo3-conta');
+    let todosPreenchidos = true;
+    selectContas.forEach(s => {
+      if (!s.value) todosPreenchidos = false;
+    });
+    const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
+    if (btnSalvar && btnSalvar.innerHTML.includes('Salvar TUDO')) {
+      btnSalvar.disabled = !todosPreenchidos;
+      if (!todosPreenchidos) {
+        btnSalvar.style.opacity = '0.5';
+        btnSalvar.style.cursor = 'not-allowed';
+      } else {
+        btnSalvar.style.opacity = '1';
+        btnSalvar.style.cursor = 'pointer';
+      }
+    }
+  }
+
+  const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
+  if (btnSalvar) {
+    btnSalvar.style.display = 'inline-block';
+    const actionsFooter = document.createElement('div');
+    actionsFooter.style.marginTop = '20px';
+    actionsFooter.style.textAlign = 'right';
+    actionsFooter.appendChild(btnSalvar);
+    passo3Div.appendChild(actionsFooter);
+  }
+  validarPasso3();
+
   passo3Div.style.display = 'block';
   
   // Attach events
@@ -752,6 +835,7 @@ function renderizarPasso3(txs) {
       sel.addEventListener('change', (e) => {
           const idx = e.target.getAttribute('data-index');
           txs[idx].conta = e.target.value;
+          validarPasso3();
       });
   });
 }
