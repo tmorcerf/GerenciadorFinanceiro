@@ -428,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
       selectCats.forEach(s => {
         if (!s.value) todosPreenchidos = false;
       });
-      if (btnSalvar && btnSalvar.innerHTML.includes('Passo 3')) {
+      if (btnSalvar && !isPasso3Ativo) {
         btnSalvar.disabled = !todosPreenchidos;
         if (!todosPreenchidos) {
           btnSalvar.style.opacity = '0.5';
@@ -805,7 +805,7 @@ function renderizarPasso3(txs) {
       if (!s.value) todosPreenchidos = false;
     });
     const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
-    if (btnSalvar && btnSalvar.innerHTML.includes('Salvar TUDO')) {
+    if (btnSalvar) {
       btnSalvar.disabled = !todosPreenchidos;
       if (!todosPreenchidos) {
         btnSalvar.style.opacity = '0.5';
