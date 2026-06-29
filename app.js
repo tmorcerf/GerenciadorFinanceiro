@@ -882,7 +882,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const cleanData = { ...d };
             // Recalcular isSpecial baseado no estado atual do checkbox
             const catAtual = d.categoria || '';
-            const isTransferCat = catAtual.toLowerCase().includes('transfer') || catAtual === 'Investimentos' || catAtual === 'Pagamento de Cartao';
+            const isTransferCat = catAtual.toLowerCase().includes('transfer') || catAtual === 'Investimentos' || catAtual === 'Pagamento de Cartão';
             const isInstallment = d.descricao && /\b\d{1,2}\s*\/\s*\d{1,2}\b/.test(d.descricao);
             const computedSpecial = d.isSpecial !== undefined ? d.isSpecial : (isTransferCat || isInstallment);
             cleanData.finalIsSpecial = computedSpecial;
@@ -967,7 +967,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               // So projeta parcelas NOVAS (01/xx)
               if (parcAtual !== 1 || parcTotal <= 1) return;
               
-              // Buscar o dia_vencimento da conta do cartao
+              // Buscar o dia_vencimento da conta do cartão
               const contaObj = (dadosFinanceiros.contas || []).find(c => c.nome === t.conta);
               const diaVenc = (contaObj && contaObj.dia_vencimento) ? contaObj.dia_vencimento : 15;
               
@@ -1010,7 +1010,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             const contas = dadosFinanceiros.contas || [];
             const original = contas.find(c => c.nome === contaOriginal);
             if (!original) return '';
-            // Se e Cartao de Credito, buscar Conta Corrente da mesma instituicao
+            // Se e Cartão de Credito, buscar Conta Corrente da mesma instituicao
             if (original.tipo && (original.tipo.toLowerCase().includes('cart') || original.tipo.toLowerCase().includes('credito'))) {
               const corrente = contas.find(c => c.instituicao === original.instituicao && c.tipo === 'Corrente');
               return corrente ? corrente.nome : '';
@@ -1322,8 +1322,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     // Bibliotecas de Conhecimento por Banco
     const BANK_LIBRARIES = {
       "banco_do_brasil": "Regras Banco do Brasil (BB) Conta Corrente: Geralmente possui colunas 'Data', 'Dependncia', 'Historico', 'Data do Balancete', 'Numero do Documento' e 'Valor'. Valores podem estar com o sinal de C (Credito) ou D (Debito) ao lado, ou negativo para sada. Cuidado com o cabecalho complexo.",
-      "bb_cartao": "Regras Banco do Brasil (BB) Cartao: O formato da fatura difere da conta corrente. Identifique as compras e separe entradas e sadas corretamente.",
-      "sicredi_cartao": "Regras Cartao Sicredi: Fique muito atento! A informacao da parcela da compra (ex: 01/03, 02/05) fica em uma coluna separada chamada 'Parcela', geralmente apos a Descricao. Voce DEVE EXTRITAMENTE concatenar essa parcela na 'descricao' final da transacao (ex: 'Loja XYZ 01/03') para que o sistema saiba que e parcelado. Nao perca esse dado!",
+      "bb_cartão": "Regras Banco do Brasil (BB) Cartão: O formato da fatura difere da conta corrente. Identifique as compras e separe entradas e sadas corretamente.",
+      "sicredi_cartão": "Regras Cartão Sicredi: Fique muito atento! A informacao da parcela da compra (ex: 01/03, 02/05) fica em uma coluna separada chamada 'Parcela', geralmente apos a Descricao. Voce DEVE EXTRITAMENTE concatenar essa parcela na 'descricao' final da transacao (ex: 'Loja XYZ 01/03') para que o sistema saiba que e parcelado. Nao perca esse dado!",
       "sicredi": "Regras Banco Sicredi Conta: Atente-se as colunas de data e historico.",
       "default": "Sem regras especficas mapeadas. Faa a deduo logica do formato das colunas. IMPORTANTE: Se houver uma coluna de 'Parcela' (ex: 01/05), voce DEVE anexar isso na descricao da transacao."
     };
@@ -1333,13 +1333,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const lowerText = csvText.toLowerCase().substring(0, 1000);
 
       if (lowerName.includes('sicredi') || lowerText.includes('sicredi')) {
-          if (lowerName.includes('fatura') || lowerName.includes('cartao') || lowerText.includes('fatura') || lowerText.includes('cartao')) {
-              return BANK_LIBRARIES["sicredi_cartao"];
+          if (lowerName.includes('fatura') || lowerName.includes('cartão') || lowerText.includes('fatura') || lowerText.includes('cartão')) {
+              return BANK_LIBRARIES["sicredi_cartão"];
           }
           return BANK_LIBRARIES["sicredi"];
       }
 
-      if ((lowerName.includes('fatura') || lowerName.includes('cartao')) && (lowerName.includes('bb') || lowerText.includes('banco do brasil'))) return BANK_LIBRARIES["bb_cartao"];
+      if ((lowerName.includes('fatura') || lowerName.includes('cartão')) && (lowerName.includes('bb') || lowerText.includes('banco do brasil'))) return BANK_LIBRARIES["bb_cartão"];
       if (lowerName.includes('bb') || lowerText.includes('banco do brasil')) return BANK_LIBRARIES["banco_do_brasil"];
       
       return BANK_LIBRARIES["default"];
@@ -1778,12 +1778,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const container = document.getElementById('executive-summary-content');
       if (!container) return;
 
-      let saldoCC = 0, saldoInv = 0, saldoCartaoes = 0;
+      let saldoCC = 0, saldoInv = 0, saldoCartãoes = 0;
 
       dadosFinanceiros.contas.forEach(c => {
         const tipo = (c.tipo || '').toLowerCase();
         if (tipo.includes('cart') || tipo.includes('credito') || tipo.includes('credito')) {
-          saldoCartaoes += c.saldo;
+          saldoCartãoes += c.saldo;
         } else if (tipo.includes('investimento') || tipo.includes('aplicao') || tipo.includes('corretora')) {
           saldoInv += c.saldo;
         } else {
@@ -1791,7 +1791,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
       });
 
-      const patrimonio = saldoCC + saldoInv + saldoCartaoes;
+      const patrimonio = saldoCC + saldoInv + saldoCartãoes;
       const alertas = dadosFinanceiros.auditoria ? dadosFinanceiros.auditoria.length : 0;
       const pendentes = dadosFinanceiros.importacoes ? dadosFinanceiros.importacoes.length : 0;
 
@@ -1801,13 +1801,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <div class="exec-card-value" style="color:#8b5cf6;">${formatBRL(saldoInv)}</div>
           <div class="exec-card-icon">??</div>
         </div>
-        <div class="exec-card cartaoes" data-action="cartaoes">
-          <div class="exec-card-label">Cartes de Credito</div>
-          <div class="exec-card-value" style="color:var(--color-expense);">${formatBRL(Math.abs(saldoCartaoes))}</div>
+        <div class="exec-card cartões" data-action="cartões">
+          <div class="exec-card-label">Cartões de Credito</div>
+          <div class="exec-card-value" style="color:var(--color-expense);">${formatBRL(Math.abs(saldoCartãoes))}</div>
           <div class="exec-card-icon">??</div>
         </div>
         <div class="exec-card patrimonio" data-action="patrimonio">
-          <div class="exec-card-label">Patrimnio Total</div>
+          <div class="exec-card-label">Patrimônio Total</div>
           <div class="exec-card-value" style="background:linear-gradient(to right, var(--color-income), #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${formatBRL(patrimonio)}</div>
           <div class="exec-card-icon">??</div>
         </div>
@@ -1827,7 +1827,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       setTimeout(() => {
         const actionMap = {
           'inv': () => window.showContasModal('inv'),
-          'cartaoes': () => window.showCartaoesModal(),
+          'cartões': () => window.showCartãoesModal(),
           'patrimonio': () => window.showPatrimonioModal(),
           'audit': () => window.showAuditoriaModal(),
           'imports': () => window.goToImportacoes()
@@ -2329,16 +2329,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const groups = {
         'Contas Correntes': [],
-        'Cartes de Credito': [],
+        'Cartões de Credito': [],
         'Investimentos': []
       };
-      let totalCC = 0, totalCartaoes = 0, totalInv = 0;
+      let totalCC = 0, totalCartãoes = 0, totalInv = 0;
 
       dadosFinanceiros.contas.forEach(c => {
         const t = (c.tipo || '').toLowerCase();
         if (t.includes('cart') || t.includes('credito') || t.includes('credito')) {
-          groups['Cartes de Credito'].push(c);
-          totalCartaoes += c.saldo;
+          groups['Cartões de Credito'].push(c);
+          totalCartãoes += c.saldo;
         } else if (t.includes('investimento') || t.includes('aplicao') || t.includes('corretora') || t.includes('aplicacao') || t.includes('poupana') || t.includes('poupanca')) {
           groups['Investimentos'].push(c);
           totalInv += c.saldo;
@@ -2348,7 +2348,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
       });
 
-      const patrimonio = totalCC + totalInv + totalCartaoes;
+      const patrimonio = totalCC + totalInv + totalCartãoes;
 
       const now = new Date();
       now.setHours(0,0,0,0);
@@ -2412,7 +2412,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem;">
           <div class="card bg-card" id="card-composicao-saldos" style="cursor:pointer; border-left: 4px solid var(--color-accent);">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">Composio de Saldos</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">Composição de Saldos</div>
             <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.9rem;">
               <span>Correntes</span><span style="color:var(--text-primary);">${formatBRL(totalCC)}</span>
             </div>
@@ -2420,10 +2420,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <span>Investimentos</span><span style="color:var(--text-primary);">${formatBRL(totalInv)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:0.8rem; font-size:0.9rem;">
-              <span>Cartes</span><span style="color:var(--color-expense);">${formatBRL(totalCartaoes)}</span>
+              <span>Cartões</span><span style="color:var(--color-expense);">${formatBRL(totalCartãoes)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem; font-weight:700;">
-              <span>Total (Lquido)</span><span style="color:var(--color-income); font-size:1.1rem;">${formatBRL(patrimonio)}</span>
+              <span>Total (Líquido)</span><span style="color:var(--color-income); font-size:1.1rem;">${formatBRL(patrimonio)}</span>
             </div>
           </div>
           
@@ -2439,28 +2439,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       const iconMap = {
         'Contas Correntes': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11m16-11v11M8 14v3m4-3v3m4-3v3"/></svg>',
-        'Cartes de Credito': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>'
+        'Cartões de Credito': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>'
       };
 
       const colorMap = {
         'Contas Correntes': 'income',
-        'Cartes de Credito': 'expense',
+        'Cartões de Credito': 'expense',
         'Investimentos': 'accent'
       };
 
       const subtotals = {
         'Contas Correntes': totalCC,
-        'Cartes de Credito': totalCartaoes,
+        'Cartões de Credito': totalCartãoes,
         'Investimentos': totalInv
       };
 
       const subtotalColors = {
         'Contas Correntes': 'var(--color-income)',
-        'Cartes de Credito': 'var(--color-expense)',
+        'Cartões de Credito': 'var(--color-expense)',
         'Investimentos': 'var(--color-accent)'
       };
 
-      for (const groupName of ['Contas Correntes', 'Cartes de Credito', 'Investimentos']) {
+      for (const groupName of ['Contas Correntes', 'Cartões de Credito', 'Investimentos']) {
         const contas = groups[groupName];
         if (contas.length === 0) continue;
 
@@ -2484,7 +2484,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
-          const isCC = groupName === 'Cartes de Credito';
+          const isCC = groupName === 'Cartões de Credito';
           
           let faturaAtual = 0;
           let faturaProxima = 0;
@@ -3124,7 +3124,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return false;
       });
 
-      let title = type === 'rendimentos' ? 'Rendimento Lquido' : type === 'aportes' ? 'Aportes do Periodo' : 'Resgates do Periodo';
+      let title = type === 'rendimentos' ? 'Rendimento Líquido' : type === 'aportes' ? 'Aportes do Periodo' : 'Resgates do Periodo';
 
       if (itemes.length === 0) {
         showGlassModal(title, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado para este tipo nao periodo.</p>');
@@ -3208,10 +3208,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       showGlassModal(`Extrato: ${nomeConta}`, html);
     };
 
-    // NEW: Show cartaoes de credito modal
-    window.showCartaoesModal = function() {
+    // NEW: Show cartões de credito modal
+    window.showCartãoesModal = function() {
       let total = 0;
-      const cartaoes = dadosFinanceiros.contas.filter(c => {
+      const cartões = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
         if (t.includes('cart') || t.includes('credito') || t.includes('credito')) {
           total += c.saldo;
@@ -3220,15 +3220,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return false;
       }).sort((a,b) => a.saldo - b.saldo);
 
-      if (cartaoes.length === 0) {
-        showGlassModal('Cartes de Credito', '<p style="color:var(--text-muted); text-align:center;">Nenhum cartao cadastrado.</p>');
+      if (cartões.length === 0) {
+        showGlassModal('Cartões de Credito', '<p style="color:var(--text-muted); text-align:center;">Nenhum cartão cadastrado.</p>');
         return;
       }
 
       const color = 'var(--color-expense)';
       let html = `<div style="margin-bottom:1.5rem; font-size:1.8rem; font-weight:bold; color:${color}; text-align:center;">${formatBRL(Math.abs(total))}</div>`;
-      const maxVal = Math.max(...cartaoes.map(c => Math.abs(c.saldo)), 1);
-      cartaoes.forEach(c => {
+      const maxVal = Math.max(...cartões.map(c => Math.abs(c.saldo)), 1);
+      cartões.forEach(c => {
         const pct = (Math.abs(c.saldo) / maxVal * 100).toFixed(1);
         html += `
           <div class="bar-chart-row" style="cursor:pointer;" data-conta-extrato="${c.nome}">
@@ -3243,7 +3243,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         `;
       });
 
-      showGlassModal('Cartes de Credito', html);
+      showGlassModal('Cartões de Credito', html);
       setTimeout(() => {
         document.querySelectorAll('[data-conta-extrato]').forEach(el => {
           el.addEventListener('click', () => window.showExtratoContaModal(el.dataset.contaExtrato));
@@ -3303,28 +3303,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     };
 
     window.showPatrimonioModal = function() {
-      let saldoCC = 0, saldoInv = 0, saldoCartaoes = 0;
+      let saldoCC = 0, saldoInv = 0, saldoCartãoes = 0;
       dadosFinanceiros.contas.forEach(c => {
         const t = (c.tipo || '').toLowerCase();
         if (t.includes('cart') || t.includes('credito') || t.includes('credito')) {
-          saldoCartaoes += c.saldo;
+          saldoCartãoes += c.saldo;
         } else if (t.includes('investimento') || t.includes('aplicao') || t.includes('corretora')) {
           saldoInv += c.saldo;
         } else {
           saldoCC += c.saldo;
         }
       });
-      const patrimonio = saldoCC + saldoInv + saldoCartaoes;
+      const patrimonio = saldoCC + saldoInv + saldoCartãoes;
 
       let html = `<div style="text-align:center; margin-bottom:2rem;">
         <div style="font-size:2rem; font-weight:bold; background:linear-gradient(to right, var(--color-income), #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${formatBRL(patrimonio)}</div>
-        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">Patrimnio Lquido Total</div>
+        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">Patrimônio Líquido Total</div>
       </div>`;
 
       const components = [
         { label: 'Contas Correntes', value: saldoCC, color: 'var(--color-income)' },
         { label: 'Investimentos', value: saldoInv, color: '#8b5cf6' },
-        { label: 'Cartes de Credito', value: saldoCartaoes, color: 'var(--color-expense)' }
+        { label: 'Cartões de Credito', value: saldoCartãoes, color: 'var(--color-expense)' }
       ];
       const maxComp = Math.max(...components.map(c => Math.abs(c.value)), 1);
 
@@ -3343,7 +3343,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         `;
       });
 
-      showGlassModal('Composio do Patrimnio', html);
+      showGlassModal('Composição do Patrimônio', html);
     };
 
     window.showContasModal = function(type) {
@@ -3354,7 +3354,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const cType = (c.tipo || '').toLowerCase();
         const isInvAccount = cType.includes('investimento') || cType.includes('aplicao') || cType.includes('corretora');
         if (isInv && isInvAccount) { total += c.saldo; return true; }
-        if (!isInv && !isInvAccount && !cType.includes('cartao') && !cType.includes('credito')) { total += c.saldo; return true; }
+        if (!isInv && !isInvAccount && !cType.includes('cartão') && !cType.includes('credito')) { total += c.saldo; return true; }
         return false;
       }).sort((a,b) => b.saldo - a.saldo);
 
@@ -3504,20 +3504,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         labels6Meses.push(`${monthNames[m]}/${y.toString().slice(-2)}`);
       }
 
-      const cartaoes = dadosFinanceiros.contas.filter(c => {
+      const cartões = dadosFinanceiros.contas.filter(c => {
         const t = (c.tipo || '').toLowerCase();
         return t.includes('cart') || t.includes('credito') || t.includes('credito');
       });
 
-      if (cartaoes.length === 0) {
-        dashboardEl.innerHTML = '<p style="color:var(--text-muted);">Nenhum cartao de credito cadastrado.</p>';
+      if (cartões.length === 0) {
+        dashboardEl.innerHTML = '<p style="color:var(--text-muted);">Nenhum cartão de credito cadastrado.</p>';
         return;
       }
 
       let faturasAtual = [];
       let faturasProxima = [];
 
-      cartaoes.forEach(c => {
+      cartões.forEach(c => {
         let faturaCardAtual = 0;
         let faturaCardProxima = 0;
         let diaVencimentoAtual = null;
@@ -3554,10 +3554,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
 
         if (faturaCardAtual !== 0) {
-           faturasAtual.push({ nome: c.nome || c.conta || 'Cartao', dia: diaVencimentoAtual || 1, valor: faturaCardAtual });
+           faturasAtual.push({ nome: c.nome || c.conta || 'Cartão', dia: diaVencimentoAtual || 1, valor: faturaCardAtual });
         }
         if (faturaCardProxima !== 0) {
-           faturasProxima.push({ nome: c.nome || c.conta || 'Cartao', dia: diaVencimentoProxima || 1, valor: faturaCardProxima });
+           faturasProxima.push({ nome: c.nome || c.conta || 'Cartão', dia: diaVencimentoProxima || 1, valor: faturaCardProxima });
         }
       });
 
@@ -3602,7 +3602,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         </div>
       `;
 
-      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus Cartes</h3>`;
+      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus Cartões</h3>`;
       html += `<div class="accounts-grid" id="credit-cards-list-container">`;
       
       const iconCC = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>';
@@ -3611,8 +3611,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let nextYear = currentYear;
       if (nextMonth > 11) { nextMonth = 0; nextYear++; }
 
-      cartaoes.forEach(c => {
-        const cName = c.nome || c.conta || 'Cartao';
+      cartões.forEach(c => {
+        const cName = c.nome || c.conta || 'Cartão';
         
         let faturaAtualCC = 0;
         let faturaProximaCC = 0;

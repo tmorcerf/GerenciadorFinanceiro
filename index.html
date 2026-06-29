@@ -56,14 +56,14 @@
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <span class="logo-text">FinanÃƒÂ§as Home</span>
+      <span class="logo-text">Finanças Home</span>
     </div>
 
     <ul class="nav-links">
       <li>
         <a class="nav-item active" data-target="panel-overview">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-          VisÃƒÂ£o Geral
+          Visão Geral
         </a>
       </li>
       <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
@@ -75,7 +75,7 @@
       <li>
         <a class="nav-item" data-target="panel-budgets">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          OrÃƒÂ§amentos
+          Orçamentos
         </a>
       </li>
       <li>
@@ -93,7 +93,7 @@
       <li>
         <a class="nav-item" data-target="panel-credit-cards">
           <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-          CartÃƒÂµes
+          Cartões
         </a>
       </li>
 
@@ -110,15 +110,15 @@
     <header>
       <div class="header-title">
         <h1 id="dashboard-title">Dashboard Financeiro</h1>
-        <p>Acompanhamento mensal de gastos e poupanÃƒÂ§a</p>
+        <p>Acompanhamento mensal de gastos e poupança</p>
       </div>
 
       <!-- Filters -->
       <div class="header-controls" style="display: flex; align-items: center; gap: 10px;">
-        <button id="btnFeedback" title="Deixar SugestÃƒÂ£o" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
-          Ã°Å¸â€™Â¡
+        <button id="btnFeedback" title="Deixar Sugestão" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">
+          💡
         </button>
-        <button id="btnSettings" class="nav-item" data-target="panel-settings" title="ConfiguraÃƒÂ§ÃƒÂµes" style="background: transparent; color: var(--text-muted); border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.15)'; this.style.color='var(--text-primary)';" onmouseout="this.style.transform='scale(1)'; this.style.color='var(--text-muted)';">
+        <button id="btnSettings" class="nav-item" data-target="panel-settings" title="Configurações" style="background: transparent; color: var(--text-muted); border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.15)'; this.style.color='var(--text-primary)';" onmouseout="this.style.transform='scale(1)'; this.style.color='var(--text-muted)';">
           <i class="fas fa-cog"></i>
         </button>
       </div>
@@ -127,18 +127,18 @@
     <!-- 1. PANEL: OVERVIEW -->
     <div id="panel-overview" class="dashboard-panel active">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;">
-        <h2 style="margin: 0;">VisÃƒÂ£o Geral</h2>
+        <h2 style="margin: 0;">Visão Geral</h2>
         <div style="display: flex; align-items: center; gap: 10px;">
           <select id="visao-geral-filter" class="date-filter-select">
-            <option value="current">MÃƒÂªs Atual</option>
-            <option value="previous">MÃƒÂªs Anterior</option>
-            <option value="year">Este Ano</option>
-            <option value="all">Todo o PerÃƒÂ­odo</option>
-            <option value="custom">PerÃƒÂ­odo...</option>
+            <option value="current">Mês Atual</option>
+            <option value="previous">Mês Anterior</option>
+            <option value="last3">Últimos 3 Meses</option>
+            <option value="all">Todo o Período</option>
+            <option value="custom">Período...</option>
           </select>
           <div id="visao-geral-custom-date" style="display: none; align-items: center; gap: 5px;">
             <input type="date" id="visao-geral-date-start" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
-            <span style="font-size: 0.8rem; color: var(--text-secondary);">atÃƒÂ©</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">até</span>
             <input type="date" id="visao-geral-date-end" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
           </div>
         </div>
@@ -162,7 +162,7 @@
         <!-- Expenses -->
         <div class="card expense-card clickable-card" id="card-expense">
           <div class="card-header">
-            <span>Despesas do PerÃƒÂ­odo</span>
+            <span>Despesas do Período</span>
             <div class="card-icon">
               <svg viewBox="0 0 24 24"><path d="M12 5v14m-7-7l7 7 7-7"/></svg>
             </div>
@@ -205,7 +205,7 @@
       <div class="charts-grid">
         <!-- Monthly Chart -->
         <div class="card chart-card">
-          <div class="chart-title">EvoluÃƒÂ§ÃƒÂ£o de Receitas vs Despesas</div>
+          <div class="chart-title">Evolução de Receitas vs Despesas</div>
           <div class="chart-container">
             <canvas id="monthly-evolution-chart"></canvas>
           </div>
@@ -213,7 +213,7 @@
 
         <!-- Category Chart -->
         <div class="card chart-card">
-          <div class="chart-title">DistribuiÃƒÂ§ÃƒÂ£o de Gastos</div>
+          <div class="chart-title">Distribuição de Gastos</div>
           <div class="chart-container">
             <canvas id="category-distribution-chart"></canvas>
           </div>
@@ -236,7 +236,7 @@
       
       <!-- BUDGET DASHBOARD -->
       <div id="budgets-dashboard" style="margin-bottom: 2.5rem;">
-        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de OrÃƒÂ§amentos</h2>
+        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de Orçamentos</h2>
         
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div class="card" style="border-top: 3px solid #3b82f6;">
@@ -248,11 +248,11 @@
             <div id="budget-dash-realizado" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="border-top: 3px solid var(--color-income);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">EspaÃƒÂ§o Livre Global</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Espaço Livre Global</span></div>
             <div id="budget-dash-livre" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="border-top: 3px solid #8b5cf6;">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do OrÃƒÂ§amento</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do Orçamento</span></div>
             <div id="budget-dash-saude" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">0%</div>
           </div>
         </div>
