@@ -1,0 +1,150 @@
+/* =========================================================================
+   FORCED MOBILE RESPONSIVENESS (Bypasses Iframe Scaling Issues)
+   ========================================================================= */
+
+/* Show Top Header */
+.mobile-top-header {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-sidebar);
+  padding: 0.8rem 1.2rem;
+  border-bottom: 1px solid var(--border-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  height: 60px;
+}
+
+/* Adjust Body */
+body {
+  flex-direction: column !important;
+}
+
+/* Transform Sidebar into Bottom Nav */
+aside {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  top: auto !important;
+  width: 100% !important;
+  height: 65px !important;
+  flex-direction: row !important;
+  padding: 0 !important;
+  border-right: none !important;
+  border-top: 1px solid var(--border-color) !important;
+  z-index: 1000 !important;
+  background: rgba(17, 20, 30, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* Hide unused Sidebar elements */
+.logo-container, .sidebar-footer {
+  display: none !important;
+}
+
+/* Bottom Nav Items */
+.nav-links {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-around !important;
+  align-items: center !important;
+  height: 100% !important;
+  gap: 0 !important;
+}
+.nav-links li {
+  margin: 0 !important;
+  flex: 1 !important;
+}
+.nav-item {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.65rem !important; /* Hides the text -> Shows the text now */
+  text-align: center !important;
+  line-height: 1.2 !important;
+  gap: 3px !important;
+  background: transparent !important;
+  border: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+.nav-item svg {
+  margin: 0 !important;
+  width: 26px !important;
+  height: 26px !important;
+}
+.nav-item i {
+  font-size: 1.2rem !important;
+  margin: 0 !important;
+}
+.nav-item.active {
+  color: var(--color-accent) !important;
+  border: none !important;
+  padding: 0 !important;
+}
+.nav-item.active::before {
+  display: none !important;
+}
+.nav-item.active i, .nav-item.active svg {
+  color: var(--color-accent) !important;
+  stroke: var(--color-accent) !important;
+}
+
+/* Main Content adjustments */
+main {
+  margin-left: 0 !important;
+  width: 100% !important;
+  margin-top: 60px !important; /* Space for Top Header */
+  padding-bottom: 85px !important; /* Space for Bottom Nav + extra */
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Stack Grids */
+.metrics-grid, 
+.budget-grid, 
+.bank-accounts-grid, 
+.charts-grid {
+  grid-template-columns: 1fr !important;
+}
+
+/* Modals Full Screen */
+.modal-content, 
+.tx-modal-content {
+  width: 100% !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+}
+
+/* Tables Horizontal Scroll */
+.table-container {
+  overflow-x: auto !important;
+}
+
+/* Make sure Header Controls don't break */
+header {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+}
+.header-controls {
+  width: 100% !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap !important;
+}

@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Variável para guardar o resultado temporário antes de salvar
   let transacoesParaSalvar = [];
   let cabecalhoAtual = null;
-  let analiseAtual = "";
   let isPasso2Concluido = false;
   let isPasso3Ativo = false;
   let transacoesPasso3 = [];
@@ -138,8 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (document.getElementById('passo3-container')) document.getElementById('passo3-container').style.display = 'none';
       
       // Renderiza a Tabela de Debug
-      analiseAtual = json.analise_ia || "";
-      renderizarTabelaDebug(transacoes, cabecalho, analiseAtual);
+      renderizarTabelaDebug(transacoes, cabecalho);
       
 
       if (transacoes.length > 0) {
@@ -158,19 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  function renderizarTabelaDebug(transacoes, cabecalho, analise = "") {
+  function renderizarTabelaDebug(transacoes, cabecalho) {
     let html = '';
-
-    if (analise) {
-      html += `
-        <div style="margin-bottom: 2rem; padding: 1.2rem; background: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--color-warning); border-radius: 8px;">
-          <h4 style="margin: 0 0 0.5rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-magic"></i> A Mente da IA (Análise)
-          </h4>
-          <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-style: italic; line-height: 1.5;">"${analise}"</p>
-        </div>
-      `;
-    }
 
     if (cabecalho && Object.keys(cabecalho).length > 0) {
       html += `
@@ -448,7 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         transacoesParaSalvar[idx].duplicado = e.target.checked;
-        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseAtual);
+        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
+        
       });
     });
   }
@@ -552,9 +540,9 @@ document.addEventListener('DOMContentLoaded', () => {
           alert("Erro: " + (json.message || json.error));
         } else {
           transacoesParaSalvar = json.data;
-          if (json.analise_ia) analiseAtual = json.analise_ia;
           isPasso2Concluido = true;
-          renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseAtual);
+          renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual);
+        
           
           btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
           
