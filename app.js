@@ -3461,18 +3461,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           try {
             await fetch(APPS_SCRIPT_WEBAPP_URL, {
               method: 'POST',
+              mode: 'no-cors',
               body: JSON.stringify({
                 action: 'sugestao',
                 texto: text
               })
             });
-            alert('Sugesto enviada com sucesso! Ela foi salva na aba SUGESTOES.');
+            alert('Sugestão enviada com sucesso! Ela foi salva na aba SUGESTOES.');
             feedbackText.value = '';
             feedbackModal.style.display = 'none';
           } catch (e) {
-            alert('Erro ao enviar sugesto: ' + e.message);
+            alert('Erro ao enviar sugestão: ' + e.message);
           } finally {
-            btnSubmitFeedback.innerText = 'Enviar Sugesto';
+            btnSubmitFeedback.innerText = 'Enviar Sugestão';
             btnSubmitFeedback.disabled = false;
           }
         };
