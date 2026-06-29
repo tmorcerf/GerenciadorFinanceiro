@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `
           <details style="margin-bottom: 1.5rem; background: rgba(220, 53, 69, 0.05); border: 1px solid var(--color-expense); border-radius: 6px; padding: 10px;">
             <summary style="cursor: pointer; color: var(--color-expense); font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-              <i class="fas fa-exclamation-triangle"></i> Lançamentos Duplicados (${duplicadas.length}) - Expanda para ver
+              <i class="fas fa-exclamation-triangle"></i> Lançamentos Fechados/Duplicados (${duplicadas.length}) - Expanda para ver
             </summary>
             <div style="margin-top: 10px; overflow-x:auto; max-height: 250px; overflow-y: auto;">
               <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <th style="padding:8px;">CONTA</th>
                     <th style="padding:8px;">DESCRICAO</th>
                     <th style="padding:8px;">VALOR</th>
-                    <th style="padding:8px; text-align:center;">DUPLICADO?</th>
+                    <th style="padding:8px; text-align:center;">FECHADO/DUPLICADO?</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <th style="padding:8px;">SUBCATEGORIA</th>
                   <th style="padding:8px; text-align:center;">CONFIANCA</th>
                   <th style="padding:8px; text-align:center;">PARCEL.</th>
-                  ${!isPasso2Concluido ? '<th style="padding:8px; text-align:center;">DUPLICADO?</th>' : ''}
+                  ${!isPasso2Concluido ? '<th style="padding:8px; text-align:center;">FECHADO/DUPLICADO?</th>' : ''}
                 </tr>
               </thead>
               <tbody>
