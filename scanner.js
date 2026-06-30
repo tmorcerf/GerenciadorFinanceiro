@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (data.status === "success") {
-        setStatus("success", `<b>Sucesso!</b> Foram encontrados ${data.items.length} itens de supermercado/combustível.`);
+        setStatus("success", `<b>Salvo na Planilha!</b> ${data.message}`);
         
         let html = '';
         data.items.forEach(item => {
