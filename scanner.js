@@ -1,4 +1,4 @@
-let APPS_SCRIPT_WEBAPP_URL = localStorage.getItem('SCANNER_API_URL') || '';
+let APPS_SCRIPT_WEBAPP_URL = localStorage.getItem('SCANNER_API_URL') || 'https://script.google.com/macros/s/AKfycbzprz-nB2uI3KUnlJl8BPdn59WfeabOV1q5E8SQOCOesw7_a9wi_4oRsTTvXf7dAeuM/exec';
 let html5QrCode;
 
 document.addEventListener("DOMContentLoaded", () => {
