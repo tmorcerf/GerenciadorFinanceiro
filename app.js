@@ -1485,8 +1485,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     function setupNavigation() {
       sidebarLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-          e.preventDefault();
           const targetPanel = link.getAttribute('data-target');
+          if (!targetPanel) return; // Permite links reais funcionarem (ex: href="scanner.html")
+          
+          e.preventDefault();
           
           sidebarLinks.forEach(l => l.classList.remove('active'));
           link.classList.add('active');
