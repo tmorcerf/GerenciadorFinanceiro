@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusMessage = document.getElementById("status-message");
   const resultsArea = document.getElementById("results-area");
 
+  const uploadBtn = document.getElementById("upload-btn");
+  const qrUploadInput = document.getElementById("qr-upload-input");
+
   const configInput = document.getElementById("scanner-api-url");
   const saveConfigBtn = document.getElementById("save-config-btn");
 
@@ -146,6 +149,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   startBtn.addEventListener("click", startScanner);
   stopBtn.addEventListener("click", stopScanner);
+
+  // Lógica para upload de foto
+  uploadBtn.addEventListener("click", () => {
+    qrUploadInput.click();
+  });
+
+  qrUploadInput.addEventListener("change", (e) => {
+    if (e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setStatus("loading", "Lendo QR Code da foto...", false);
+    
+    if (!html5QrCode) {
+      html5QrCode = new Html5Qrcode("reader");
+    }
+
+    html5QrCode.scanFile(file, true)
+      .then(decodedText => {
+        qrUploadInput.value = "";
+        onScanSuccess(decodedText, null);
+      })
+      .catch(err => {
+        qrUploadInput.value = "";
+        console.warn("Erro na leitura da imagem", err);
+        setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. Tente novamente ou use a câmera ao vivo.");
+      });
+  });
 
   // Auto-inicia a câmera ao abrir a página
   setTimeout(() => {
