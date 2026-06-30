@@ -237,7 +237,16 @@
       
       <!-- BUDGET DASHBOARD -->
       <div id="budgets-dashboard" style="margin-bottom: 2.5rem;">
-        <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Dashboard de Controle de Orçamentos</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
+          <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Dashboard de Controle de Orçamentos</h2>
+          <select id="orcamento-dashboard-filter" class="date-filter-select">
+            <option value="current">Mês Atual</option>
+            <option value="previous">Mês Anterior</option>
+            <option value="last3">Últimos 3 Meses</option>
+            <option value="year">Ano Atual</option>
+            <option value="last_year">Ano Anterior</option>
+          </select>
+        </div>
         
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div class="card" style="border-top: 3px solid #3b82f6;">

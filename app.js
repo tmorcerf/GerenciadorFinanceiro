@@ -1650,7 +1650,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     function bindTabPeriodSelectors() {
       const tabs = [
         { filterId: 'visao-geral-filter', startId: 'visao-geral-date-start', endId: 'visao-geral-date-end', customId: 'visao-geral-custom-date', tabId: 'visao-geral', updateFn: () => { updateOverview(); updateCharts(); } },
-        { filterId: 'investimentos-filter', startId: 'investimentos-date-start', endId: 'investimentos-date-end', customId: 'investimentos-custom-date', tabId: 'investimentos', updateFn: () => { if(typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard(); if(typeof renderInvestments === 'function') renderInvestments(); } }
+        { filterId: 'investimentos-filter', startId: 'investimentos-date-start', endId: 'investimentos-date-end', customId: 'investimentos-custom-date', tabId: 'investimentos', updateFn: () => { if(typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard(); if(typeof renderInvestments === 'function') renderInvestments(); } },
+        { filterId: 'orcamento-dashboard-filter', startId: null, endId: null, customId: null, tabId: 'orcamentos-dash', updateFn: () => { renderBudgets(); } }
       ];
 
       tabs.forEach(tab => {
@@ -2209,16 +2210,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (isFav) favItemes.push(o);
           normalItemes.push(o);
 
-          const cardPer = getBudgetCardPeriod(o.categoria);
-          const d = getCardData(o, cardPer);
+          const dashPeriod = document.getElementById('orcamento-dashboard-filter')?.value || 'current';
+          const dDash = getCardData(o, dashPeriod);
           
-          tetoGlobal += d.limit;
-          gastoGlobal += d.spent;
+          tetoGlobal += dDash.limit;
+          gastoGlobal += dDash.spent;
 
           chartLabels.push(o.categoria);
-          chartTeto.push(d.limit);
-          chartGasto.push(d.spent);
-          chartColors.push(d.isBurst ? '#ef4444' : (d.pct > 80 ? '#f59e0b' : '#3b82f6'));
+          chartTeto.push(dDash.limit);
+          chartGasto.push(dDash.spent);
+          chartColors.push(dDash.isBurst ? '#ef4444' : (dDash.pct > 80 ? '#f59e0b' : '#3b82f6'));
         });
       }
 
