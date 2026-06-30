@@ -8,6 +8,7 @@
 !current_script.js
 !dados.js
 !sw.js
+!scanner.js
 
 # Ignore sensitive files and data
 credentials.json
