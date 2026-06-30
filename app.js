@@ -2086,11 +2086,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
             <div style="display:flex; align-itemes:center; gap: 10px;">
               <select class="budget-period-select" data-budget-cat="${o.categoria}" onclick="event.stopPropagation()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:2px 5px; font-size:0.8rem; outline:none; cursor:pointer;">
-                <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Este Ms</option>
-                <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Ms Passado</option>
-                <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>ultimos 3 Meses</option>
-                <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>ultimos 6 Meses</option>
-                <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Este Ano</option>
+                <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Mês Atual</option>
+                <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mês Anterior</option>
+                <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>Últimos 3 Meses</option>
+                <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>Últimos 6 Meses</option>
+                <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Ano Atual</option>
+                <option value="last_year" ${cardPer === 'last_year' ? 'selected' : ''}>Ano Anterior</option>
               </select>
               <span class="budget-limit" style="font-weight:600;">Teto: ${formatBRL(d.limit)}</span>
             </div>
