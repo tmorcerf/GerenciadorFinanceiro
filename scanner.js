@@ -40,20 +40,38 @@ document.addEventListener("DOMContentLoaded", () => {
   function startScanner() {
     statusContainer.style.display = "none";
     
-    html5QrCode = new Html5Qrcode("reader");
-    
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-    
-    // Attempt to use the back camera
-    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-      .then(() => {
-        startBtn.style.display = "none";
-        stopBtn.style.display = "flex";
-      })
-      .catch((err) => {
-        console.error("Error starting scanner", err);
-        setStatus("error", `Erro ao acessar câmera: ${err}`);
-      });
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        // Inicializa o leitor
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        // Tenta iniciar a câmera traseira
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+          .then(() => {
+            startBtn.style.display = "none";
+            stopBtn.style.display = "flex";
+          })
+          .catch((err) => {
+            console.warn("Falha ao iniciar facingMode: environment. Tentando ID da câmera...", err);
+            // Fallback para a última câmera da lista (geralmente a traseira)
+            const cameraId = devices[devices.length - 1].id;
+            html5QrCode.start(cameraId, config, onScanSuccess)
+              .then(() => {
+                startBtn.style.display = "none";
+                stopBtn.style.display = "flex";
+              })
+              .catch((err2) => {
+                setStatus("error", `Erro ao acessar câmera (fallback): ${err2}`);
+              });
+          });
+      } else {
+        setStatus("error", "Nenhuma câmera encontrada no seu dispositivo.");
+      }
+    }).catch(err => {
+      console.error("Permissão negada ou erro ao buscar câmeras:", err);
+      setStatus("error", `Permissão da câmera negada. Atualize a página e permita o acesso. (${err})`);
+    });
   }
 
   function stopScanner() {
