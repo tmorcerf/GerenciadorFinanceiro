@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
     } catch (error) {
       console.error(error);
-      setStatus("error", "Erro ao conectar com o servidor. A URL do cupom era: <br><br><span style='font-size:0.75rem; word-break:break-all;'>" + decodedText + "</span>");
+      setStatus("error", "<b>Erro de Permissão no Servidor:</b> O seu Google Apps Script não tem acesso público.<br><br>Você precisa ir no painel do Apps Script, clicar em <b>Implantar > Gerenciar Implantações > Editar</b> e garantir que 'Quem tem acesso' esteja como <b>'Qualquer pessoa'</b>.<br><br><span style='font-size:0.75rem; word-break:break-all;'>URL do cupom lido: " + decodedText + "</span>");
     }
   }
 
@@ -185,13 +185,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const decodedText = await html5QrCode.scanFile(file, false);
+      // Adicionamos um limite de tempo (10 segundos) porque algumas fotos de celular (ex: HEIC no iPhone) podem fazer a biblioteca travar infinitamente
+      const decodedText = await Promise.race([
+        html5QrCode.scanFile(file, false),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 10000))
+      ]);
+      
       qrUploadInput.value = "";
       onScanSuccess(decodedText, null);
     } catch (err) {
       qrUploadInput.value = "";
       console.warn("Erro na leitura da imagem", err);
-      setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. A foto precisa estar focada no código quadriculado.");
+      if (err && err.message === "TIMEOUT") {
+        setStatus("error", "A leitura demorou muito. O formato da foto (ex: HEIC) pode não ser compatível com o navegador do celular. Tente enviar um print da tela (captura de tela) da foto.");
+      } else {
+        setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. A foto precisa estar focada no código quadriculado.");
+      }
     }
   });
 
