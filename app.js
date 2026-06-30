@@ -2197,10 +2197,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let tetoGlobal = 0;
       let gastoGlobal = 0;
 
-      const chartLabels = [];
-      const chartTeto = [];
-      const chartGasto = [];
-      const chartColors = [];
+      const dashItems = [];
 
       if (dadosFinanceiros.orcamento) {
         dadosFinanceiros.orcamento.forEach(o => {
@@ -2216,10 +2213,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           tetoGlobal += dDash.limit;
           gastoGlobal += dDash.spent;
 
-          chartLabels.push(o.categoria);
-          chartTeto.push(dDash.limit);
-          chartGasto.push(dDash.spent);
-          chartColors.push(dDash.isBurst ? '#ef4444' : (dDash.pct > 80 ? '#f59e0b' : '#3b82f6'));
+          dashItems.push({
+            name: o.categoria,
+            limit: dDash.limit,
+            spent: dDash.spent,
+            pct: dDash.pct,
+            isBurst: dDash.isBurst
+          });
         });
       }
 
@@ -2244,30 +2244,48 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         elSaude.style.color = saudePct > 100 ? '#ef4444' : (saudePct > 80 ? '#f59e0b' : '#10b981');
       }
 
-      // Render Chart
-      const ctxBudget = document.getElementById('budget-consumption-chart');
-      if (ctxBudget) {
-        if (budgetConsumptionChart) budgetConsumptionChart.destroy();
-        budgetConsumptionChart = new Chart(ctxBudget.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: chartLabels,
-            datasets: [
-              { label: 'Realizado (R$)', data: chartGasto, backgroundColor: chartColors, borderRadius: 4, stack: 'Stack 0' },
-              { label: 'Limite Disponvel', data: chartTeto.map((t, i) => Math.max(0, t - chartGasto[i])), backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 4, stack: 'Stack 0' }
-            ]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { stacked: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } },
-              y: { stacked: true, grid: { display: false }, ticks: { color: '#a0aec0' } }
-            }
+      // Render Custom Bars
+      const barsContainer = document.getElementById('budget-custom-bars-container');
+      if (barsContainer) {
+        let barsHtml = '';
+        dashItems.sort((a,b) => b.spent - a.spent);
+        dashItems.forEach(item => {
+          if (item.limit === 0 && item.spent === 0) return;
+          
+          let barColor = 'linear-gradient(90deg, #3b82f6, #60a5fa)'; // Default blue
+          if (item.isBurst) {
+            barColor = 'linear-gradient(90deg, #ef4444, #f87171)'; // Red
+          } else if (item.pct > 80) {
+            barColor = 'linear-gradient(90deg, #f59e0b, #fbbf24)'; // Amber
+          } else if (item.pct > 0) {
+            barColor = 'linear-gradient(90deg, #10b981, #34d399)'; // Green
           }
+
+          const fillWidth = Math.min(item.pct, 100);
+          const remain = item.limit - item.spent;
+          const statusText = remain >= 0 ? `Sobra: ${formatBRL(remain)}` : `Estourou: ${formatBRL(Math.abs(remain))}`;
+          const statusColor = remain >= 0 ? 'var(--text-secondary)' : '#f87171';
+
+          barsHtml += `
+            <div style="margin-bottom: 1.2rem; padding: 12px 15px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); transition: all 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.transform='translateX(4px)';" onmouseout="this.style.background='rgba(255,255,255,0.02)'; this.style.transform='translateX(0)';">
+              <div style="display:flex; justify-content:space-between; margin-bottom: 8px; align-items: flex-end;">
+                <span style="font-weight: 700; font-size: 0.95rem; color: #f8fafc;">${item.name}</span>
+                <div style="text-align: right; line-height: 1.2;">
+                  <span style="font-weight: 700; font-size: 1rem; color: #f8fafc;">${formatBRL(item.spent)}</span>
+                  <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;"> / ${formatBRL(item.limit)}</span>
+                </div>
+              </div>
+              <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
+                <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${fillWidth}%; background: ${barColor}; border-radius: 5px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px ${barColor.split(',')[1].trim()}60;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-top: 8px;">
+                <span style="font-size: 0.8rem; color: ${statusColor}; font-weight: 600;">${statusText}</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">${item.pct.toFixed(1)}%</span>
+              </div>
+            </div>
+          `;
         });
+        barsContainer.innerHTML = barsHtml || '<p style="color:var(--text-muted); text-align:center; padding: 20px;">Nenhum dado no período.</p>';
       }
 
       if (!dadosFinanceiros.orcamento || dadosFinanceiros.orcamento.length === 0) {
