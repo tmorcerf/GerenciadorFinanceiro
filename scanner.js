@@ -1,4 +1,4 @@
-const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw7Q_cWzaXXeHo11zl7e2K27d7WCrSCeOxlrysUXOv8Un6btw5qEg3jSh1WVUzvE6JQUQ/exec';
+let APPS_SCRIPT_WEBAPP_URL = localStorage.getItem('SCANNER_API_URL') || '';
 let html5QrCode;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,6 +8,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusSpinner = document.getElementById("status-spinner");
   const statusMessage = document.getElementById("status-message");
   const resultsArea = document.getElementById("results-area");
+
+  const configInput = document.getElementById("scanner-api-url");
+  const saveConfigBtn = document.getElementById("save-config-btn");
+
+  if (APPS_SCRIPT_WEBAPP_URL) {
+    configInput.value = APPS_SCRIPT_WEBAPP_URL;
+  }
+
+  saveConfigBtn.addEventListener("click", () => {
+    const val = configInput.value.trim();
+    if (val) {
+      localStorage.setItem('SCANNER_API_URL', val);
+      APPS_SCRIPT_WEBAPP_URL = val;
+      setStatus("success", "URL salva com sucesso!");
+      setTimeout(() => setStatus("", ""), 2000);
+    }
+  });
 
   function setStatus(type, message, isLoading = false) {
     statusContainer.className = `status-card ${type}`;
@@ -58,6 +75,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Check if it looks like a URL
     if (!decodedText.startsWith('http')) {
       setStatus("error", "O QR Code não contém uma URL válida de cupom fiscal.");
+      return;
+    }
+
+    if (!APPS_SCRIPT_WEBAPP_URL) {
+      setStatus("error", "Você precisa configurar a URL do Apps Script primeiro no painel acima!");
       return;
     }
 

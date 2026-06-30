@@ -149,6 +149,18 @@
   <div class="scanner-container">
     
     <div style="background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; cursor: pointer;" onclick="document.getElementById('config-panel').style.display = document.getElementById('config-panel').style.display === 'none' ? 'block' : 'none'">
+        <span style="font-weight: 600; color: var(--text-secondary);"><i class="fas fa-cog"></i> Configuração do Scanner</span>
+        <i class="fas fa-chevron-down" style="color: var(--text-muted);"></i>
+      </div>
+      <div id="config-panel" style="display: none; margin-top: 10px;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Cole aqui a URL do Web App do novo Google Apps Script (Scanner):</p>
+        <input type="text" id="scanner-api-url" placeholder="https://script.google.com/macros/s/.../exec" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none; margin-bottom: 10px; font-size: 0.85rem;">
+        <button id="save-config-btn" class="action-btn" style="padding: 8px 15px; font-size: 0.9rem;">Salvar URL</button>
+      </div>
+    </div>
+
+    <div style="background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
       <p style="margin: 0 0 15px 0; color: var(--text-secondary); font-size: 0.95rem;">Escaneie o QR Code do Cupom Fiscal (NFC-e / SAT) para registrar os preços de mercado ou combustível.</p>
       
       <div id="reader"></div>
