@@ -2078,7 +2078,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const d = getCardData(o, cardPer);
       const starClass = isFav ? 'active' : '';
       let html = `
-        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible;">
+        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible; ${isTopArea ? 'min-height: 420px; display: flex; flex-direction: column;' : ''}">
           <div class="budget-title-row" style="display:flex; justify-content:space-between; align-itemes:center; flex-wrap:wrap; gap:10px;">
             <div style="display:flex; align-itemes:center; gap: 6px;">
               <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar">&#9733;</span>
@@ -2112,22 +2112,25 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       if (isTopArea) {
         const txs = getFilteredTransactions(cardPer).filter(l => (l.categoria || '').toLowerCase().trim() === o.categoria.toLowerCase().trim());
-        txs.sort((a,b) => Math.abs(b.valor) - Math.abs(a.valor));
-        const topTxs = txs.slice(0, 3);
+        txs.sort((a,b) => parseDateString(b.data).getTime() - parseDateString(a.data).getTime());
+        const topTxs = txs.slice(0, 5);
         if (topTxs.length > 0) {
-          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05);">`;
-          html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">Maiores Gastos nao Periodo:</div>`;
+          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); flex-grow: 1; display: flex; flex-direction: column;">`;
+          html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.8rem; font-weight: 600; text-transform: uppercase;">Últimos Lançamentos:</div>`;
           topTxs.forEach(t => {
             html += `
-              <div style="display:flex; justify-content:space-between; align-itemes:center; margin-bottom:4px;">
-                <span style="font-size:0.85rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:65%;" title="${t.obs || t.conta}">${t.obs || t.conta}</span>
-                <span style="font-size:0.85rem; color:var(--color-expense); font-weight:600;">${formatBRL(Math.abs(t.valor))}</span>
+              <div style="display:flex; flex-direction:column; justify-content:center; margin-bottom:10px; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px;">
+                  <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${t.subcategoria || 'Sem subcategoria'}</span>
+                  <span style="font-size:0.85rem; color:var(--color-expense); font-weight:700;">${formatBRL(Math.abs(t.valor))}</span>
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${t.obs || t.conta}">${t.obs || t.conta}</div>
               </div>
             `;
           });
           html += `</div>`;
         } else {
-          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); text-align:center;">Nenhum gasto nao periodo.</div>`;
+          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); text-align:center; flex-grow: 1;">Nenhum gasto no período.</div>`;
         }
       }
 
