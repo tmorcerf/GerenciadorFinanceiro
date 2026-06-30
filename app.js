@@ -2441,7 +2441,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         'Investimentos': 'var(--color-accent)'
       };
 
-      for (const groupName of ['Contas Correntes', 'Cartões de Credito', 'Investimentos']) {
+      for (const groupName of ['Contas Correntes', 'Cartões de Credito']) {
         const contas = groups[groupName];
         if (contas.length === 0) continue;
 
