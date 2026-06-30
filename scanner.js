@@ -160,4 +160,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   startBtn.addEventListener("click", startScanner);
   stopBtn.addEventListener("click", stopScanner);
+
+  // Auto-inicia a câmera ao abrir a página
+  setTimeout(() => {
+    startScanner();
+  }, 500);
 });

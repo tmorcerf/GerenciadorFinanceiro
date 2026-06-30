@@ -27,6 +27,16 @@
           "accept": [".csv", ".pdf", "text/csv", "application/pdf"]
         }
       ]
+      ]
     }
-  }
+  },
+  "shortcuts": [
+    {
+      "name": "Verificar Ofertas",
+      "short_name": "Scanner",
+      "description": "Escaneie Cupons Fiscais",
+      "url": "./scanner.html",
+      "icons": [{ "src": "icon.png", "sizes": "512x512" }]
+    }
+  ]
 }

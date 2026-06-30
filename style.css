@@ -1218,3 +1218,27 @@
         flex-wrap: wrap;
       }
     }
+
+/* Botão Flutuante (Scanner) */
+.fab-scanner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--color-accent), #4f46e5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 9999;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+
+.fab-scanner:active {
+  transform: scale(0.9);
+}
