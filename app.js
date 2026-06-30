@@ -2118,10 +2118,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); flex-grow: 1; display: flex; flex-direction: column;">`;
           html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.8rem; font-weight: 600; text-transform: uppercase;">Últimos Lançamentos:</div>`;
           topTxs.forEach(t => {
+            let cleanSub = t.subcategoria || 'Sem subcategoria';
+            if (cleanSub.includes(' - ')) {
+              cleanSub = cleanSub.split(' - ').slice(1).join(' - ').trim();
+            }
             html += `
               <div style="display:flex; flex-direction:column; justify-content:center; margin-bottom:10px; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 6px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px;">
-                  <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${t.subcategoria || 'Sem subcategoria'}</span>
+                  <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${cleanSub}</span>
                   <span style="font-size:0.85rem; color:var(--color-expense); font-weight:700;">${formatBRL(Math.abs(t.valor))}</span>
                 </div>
                 <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${t.obs || t.conta}">${t.obs || t.conta}</div>
