@@ -1603,6 +1603,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (period === 'current' && yyyy_mm !== currMonthStr) return false;
           if (period === 'previous' && yyyy_mm !== prevMonthStr) return false;
           if (period === 'year' && parts[2] !== currYearStr) return false;
+          if (period === 'last_year' && parts[2] !== (parseInt(currYearStr) - 1).toString()) return false;
           if (period === 'custom') {
             const d = parseDateString(l.data);
             if (d < sD || d > eD) return false;
@@ -1916,7 +1917,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const activePeriod = cardPeriod || document.getElementById('month-filter').value;
       let periodMonths = 12;
       if (activePeriod === 'current' || activePeriod === 'previous') periodMonths = 1;
-      else if (activePeriod === 'year') periodMonths = 12;
+      else if (activePeriod === 'year' || activePeriod === 'last_year') periodMonths = 12;
       else if (activePeriod === '3months') periodMonths = 3;
       else if (activePeriod === '6months') periodMonths = 6;
       else if (activePeriod === 'custom') {
@@ -1942,6 +1943,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               if (activePeriod === 'current' && lym !== currMonthStr) return;
               if (activePeriod === 'previous' && lym !== prevMonthStr) return;
               if (activePeriod === 'year' && lYear !== currYearStr) return;
+              if (activePeriod === 'last_year' && lYear !== (parseInt(currYearStr) - 1).toString()) return;
             }
           }
           dynamicSpent += Math.abs(l.valor);
