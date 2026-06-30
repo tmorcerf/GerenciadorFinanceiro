@@ -239,7 +239,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           categoria: o['Categorias'] || '',
           inicio: o['Inicio'] || '',
           fim: o['Fim'] || '',
-          orcamento: parseBrlFloat(o['Oramento']),
+          orcamento: parseBrlFloat(o['ORCAMENTO'] || o['Oramento'] || o['Orçamento'] || o['Orcamento']),
           realizado: parseBrlFloat(o['Realizado at hoje']),
           desvio: parseFloat((o['DESVIO'] || '0').replace('%', '').replace(',', '.')) || 0,
           sobra: parseBrlFloat(o['Sobra']),
