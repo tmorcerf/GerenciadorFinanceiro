@@ -80,13 +80,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function stopScanner() {
     if (html5QrCode) {
-      html5QrCode.stop().then(() => {
+      // Evita erro síncrono: só tenta dar stop() se o estado for SCANNING (2)
+      if (html5QrCode.getState() === 2) {
+        html5QrCode.stop().then(() => {
+          startBtn.style.display = "flex";
+          stopBtn.style.display = "none";
+          html5QrCode.clear();
+        }).catch(err => {
+          console.error("Error stopping scanner", err);
+        });
+      } else {
+        // Se não estava rodando a câmera, apenas volta os botões ao normal
         startBtn.style.display = "flex";
         stopBtn.style.display = "none";
         html5QrCode.clear();
-      }).catch(err => {
-        console.error("Error stopping scanner", err);
-      });
+      }
     }
   }
 
