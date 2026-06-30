@@ -2197,10 +2197,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       let tetoGlobal = 0;
       let gastoGlobal = 0;
 
-      const chartLabels = [];
-      const chartTeto = [];
-      const chartGasto = [];
-      const chartColors = [];
+
 
       if (dadosFinanceiros.orcamento) {
         dadosFinanceiros.orcamento.forEach(o => {
@@ -2216,10 +2213,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           tetoGlobal += dDash.limit;
           gastoGlobal += dDash.spent;
 
-          chartLabels.push(o.categoria);
-          chartTeto.push(dDash.limit);
-          chartGasto.push(dDash.spent);
-          chartColors.push(dDash.isBurst ? '#ef4444' : (dDash.pct > 80 ? '#f59e0b' : '#3b82f6'));
+
         });
       }
 
@@ -2244,31 +2238,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         elSaude.style.color = saudePct > 100 ? '#ef4444' : (saudePct > 80 ? '#f59e0b' : '#10b981');
       }
 
-      // Render Chart
-      const ctxBudget = document.getElementById('budget-consumption-chart');
-      if (ctxBudget) {
-        if (budgetConsumptionChart) budgetConsumptionChart.destroy();
-        budgetConsumptionChart = new Chart(ctxBudget.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: chartLabels,
-            datasets: [
-              { label: 'Realizado (R$)', data: chartGasto, backgroundColor: chartColors, borderRadius: 4, stack: 'Stack 0' },
-              { label: 'Limite Disponvel', data: chartTeto.map((t, i) => Math.max(0, t - chartGasto[i])), backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 4, stack: 'Stack 0' }
-            ]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { stacked: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a0aec0' } },
-              y: { stacked: true, grid: { display: false }, ticks: { color: '#a0aec0', crossAlign: 'far' } }
-            }
-          }
-        });
-      }
+
 
       if (!dadosFinanceiros.orcamento || dadosFinanceiros.orcamento.length === 0) {
         budgetContainer.innerHTML = '<p style="color: var(--text-muted);">Nenhuma meta de oramento definida.</p>';
