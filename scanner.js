@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function setStatus(type, message, isLoading = false) {
+    statusContainer.style.display = ""; // Remove o display: none inline
     statusContainer.className = `status-card ${type}`;
     statusSpinner.style.display = isLoading ? "block" : "none";
     statusMessage.innerHTML = message;
@@ -104,31 +105,16 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("loading", "Enviando cupom para a Inteligência Artificial...", true);
 
     try {
+      // Faz o POST enviando o body como string (text/plain) para evitar preflight (OPTIONS) e erro de CORS no Google Apps Script
       const response = await fetch(APPS_SCRIPT_WEBAPP_URL, {
         method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({
           action: "scan_invoice",
           url: decodedText
         })
       });
 
-      // Because of no-cors in GAS (sometimes needed depending on the setup), we might not get a readable JSON back immediately unless we setup the Apps Script properly with CORS headers.
-      // However, we will assume the Apps Script responds properly as we do with the "Importar (IA)" feature.
-      
-      // Let's actually fetch without no-cors first, since the main app uses standard fetch for the IA import
-      const corsResponse = await fetch(APPS_SCRIPT_WEBAPP_URL + "?action=scan_invoice", {
-        method: "POST",
-        body: JSON.stringify({
-          action: "scan_invoice",
-          url: decodedText
-        })
-      });
-
-      const data = await corsResponse.json();
+      const data = await response.json();
 
       if (data.status === "success") {
         setStatus("success", `<b>Sucesso!</b> Foram encontrados ${data.items.length} itens de supermercado/combustível.`);
