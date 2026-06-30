@@ -185,22 +185,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // Adicionamos um limite de tempo (10 segundos) porque algumas fotos de celular (ex: HEIC no iPhone) podem fazer a biblioteca travar infinitamente
-      const decodedText = await Promise.race([
-        html5QrCode.scanFile(file, false),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 10000))
-      ]);
+      // Usando scanFile padrão sem timeout forçado, mas com try/catch
+      const decodedText = await html5QrCode.scanFile(file, false);
       
       qrUploadInput.value = "";
       onScanSuccess(decodedText, null);
     } catch (err) {
       qrUploadInput.value = "";
       console.warn("Erro na leitura da imagem", err);
-      if (err && err.message === "TIMEOUT") {
-        setStatus("error", "A leitura demorou muito. O formato da foto (ex: HEIC) pode não ser compatível com o navegador do celular. Tente enviar um print da tela (captura de tela) da foto.");
-      } else {
-        setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. A foto precisa estar focada no código quadriculado.");
-      }
+      setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. A foto precisa estar focada no código quadriculado.");
     }
   });
 
