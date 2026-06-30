@@ -155,26 +155,36 @@ document.addEventListener("DOMContentLoaded", () => {
     qrUploadInput.click();
   });
 
-  qrUploadInput.addEventListener("change", (e) => {
+  qrUploadInput.addEventListener("change", async (e) => {
     if (e.target.files.length === 0) return;
     
     const file = e.target.files[0];
-    setStatus("loading", "Lendo QR Code da foto...", false);
+    
+    // Se a câmera estiver rodando, precisamos pará-la antes de ler o arquivo
+    if (html5QrCode && html5QrCode.getState() === 2 /* SCANNING */) {
+      try {
+        await html5QrCode.stop();
+        html5QrCode.clear();
+      } catch(err) {
+        console.log("Erro ao parar a câmera:", err);
+      }
+    }
+
+    setStatus("loading", "Procurando QR Code na foto...", true);
     
     if (!html5QrCode) {
       html5QrCode = new Html5Qrcode("reader");
     }
 
-    html5QrCode.scanFile(file, true)
-      .then(decodedText => {
-        qrUploadInput.value = "";
-        onScanSuccess(decodedText, null);
-      })
-      .catch(err => {
-        qrUploadInput.value = "";
-        console.warn("Erro na leitura da imagem", err);
-        setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. Tente novamente ou use a câmera ao vivo.");
-      });
+    try {
+      const decodedText = await html5QrCode.scanFile(file, false);
+      qrUploadInput.value = "";
+      onScanSuccess(decodedText, null);
+    } catch (err) {
+      qrUploadInput.value = "";
+      console.warn("Erro na leitura da imagem", err);
+      setStatus("error", "Não foi possível encontrar um QR Code nítido nesta foto. A foto precisa estar focada no código quadriculado.");
+    }
   });
 
   // Auto-inicia a câmera ao abrir a página
