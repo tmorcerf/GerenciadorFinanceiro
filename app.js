@@ -2309,21 +2309,53 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const contas = dadosFinanceiros.contas.filter(c => c.tipo !== 'Investimento' && c.tipo !== 'Empréstimo' && c.nome.toLowerCase() !== 'cofre');
       if (contas.length === 0) return;
       
+      // Funcao para converter DD/MM/YYYY em Date
+      function parseDateBr(dateStr) {
+        if (!dateStr || dateStr === 'N/A') return new Date(0);
+        const parts = dateStr.split('/');
+        if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+        return new Date(0);
+      }
+
+      // Ordenar por data crescente (mais antigos primeiro)
+      contas.sort((a, b) => {
+        const dateA = parseDateBr(a.conciliado_ate);
+        const dateB = parseDateBr(b.conciliado_ate);
+        return dateA - dateB;
+      });
+      
       let html = '';
       contas.forEach(c => {
         let conciliadoData = c.conciliado_ate || 'N/A';
-        // extrai só o primeiro nome
-        let nomeCurto = c.nome.split(' ')[0];
+        let nome = c.nome;
         
         let color = 'var(--text-secondary)';
-        let bg = 'rgba(255,255,255,0.05)';
+        let bg = 'rgba(255,255,255,0.03)';
         let border = '1px solid var(--border-color)';
+        let accent = 'var(--color-accent)';
+        
+        // Destacar os mais atrasados
+        const d = parseDateBr(conciliadoData);
+        const diasAtras = (new Date() - d) / (1000 * 60 * 60 * 24);
+        if (diasAtras > 30 || conciliadoData === 'N/A') {
+          color = 'var(--color-expense)';
+          accent = 'var(--color-expense)';
+          bg = 'rgba(239, 68, 68, 0.05)';
+          border = '1px solid rgba(239, 68, 68, 0.2)';
+        } else if (diasAtras > 15) {
+          color = 'var(--color-warning)';
+          accent = 'var(--color-warning)';
+          bg = 'rgba(245, 158, 11, 0.05)';
+          border = '1px solid rgba(245, 158, 11, 0.2)';
+        }
         
         html += `
-          <div style="background: ${bg}; border: ${border}; border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" title="Conta: ${c.nome}">
-            <i class="fas fa-university" style="color: var(--color-accent);"></i>
-            <span style="font-weight: 500; color: var(--text-primary);">${nomeCurto}:</span>
-            <span style="color: ${color}; font-family: monospace;">${conciliadoData}</span>
+          <div style="background: ${bg}; border: ${border}; border-radius: 8px; padding: 10px 12px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center;" title="Conta: ${c.nome}">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-university" style="color: ${accent};"></i>
+              <span style="font-weight: 500; color: var(--text-primary);">${nome}</span>
+            </div>
+            <span style="color: ${color}; font-family: monospace; font-weight: 600;">${conciliadoData}</span>
           </div>
         `;
       });
