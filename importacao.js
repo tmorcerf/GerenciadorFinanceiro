@@ -4,6 +4,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const uploadInput = document.getElementById('uploadFileImportacao');
   const statusBox = document.getElementById('import-status-box');
+  const btnImport = document.getElementById('btn-import-novo');
+  let btnImportOriginal = '';
   const resultContainer = document.getElementById('import-result-container');
   const resultContent = document.getElementById('import-result-content');
   const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
@@ -68,7 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
     resultContainer.style.display = 'none';
     btnSalvar.style.display = 'none';
     resultContent.innerHTML = '';
-    statusBox.style.display = 'flex';
+    if (btnImport) {
+      btnImportOriginal = btnImport.innerHTML;
+      btnImport.disabled = true;
+    }
+    if(statusBox) statusBox.style.display = 'none';
     btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
     
     try {
