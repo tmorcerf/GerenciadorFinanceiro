@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isPasso3Ativo = false;
       if (document.getElementById('passo3-container')) document.getElementById('passo3-container').style.display = 'none';
       
-      cabecalhoAtual = json.cabecalho || {};
+      // cabecalhoAtual já preenchido
       analiseExtracao = json.analise_ia || "";
       analiseCategorizacao = "";
       renderizarTabelaDebug(transacoes, cabecalho, analiseExtracao, analiseCategorizacao);
@@ -198,15 +198,16 @@ document.addEventListener('DOMContentLoaded', () => {
       cardsHtml += `</div>`;
 
       html += `
-        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
-          <h4 style="margin: 0 0 1.2rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+        <details open style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <summary style="margin: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; cursor: pointer; user-select: none; list-style: none;">
             <i class="fas fa-file-invoice-dollar" style="color: var(--color-accent); font-size: 1.3rem;"></i> Resumo da Extração
-          </h4>
-          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);"></i>
+          </summary>
+          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.2rem;">
             ${analiseHtml}
             ${cardsHtml}
           </div>
-        </div>
+        </details>
       `;
     } else if (analiseExtra) {
       html += `
@@ -231,11 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
       html += `
-        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
-          <h4 style="margin: 0 0 1.2rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+        <details open style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <summary style="margin: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; cursor: pointer; user-select: none; list-style: none;">
             <i class="fas fa-tags" style="color: var(--color-income); font-size: 1.3rem;"></i> Resumo da Categorização
-          </h4>
-          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);"></i>
+          </summary>
+          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.2rem;">
             <div style="flex: 1 1 300px; max-width: 33%; padding-right: 1.5rem; border-right: 1px solid rgba(255,255,255,0.1);">
               <h4 style="margin: 0 0 0.8rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-magic"></i> A Mente da IA (Categorização)
@@ -257,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
           </div>
-        </div>
+        </details>
       `;
     }
 
