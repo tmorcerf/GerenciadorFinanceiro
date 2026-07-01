@@ -784,6 +784,7 @@ function renderizarPasso3(txs) {
     passo3Div.style.marginTop = '2rem';
     document.getElementById('import-result-container').appendChild(passo3Div);
   }
+  passo3Div.style.display = 'block';
   
   let contasOptions = '<option value="">-- Selecione a Contrapartida --</option>';
   const contasArr = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : (window.dadosFinanceiros && window.dadosFinanceiros.contas ? window.dadosFinanceiros.contas : []);
