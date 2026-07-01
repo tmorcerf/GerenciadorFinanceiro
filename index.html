@@ -378,7 +378,17 @@
 
       <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; margin-bottom: 2rem;">
         
-        <!-- Left Side: Upload Zone -->
+        <!-- Left Side: Status de Conciliação Card -->
+        <div style="flex: 1 1 300px; max-width: 450px;">
+          <div class="metric-card" style="height: 100%; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column;">
+            <h3 style="margin-top:0; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; color: var(--text-primary);"><i class="fas fa-history" style="color:var(--text-muted); margin-right:8px;"></i> Status de Conciliação</h3>
+            <div id="import-conciliacao-status" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 5px;">
+              <!-- Injetado via JS -->
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Side: Upload Zone -->
         <div style="flex: 1 1 500px;">
           <div class="metric-card" style="height: 100%; padding: 2.5rem; text-align: center; border: 1px dashed rgba(59, 130, 246, 0.5); background: linear-gradient(145deg, rgba(22, 27, 38, 0.4) 0%, rgba(30, 37, 51, 0.8) 100%); transition: all 0.3s ease; position: relative; overflow: hidden;" id="upload-zone-container" onmouseover="this.style.borderColor='var(--color-accent)'; this.style.boxShadow='0 0 20px var(--color-accent-glow)';" onmouseout="this.style.borderColor='rgba(59, 130, 246, 0.5)'; this.style.boxShadow='none';">
             <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: var(--color-accent); filter: blur(60px); opacity: 0.3;"></div>
@@ -392,16 +402,6 @@
             <button id="btn-import-novo" title="Selecionar Arquivo" style="background: linear-gradient(135deg, var(--color-accent), #2563eb); color: white; border: none; border-radius: 50px; font-weight: 600; font-size: 1.05rem; padding: 14px 32px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-accent-glow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 1;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(59,130,246,0.6)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px var(--color-accent-glow)';" onclick="document.getElementById('uploadFileImportacao').click()">
               <i class="fas fa-magic"></i> Extrair Dados
             </button>
-          </div>
-        </div>
-
-        <!-- Right Side: Status de Conciliação Card -->
-        <div style="flex: 1 1 300px; max-width: 450px;">
-          <div class="metric-card" style="height: 100%; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column;">
-            <h3 style="margin-top:0; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; color: var(--text-primary);"><i class="fas fa-history" style="color:var(--text-muted); margin-right:8px;"></i> Status de Conciliação</h3>
-            <div id="import-conciliacao-status" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 5px;">
-              <!-- Injetado via JS -->
-            </div>
           </div>
         </div>
       </div>
