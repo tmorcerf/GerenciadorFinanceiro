@@ -65,10 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
   uploadInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    window.currentImportFile = file;
 
     // Reset UI
     resultContainer.style.display = 'none';
     btnSalvar.style.display = 'none';
+    const existingBtn = document.getElementById('view-doc-btn');
+    if (existingBtn) existingBtn.style.display = 'none';
     document.getElementById('import-summary-content').innerHTML = '';
     document.getElementById('import-table-content').innerHTML = '';
     if (btnImport) {
@@ -160,6 +163,52 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSalvar.style.display = 'inline-block';
         const btnCategorizarContainer = document.getElementById('import-ia-btn-container');
         if (btnCategorizarContainer) btnCategorizarContainer.style.display = 'flex';
+        
+        // Botão flutuante para ver documento original
+        let viewDocBtn = document.getElementById('view-doc-btn');
+        if (!viewDocBtn) {
+          viewDocBtn = document.createElement('button');
+          viewDocBtn.id = 'view-doc-btn';
+          viewDocBtn.innerHTML = '<i class="fas fa-file-invoice"></i> Ver Extrato Original';
+          viewDocBtn.style.position = 'fixed';
+          viewDocBtn.style.bottom = '30px';
+          viewDocBtn.style.right = '30px';
+          viewDocBtn.style.zIndex = '9999';
+          viewDocBtn.style.padding = '15px 25px';
+          viewDocBtn.style.background = 'var(--color-primary)';
+          viewDocBtn.style.color = '#fff';
+          viewDocBtn.style.border = 'none';
+          viewDocBtn.style.borderRadius = '50px';
+          viewDocBtn.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+          viewDocBtn.style.cursor = 'pointer';
+          viewDocBtn.style.fontSize = '15px';
+          viewDocBtn.style.fontWeight = 'bold';
+          viewDocBtn.style.transition = 'all 0.3s ease';
+          viewDocBtn.onmouseover = () => { viewDocBtn.style.transform = 'scale(1.05) translateY(-5px)'; };
+          viewDocBtn.onmouseout = () => { viewDocBtn.style.transform = 'scale(1) translateY(0)'; };
+          viewDocBtn.addEventListener('click', () => {
+             if (window.currentImportFile) {
+                const url = URL.createObjectURL(window.currentImportFile);
+                window.open(url, '_blank');
+             }
+          });
+          document.body.appendChild(viewDocBtn);
+          
+          // Oculta quando sai da aba
+          const observer = new MutationObserver(() => {
+            const importSec = document.getElementById('import-section');
+            if (importSec && importSec.style.display === 'none') {
+              viewDocBtn.style.display = 'none';
+            } else if (transacoesParaSalvar.length > 0) {
+              viewDocBtn.style.display = 'block';
+            }
+          });
+          const importSec = document.getElementById('import-section');
+          if (importSec) {
+             observer.observe(importSec, { attributes: true, attributeFilter: ['style'] });
+          }
+        }
+        viewDocBtn.style.display = 'block';
       }
 
     } catch (err) {
