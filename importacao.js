@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnImport = document.getElementById('btn-import-novo');
   let btnImportOriginal = '';
   const resultContainer = document.getElementById('import-result-container');
-  const resultContent = document.getElementById('import-result-content');
+  
   const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
   const uploadZone = document.getElementById('upload-zone-container');
 
@@ -69,7 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset UI
     resultContainer.style.display = 'none';
     btnSalvar.style.display = 'none';
-    resultContent.innerHTML = '';
+    document.getElementById('import-summary-content').innerHTML = '';
+    document.getElementById('import-table-content').innerHTML = '';
     if (btnImport) {
       btnImportOriginal = btnImport.innerHTML;
       btnImport.disabled = true;
