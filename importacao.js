@@ -158,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (transacoes.length > 0) {
         btnSalvar.style.display = 'inline-block';
-        const btnCategorizar = document.getElementById('btnCategorizarIA');
-        if (btnCategorizar) btnCategorizar.style.display = 'inline-block';
+        const btnCategorizarContainer = document.getElementById('import-ia-btn-container');
+        if (btnCategorizarContainer) btnCategorizarContainer.style.display = 'flex';
       }
 
     } catch (err) {
@@ -394,9 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (unicas.length > 0) {
         tableHtml += `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="margin-bottom: 8px;">
             <strong style="color:var(--text-secondary);">Transações Únicas (${unicas.length}):</strong>
-            <input type="text" id="import-search-input" placeholder="Buscar nas transações..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-primary); font-size: 0.9rem; width: 300px; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)'" onblur="this.style.borderColor='var(--border-color)'">
           </div>
           <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
             <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
@@ -584,28 +583,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseExtracao, analiseCategorizacao);
       });
     });
-
-    // Event listener para o filtro de busca
-    const searchInput = document.getElementById('import-search-input');
-    if (searchInput) {
-      searchInput.addEventListener('keyup', (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.unica-row').forEach(row => {
-          let rowText = row.innerText.toLowerCase();
-          const selects = row.querySelectorAll('select');
-          selects.forEach(sel => {
-            if (sel.options[sel.selectedIndex]) {
-              rowText += ' ' + sel.options[sel.selectedIndex].text.toLowerCase();
-            }
-          });
-          if (rowText.includes(term)) {
-            row.style.display = '';
-          } else {
-            row.style.display = 'none';
-          }
-        });
-      });
-    }
   }
 
   // Ação de Salvar Lançamentos
