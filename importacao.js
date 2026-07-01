@@ -873,10 +873,10 @@ function renderizarPasso3(txs) {
       return tableHtml;
   };
 
-  tableHtml += generateTable(txsTransfers, 'Transferências (Origem e Destino)', 'var(--color-warning)', 'fa-exchange-alt');
-  tableHtml += generateTable(txsParcels, 'Projeção de Parcelamentos', 'var(--color-income)', 'fa-layer-group');
+  html += generateTable(txsTransfers, 'Transferências (Origem e Destino)', 'var(--color-warning)', 'fa-exchange-alt');
+  html += generateTable(txsParcels, 'Projeção de Parcelamentos', 'var(--color-income)', 'fa-layer-group');
   
-  tableHtml += `
+  html += `
         <details style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
           <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-code"></i> Inspecionar JSON bruto recebido da IA (Debug)
@@ -885,7 +885,7 @@ function renderizarPasso3(txs) {
         </details>
       `;
 
-  tableHtml += `</div>`;
+  html += `</div>`;
   passo3Div.innerHTML = html;
   passo3Div.style.display = 'block';
   
