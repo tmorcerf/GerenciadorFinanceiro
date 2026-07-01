@@ -3,7 +3,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const uploadInput = document.getElementById('uploadFileImportacao');
-  const statusBox = document.getElementById('import-status-box');
+  
   const btnImport = document.getElementById('btn-import-novo');
   let btnImportOriginal = '';
   const resultContainer = document.getElementById('import-result-container');
@@ -74,18 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
       btnImportOriginal = btnImport.innerHTML;
       btnImport.disabled = true;
     }
-    if(statusBox) statusBox.style.display = 'none';
+    
     btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
     
     try {
-      statusBox.innerHTML = '<i class="fas fa-sync-alt fa-spin" style="color: var(--color-primary);"></i> Lendo arquivo localmente...';
-      statusBox.style.borderLeftColor = 'var(--color-primary)';
+      if (btnImport) btnImport.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Lendo arquivo localmente...';
       
       // Utiliza a função global existente no app.js para ler o arquivo (PDF/CSV)
       const fileData = await window.extractFileContent(file);
 
-      statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-warning);"></i> Extraindo inteligência dos dados (aguarde até 30s)...';
-      statusBox.style.borderLeftColor = 'var(--color-warning)';
+      if (btnImport) btnImport.innerHTML = '<i class="fas fa-magic fa-bounce"></i> Extraindo dados (aguarde até 30s)...';
 
       // Requisição para o backend
       // APPS_SCRIPT_WEBAPP_URL is defined in app.js (global)
@@ -106,8 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(json.message || "Erro desconhecido na IA.");
       }
 
-      statusBox.innerHTML = '<i class="fas fa-check-circle" style="color: var(--color-income);"></i> Mágica concluída com sucesso!';
-      statusBox.style.borderLeftColor = 'var(--color-income)';
+      if (btnImport) {
+        btnImport.innerHTML = '<i class="fas fa-check-circle"></i> Mágica concluída!';
+        setTimeout(() => {
+          btnImport.innerHTML = btnImportOriginal;
+          btnImport.disabled = false;
+        }, 2000);
+      }
 
       // Processa a resposta
       const dataIA = json.data;
@@ -160,8 +163,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      statusBox.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--color-expense);"></i> Erro: ${err.message}`;
-      statusBox.style.borderLeftColor = 'var(--color-expense)';
+      if (btnImport) {
+        btnImport.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro na extração`;
+        setTimeout(() => {
+          btnImport.innerHTML = btnImportOriginal;
+          btnImport.disabled = false;
+        }, 4000);
+      }
+      alert('Erro na extração: ' + err.message);
     } finally {
       // Limpa o input para permitir enviar o mesmo arquivo novamente se necessário
       uploadInput.value = '';
@@ -653,8 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Limpa a tela
         resultContainer.style.display = 'none';
         transacoesParaSalvar = [];
-        statusBox.innerHTML = '<i class="fas fa-check-double"></i> Tudo salvo. Aguardando novo arquivo...';
-        statusBox.style.color = 'var(--text-secondary)';
+        
       } else {
         throw new Error(result.message);
       }
@@ -676,9 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnCategorizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analisando Histórico...';
       btnCategorizar.disabled = true;
       
-      statusBox.innerHTML = '<i class="fas fa-magic fa-bounce" style="color: var(--color-accent);"></i> Cruzando dados com histórico (pode levar 30s)...';
-      statusBox.style.display = 'flex';
-      statusBox.style.borderLeftColor = 'var(--color-accent)';
+      
       
       try {
         const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
@@ -703,8 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
           
           btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
           
-          statusBox.innerHTML = '<i class="fas fa-check-circle" style="color: var(--color-income);"></i> Categorização inteligente aplicada!';
-          statusBox.style.borderLeftColor = 'var(--color-income)';
+          
         }
       } catch(err) {
         alert("Erro ao categorizar: " + err.message);
