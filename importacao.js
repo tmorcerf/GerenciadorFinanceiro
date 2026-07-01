@@ -57,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let isPasso3Ativo = false;
   let transacoesPasso3 = [];
   let transacoesNormais = [];
+  let currentSortCol = null;
+  let currentSortDir = 'asc';
 
   uploadInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -295,6 +297,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      if (currentSortCol) {
+        unicas.sort((a, b) => {
+          let valA = a.t[currentSortCol] || '';
+          let valB = b.t[currentSortCol] || '';
+          if (currentSortCol === 'valor' || currentSortCol === 'confianca') {
+            valA = parseFloat(String(valA).replace(/[R$\s\.]/g, '').replace(',', '.')) || 0;
+            valB = parseFloat(String(valB).replace(/[R$\s\.]/g, '').replace(',', '.')) || 0;
+          } else if (currentSortCol === 'data' || currentSortCol === 'vencimento') {
+            const parseDate = (d) => {
+              if (!d) return '';
+              const parts = d.split('/');
+              if (parts.length === 3) return `${parts[2]}${parts[1]}${parts[0]}`;
+              return d;
+            };
+            valA = parseDate(String(valA));
+            valB = parseDate(String(valB));
+          } else {
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+          }
+          if (valA < valB) return currentSortDir === 'asc' ? -1 : 1;
+          if (valA > valB) return currentSortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      function getSortIcon(col) {
+        if (currentSortCol !== col) return '<i class="fas fa-sort" style="opacity:0.3; margin-left:4px;"></i>';
+        return currentSortDir === 'asc' ? '<i class="fas fa-sort-up" style="margin-left:4px; color:var(--color-accent);"></i>' : '<i class="fas fa-sort-down" style="margin-left:4px; color:var(--color-accent);"></i>';
+      }
+
       if (duplicadas.length > 0) {
         html += `
           <details style="margin-bottom: 1.5rem; background: rgba(220, 53, 69, 0.05); border: 1px solid var(--color-expense); border-radius: 6px; padding: 10px;">
@@ -340,20 +373,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (unicas.length > 0) {
         html += `
-          <strong style="color:var(--text-secondary); display:block; margin-bottom: 6px;">Transações Únicas (${unicas.length}):</strong>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color:var(--text-secondary);">Transações Únicas (${unicas.length}):</strong>
+            <input type="text" id="import-search-input" placeholder="Buscar nas transações..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-primary); font-size: 0.9rem; width: 300px; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)'" onblur="this.style.borderColor='var(--border-color)'">
+          </div>
           <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
             <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
               <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
                 <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
                   <th style="padding:8px; display:none;">COD</th>
-                  <th style="padding:8px;">DATA</th>
-                  <th style="padding:8px;">VENCIMENTO</th>
-                  <th style="padding:8px;">CONTA</th>
-                  <th style="padding:8px;">DESCRICAO</th>
-                  <th style="padding:8px;">VALOR</th>
-                  <th style="padding:8px;">CATEGORIA</th>
-                  <th style="padding:8px;">SUBCATEGORIA</th>
-                  <th style="padding:8px; text-align:center;">CONFIANCA</th>
+                  <th class="import-sortable" data-col="data" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Data">DATA ${getSortIcon('data')}</th>
+                  <th class="import-sortable" data-col="vencimento" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Vencimento">VENCIMENTO ${getSortIcon('vencimento')}</th>
+                  <th class="import-sortable" data-col="conta" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Conta">CONTA ${getSortIcon('conta')}</th>
+                  <th class="import-sortable" data-col="descricao" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Descrição">DESCRICAO ${getSortIcon('descricao')}</th>
+                  <th class="import-sortable" data-col="valor" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Valor">VALOR ${getSortIcon('valor')}</th>
+                  <th class="import-sortable" data-col="categoria" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Categoria">CATEGORIA ${getSortIcon('categoria')}</th>
+                  <th class="import-sortable" data-col="subcategoria" style="padding:8px; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Subcategoria">SUBCATEGORIA ${getSortIcon('subcategoria')}</th>
+                  <th class="import-sortable" data-col="confianca" style="padding:8px; text-align:center; cursor:pointer; user-select:none; white-space:nowrap;" title="Ordenar por Confiança">CONFIANCA ${getSortIcon('confianca')}</th>
                   <th style="padding:8px; text-align:center;">PARCEL.</th>
                   ${!isPasso2Concluido ? '<th style="padding:8px; text-align:center;">FECHADO/DUPLICADO?</th>' : ''}
                 </tr>
@@ -414,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           html += `
-            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+            <tr class="unica-row" style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
               <td style="padding:12px 8px; color: var(--text-muted); display:none;">${t.cod || ''}</td>
               <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
               <td style="padding:12px 8px; white-space: nowrap;">${t.vencimento || ''}</td>
@@ -516,6 +552,42 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseExtracao, analiseCategorizacao);
       });
     });
+
+    // Event listeners para ordenação
+    document.querySelectorAll('.import-sortable').forEach(th => {
+      th.addEventListener('click', (e) => {
+        const col = e.currentTarget.getAttribute('data-col');
+        if (currentSortCol === col) {
+          currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSortCol = col;
+          currentSortDir = 'asc';
+        }
+        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseExtracao, analiseCategorizacao);
+      });
+    });
+
+    // Event listener para o filtro de busca
+    const searchInput = document.getElementById('import-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('keyup', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.unica-row').forEach(row => {
+          let rowText = row.innerText.toLowerCase();
+          const selects = row.querySelectorAll('select');
+          selects.forEach(sel => {
+            if (sel.options[sel.selectedIndex]) {
+              rowText += ' ' + sel.options[sel.selectedIndex].text.toLowerCase();
+            }
+          });
+          if (rowText.includes(term)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
   }
 
   // Ação de Salvar Lançamentos
