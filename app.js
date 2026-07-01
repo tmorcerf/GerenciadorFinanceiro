@@ -1422,6 +1422,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       updateOverview();
       renderBudgets();
+      renderImportConciliacao();
       renderAccounts();
       renderInvestments();
       renderAudit();
@@ -2299,6 +2300,34 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
         });
       }, 0);
+    }
+
+    function renderImportConciliacao() {
+      const container = document.getElementById('import-conciliacao-status');
+      if (!container) return;
+      
+      const contas = dadosFinanceiros.contas.filter(c => c.tipo !== 'Investimento' && c.tipo !== 'Empréstimo' && c.nome.toLowerCase() !== 'cofre');
+      if (contas.length === 0) return;
+      
+      let html = '';
+      contas.forEach(c => {
+        let conciliadoData = c.conciliado_ate || 'N/A';
+        // extrai só o primeiro nome
+        let nomeCurto = c.nome.split(' ')[0];
+        
+        let color = 'var(--text-secondary)';
+        let bg = 'rgba(255,255,255,0.05)';
+        let border = '1px solid var(--border-color)';
+        
+        html += `
+          <div style="background: ${bg}; border: ${border}; border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" title="Conta: ${c.nome}">
+            <i class="fas fa-university" style="color: var(--color-accent);"></i>
+            <span style="font-weight: 500; color: var(--text-primary);">${nomeCurto}:</span>
+            <span style="color: ${color}; font-family: monospace;">${conciliadoData}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
     }
 
     function renderAccounts() {
