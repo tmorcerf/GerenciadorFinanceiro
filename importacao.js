@@ -153,10 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (contasInfo.length > 0) {
         const parseLocalDt = (str) => {
           if (!str) return 0;
-          let p = String(str).split('/');
-          if (p.length === 3) return new Date(p[2], parseInt(p[1])-1, p[0]).getTime();
-          p = String(str).split('-');
-          if (p.length === 3) return new Date(p[0], parseInt(p[1])-1, p[2]).getTime();
+          let s = String(str).trim().split(' ')[0]; // Pega só a parte da data
+          let p = s.split('/');
+          if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0])).getTime();
+          p = s.split('-');
+          if (p.length === 3) return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])).getTime();
           if (typeof str === 'object' && str instanceof Date) return str.getTime();
           return 0;
         };
