@@ -147,6 +147,37 @@ document.addEventListener('DOMContentLoaded', () => {
         t.duplicado = (dupVal === true || String(dupVal).toLowerCase().trim() === 'sim');
       });
 
+      // --- INÍCIO DA MARCAÇÃO DE CONCILIADOS (FRONTEND) ---
+      // Se a data do lançamento for <= a data "Conciliado Até" da conta, já foi processado!
+      const contasInfo = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+      if (contasInfo.length > 0) {
+        const parseLocalDt = (str) => {
+          if (!str) return 0;
+          let p = String(str).split('/');
+          if (p.length === 3) return new Date(p[2], parseInt(p[1])-1, p[0]).getTime();
+          p = String(str).split('-');
+          if (p.length === 3) return new Date(p[0], parseInt(p[1])-1, p[2]).getTime();
+          if (typeof str === 'object' && str instanceof Date) return str.getTime();
+          return 0;
+        };
+
+        transacoes.forEach(t => {
+           if (!t.duplicado) {
+              let tTime = parseLocalDt(t.data);
+              let tContaName = String(t.conta || cabecalho['Nome da conta'] || cabecalho['conta'] || '').toLowerCase().trim();
+              
+              let contaObj = contasInfo.find(c => String(c.nome).toLowerCase().trim() === tContaName);
+              if (contaObj && contaObj.conciliado_ate) {
+                 let concTime = parseLocalDt(contaObj.conciliado_ate);
+                 if (tTime > 0 && concTime > 0 && tTime <= concTime) {
+                    t.duplicado = true;
+                 }
+              }
+           }
+        });
+      }
+      // --- FIM DA MARCAÇÃO DE CONCILIADOS ---
+
       transacoesParaSalvar = transacoes;
       cabecalhoAtual = cabecalho;
       isPasso2Concluido = false;
