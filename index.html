@@ -96,18 +96,17 @@
           Importar Extratos
         </a>
       </li>
-      <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
-        <a class="nav-item" href="scanner.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2" ry="2"/></svg>
-          Verifica Ofertas
-        </a>
-      </li>
 
     </ul>
 
-    <div class="sidebar-footer">
-      <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">Sincronizado Online | v3.2</span>
+    <div class="sidebar-footer" style="display: flex; justify-content: space-between; align-items: center; padding-right: 15px;">
+      <div>
+        <span>Controle Financeiro</span>
+        <span style="font-size: 0.75rem; display: block; margin-top: 2px;">Sincronizado Online | v3.2</span>
+      </div>
+      <button id="btn-open-config" title="Configurações" style="background: none; border: none; color: var(--text-muted); cursor: pointer; transition: color 0.3s; padding: 5px;" onmouseover="this.style.color='var(--color-accent)';" onmouseout="this.style.color='var(--text-muted)';">
+        <i class="fas fa-cog" style="font-size: 1.2rem;"></i>
+      </button>
     </div>
   </aside>
 
@@ -574,7 +573,37 @@
     <i class="fas fa-qrcode"></i>
   </a>
 
-<script src="dados.js"></script>
+  <!-- Modal de Configurações -->
+  <div id="config-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1.4rem; color: var(--text-primary);"><i class="fas fa-cog" style="color: var(--color-accent); margin-right: 8px;"></i> Configurações</h3>
+        <button id="btn-close-config" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--color-expense)';" onmouseout="this.style.color='var(--text-muted)';">&times;</button>
+      </div>
+      
+      <div style="color: var(--text-secondary); text-align: center; padding: 2rem 0;">
+        <i class="fas fa-tools" style="font-size: 3rem; color: var(--border-color); margin-bottom: 1rem;"></i>
+        <p style="margin: 0; font-size: 1.1rem; font-weight: 500;">Painel em Construção</p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5;">Em breve você poderá configurar preferências, gerenciar a chave da IA e dicionários diretamente por aqui.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('btn-open-config').addEventListener('click', () => {
+      document.getElementById('config-modal').style.display = 'flex';
+    });
+    document.getElementById('btn-close-config').addEventListener('click', () => {
+      document.getElementById('config-modal').style.display = 'none';
+    });
+    document.getElementById('config-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'config-modal') {
+        document.getElementById('config-modal').style.display = 'none';
+      }
+    });
+  </script>
+
+  <script src="dados.js"></script>
   <script src="app.js?v=22"></script>
   <script src="importacao.js?v=1"></script>
   <!-- Modal Detalhado (Huge Card) -->
