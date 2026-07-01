@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `
           </div>
         </div>
+        <div id="ia-button-container" style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;"></div>
       `;
     }
 
@@ -404,6 +405,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resultContent.innerHTML = html;
     resultContainer.style.display = 'block';
+
+    const btnCatIA = document.getElementById('btnCategorizarIA');
+    const iaContainer = document.getElementById('ia-button-container');
+    if (btnCatIA && iaContainer) {
+      iaContainer.appendChild(btnCatIA);
+    }
 
     // Adicionar listener para atualizar subcategorias dinamicamente se o usuario mudar a categoria
     document.querySelectorAll('.import-sel-cat').forEach(sel => {
