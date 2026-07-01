@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnImport.disabled = true;
     }
     
-    btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
+    btnSalvar.innerHTML = 'Tratar Transferências e Parcelamentos <i class="fas fa-arrow-right"></i>';
     
     try {
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Lendo arquivo localmente...';
@@ -609,7 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
         transacoesNormais = txNormais;
         transacoesPasso3 = processarPasso3(txPasso3);
         
-        resultContent.style.display = 'none';
+        document.getElementById('import-summary-content').style.display = 'none';
+        document.getElementById('import-table-content').style.display = 'none';
         renderizarPasso3(transacoesPasso3);
         
         btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar TUDO';
