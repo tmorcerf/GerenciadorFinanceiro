@@ -144,6 +144,56 @@ document.addEventListener('DOMContentLoaded', () => {
         t.duplicado = (dupVal === true || String(dupVal).toLowerCase().trim() === 'sim');
       });
 
+      // --- INÍCIO DA DEDUPLICAÇÃO ALGORÍTMICA (FRONTEND) ---
+      // Fazemos o cruzamento exato com o histórico no frontend para evitar que a IA erre
+      const history = (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) ? window.dadosFinanceiros.lancamentos : [];
+      if (history.length > 0) {
+        const parseLocalNum = (val) => {
+          if (typeof val === 'number') return val;
+          if (!val) return 0;
+          let str = String(val).replace(/[^\d,\.-]/g, '');
+          let parsed = parseFloat(str.replace(',', '.'));
+          return isNaN(parsed) ? 0 : parsed;
+        };
+        const parseLocalDt = (str) => {
+          if (!str) return 0;
+          let p = String(str).split('/');
+          if (p.length === 3) return new Date(p[2], parseInt(p[1])-1, p[0]).getTime();
+          p = String(str).split('-');
+          if (p.length === 3) return new Date(p[0], parseInt(p[1])-1, p[2]).getTime();
+          return 0;
+        };
+
+        transacoes.forEach(t => {
+           if (!t.duplicado) {
+              let tTime = parseLocalDt(t.data);
+              let tVal = parseLocalNum(t.valor);
+              let tConta = String(t.conta || cabecalho['Nome da conta'] || cabecalho['conta'] || '').toLowerCase().trim();
+              
+              let limiteHistorico = Math.max(0, history.length - 1000);
+              for (let i = history.length - 1; i >= limiteHistorico; i--) {
+                 let h = history[i];
+                 let hTime = parseLocalDt(h.data);
+                 let hVal = parseLocalNum(h.valor);
+                 let hConta = String(h.conta || '').toLowerCase().trim();
+                 
+                 if (tConta && hConta && tConta === hConta) {
+                    if (Math.abs(tTime - hTime) <= 3 * 24 * 60 * 60 * 1000) {
+                       if (Math.abs(tVal - hVal) <= 0.1) {
+                          t.duplicado = true;
+                          t.categoria = h.categoria || '';
+                          t.subcategoria = h.subcategoria || '';
+                          break;
+                       }
+                    }
+                 }
+              }
+           }
+        });
+      }
+      // --- FIM DA DEDUPLICAÇÃO ALGORÍTMICA ---
+
+
       transacoesParaSalvar = transacoes;
       cabecalhoAtual = cabecalho;
       isPasso2Concluido = false;
