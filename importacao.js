@@ -51,7 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Variável para guardar o resultado temporário antes de salvar
   let transacoesParaSalvar = [];
   let cabecalhoAtual = null;
-  let analiseAtual = "";
+  let analiseExtracao = "";
+  let analiseCategorizacao = "";
   let isPasso2Concluido = false;
   let isPasso3Ativo = false;
   let transacoesPasso3 = [];
@@ -137,9 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
       isPasso3Ativo = false;
       if (document.getElementById('passo3-container')) document.getElementById('passo3-container').style.display = 'none';
       
-      // Renderiza a Tabela de Debug
-      analiseAtual = json.analise_ia || "";
-      renderizarTabelaDebug(transacoes, cabecalho, analiseAtual);
+      cabecalhoAtual = json.cabecalho || {};
+      analiseExtracao = json.analise_ia || "";
+      analiseCategorizacao = "";
+      renderizarTabelaDebug(transacoes, cabecalho, analiseExtracao, analiseCategorizacao);
       
 
       if (transacoes.length > 0) {
@@ -158,33 +160,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  function renderizarTabelaDebug(transacoes, cabecalho, analise = "") {
+  function renderizarTabelaDebug(transacoes, cabecalho, analiseExtra = "", analiseCat = "") {
     let html = '';
 
-    if (analise) {
-      html += `
-        <div style="margin-bottom: 2rem; padding: 1.2rem; background: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--color-warning); border-radius: 8px;">
-          <h4 style="margin: 0 0 0.5rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-magic"></i> A Mente da IA (Análise)
-          </h4>
-          <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-style: italic; line-height: 1.5;">"${analise}"</p>
-        </div>
-      `;
-    }
-
     if (cabecalho && Object.keys(cabecalho).length > 0) {
-      html += `
-        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
-          <h4 style="margin: 0 0 1.2rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
-            <i class="fas fa-file-invoice-dollar" style="color: var(--color-accent); font-size: 1.3rem;"></i> Resumo da Extração
-          </h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-      `;
+      let analiseHtml = '';
+      if (analiseExtra) {
+        analiseHtml = `
+          <div style="flex: 1 1 300px; max-width: 33%; padding-right: 1.5rem; border-right: 1px solid rgba(255,255,255,0.1);">
+            <h4 style="margin: 0 0 0.8rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-magic"></i> A Mente da IA (Extração)
+            </h4>
+            <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-style: italic; line-height: 1.6;">"${analiseExtra}"</p>
+          </div>
+        `;
+      }
       
+      let cardsHtml = `<div style="flex: 2 1 400px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-content: start;">`;
       for (const [key, value] of Object.entries(cabecalho)) {
-        // Ignora propriedades que não devem aparecer como cards
         if (typeof value === 'object') continue;
-        
         let icon = 'fa-info-circle';
         const keyLower = key.toLowerCase();
         if (keyLower.includes('conta')) icon = 'fa-university';
@@ -192,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (keyLower.includes('periodo') || keyLower.includes('data')) icon = 'fa-calendar-alt';
         else if (keyLower.includes('quantidade') || keyLower.includes('total')) icon = 'fa-hashtag';
         
-        html += `
+        cardsHtml += `
             <div style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 1.2rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
               <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;">
                 <i class="fas ${icon}" style="color: rgba(255,255,255,0.3);"></i> ${key}
@@ -201,13 +195,75 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
       }
-      
+      cardsHtml += `</div>`;
+
       html += `
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <h4 style="margin: 0 0 1.2rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+            <i class="fas fa-file-invoice-dollar" style="color: var(--color-accent); font-size: 1.3rem;"></i> Resumo da Extração
+          </h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+            ${analiseHtml}
+            ${cardsHtml}
           </div>
         </div>
-        <div id="ia-button-container" style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;"></div>
+      `;
+    } else if (analiseExtra) {
+      html += `
+        <div style="margin-bottom: 2rem; padding: 1.2rem; background: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--color-warning); border-radius: 8px;">
+          <h4 style="margin: 0 0 0.5rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-magic"></i> A Mente da IA (Extração)
+          </h4>
+          <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-style: italic; line-height: 1.5;">"${analiseExtra}"</p>
+        </div>
       `;
     }
+
+    if (analiseCat) {
+      let counts = { categorizados: 0, revisao: 0 };
+      if (transacoes) {
+        transacoes.forEach(t => {
+          if (t.categoria && t.categoria !== '-- Selecione --' && t.categoria !== '') {
+            counts.categorizados++;
+          } else {
+            counts.revisao++;
+          }
+        });
+      }
+      html += `
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <h4 style="margin: 0 0 1.2rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+            <i class="fas fa-tags" style="color: var(--color-income); font-size: 1.3rem;"></i> Resumo da Categorização
+          </h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+            <div style="flex: 1 1 300px; max-width: 33%; padding-right: 1.5rem; border-right: 1px solid rgba(255,255,255,0.1);">
+              <h4 style="margin: 0 0 0.8rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-magic"></i> A Mente da IA (Categorização)
+              </h4>
+              <p style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-style: italic; line-height: 1.6;">"${analiseCat}"</p>
+            </div>
+            <div style="flex: 2 1 400px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-content: start;">
+              <div style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 1.2rem;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;">
+                  <i class="fas fa-check-circle" style="color: var(--color-income);"></i> Categorizados
+                </div>
+                <div style="font-size: 1.15rem; font-weight: 600; color: var(--color-primary);">${counts.categorizados}</div>
+              </div>
+              <div style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 1.2rem;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px;">
+                  <i class="fas fa-exclamation-triangle" style="color: var(--color-warning);"></i> Revisão Pendente
+                </div>
+                <div style="font-size: 1.15rem; font-weight: 600; color: var(--color-primary);">${counts.revisao}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    html += `
+        <div id="ia-button-container" style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;"></div>
+    `;
 
     if (transacoes.length === 0) {
       html += `<p style="color:var(--text-secondary);">Nenhuma transação encontrada.</p>`;
@@ -455,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         transacoesParaSalvar[idx].duplicado = e.target.checked;
-        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseAtual);
+        renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseExtracao, analiseCategorizacao);
       });
     });
   }
@@ -559,9 +615,9 @@ document.addEventListener('DOMContentLoaded', () => {
           alert("Erro: " + (json.message || json.error));
         } else {
           transacoesParaSalvar = json.data;
-          if (json.analise_ia) analiseAtual = json.analise_ia;
+          if (json.analise_ia) analiseCategorizacao = json.analise_ia;
           isPasso2Concluido = true;
-          renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseAtual);
+          renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseExtracao, analiseCategorizacao);
           
           btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
           
