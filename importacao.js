@@ -163,7 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function renderizarTabelaDebug(transacoes, cabecalho, analiseExtra = "", analiseCat = "") {
-    let html = '';
+    let summaryHtml = '';
+    let tableHtml = '';
 
     if (cabecalho && Object.keys(cabecalho).length > 0) {
       let analiseHtml = '';
@@ -199,11 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       cardsHtml += `</div>`;
 
-      html += `
-        <details open style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
-          <summary style="margin: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; cursor: pointer; user-select: none; list-style: none;">
-            <i class="fas fa-file-invoice-dollar" style="color: var(--color-accent); font-size: 1.3rem;"></i> Resumo da Extração
-            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);"></i>
+      summaryHtml += `
+        <details ${isPasso2Concluido ? '' : 'open'} style="margin-bottom: 1.5rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <summary style="cursor: pointer; user-select: none; list-style: none; outline: none; margin-bottom: 0;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--text-secondary); width: 100%;">
+              <i class="fas fa-file-invoice-dollar" style="color: var(--color-accent); font-size: 1.3rem;"></i> 
+              <strong style="font-weight: 600;">Resumo da Extração</strong>
+              <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);"></i>
+            </div>
           </summary>
           <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.2rem;">
             ${analiseHtml}
@@ -212,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </details>
       `;
     } else if (analiseExtra) {
-      html += `
+      summaryHtml += `
         <div style="margin-bottom: 2rem; padding: 1.2rem; background: rgba(255, 193, 7, 0.1); border-left: 4px solid var(--color-warning); border-radius: 8px;">
           <h4 style="margin: 0 0 0.5rem 0; color: var(--color-warning); font-size: 1rem; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-magic"></i> A Mente da IA (Extração)
@@ -233,11 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
-      html += `
-        <details open style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
-          <summary style="margin: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; cursor: pointer; user-select: none; list-style: none;">
-            <i class="fas fa-tags" style="color: var(--color-income); font-size: 1.3rem;"></i> Resumo da Categorização
-            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);"></i>
+      summaryHtml += `
+        <details open style="margin-bottom: 1.5rem; padding: 1.5rem; background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 37, 51, 0.6) 100%); border-radius: 12px; border: 1px solid var(--border-color);">
+          <summary style="cursor: pointer; user-select: none; list-style: none; outline: none; margin-bottom: 0;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 1.1rem; color: var(--text-secondary); width: 100%;">
+              <i class="fas fa-tags" style="color: var(--color-income); font-size: 1.3rem;"></i> 
+              <strong style="font-weight: 600;">Resumo da Categorização</strong>
+              <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 0.9rem; color: var(--text-muted);"></i>
+            </div>
           </summary>
           <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.2rem;">
             <div style="flex: 1 1 300px; max-width: 33%; padding-right: 1.5rem; border-right: 1px solid rgba(255,255,255,0.1);">
@@ -265,12 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    html += `
-        <div id="ia-button-container" style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;"></div>
-    `;
+    
 
     if (transacoes.length === 0) {
-      html += `<p style="color:var(--text-secondary);">Nenhuma transação encontrada.</p>`;
+      tableHtml += `<p style="color:var(--text-secondary);">Nenhuma transação encontrada.</p>`;
     } else {
       const dic = window.dicionarioGeral || {};
       const catKeys = Object.keys(dic).sort();
@@ -329,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (duplicadas.length > 0) {
-        html += `
+        tableHtml += `
           <details style="margin-bottom: 1.5rem; background: rgba(220, 53, 69, 0.05); border: 1px solid var(--color-expense); border-radius: 6px; padding: 10px;">
             <summary style="cursor: pointer; color: var(--color-expense); font-weight: bold; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
               <i class="fas fa-exclamation-triangle"></i> Lançamentos Fechados/Duplicados (${duplicadas.length}) - Expanda para ver
@@ -354,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const index = item.index;
           let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
           
-          html += `
+          tableHtml += `
             <tr style="border-bottom: 1px solid var(--border-color); opacity: 0.8;">
               <td style="padding:8px; color: var(--text-muted); display:none;">${t.cod || ''}</td>
               <td style="padding:8px; white-space: nowrap;">${t.data || ''}</td>
@@ -368,11 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>
           `;
         });
-        html += `</tbody></table></div></details>`;
+        tableHtml += `</tbody></table></div></details>`;
       }
 
       if (unicas.length > 0) {
-        html += `
+        tableHtml += `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <strong style="color:var(--text-secondary);">Transações Únicas (${unicas.length}):</strong>
             <input type="text" id="import-search-input" placeholder="Buscar nas transações..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-primary); font-size: 0.9rem; width: 300px; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--color-accent)'" onblur="this.style.borderColor='var(--border-color)'">
@@ -449,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (lowerConf.includes('baixa') || lowerConf.includes('vermelha')) corConfianca = 'var(--color-expense)';
           }
 
-          html += `
+          tableHtml += `
             <tr class="unica-row" style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
               <td style="padding:12px 8px; color: var(--text-muted); display:none;">${t.cod || ''}</td>
               <td style="padding:12px 8px; white-space: nowrap;">${t.data || ''}</td>
@@ -484,11 +489,11 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>
           `;
         });
-        html += `</tbody></table></div>`;
+        tableHtml += `</tbody></table></div>`;
       }
     }
 
-      html += `
+      tableHtml += `
         <details style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
           <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-code"></i> Inspecionar JSON bruto da IA (Debug)
@@ -497,14 +502,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </details>
       `;
 
-    resultContent.innerHTML = html;
+    document.getElementById('import-summary-content').innerHTML = summaryHtml;
+    document.getElementById('import-table-content').innerHTML = tableHtml;
     resultContainer.style.display = 'block';
 
-    const btnCatIA = document.getElementById('btnCategorizarIA');
-    const iaContainer = document.getElementById('ia-button-container');
-    if (btnCatIA && iaContainer) {
-      iaContainer.appendChild(btnCatIA);
-    }
+    
 
     // Adicionar listener para atualizar subcategorias dinamicamente se o usuario mudar a categoria
     document.querySelectorAll('.import-sel-cat').forEach(sel => {
@@ -880,10 +882,10 @@ function renderizarPasso3(txs) {
       return tableHtml;
   };
 
-  html += generateTable(txsTransfers, 'Transferências (Origem e Destino)', 'var(--color-warning)', 'fa-exchange-alt');
-  html += generateTable(txsParcels, 'Projeção de Parcelamentos', 'var(--color-income)', 'fa-layer-group');
+  tableHtml += generateTable(txsTransfers, 'Transferências (Origem e Destino)', 'var(--color-warning)', 'fa-exchange-alt');
+  tableHtml += generateTable(txsParcels, 'Projeção de Parcelamentos', 'var(--color-income)', 'fa-layer-group');
   
-  html += `
+  tableHtml += `
         <details style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
           <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-code"></i> Inspecionar JSON bruto recebido da IA (Debug)
@@ -892,7 +894,7 @@ function renderizarPasso3(txs) {
         </details>
       `;
 
-  html += `</div>`;
+  tableHtml += `</div>`;
   passo3Div.innerHTML = html;
   passo3Div.style.display = 'block';
   
