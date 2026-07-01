@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
           isPasso2Concluido = true;
           renderizarTabelaDebug(transacoesParaSalvar, cabecalhoAtual, analiseExtracao, analiseCategorizacao);
           
-          btnSalvar.innerHTML = 'Ir para o Passo 3 <i class="fas fa-arrow-right"></i>';
+          btnSalvar.innerHTML = 'Tratar Transferências e Parcelamentos <i class="fas fa-arrow-right"></i>';
           
           
         }
