@@ -380,17 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const unicas = [];
       
       transacoes.forEach((t, index) => {
-        let dupVal = false;
-        if (t) {
-          for (let key in t) {
-            if (key.toLowerCase().includes('duplicad')) {
-              dupVal = t[key];
-              break;
-            }
-          }
-        }
-        t.duplicado = (dupVal === true || String(dupVal).toLowerCase().trim() === 'sim');
-        
         if (t.duplicado) {
           duplicadas.push({t, index});
         } else {
