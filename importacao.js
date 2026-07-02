@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     const criarLinha = (tipo, data, descricao, categoria, valor, icon, color) => {
-       return \`
+       return `
        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
          <td style="padding: 10px; color: \${color}; font-weight: bold;">\${icon} \${tipo}</td>
          <td style="padding: 10px;">\${data || ''}</td>
@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
            \${String(valor).includes('-') ? '<span style="color:var(--color-expense)">'+valor+'</span>' : '<span style="color:var(--color-income)">'+valor+'</span>'}
          </td>
        </tr>
-       \`;
+       `;
     };
 
     dadosSincronizacao.sobrando.forEach(item => {
@@ -309,13 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
        html += '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhum lançamento processado.</td></tr>';
     }
 
-    html += \`</tbody></table></div>\`;
+    html += `</tbody></table></div>`;
     document.getElementById('import-table-content').innerHTML = html;
   }
 
   // PASSO 2: REVISÃO DA CATEGORIZAÇÃO
   function renderizarRevisaoCategorizacao(txs) {
-    let html = \`
+    let html = `
       <div style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
         <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (Categorização)</h4>
         <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">"\${analiseCategorizacao}"</p>
@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>
           </thead>
           <tbody>
-    \`;
+    `;
 
     const dic = window.dicionarioGeral || {};
     const catKeys = Object.keys(dic).sort();
@@ -361,10 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
       catKeys.forEach(k => {
         const selected = (t.categoria === k) ? 'selected' : '';
         if (selected) catFound = true;
-        catOptions += \`<option value="\${k}" \${selected}>\${k}</option>\`;
+        catOptions += `<option value="\${k}" \${selected}>\${k}</option>`;
       });
       if (t.categoria && !catFound) {
-        catOptions += \`<option value="\${t.categoria}" selected>⚠️ \${t.categoria} (Não encontrada)</option>\`;
+        catOptions += `<option value="\${t.categoria}" selected>⚠️ \${t.categoria} (Não encontrada)</option>`;
       }
 
       let subcatOptions = '<option value="">-- Selecione --</option>';
@@ -373,14 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
         dic[t.categoria].forEach(sub => {
           const selected = (t.subcategoria === sub) ? 'selected' : '';
           if (selected) subcatFound = true;
-          subcatOptions += \`<option value="\${sub}" \${selected}>\${sub}</option>\`;
+          subcatOptions += `<option value="\${sub}" \${selected}>\${sub}</option>`;
         });
       }
       if (t.subcategoria && !subcatFound) {
-        subcatOptions += \`<option value="\${t.subcategoria}" selected>⚠️ \${t.subcategoria} (Não encontrada)</option>\`;
+        subcatOptions += `<option value="\${t.subcategoria}" selected>⚠️ \${t.subcategoria} (Não encontrada)</option>`;
       }
 
-      html += \`
+      html += `
         <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
           <td style="padding:10px; white-space: nowrap;">\${t.data || ''}</td>
           <td style="padding:10px;">\${t.descricao || ''}</td>
@@ -399,10 +399,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="checkbox" class="import-chk-parcel" data-index="\${index}" \${t.parcelamento ? 'checked' : ''} style="cursor:pointer; transform:scale(1.2);">
           </td>
         </tr>
-      \`;
+      `;
     });
 
-    html += \`</tbody></table></div>\`;
+    html += `</tbody></table></div>`;
     
     document.getElementById('import-table-content').innerHTML = html;
 
@@ -414,12 +414,12 @@ document.addEventListener('DOMContentLoaded', () => {
         dadosSincronizacao.faltantes[idx].categoria = newCat;
         dadosSincronizacao.faltantes[idx].subcategoria = ''; 
         
-        const subcatSel = document.querySelector(\`.import-sel-subcat[data-index="\${idx}"]\`);
+        const subcatSel = document.querySelector(`.import-sel-subcat[data-index="\${idx}"]`);
         if (subcatSel) {
           let subOptions = '<option value="">-- Selecione --</option>';
           if (newCat && window.dicionarioGeral && window.dicionarioGeral[newCat]) {
             window.dicionarioGeral[newCat].forEach(sub => {
-              subOptions += \`<option value="\${sub}">\${sub}</option>\`;
+              subOptions += `<option value="\${sub}">\${sub}</option>`;
             });
           }
           subcatSel.innerHTML = subOptions;
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnSalvar.addEventListener('click', async () => {
     // ESTADO 1: Acabou de fazer a triagem, vai categorizar os faltantes
     if (!isCategorizado) {
-       if (!confirm(\`Você está prestes a:\\n\\n- Categorizar e ADICIONAR \${dadosSincronizacao.faltantes.length} novos lançamentos.\\n- DELETAR FISICAMENTE \${dadosSincronizacao.sobrando.length} lançamentos.\\n\\nTem certeza?\`)) {
+       if (!confirm(`Você está prestes a:\\n\\n- Categorizar e ADICIONAR \${dadosSincronizacao.faltantes.length} novos lançamentos.\\n- DELETAR FISICAMENTE \${dadosSincronizacao.sobrando.length} lançamentos.\\n\\nTem certeza?`)) {
           return;
        }
 
@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
          try {
            btnSalvar.disabled = true;
            btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
-           feedbackConsole.innerHTML += \`\\nEnviando \${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...\`;
+           feedbackConsole.innerHTML += `\\nEnviando \${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`;
            
            const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};
            const resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
            
            dadosSincronizacao.faltantes = jsonCat.data || dadosSincronizacao.faltantes; 
            analiseCategorizacao = jsonCat.analise_ia || "Categorização concluída.";
-           feedbackConsole.innerHTML += \` Concluído!\\n\`;
+           feedbackConsole.innerHTML += ` Concluído!\\n`;
 
            isCategorizado = true;
            
@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
          } catch (err) {
            alert("Erro na IA: " + err.message);
-           feedbackConsole.innerHTML += \`\\n<span style="color:#ef4444">Erro: \${err.message}</span>\`;
+           feedbackConsole.innerHTML += `\\n<span style="color:#ef4444">Erro: \${err.message}</span>`;
            btnSalvar.disabled = false;
            btnSalvar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
            return;
@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
     } catch (err) {
       alert("Erro ao salvar: " + err.message);
-      feedbackConsole.innerHTML += \`\\n<span style="color:#ef4444">Erro ao salvar: \${err.message}</span>\`;
+      feedbackConsole.innerHTML += `\\n<span style="color:#ef4444">Erro ao salvar: \${err.message}</span>`;
       btnSalvar.disabled = false;
       btnSalvar.innerHTML = '<i class="fas fa-save"></i> Tentar Novamente';
     }
@@ -603,7 +603,7 @@ function renderizarPasso3(txs) {
   const container = document.getElementById('passo3-container');
   container.style.display = 'block';
   
-  let html = \`
+  let html = `
     <div style="background: rgba(139, 92, 246, 0.1); border-left: 4px solid #8b5cf6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
       <h3 style="margin: 0 0 10px 0; color: #8b5cf6;"><i class="fas fa-random"></i> Passo 2: Transferências e Parcelamentos</h3>
       <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Identificamos transferências ou parcelamentos. Por favor, preencha a conta de destino/origem para as transferências e configure os parcelamentos.</p>
@@ -621,7 +621,7 @@ function renderizarPasso3(txs) {
           </tr>
         </thead>
         <tbody id="passo3-tbody">
-  \`;
+  `;
   
   txs.forEach((t, i) => {
     const isIncome = String(t.valor).indexOf('-') === -1;
@@ -632,32 +632,32 @@ function renderizarPasso3(txs) {
     let descColor = 'var(--text-primary)';
     
     if (t.isPasso3Original) {
-       extraDesc = \`<strong>\${t.descricao}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-university"></i> \${t.conta}</span>\`;
-       acaoHtml = \`<span style="color:var(--text-muted); font-size:0.8rem;">Principal</span>\`;
+       extraDesc = `<strong>\${t.descricao}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-university"></i> \${t.conta}</span>`;
+       acaoHtml = `<span style="color:var(--text-muted); font-size:0.8rem;">Principal</span>`;
     } else if (t.isPasso3Mirror) {
        descColor = '#8b5cf6';
        let contasOptions = '<option value="">-- Selecione a Conta Destino/Origem --</option>';
        const contasInfo = window.dadosFinanceiros && window.dadosFinanceiros.contas ? window.dadosFinanceiros.contas : [];
        contasInfo.forEach(c => {
-         contasOptions += \`<option value="\${c.nome}">\${c.nome}</option>\`;
+         contasOptions += `<option value="\${c.nome}">\${c.nome}</option>`;
        });
        
-       extraDesc = \`<strong>Contrapartida: \${t.descricao}</strong><br>
+       extraDesc = `<strong>Contrapartida: \${t.descricao}</strong><br>
                     <select class="p3-conta-select" data-index="\${i}" style="margin-top:5px; width:100%; padding:5px; background:var(--bg-card); color:var(--text-primary); border:1px solid #8b5cf6; border-radius:4px;">
                       \${contasOptions}
-                    </select>\`;
-       acaoHtml = \`<span style="color:#8b5cf6; font-size:0.8rem;">Contrapartida</span>\`;
+                    </select>`;
+       acaoHtml = `<span style="color:#8b5cf6; font-size:0.8rem;">Contrapartida</span>`;
     } else if (t.isPasso3ParcelaOriginal) {
-       extraDesc = \`<strong>\${t.descricao}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-university"></i> \${t.conta}</span>\`;
-       acaoHtml = \`
+       extraDesc = `<strong>\${t.descricao}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-university"></i> \${t.conta}</span>`;
+       acaoHtml = `
          <div style="display:flex; gap:5px; align-items:center;">
             <span>Parc. 1 de</span>
             <input type="number" class="p3-parcel-total" data-index="\${i}" value="\${t.parcelasTotal}" min="1" max="120" style="width:50px; padding:3px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:3px;">
          </div>
-       \`;
+       `;
     }
 
-    html += \`
+    html += `
       <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
         <td style="padding:10px; color:var(--text-secondary);">\${t.data}</td>
         <td style="padding:10px; color:\${descColor};">\${extraDesc}</td>
@@ -665,10 +665,10 @@ function renderizarPasso3(txs) {
         <td style="padding:10px; text-align:right; color:\${color}; font-weight:bold;">\${t.valor}</td>
         <td style="padding:10px;">\${acaoHtml}</td>
       </tr>
-    \`;
+    `;
   });
   
-  html += \`</tbody></table></div>\`;
+  html += `</tbody></table></div>`;
   container.innerHTML = html;
   
   document.querySelectorAll('.p3-conta-select').forEach(sel => {
@@ -702,7 +702,7 @@ function renderizarPasso3(txs) {
                parcelaAtual: p,
                parcelasTotal: val,
                originalParcelCod: t.cod,
-               descricao: \`\${t.descricao} (\${p}/\${val})\`
+               descricao: `\${t.descricao} (\${p}/\${val})`
             });
          }
       }
@@ -715,5 +715,5 @@ function addMonthsStr(dateStr, months) {
   if (parts.length !== 3) return dateStr;
   let d = new Date(parts[2], parseInt(parts[1])-1, parts[0]);
   d.setMonth(d.getMonth() + months);
-  return \`\${String(d.getDate()).padStart(2,'0')}/\${String(d.getMonth()+1).padStart(2,'0')}/\${d.getFullYear()}\`;
+  return `\${String(d.getDate()).padStart(2,'0')}/\${String(d.getMonth()+1).padStart(2,'0')}/\${d.getFullYear()}`;
 }
