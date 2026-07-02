@@ -446,15 +446,11 @@ document.addEventListener('DOMContentLoaded', () => {
   btnSalvar.addEventListener('click', async () => {
     // ESTADO 1: Acabou de fazer a triagem, vai categorizar os faltantes
     if (!isCategorizado) {
-       if (!confirm(`Você está prestes a:\\n\\n- Categorizar e ADICIONAR ${dadosSincronizacao.faltantes.length} novos lançamentos.\\n- DELETAR FISICAMENTE ${dadosSincronizacao.sobrando.length} lançamentos.\\n\\nTem certeza?`)) {
-          return;
-       }
-
        if (dadosSincronizacao.faltantes.length > 0) {
          try {
            btnSalvar.disabled = true;
            btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
-           feedbackConsole.innerHTML += `\\nEnviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`;
+           feedbackConsole.innerHTML += `\nEnviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`;
            
            const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};
            const resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
@@ -637,7 +633,7 @@ function renderizarPasso3(txs) {
     } else if (t.isPasso3Mirror) {
        descColor = '#8b5cf6';
        let contasOptions = '<option value="">-- Selecione a Conta Destino/Origem --</option>';
-       const contasInfo = window.dadosFinanceiros && window.dadosFinanceiros.contas ? window.dadosFinanceiros.contas : [];
+       const contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
        contasInfo.forEach(c => {
          contasOptions += `<option value="${c.nome}">${c.nome}</option>`;
        });
