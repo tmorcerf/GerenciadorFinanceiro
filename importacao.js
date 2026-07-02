@@ -132,6 +132,36 @@ document.addEventListener('DOMContentLoaded', () => {
         cabecalho = dataIA.cabecalho;
       }
 
+      // --- INÍCIO DO FILTRO INVISÍVEL DE CONCILIADOS (FRONTEND) ---
+      const contasInfo = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+      if (contasInfo.length > 0) {
+        const parseLocalDt = (str) => {
+          if (!str) return 0;
+          let s = String(str).trim().split(' ')[0]; 
+          let p = s.split('/');
+          if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0])).getTime();
+          p = s.split('-');
+          if (p.length === 3) return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])).getTime();
+          if (typeof str === 'object' && str instanceof Date) return str.getTime();
+          return 0;
+        };
+
+        transacoes = transacoes.filter(t => {
+           let tTime = parseLocalDt(t.data);
+           let tContaName = String(t.conta || cabecalho['Nome da conta'] || cabecalho['conta'] || '').toLowerCase().trim();
+           
+           let contaObj = contasInfo.find(c => String(c.nome).toLowerCase().trim() === tContaName);
+           if (contaObj && contaObj.conciliado_ate) {
+              let concTime = parseLocalDt(contaObj.conciliado_ate);
+              if (tTime > 0 && concTime > 0 && tTime <= concTime) {
+                 return false; // Descarta silenciosamente
+              }
+           }
+           return true; 
+        });
+      }
+      // --- FIM DO FILTRO INVISÍVEL ---
+
       // Limpa a tentativa de categorização do Passo 1 para não confundir o usuário
       transacoes.forEach(t => {
         t.categoria = '';
