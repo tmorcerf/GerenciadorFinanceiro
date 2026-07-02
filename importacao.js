@@ -98,7 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
           action: 'importar_simples_v2',
           fileContent: fileData.content,
           fileType: fileData.type,
-          fileName: file.name
+          fileName: file.name,
+          contasInfo: (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate})) : []
         })
       });
 
@@ -146,49 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         t.duplicado = (dupVal === true || String(dupVal).toLowerCase().trim() === 'sim');
       });
-
-      // --- INÍCIO DA MARCAÇÃO DE CONCILIADOS (FRONTEND) ---
-      // Se a data do lançamento for <= a data "Conciliado Até" da conta, já foi processado!
-      let descartadosConciliacao = 0;
-      let dataCorte = "";
-      const contasInfo = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
-      if (contasInfo.length > 0) {
-        const parseLocalDt = (str) => {
-          if (!str) return 0;
-          let s = String(str).trim().split(' ')[0]; // Pega só a parte da data
-          let p = s.split('/');
-          if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0])).getTime();
-          p = s.split('-');
-          if (p.length === 3) return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])).getTime();
-          if (typeof str === 'object' && str instanceof Date) return str.getTime();
-          return 0;
-        };
-
-        transacoes.forEach(t => {
-           if (!t.duplicado) {
-              let tTime = parseLocalDt(t.data);
-              let tContaName = String(t.conta || cabecalho['Nome da conta'] || cabecalho['conta'] || '').toLowerCase().trim();
-              
-              let contaObj = contasInfo.find(c => String(c.nome).toLowerCase().trim() === tContaName);
-              if (contaObj && contaObj.conciliado_ate) {
-                 let concTime = parseLocalDt(contaObj.conciliado_ate);
-                 if (tTime > 0 && concTime > 0 && tTime <= concTime) {
-                    t.descartadoPorConciliacao = true;
-                    descartadosConciliacao++;
-                    dataCorte = String(contaObj.conciliado_ate).trim().split(' ')[0];
-                 }
-              }
-           }
-        });
-      }
-      
-      if (descartadosConciliacao > 0) {
-         transacoes = transacoes.filter(t => !t.descartadoPorConciliacao);
-         setTimeout(() => {
-            alert(`Filtro Local Aplicado: ${descartadosConciliacao} transações mais antigas que a data de conciliação da conta (${dataCorte}) foram descartadas automaticamente.`);
-         }, 500);
-      }
-      // --- FIM DA MARCAÇÃO DE CONCILIADOS ---
 
       transacoesParaSalvar = transacoes;
       cabecalhoAtual = cabecalho;
