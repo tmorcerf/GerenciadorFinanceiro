@@ -96,27 +96,18 @@
           Importar Extratos
         </a>
       </li>
-      <li style="margin-top: 5px; padding-top: 5px;">
-        <a class="nav-item" data-target="panel-sync">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 21v-5h5"></path></svg>
-          Sincronizar Período
+      <li style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
+        <a class="nav-item" href="scanner.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2" ry="2"/></svg>
+          Verifica Ofertas
         </a>
       </li>
 
-      <li style="margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
-        <a class="nav-item" id="btn-open-config" title="Configurações" style="cursor: pointer;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          Configurações
-        </a>
-      </li>
     </ul>
 
     <div class="sidebar-footer">
       <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">v 0.9.0061</span>
+      <span style="font-size: 0.75rem;">Sincronizado Online | v3.2</span>
     </div>
   </aside>
 
@@ -375,150 +366,46 @@
       </div>
     </div>
     
-    <!-- PANEL: SINCRONIZAÇÃO DE PERÍODO FECHADO -->
-    <div id="panel-sync" class="dashboard-panel">
-      <div style="margin-bottom: 2rem;">
-        <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">Sincronizar Período Fechado</h2>
-        <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Faça upload do extrato (fatura fechada ou mês completo) para ser a VERDADE absoluta da planilha.</p>
-      </div>
-
-      <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; margin-bottom: 2rem;">
-        
-        <!-- Passo 1: Upload (Sync) -->
-        <div class="glass-card" style="flex: 1; min-width: 300px; border-top: 4px solid var(--accent-blue);">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-            <div style="background: var(--accent-blue); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; box-shadow: 0 0 10px rgba(78, 205, 196, 0.4);">1</div>
-            <h3 style="margin: 0; font-size: 1.2rem;">Enviar Extrato</h3>
-          </div>
-          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.4;">Selecione o arquivo PDF ou cole o texto. A IA lerá o documento na íntegra para cruzarmos com a planilha.</p>
-          
-          <div class="form-group">
-             <label>Selecione o Arquivo (PDF ou Imagem):</label>
-             <input type="file" id="syncFileInput" class="custom-file-input" accept=".pdf,image/*">
-          </div>
-          
-          <div style="text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.85rem; position: relative;">
-             <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); position: absolute; width: 100%; top: 50%; z-index: 1;">
-             <span style="background: var(--bg-card); padding: 0 10px; position: relative; z-index: 2;">OU COLAR TEXTO</span>
-          </div>
-          
-          <div class="form-group">
-            <textarea id="syncTextInput" rows="4" placeholder="Cole aqui o texto do extrato caso prefira..." style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
-          </div>
-
-          <button id="btnProcessarSync" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-            Processar Sincronização
-          </button>
-        </div>
-
-        <!-- Feedback Area -->
-        <div class="glass-card" style="flex: 2; min-width: 300px; display: flex; flex-direction: column;">
-          <h3 style="margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 1.1rem;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 12 12 12 8"></polyline><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            Status
-          </h3>
-          <div id="syncFeedback" style="flex: 1; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.9rem; color: var(--text-muted); overflow-y: auto; max-height: 250px; white-space: pre-wrap;">
-            Aguardando arquivo...
-          </div>
-          
-          <div id="syncResumo" style="display: none; margin-top: 15px; padding: 15px; background: rgba(78, 205, 196, 0.1); border-left: 4px solid var(--accent-blue); border-radius: 4px;">
-             <!-- Resumo injected here -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Passo 2 e 3: Triagem e Salvar -->
-      <div id="syncAreaTabela" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="background: var(--accent-blue); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; box-shadow: 0 0 10px rgba(78, 205, 196, 0.4);">2</div>
-            <h3 style="margin: 0; font-size: 1.3rem;">Triagem de Sincronização</h3>
-          </div>
-          <button id="btnSalvarSync" class="btn btn-success" style="padding: 10px 20px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-            Confirmar e Sincronizar
-          </button>
-        </div>
-        
-        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
-          Abaixo estão os resultados do cruzamento entre o extrato e a sua planilha.
-          <br><strong>Faltantes</strong> (serão adicionados), <strong>Sobrando</strong> (serão excluídos) e <strong>Corretos</strong> (já existem).
-        </p>
-
-        <div style="overflow-x: auto; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-          <table id="tabelaSync" class="data-table" style="width: 100%; border-collapse: collapse; min-width: 900px;">
-            <thead>
-              <tr style="background: rgba(0,0,0,0.2);">
-                <th style="padding: 12px 15px; text-align: left; font-weight: 600; color: var(--text-secondary);">Ação</th>
-                <th style="padding: 12px 15px; text-align: left; font-weight: 600; color: var(--text-secondary);">Data</th>
-                <th style="padding: 12px 15px; text-align: left; font-weight: 600; color: var(--text-secondary);">Descrição</th>
-                <th style="padding: 12px 15px; text-align: left; font-weight: 600; color: var(--text-secondary);">Categoria (IA)</th>
-                <th style="padding: 12px 15px; text-align: right; font-weight: 600; color: var(--text-secondary);">Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Preenchido via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    
     <!-- 5. PANEL: IMPORTAÃƒâ€¡ÃƒÆ’O SIMPLIFICADA -->
     <div id="panel-import" class="dashboard-panel">
-      <div style="margin-bottom: 2rem;">
-        <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">Importação com Inteligência Artificial</h2>
-        <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Faça upload do seu extrato e deixe a IA categorizar magicamente.</p>
-      </div>
-
-      <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; margin-bottom: 2rem;">
-        
-        <!-- Left Side: Status de Conciliação Card -->
-        <div style="flex: 1 1 300px; max-width: 450px;">
-          <div class="metric-card" style="height: 100%; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column;">
-            <h3 style="margin-top:0; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; color: var(--text-primary);"><i class="fas fa-history" style="color:var(--text-muted); margin-right:8px;"></i> Status de Conciliação</h3>
-            <div id="import-conciliacao-status" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 250px; padding-right: 5px;">
-              <!-- Injetado via JS -->
-            </div>
-          </div>
-        </div>
-        
-        <!-- Right Side: Upload Zone -->
-        <div style="flex: 1 1 500px;">
-          <div class="metric-card" style="height: 100%; padding: 2.5rem; text-align: center; border: 1px dashed rgba(59, 130, 246, 0.5); background: linear-gradient(145deg, rgba(22, 27, 38, 0.4) 0%, rgba(30, 37, 51, 0.8) 100%); transition: all 0.3s ease; position: relative; overflow: hidden;" id="upload-zone-container" onmouseover="this.style.borderColor='var(--color-accent)'; this.style.boxShadow='0 0 20px var(--color-accent-glow)';" onmouseout="this.style.borderColor='rgba(59, 130, 246, 0.5)'; this.style.boxShadow='none';">
-            <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: var(--color-accent); filter: blur(60px); opacity: 0.3;"></div>
-            <div style="position: absolute; bottom: -50px; right: -50px; width: 100px; height: 100px; background: var(--color-income); filter: blur(60px); opacity: 0.2;"></div>
-            
-            <i class="fas fa-cloud-upload-alt" style="font-size: 3.5rem; color: var(--color-accent); margin-bottom: 1rem; filter: drop-shadow(0 0 10px var(--color-accent-glow));"></i>
-            <h3 style="margin: 0 0 10px 0; font-weight: 600; color: var(--text-primary);">Arraste seu arquivo ou clique para selecionar</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Suporta PDF, OFX, CSV, XLS e TXT</p>
-            
-            <input type="file" id="uploadFileImportacao" accept=".csv, .txt, .ofx, .pdf, .xls, .xlsx" style="display: none;" />
-            <button id="btn-import-novo" title="Selecionar Arquivo" style="background: linear-gradient(135deg, var(--color-accent), #2563eb); color: white; border: none; border-radius: 50px; font-weight: 600; font-size: 1.05rem; padding: 14px 32px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-accent-glow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 1;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(59,130,246,0.6)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px var(--color-accent-glow)';" onclick="document.getElementById('uploadFileImportacao').click()">
-              <i class="fas fa-magic"></i> Extrair Dados
-            </button>
-          </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">ImportaÃ§Ã£o com InteligÃªncia Artificial</h2>
+          <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">FaÃ§a upload do seu extrato e deixe a IA categorizar magicamente.</p>
         </div>
       </div>
 
+      <div class="metric-card" style="padding: 2.5rem; text-align: center; margin-bottom: 2rem; border: 1px dashed rgba(59, 130, 246, 0.5); background: linear-gradient(145deg, rgba(22, 27, 38, 0.4) 0%, rgba(30, 37, 51, 0.8) 100%); transition: all 0.3s ease; position: relative; overflow: hidden;" id="upload-zone-container" onmouseover="this.style.borderColor='var(--color-accent)'; this.style.boxShadow='0 0 20px var(--color-accent-glow)';" onmouseout="this.style.borderColor='rgba(59, 130, 246, 0.5)'; this.style.boxShadow='none';">
+        <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: var(--color-accent); filter: blur(60px); opacity: 0.3;"></div>
+        <div style="position: absolute; bottom: -50px; right: -50px; width: 100px; height: 100px; background: var(--color-income); filter: blur(60px); opacity: 0.2;"></div>
+        
+        <i class="fas fa-cloud-upload-alt" style="font-size: 3.5rem; color: var(--color-accent); margin-bottom: 1rem; filter: drop-shadow(0 0 10px var(--color-accent-glow));"></i>
+        <h3 style="margin: 0 0 10px 0; font-weight: 600; color: var(--text-primary);">Arraste seu arquivo ou clique para selecionar</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Suporta PDF, OFX, CSV, XLS e TXT</p>
+        
+        <input type="file" id="uploadFileImportacao" accept=".csv, .txt, .ofx, .pdf, .xls, .xlsx" style="display: none;" />
+        <button id="btn-import-novo" title="Selecionar Arquivo" style="background: linear-gradient(135deg, var(--color-accent), #2563eb); color: white; border: none; border-radius: 50px; font-weight: 600; font-size: 1.05rem; padding: 14px 32px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-accent-glow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 1;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(59,130,246,0.6)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px var(--color-accent-glow)';" onclick="document.getElementById('uploadFileImportacao').click()">
+          <i class="fas fa-magic"></i> Extrair Dados
+        </button>
+      </div>
 
+      <div id="import-status-box" style="margin-bottom: 2rem; padding: 1.2rem 1.5rem; background: var(--bg-card); border-left: 4px solid var(--color-accent); border-radius: 8px; font-weight: 500; color: var(--text-secondary); display: none; align-items: center; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <i class="fas fa-info-circle" style="font-size: 1.2rem; color: var(--color-accent);"></i> Aguardando arquivo...
+      </div>
 
       <div id="import-result-container" style="display: none; padding: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color);">
-          <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-list-check" style="color: var(--color-income);"></i> Resultado da Extração</h3>
+          <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;"><i class="fas fa-list-check" style="color: var(--color-income);"></i> Resultado da ExtraÃ§Ã£o</h3>
+          <div style="display: flex; gap: 10px;">
+            <button id="btnCategorizarIA" style="background: linear-gradient(135deg, var(--color-accent), #3b82f6); color: #fff; border: none; padding: 10px 24px; border-radius: 50px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: none; align-items: center; gap: 8px; box-shadow: 0 6px 20px var(--color-accent-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+              <i class="fas fa-magic"></i> Categorizar com IA
+            </button>
+          </div>
         </div>
-        <div id="import-summary-content" style="padding: 1.5rem 1.5rem 0 1.5rem;"></div>
-        <div id="import-ia-btn-container" style="padding: 0 1.5rem 1.5rem 1.5rem; display: none; justify-content: flex-end;">
-          <button id="btnCategorizarIA" style="background: linear-gradient(135deg, var(--color-accent), #3b82f6); color: #fff; border: none; padding: 10px 24px; border-radius: 50px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px var(--color-accent-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-            <i class="fas fa-magic"></i> Categorizar com IA
-          </button>
-        </div>
-        <div id="import-table-content" style="padding: 0 1.5rem 1.5rem 1.5rem;"></div>
-        <div id="passo3-container" style="display: none; padding: 0 1.5rem 1.5rem 1.5rem;"></div>
+        <div id="import-result-content" style="padding: 1.5rem;"></div>
         <div style="display: flex; justify-content: flex-end; padding: 1.5rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
           <button id="btnSalvarImportacaoNova" style="background: linear-gradient(135deg, var(--color-income), #059669); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-income-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-            Tratar Transferências e Parcelamentos <i class="fas fa-arrow-right"></i>
+            Ir para o Passo 3 <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
@@ -669,40 +556,13 @@
     </div>
   </div>
 
-  <!-- Modal de Configurações -->
-  <div id="config-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
-    <div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-        <h3 style="margin: 0; font-size: 1.4rem; color: var(--text-primary);"><i class="fas fa-cog" style="color: var(--color-accent); margin-right: 8px;"></i> Configurações</h3>
-        <button id="btn-close-config" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--color-expense)';" onmouseout="this.style.color='var(--text-muted)';">&times;</button>
-      </div>
-      
-      <div style="color: var(--text-secondary); text-align: center; padding: 2rem 0;">
-        <i class="fas fa-tools" style="font-size: 3rem; color: var(--border-color); margin-bottom: 1rem;"></i>
-        <p style="margin: 0; font-size: 1.1rem; font-weight: 500;">Painel em Construção</p>
-        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5;">Em breve você poderá configurar preferências, gerenciar a chave da IA e dicionários diretamente por aqui.</p>
-      </div>
-    </div>
-  </div>
+  <a href="scanner.html" class="fab-scanner" title="Escanear Cupom">
+    <i class="fas fa-qrcode"></i>
+  </a>
 
-  <script>
-    document.getElementById('btn-open-config').addEventListener('click', () => {
-      document.getElementById('config-modal').style.display = 'flex';
-    });
-    document.getElementById('btn-close-config').addEventListener('click', () => {
-      document.getElementById('config-modal').style.display = 'none';
-    });
-    document.getElementById('config-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'config-modal') {
-        document.getElementById('config-modal').style.display = 'none';
-      }
-    });
-  </script>
-
-  <script src="dados.js"></script>
+<script src="dados.js"></script>
   <script src="app.js?v=22"></script>
   <script src="importacao.js?v=1"></script>
-  <script src="sincronizacao.js?v=1"></script>
   <!-- Modal Detalhado (Huge Card) -->
   <div id="detailedModal" class="tx-modal-overlay">
     <div class="tx-modal-content" style="max-width: 600px; padding: 2rem;">
