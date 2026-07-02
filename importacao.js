@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
           fileContent: fileData.content,
           fileType: fileData.type,
           fileName: file.name,
-          contasInfo: (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate})) : []
+          contasInfo: (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate})) : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate})) : [])
         })
       });
 
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // --- INÍCIO DO FILTRO INVISÍVEL DE CONCILIADOS (FRONTEND) ---
-      const contasInfo = (window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : [];
+      const contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
       if (contasInfo.length > 0) {
         const parseLocalDt = (str) => {
           if (!str) return 0;
