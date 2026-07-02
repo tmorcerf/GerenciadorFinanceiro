@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       feedbackConsole.innerHTML += `Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`;
 
-      renderizarTabelaSyncTriagem();
+      renderizarTabelaUnificada();
       
       resultContainer.style.display = 'block';
       resumoDiv.style.display = 'block';
@@ -259,72 +259,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // PASSO 1: TRIAGEM CRUA
-  function renderizarTabelaSyncTriagem() {
+
+  // FUNÇÃO UNIFICADA DE RENDERIZAÇÃO
+  function renderizarTabelaUnificada() {
     let html = `
       <div style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-        <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (Extração)</h4>
-        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">"${analiseExtracao}"</p>
-      </div>
-      
-      <div style="overflow-x:auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
-        <table style="width:100%; border-collapse: collapse; font-size: 0.8rem; color:var(--text-primary);">
-          <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
-            <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-              <th style="padding:10px;">AÇÃO</th>
-              <th style="padding:10px;">DATA</th>
-              <th style="padding:10px;">DESCRIÇÃO</th>
-              <th style="padding:10px;">CATEGORIA (ATUAL)</th>
-              <th style="padding:10px; text-align:right;">VALOR</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    const criarLinha = (tipo, data, descricao, categoria, valor, icon, color) => {
-       return `
-       <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-         <td style="padding: 10px; color: ${color}; font-weight: bold;">${icon} ${tipo}</td>
-         <td style="padding: 10px;">${data || ''}</td>
-         <td style="padding: 10px;">${descricao || ''}</td>
-         <td style="padding: 10px;"><span style="background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 12px; font-size: 0.75rem;">${categoria || '-'}</span></td>
-         <td style="padding: 10px; text-align: right; font-weight: 500;">
-           ${String(valor).includes('-') ? '<span style="color:var(--color-expense)">'+valor+'</span>' : '<span style="color:var(--color-income)">'+valor+'</span>'}
-         </td>
-       </tr>
-       `;
-    };
-
-    dadosSincronizacao.sobrando.forEach(item => {
-       html += criarLinha("Excluir", item.data, item.descricao, item.categoria, item.valor, "🗑️", "#ef4444");
-    });
-    dadosSincronizacao.faltantes.forEach(item => {
-       html += criarLinha("Adicionar", item.data, item.descricao, 'Será Categorizado', item.valor, "➕", "var(--accent-blue)");
-    });
-    dadosSincronizacao.corretos.forEach(item => {
-       html += criarLinha("Correto", item.planilha.data, item.planilha.descricao, item.planilha.categoria, item.planilha.valor, "✔️", "var(--text-muted)");
-    });
-
-    if (dadosSincronizacao.sobrando.length === 0 && dadosSincronizacao.faltantes.length === 0 && dadosSincronizacao.corretos.length === 0) {
-       html += '<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhum lançamento processado.</td></tr>';
-    }
-
-    html += `</tbody></table></div>`;
-    document.getElementById('import-table-content').innerHTML = html;
-  }
-
-  // PASSO 2: REVISÃO DA CATEGORIZAÇÃO
-  function renderizarRevisaoCategorizacao(txs) {
-    let html = `
-      <div style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-        <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (Categorização)</h4>
-        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">"${analiseCategorizacao}"</p>
+        <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (${isCategorizado ? 'Categorização' : 'Extração'})</h4>
+        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">"${isCategorizado ? analiseCategorizacao : analiseExtracao}"</p>
       </div>
       
       <div style="overflow-x:auto; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
         <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; color:var(--text-primary);">
           <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
             <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
+              <th style="padding:10px;">AÇÃO</th>
               <th style="padding:10px;">DATA</th>
               <th style="padding:10px;">DESCRIÇÃO</th>
               <th style="padding:10px; text-align:right;">VALOR</th>
@@ -339,7 +287,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dic = window.dicionarioGeral || {};
     const catKeys = Object.keys(dic).sort();
 
-    txs.forEach((t, index) => {
+    const criarLinha = (tipo, item, index, isFaltante) => {
+      let icon = tipo === "Adicionar" ? "➕" : (tipo === "Excluir" ? "🗑️" : "✔️");
+      let colorTipo = tipo === "Adicionar" ? "var(--accent-blue)" : (tipo === "Excluir" ? "#ef4444" : "var(--text-muted)");
+      
+      let t = isFaltante ? item : (tipo === "Correto" ? item.planilha : item);
+      let disabledAttr = !isFaltante ? "disabled" : "";
+      
       // Sanitize match
       if (t.categoria) {
         const matchedCat = catKeys.find(k => k.trim().toLowerCase() === String(t.categoria).trim().toLowerCase());
@@ -380,41 +334,58 @@ document.addEventListener('DOMContentLoaded', () => {
         subcatOptions += `<option value="${t.subcategoria}" selected>⚠️ ${t.subcategoria} (Não encontrada)</option>`;
       }
 
-      html += `
+      return `
         <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+          <td style="padding:10px; color: ${colorTipo}; font-weight: bold;">${icon} ${tipo}</td>
           <td style="padding:10px; white-space: nowrap;">${t.data || ''}</td>
           <td style="padding:10px;">${t.descricao || ''}</td>
           <td style="padding:10px; white-space: nowrap; text-align:right; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
           <td style="padding:10px;">
-            <select class="import-sel-cat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 160px; font-size:0.8rem;">
+            <select class="import-sel-cat" data-index="${index}" ${disabledAttr} style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
               ${catOptions}
             </select>
           </td>
           <td style="padding:10px;">
-            <select class="import-sel-subcat" data-index="${index}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 160px; font-size:0.8rem;">
+            <select class="import-sel-subcat" data-index="${index}" ${disabledAttr} style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
               ${subcatOptions}
             </select>
           </td>
           <td style="padding:10px; text-align:center;">
-            <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${t.parcelamento ? 'checked' : ''} style="cursor:pointer; transform:scale(1.2);">
+            <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${t.parcelamento ? 'checked' : ''} ${disabledAttr} style="cursor:pointer; transform:scale(1.2);">
           </td>
         </tr>
       `;
+    };
+
+    dadosSincronizacao.sobrando.forEach((item, i) => {
+       html += criarLinha("Excluir", item, i, false);
+    });
+    dadosSincronizacao.faltantes.forEach((item, i) => {
+       html += criarLinha("Adicionar", item, i, true);
+    });
+    dadosSincronizacao.corretos.forEach((item, i) => {
+       html += criarLinha("Correto", item, i, false);
     });
 
+    if (dadosSincronizacao.sobrando.length === 0 && dadosSincronizacao.faltantes.length === 0 && dadosSincronizacao.corretos.length === 0) {
+       html += '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhum lançamento processado.</td></tr>';
+    }
+
     html += `</tbody></table></div>`;
-    
     document.getElementById('import-table-content').innerHTML = html;
 
-    // Listeners
-    document.querySelectorAll('.import-sel-cat').forEach(sel => {
+    // Listeners apenas para os Adicionar (faltantes) que não estão disabled
+    document.querySelectorAll('.import-sel-cat:not([disabled])').forEach(sel => {
       sel.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         const newCat = e.target.value;
         dadosSincronizacao.faltantes[idx].categoria = newCat;
         dadosSincronizacao.faltantes[idx].subcategoria = ''; 
         
-        const subcatSel = document.querySelector(`.import-sel-subcat[data-index="${idx}"]`);
+        // Pega o select de subcategoria na mesma linha (parent tr -> find select)
+        const tr = e.target.closest('tr');
+        const subcatSel = tr.querySelector('.import-sel-subcat');
+        
         if (subcatSel) {
           let subOptions = '<option value="">-- Selecione --</option>';
           if (newCat && window.dicionarioGeral && window.dicionarioGeral[newCat]) {
@@ -427,14 +398,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    document.querySelectorAll('.import-sel-subcat').forEach(sel => {
+    document.querySelectorAll('.import-sel-subcat:not([disabled])').forEach(sel => {
       sel.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         dadosSincronizacao.faltantes[idx].subcategoria = e.target.value;
       });
     });
     
-    document.querySelectorAll('.import-chk-parcel').forEach(chk => {
+    document.querySelectorAll('.import-chk-parcel:not([disabled])').forEach(chk => {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         dadosSincronizacao.faltantes[idx].parcelamento = e.target.checked;
@@ -472,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
            isCategorizado = true;
            
            // Renderizar a tabela com os selects
-           renderizarRevisaoCategorizacao(dadosSincronizacao.faltantes);
+           renderizarTabelaUnificada();
            
            btnSalvar.innerHTML = 'Prosseguir para Transferências <i class="fas fa-arrow-right"></i>';
            btnSalvar.disabled = false;
