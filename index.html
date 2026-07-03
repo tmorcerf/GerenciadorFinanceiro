@@ -109,7 +109,7 @@
 
     <div class="sidebar-footer">
       <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">v 0.9.0075</span>
+      <span style="font-size: 0.75rem;">v 0.9.0076</span>
     </div>
   </aside>
 
@@ -416,8 +416,40 @@
           Confira o que será <strong>Adicionado</strong>, <strong>Excluído</strong> e <strong>Mantido</strong>. (Nesta etapa, os itens faltantes ainda não possuem categoria).
         </div>
 
-        <!-- Tabela de Triagem (Injetada via JS) -->
-        <div id="import-table-content" style="padding: 0 1.5rem 1.5rem 1.5rem;"></div>
+        <!-- Tabela de Triagem e Categorização (Unificada) -->
+        <style>
+          .step-1-active .col-conta,
+          .step-3-active .col-parc {
+            display: none !important;
+          }
+        </style>
+        <div id="import-table-content" style="padding: 0 1.5rem 1.5rem 1.5rem;">
+          
+          <div id="ia-mind-container" style="display:none; margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (<span id="ia-mind-title"></span>)</h4>
+            <p id="ia-mind-text" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;"></p>
+          </div>
+
+          <div style="overflow-x:auto; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
+            <table id="unified-table" class="step-1-active" style="width:100%; border-collapse: collapse; font-size: 0.85rem; color:var(--text-primary);">
+              <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
+                <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
+                  <th class="col-acao" style="padding:10px;">AÇÃO</th>
+                  <th class="col-data" style="padding:10px;">DATA</th>
+                  <th class="col-desc" style="padding:10px;">DESCRIÇÃO</th>
+                  <th class="col-conta" style="padding:10px;">CONTA</th>
+                  <th class="col-valor" style="padding:10px; text-align:right;">VALOR</th>
+                  <th class="col-cat" style="padding:10px;">CATEGORIA</th>
+                  <th class="col-subcat" style="padding:10px;">SUBCATEGORIA</th>
+                  <th class="col-parc" style="padding:10px; text-align:center;" title="Parcelamento?">PARC.</th>
+                </tr>
+              </thead>
+              <tbody id="unified-table-body">
+                <!-- Injetado via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
         
         <!-- Passo 3 Container -->
         <div id="passo3-container" style="display: none; padding: 0 1.5rem 1.5rem 1.5rem;"></div>

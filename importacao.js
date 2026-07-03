@@ -282,37 +282,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // FUNÇÃO UNIFICADA DE RENDERIZAÇÃO
   function renderizarTabelaUnificada() {
-    let html = `
-      <div style="margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-        <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (${isCategorizado ? 'Categorização' : 'Extração'})</h4>
-        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">"${isCategorizado ? analiseCategorizacao : analiseExtracao}"</p>
-      </div>
-      
-      <div style="overflow-x:auto; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
-        <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; color:var(--text-primary);">
-          <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
-            <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-              <th style="padding:10px;">AÇÃO</th>
-              <th style="padding:10px;">DATA</th>
-              <th style="padding:10px;">DESCRIÇÃO</th>
-              <th style="padding:10px; text-align:right;">VALOR</th>
-              <th style="padding:10px;">CATEGORIA</th>
-              <th style="padding:10px;">SUBCATEGORIA</th>
-              <th style="padding:10px; text-align:center;" title="Parcelamento?">PARC.</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
+    let tbodyHtml = '';
 
     const dic = window.dicionarioGeral || {};
     const catKeys = Object.keys(dic).sort();
+    
+    // Atualiza o quadro da IA
+    const iaContainer = document.getElementById('ia-mind-container');
+    const iaTitle = document.getElementById('ia-mind-title');
+    const iaText = document.getElementById('ia-mind-text');
+    
+    if (analiseExtracao || analiseCategorizacao) {
+      iaContainer.style.display = 'block';
+      iaTitle.innerText = isCategorizado ? 'Categorização' : 'Extração';
+      iaText.innerText = `"${isCategorizado ? analiseCategorizacao : analiseExtracao}"`;
+    } else {
+      iaContainer.style.display = 'none';
+    }
+    
+    // Define qual passo estamos para a classe do unified-table
+    const unifiedTable = document.getElementById('unified-table');
+    unifiedTable.className = isPasso3Ativo ? 'step-3-active' : 'step-1-active';
 
     const criarLinha = (tipo, item, index, isFaltante) => {
       let icon = tipo === "Adicionar" ? "➕" : (tipo === "Excluir" ? "🗑️" : "✔️");
       let colorTipo = tipo === "Adicionar" ? "var(--accent-blue)" : (tipo === "Excluir" ? "#ef4444" : "var(--text-muted)");
       
       let t = isFaltante ? item : (tipo === "Correto" ? item.planilha : item);
-      let disabledAttr = !isFaltante ? "disabled" : "";
+      let disabledAttr = ""; // Sempre editável para categorias no Passo 1 se for Adicionar, ou Correto (conforme plano)!
       
       // Sanitize match
       if (t.categoria) {
@@ -356,79 +353,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return `
         <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-          <td style="padding:10px; color: ${colorTipo}; font-weight: bold;">${icon} ${tipo}</td>
-          <td style="padding:10px; white-space: nowrap;">${t.data || ''}</td>
-          <td style="padding:10px;">${t.descricao || ''}</td>
-          <td style="padding:10px; white-space: nowrap; text-align:right; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
-          <td style="padding:10px;">
-            <select class="import-sel-cat" data-index="${index}" ${disabledAttr} style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
+          <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">${icon} ${tipo}</td>
+          <td class="col-data" style="padding:10px; white-space: nowrap;">${t.data || ''}</td>
+          <td class="col-desc" style="padding:10px;">${t.descricao || ''}</td>
+          <td class="col-conta" style="padding:10px;">${t.conta || contaDoExtrato || ''}</td>
+          <td class="col-valor" style="padding:10px; white-space: nowrap; text-align:right; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+          <td class="col-cat" style="padding:10px;">
+            <select class="import-sel-cat" data-index="${index}" data-tipo="${tipo}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
               ${catOptions}
             </select>
           </td>
-          <td style="padding:10px;">
-            <select class="import-sel-subcat" data-index="${index}" ${disabledAttr} style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
+          <td class="col-subcat" style="padding:10px;">
+            <select class="import-sel-subcat" data-index="${index}" data-tipo="${tipo}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
               ${subcatOptions}
             </select>
           </td>
-          <td style="padding:10px; text-align:center;">
-            <input type="checkbox" class="import-chk-parcel" data-index="${index}" ${t.parcelamento ? 'checked' : ''} ${disabledAttr} style="cursor:pointer; transform:scale(1.2);">
+          <td class="col-parc" style="padding:10px; text-align:center;">
+            <input type="checkbox" class="import-chk-parcel" data-index="${index}" data-tipo="${tipo}" ${t.parcelamento ? 'checked' : ''} style="cursor:pointer; transform:scale(1.2);">
           </td>
         </tr>
       `;
     };
 
     dadosSincronizacao.sobrando.forEach((item, i) => {
-       html += criarLinha("Excluir", item, i, false);
+       tbodyHtml += criarLinha("Excluir", item, i, false);
     });
     dadosSincronizacao.faltantes.forEach((item, i) => {
-       html += criarLinha("Adicionar", item, i, true);
+       tbodyHtml += criarLinha("Adicionar", item, i, true);
     });
     dadosSincronizacao.corretos.forEach((item, i) => {
-       html += criarLinha("Correto", item, i, false);
+       tbodyHtml += criarLinha("Correto", item, i, false);
     });
 
     if (dadosSincronizacao.sobrando.length === 0 && dadosSincronizacao.faltantes.length === 0 && dadosSincronizacao.corretos.length === 0) {
-       html += '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhum lançamento processado.</td></tr>';
+       tbodyHtml += '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhum lançamento processado.</td></tr>';
     }
 
-    html += `</tbody></table></div>`;
-    document.getElementById('import-table-content').innerHTML = html;
+    document.getElementById('unified-table-body').innerHTML = tbodyHtml;
+    document.getElementById('import-table-content').style.display = 'block';
 
-    // Listeners apenas para os Adicionar (faltantes) que não estão disabled
-    document.querySelectorAll('.import-sel-cat:not([disabled])').forEach(sel => {
+    // Listeners
+    document.querySelectorAll('.import-sel-cat').forEach(sel => {
       sel.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
-        const newCat = e.target.value;
-        dadosSincronizacao.faltantes[idx].categoria = newCat;
-        dadosSincronizacao.faltantes[idx].subcategoria = ''; 
+        const tipo = e.target.getAttribute('data-tipo');
         
-        // Pega o select de subcategoria na mesma linha (parent tr -> find select)
-        const tr = e.target.closest('tr');
-        const subcatSel = tr.querySelector('.import-sel-subcat');
-        
-        if (subcatSel) {
-          let subOptions = '<option value="">-- Selecione --</option>';
-          if (newCat && window.dicionarioGeral && window.dicionarioGeral[newCat]) {
-            window.dicionarioGeral[newCat].forEach(sub => {
-              subOptions += `<option value="${sub}">${sub}</option>`;
-            });
-          }
-          subcatSel.innerHTML = subOptions;
-        }
+        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+        let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
+
+        t.categoria = e.target.value;
+        t.subcategoria = ''; // reset
+
+        renderizarTabelaUnificada();
       });
     });
 
-    document.querySelectorAll('.import-sel-subcat:not([disabled])').forEach(sel => {
+    document.querySelectorAll('.import-sel-subcat').forEach(sel => {
       sel.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
-        dadosSincronizacao.faltantes[idx].subcategoria = e.target.value;
+        const tipo = e.target.getAttribute('data-tipo');
+        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+        let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
+        t.subcategoria = e.target.value;
       });
     });
-    
-    document.querySelectorAll('.import-chk-parcel:not([disabled])').forEach(chk => {
+
+    document.querySelectorAll('.import-chk-parcel').forEach(chk => {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
-        dadosSincronizacao.faltantes[idx].parcelamento = e.target.checked;
+        const tipo = e.target.getAttribute('data-tipo');
+        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+        let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
+        t.parcelamento = e.target.checked;
       });
     });
   }
@@ -590,25 +586,25 @@ function renderizarPasso3(txs) {
   const container = document.getElementById('passo3-container');
   container.style.display = 'block';
   
-  let html = `
+  // Oculta a Tabela de Triagem e Mostra apenas o quadro de Transferências
+  document.getElementById('import-table-content').style.display = 'none';
+
+  // Na verdade, a regra diz para mantermos a mesma tabela estrutural. 
+  // Mas como esse Passo 2 tem um header "Passo 2: Transferências", vamos exibi-lo acima da tabela.
+  // Vamos reexibir a div da tabela, mas atualizar o CSS para step-3-active.
+  document.getElementById('import-table-content').style.display = 'block';
+  const unifiedTable = document.getElementById('unified-table');
+  unifiedTable.className = 'step-3-active'; // Ocultará Parc. 
+
+  let headerHtml = `
     <div style="background: rgba(139, 92, 246, 0.1); border-left: 4px solid #8b5cf6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
       <h3 style="margin: 0 0 10px 0; color: #8b5cf6;"><i class="fas fa-random"></i> Passo 2: Transferências e Parcelamentos</h3>
       <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Identificamos transferências ou parcelamentos. Por favor, preencha a conta de destino/origem para as transferências e configure os parcelamentos.</p>
     </div>
-    
-    <div style="overflow-x:auto;">
-      <table style="width:100%; border-collapse: collapse; font-size: 0.85rem;">
-        <thead>
-          <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-            <th style="padding:10px;">DATA</th>
-            <th style="padding:10px;">DESCRIÇÃO / CONTA</th>
-            <th style="padding:10px;">CATEGORIA</th>
-            <th style="padding:10px; text-align:right;">VALOR</th>
-            <th style="padding:10px;">AÇÃO</th>
-          </tr>
-        </thead>
-        <tbody id="passo3-tbody">
   `;
+  container.innerHTML = headerHtml; // Container gets only the header now
+  
+  let tbodyHtml = '';
   
   txs.forEach((t, i) => {
     const isIncome = String(t.valor).indexOf('-') === -1;
@@ -617,25 +613,26 @@ function renderizarPasso3(txs) {
     let acaoHtml = '';
     let extraDesc = t.descricao;
     let descColor = 'var(--text-primary)';
+    let contaHtml = t.conta || 'N/A';
     
     if (t.isPasso3Original) {
-       extraDesc = `<strong>${t.descricao}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-university"></i> ${t.conta}</span>`;
        acaoHtml = `<span style="color:var(--text-muted); font-size:0.8rem;">Principal</span>`;
     } else if (t.isPasso3Mirror) {
        descColor = '#8b5cf6';
-       let contasOptions = '<option value="">-- Selecione a Conta Destino/Origem --</option>';
+       let contasOptions = '<option value="">-- Selecione a Conta --</option>';
        const contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
        contasInfo.forEach(c => {
          contasOptions += `<option value="${c.nome}">${c.nome}</option>`;
        });
        
-       extraDesc = `<strong>Contrapartida: ${t.descricao}</strong><br>
-                    <select class="p3-conta-select" data-index="${i}" style="margin-top:5px; width:100%; padding:5px; background:var(--bg-card); color:var(--text-primary); border:1px solid #8b5cf6; border-radius:4px;">
-                      ${contasOptions}
-                    </select>`;
+       extraDesc = `<strong>Contrapartida: ${t.descricao}</strong>`;
+       contaHtml = `
+         <select class="p3-conta-select" data-index="${i}" style="width:100%; padding:5px; background:var(--bg-card); color:var(--text-primary); border:1px solid #8b5cf6; border-radius:4px;">
+           ${contasOptions}
+         </select>
+       `;
        acaoHtml = `<span style="color:#8b5cf6; font-size:0.8rem;">Contrapartida</span>`;
     } else if (t.isPasso3ParcelaOriginal) {
-       extraDesc = `<strong>${t.descricao}</strong><br><span style="font-size:0.75rem; color:var(--text-muted);"><i class="fas fa-university"></i> ${t.conta}</span>`;
        acaoHtml = `
          <div style="display:flex; gap:5px; align-items:center;">
             <span>Parc. 1 de</span>
@@ -644,19 +641,25 @@ function renderizarPasso3(txs) {
        `;
     }
 
-    html += `
+    tbodyHtml += `
       <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <td style="padding:10px; color:var(--text-secondary);">${t.data}</td>
-        <td style="padding:10px; color:${descColor};">${extraDesc}</td>
-        <td style="padding:10px;"><span style="background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:12px; font-size:0.75rem;">${t.categoria || 'Sem Categoria'}</span></td>
-        <td style="padding:10px; text-align:right; color:${color}; font-weight:bold;">${t.valor}</td>
-        <td style="padding:10px;">${acaoHtml}</td>
+        <td class="col-acao" style="padding:10px;">${acaoHtml}</td>
+        <td class="col-data" style="padding:10px; color:var(--text-secondary);">${t.data}</td>
+        <td class="col-desc" style="padding:10px; color:${descColor};">${extraDesc}</td>
+        <td class="col-conta" style="padding:10px;">${contaHtml}</td>
+        <td class="col-valor" style="padding:10px; text-align:right; color:${color}; font-weight:bold;">${t.valor}</td>
+        <td class="col-cat" style="padding:10px;"><span style="background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:12px; font-size:0.75rem;">${t.categoria || 'Sem Categoria'}</span></td>
+        <td class="col-subcat" style="padding:10px;">${t.subcategoria || '-'}</td>
+        <td class="col-parc" style="padding:10px;">-</td>
       </tr>
     `;
   });
   
-  html += `</tbody></table></div>`;
-  container.innerHTML = html;
+  if (txs.length === 0) {
+     tbodyHtml += '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma transferência pendente.</td></tr>';
+  }
+
+  document.getElementById('unified-table-body').innerHTML = tbodyHtml;
   
   document.querySelectorAll('.p3-conta-select').forEach(sel => {
     sel.addEventListener('change', (e) => {
