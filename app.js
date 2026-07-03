@@ -147,27 +147,27 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       try {
         const [resLanc, resOrc, resCat, resContas, resAudit, resImports] = await Promise.all([
-          fetch(CSV_URL_LANCAMENTOS).then(r => {
+          fetch(CSV_URL_LANCAMENTOS + '&_t=' + Date.now()).then(r => {
             if(!r.ok) throw new Error('Falha ao acessar Lancamentos');
             return r.text();
           }),
-          fetch(CSV_URL_ORCAMENTO).then(r => {
+          fetch(CSV_URL_ORCAMENTO + '&_t=' + Date.now()).then(r => {
             if(!r.ok) return '';
             return r.text();
           }),
-          fetch(CSV_URL_CATEGORIAS).then(r => {
+          fetch(CSV_URL_CATEGORIAS + '&_t=' + Date.now()).then(r => {
             if(!r.ok) throw new Error('Falha ao acessar Categorias');
             return r.text();
           }),
-          fetch(CSV_URL_CONTAS).then(r => {
+          fetch(CSV_URL_CONTAS + '&_t=' + Date.now()).then(r => {
             if(!r.ok) throw new Error('Falha ao acessar Contas');
             return r.text();
           }),
-          fetch(CSV_URL_AUDITORIA).then(r => {
+          fetch(CSV_URL_AUDITORIA + '&_t=' + Date.now()).then(r => {
             if(!r.ok) throw new Error('Falha ao acessar Auditoria');
             return r.text();
           }),
-          fetch(CSV_URL_IMPORTACOES).then(r => {
+          fetch(CSV_URL_IMPORTACOES + '&_t=' + Date.now()).then(r => {
             if(!r.ok) return ''; // Importaes pode estar vazia/inexistente temporariamente
             return r.text();
           }).catch(() => '')
