@@ -177,6 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
          baseLocal = window.dadosFinanceiros.lancamentos;
       }
 
+      feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\\n`;
+      let debugLocal = baseLocal.filter(l => String(l.conta).trim().toLowerCase() === contaDoExtrato);
+      feedbackConsole.innerHTML += `DEBUG: Temos ${debugLocal.length} itens na base local para a conta '${contaDoExtrato}'.\\n`;
+      if (debugLocal.length > 0) {
+          let l = debugLocal[0];
+          feedbackConsole.innerHTML += `Exemplo: data=${l.data}, valor=${l.valor}, tTime=${parseDataBR(l.data)}.\\n`;
+      }
+
       let poolLocal = baseLocal.filter(L => {
          let matchConta = String(L.conta).trim().toLowerCase() === contaDoExtrato;
          let tTime = parseDataBR(L.data);
@@ -184,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
          return matchConta && matchTempo;
       });
 
-      feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\\n`;
       feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período (com margem de 3 dias).\\n`;
 
       let faltantes = [];
