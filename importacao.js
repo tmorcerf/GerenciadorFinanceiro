@@ -74,7 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset UI e Estados
     resultContainer.style.display = 'none';
     btnSalvar.style.display = 'none';
-    document.getElementById('import-table-content').innerHTML = '';
+    
+    // Não podemos dar innerHTML = '' no import-table-content senão destruímos a tabela unificada e o ia-mind-container!
+    document.getElementById('import-table-content').style.display = 'none';
+    if (document.getElementById('unified-table-body')) {
+      document.getElementById('unified-table-body').innerHTML = '';
+    }
+    if (document.getElementById('ia-mind-container')) {
+      document.getElementById('ia-mind-container').style.display = 'none';
+    }
+    
     resumoDiv.style.display = 'none';
     resumoDiv.innerHTML = '';
     isCategorizado = false;
@@ -85,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (document.getElementById('passo3-container')) {
       document.getElementById('passo3-container').style.display = 'none';
-      document.getElementById('passo3-container').innerHTML = '';
+      document.getElementById('passo3-container').innerHTML = ''; // Passo 3 container ainda é populado via js (apenas o header dele)
     }
 
     if (btnImport) {
