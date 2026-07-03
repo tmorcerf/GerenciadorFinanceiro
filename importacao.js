@@ -178,12 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       let poolLocal = baseLocal.filter(L => {
-         if (String(L.conta).trim().toLowerCase() !== contaDoExtrato) return false;
+         let matchConta = String(L.conta).trim().toLowerCase() === contaDoExtrato;
          let tTime = parseDataBR(L.data);
-         return (tTime >= minTime && tTime <= maxTime);
+         let matchTempo = (tTime >= (minTime - 3*86400000) && tTime <= (maxTime + 3*86400000));
+         return matchConta && matchTempo;
       });
 
-      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais neste mesmo período para esta conta.\nCruzando dados...\n`;
+      feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\\n`;
+      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período (com margem de 3 dias).\\n`;
 
       let faltantes = [];
       let corretos = [];
@@ -202,23 +204,34 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       dadosExtrato.forEach((ext, index) => {
-         // Garantir que todos tenham cod para não bugar o fluxo
          ext.cod = ext.cod || "TX_NEW_" + index;
          
          let matchIdx = poolLocal.findIndex(loc => {
-            return isDataIgual(ext.data, loc.data) && isValorIgual(ext.valor, loc.valor);
+            let dataOk = isDataIgual(ext.data, loc.data);
+            let valOk = isValorIgual(ext.valor, loc.valor);
+            return dataOk && valOk;
          });
 
          if (matchIdx !== -1) {
             let matchedLocal = poolLocal.splice(matchIdx, 1)[0];
-            corretos.push({
-               extrato: ext,
-               planilha: matchedLocal
-            });
+            corretos.push({ extrato: ext, planilha: matchedLocal });
          } else {
             faltantes.push(ext);
          }
       });
+
+      if (faltantes.length > 0 && poolLocal.length > 0) {
+          feedbackConsole.innerHTML += `\\n🔍 **DEBUG DE CRUZAMENTO:**\\n`;
+          feedbackConsole.innerHTML += `O primeiro item não encontrado foi: ${faltantes[0].data} | ${faltantes[0].descricao} | ${faltantes[0].valor}.\\n`;
+          feedbackConsole.innerHTML += `Tentamos cruzar com os seguintes itens na sua planilha:\\n`;
+          poolLocal.slice(0, 3).forEach(loc => {
+              let valExt = parseFloat(String(faltantes[0].valor).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
+              let valLoc = parseFloat(String(loc.valor).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
+              let t1 = parseDataBR(faltantes[0].data);
+              let t2 = parseDataBR(loc.data);
+              feedbackConsole.innerHTML += `  -> Planilha: ${loc.data} | ${loc.descricao} | ${loc.valor} (Dif. Dias: ${(Math.abs(t1-t2)/86400000).toFixed(0)}, Dif. Valor: ${Math.abs(Math.abs(valExt) - Math.abs(valLoc)).toFixed(2)})\\n`;
+          });
+      }
 
       let sobrando = poolLocal.map(loc => loc);
 
