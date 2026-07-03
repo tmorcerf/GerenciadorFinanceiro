@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isValorIgual = (v1, v2) => {
          let val1 = parseFloat(String(v1).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
          let val2 = parseFloat(String(v2).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
-         return Math.abs(val1 - val2) <= 0.50;
+         return Math.abs(Math.abs(val1) - Math.abs(val2)) <= 0.50;
       };
 
       const isDataIgual = (d1, d2) => {
