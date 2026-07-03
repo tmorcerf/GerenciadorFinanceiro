@@ -1,6 +1,15 @@
 // importacao.js
 // Lógica para a aba de Sincronização de Período Fechado (agora unificado na Importação Principal)
 
+let dadosSincronizacao = { corretos: [], faltantes: [], sobrando: [] };
+let isCategorizado = false;
+let isPasso3Ativo = false;
+let transacoesPasso3 = [];
+let transacoesNormais = [];
+let analiseExtracao = "";
+let analiseCategorizacao = "";
+let cabecalhoAtual = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   const uploadInput = document.getElementById('uploadFileImportacao');
   const btnImport = document.getElementById('btn-import-novo');
@@ -53,18 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return 0;
   }
 
-  let dadosSincronizacao = { corretos: [], faltantes: [], sobrando: [] };
-  
-  // Máquina de estados
-  let isCategorizado = false;
-  let isPasso3Ativo = false;
-  
-  let transacoesPasso3 = [];
-  let transacoesNormais = [];
 
-  let analiseExtracao = "";
-  let analiseCategorizacao = "";
-  let cabecalhoAtual = null;
 
   uploadInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -522,6 +520,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // ESTADO 3: Já tratou tudo, salva no Google Sheets
     try {
+      if (isPasso3Ativo) {
+         let unselected = transacoesPasso3.filter(t => t.isPasso3Mirror && !t.conta);
+         if (unselected.length > 0) {
+            alert("Por favor, selecione a conta de destino/origem para todas as transferências!");
+            return;
+         }
+      }
+
       btnSalvar.disabled = true;
       btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando (Salvando)...';
       
