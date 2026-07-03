@@ -164,6 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
       let minTime = Infinity;
       let maxTime = 0;
       dadosExtrato.forEach(t => {
+         // Garantir que a transação tenha a conta preenchida (importante para a IA puxar o histórico da conta correta depois)
+         if (!t.conta && cabecalho && (cabecalho['Nome da conta'] || cabecalho['conta'])) {
+            t.conta = cabecalho['Nome da conta'] || cabecalho['conta'];
+         }
+         
          let time = parseDataBR(t.data);
          if (time > 0) {
             if (time < minTime) minTime = time;
