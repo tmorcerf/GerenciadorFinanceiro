@@ -246,11 +246,16 @@ document.addEventListener('DOMContentLoaded', () => {
               let valLoc = parseFloat(String(loc.valor).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
               let t1 = parseDataBR(faltantes[0].data);
               let t2 = parseDataBR(loc.data);
-              feedbackConsole.innerHTML += `  -> Planilha: ${loc.data} | ${loc.descricao} | ${loc.valor} (Dif. Dias: ${(Math.abs(t1-t2)/86400000).toFixed(0)}, Dif. Valor: ${Math.abs(Math.abs(valExt) - Math.abs(valLoc)).toFixed(2)})\\n`;
+              feedbackConsole.innerHTML += `  -> Planilha: ${loc.data} | ${loc.obs} | ${loc.valor} (Dif. Dias: ${(Math.abs(t1-t2)/86400000).toFixed(0)}, Dif. Valor: ${Math.abs(Math.abs(valExt) - Math.abs(valLoc)).toFixed(2)})\\n`;
           });
       }
 
-      let sobrando = poolLocal.map(loc => loc);
+      // Itens "sobrando" (para excluir) só devem ser aqueles que caem EXATAMENTE no período do extrato. 
+      // Se caírem na "margem de 3 dias" fora do extrato e não casarem, apenas ignoramos.
+      let sobrando = poolLocal.filter(loc => {
+         let tTime = parseDataBR(loc.data);
+         return (tTime >= minTime && tTime <= maxTime);
+      });
 
       dadosSincronizacao = { corretos, faltantes, sobrando };
       
