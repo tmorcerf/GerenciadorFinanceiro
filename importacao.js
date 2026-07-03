@@ -182,8 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
       feedbackConsole.innerHTML += `Período identificado: ${dataInicio} até ${dataFim}.\n`;
 
       let baseLocal = [];
-      if (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) {
-         baseLocal = window.dadosFinanceiros.lancamentos;
+      const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+      if (_df && _df.lancamentos) {
+         baseLocal = _df.lancamentos;
       }
 
       feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\\n`;
