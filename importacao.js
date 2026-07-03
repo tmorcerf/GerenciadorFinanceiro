@@ -467,12 +467,18 @@ document.addEventListener('DOMContentLoaded', () => {
                categoriasTree: categoriasTree
              })
            });
-           const jsonCat = await resCat.json();
-           if (jsonCat.status === "error") throw new Error(jsonCat.message);
+           const resultCat = await resCat.json();
            
-           dadosSincronizacao.faltantes = jsonCat.data || dadosSincronizacao.faltantes; 
-           analiseCategorizacao = jsonCat.analise_ia || "Categorização concluída.";
-           feedbackConsole.innerHTML += ` Concluído!\\n`;
+           if (resultCat.debug) {
+             console.log("DEBUG APPS SCRIPT:", resultCat.debug);
+             feedbackConsole.innerHTML += `\n<span style="color: var(--accent-orange);">DEBUG BACKEND: Importando ${resultCat.debug.contasSendoImportadas.length} contas. Histórico possui ${resultCat.debug.historicoStr.split('\n').length - 2} linhas.</span>\n`;
+           }
+           
+           if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
+           
+           dadosSincronizacao.faltantes = resultCat.data || dadosSincronizacao.faltantes; 
+           analiseCategorizacao = resultCat.analise_ia || "Categorização concluída.";
+           feedbackConsole.innerHTML += ` Concluído!\n`;
 
            isCategorizado = true;
            
