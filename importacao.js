@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
          return matchConta && matchTempo;
       });
 
-      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período (com margem de 3 dias).\\n`;
+      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período do extrato.\\n`;
 
       let faltantes = [];
       let corretos = [];
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
          let t1 = parseDataBR(d1);
          let t2 = parseDataBR(d2);
          let diff = Math.abs(t1 - t2);
-         return diff <= (2 * 24 * 60 * 60 * 1000); // 2 dias margem
+         return diff === 0; // 0 dias de margem para evitar falsos positivos
       };
 
       dadosExtrato.forEach((ext, index) => {
@@ -542,7 +542,26 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSalvar.disabled = true;
       btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando (Salvando)...';
       
-      let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...transacoesPasso3] : dadosSincronizacao.faltantes;
+      let finalPasso3 = [];
+      if (isPasso3Ativo) {
+         transacoesPasso3.forEach(t => {
+            if (t.isPasso3Original) {
+               let mirror = transacoesPasso3.find(m => m.isPasso3Mirror && m.originalCod === t.cod);
+               if (mirror) {
+                  t.contaDestino = mirror.conta;
+               }
+               finalPasso3.push(t);
+            } else if (t.isPasso3Mirror) {
+               if (!t.sugestaoExistente) {
+                  finalPasso3.push(t);
+               }
+            } else {
+               finalPasso3.push(t);
+            }
+         });
+      }
+      
+      let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...finalPasso3] : dadosSincronizacao.faltantes;
 
       const contaDoExtrato = dadosSincronizacao.faltantes.length > 0 ? dadosSincronizacao.faltantes[0].conta : 
                              (dadosSincronizacao.corretos.length > 0 ? dadosSincronizacao.corretos[0].extrato.conta : "");
@@ -581,6 +600,44 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+function buscarPossiveisContraPartidas(txMirror) {
+    if (!window.dadosFinanceiros || !window.dadosFinanceiros.lancamentos) return [];
+    
+    let baseLocal = window.dadosFinanceiros.lancamentos;
+    
+    let parts = txMirror.data.split('/');
+    let tsMirror = new Date(parts[2], parseInt(parts[1])-1, parts[0]).getTime();
+    
+    let valStr = String(txMirror.valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    let valorMirror = parseFloat(valStr) || 0;
+    
+    let sugestoes = [];
+    baseLocal.forEach(l => {
+       if (!l.data || !l.valor) return;
+       let p = String(l.data).split('/');
+       if (p.length !== 3) return;
+       let tsHist = new Date(p[2], parseInt(p[1])-1, p[0]).getTime();
+       
+       let diffDias = Math.abs((tsMirror - tsHist) / (1000 * 60 * 60 * 24));
+       
+       let vHistStr = String(l.valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+       let valHist = parseFloat(vHistStr) || 0;
+       
+       if (diffDias <= 3 && Math.abs(valorMirror - valHist) < 0.05) {
+          sugestoes.push(l);
+       }
+    });
+    
+    // Filtra duplicatas nas próprias sugestões
+    let seen = new Set();
+    return sugestoes.filter(s => {
+       let key = `${s.conta}-${s.data}-${s.valor}`;
+       if (seen.has(key)) return false;
+       seen.add(key);
+       return true;
+    });
+}
 
 function processarPasso3(txs) {
   let result = [];
@@ -663,6 +720,28 @@ function renderizarPasso3(txs) {
            ${contasOptions}
          </select>
        `;
+       
+       let sugestoes = buscarPossiveisContraPartidas(t);
+       if (sugestoes.length > 0) {
+          contaHtml += `<div style="margin-top: 8px; font-size: 0.85rem; padding: 8px; background: rgba(139, 92, 246, 0.1); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
+            <div style="color: #8b5cf6; margin-bottom: 5px; font-weight: bold;"><i class="fas fa-lightbulb"></i> Sugestões de contrapartida já existentes:</div>`;
+          sugestoes.forEach((s, sIdx) => {
+             contaHtml += `
+               <label style="display: block; margin-bottom: 3px; cursor: pointer; color: var(--text-primary);">
+                 <input type="radio" name="sugestao-${i}" class="p3-sugestao-radio" data-index="${i}" value='${JSON.stringify(s)}'>
+                 <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 5px;">${s.conta}</span>
+                 ${s.data} | ${s.categoria} | R$ ${s.valor}
+               </label>
+             `;
+          });
+          contaHtml += `
+               <label style="display: block; margin-top: 5px; cursor: pointer; color: var(--text-secondary);">
+                 <input type="radio" name="sugestao-${i}" class="p3-sugestao-radio" data-index="${i}" value="" checked>
+                 Nenhuma dessas (Criar novo lançamento na conta selecionada acima)
+               </label>
+          </div>`;
+       }
+       
        acaoHtml = `<span style="color:#8b5cf6; font-size:0.8rem;">Contrapartida</span>`;
     } else if (t.isPasso3ParcelaOriginal) {
        acaoHtml = `
@@ -697,6 +776,40 @@ function renderizarPasso3(txs) {
     sel.addEventListener('change', (e) => {
       const idx = e.target.getAttribute('data-index');
       transacoesPasso3[idx].conta = e.target.value;
+    });
+  });
+  
+  document.querySelectorAll('.p3-sugestao-radio').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const idx = e.target.getAttribute('data-index');
+      const val = e.target.value;
+      const selectElem = document.querySelector(`.p3-conta-select[data-index="${idx}"]`);
+      const tr = e.target.closest('tr');
+      
+      if (val) {
+         let sugestao = JSON.parse(val);
+         transacoesPasso3[idx].conta = sugestao.conta; 
+         transacoesPasso3[idx].sugestaoExistente = sugestao;
+         
+         if (selectElem) {
+            selectElem.value = sugestao.conta;
+            selectElem.disabled = true;
+         }
+         if (tr) {
+            tr.style.opacity = '0.5';
+            tr.style.textDecoration = 'line-through';
+         }
+      } else {
+         transacoesPasso3[idx].sugestaoExistente = null;
+         if (selectElem) {
+            selectElem.disabled = false;
+            transacoesPasso3[idx].conta = selectElem.value;
+         }
+         if (tr) {
+            tr.style.opacity = '1';
+            tr.style.textDecoration = 'none';
+         }
+      }
     });
   });
 
