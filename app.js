@@ -222,6 +222,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             saldo_inicial: parseBrlFloat(c['Saldo inicial']),
             saldo: parseBrlFloat(c['Saldo atual'] || c['Saldo']),
             conciliado_ate: c['Conciliado até'] || c['Conciliado ate'] || c['Conciliado at'] || c['Conciliado atǸ'] || c['Conciliado atÃ©'] || c['Conciliado at\ufffd'] || '',
+            conciliado_desde: c['Conciliado desde'] || '',
             saldo_lancado: parseBrlFloat(c['Saldo lanado']),
             saldo_apurado: parseBrlFloat(c['Saldo Apurado']),
             uultima_movimentacao: c['Data da ultima movimentao'] || c['ultima Movimentao'] || c['Data ultima mov.'] || c['Uultima mov'] || c['Data da uultima movimentacao'] || c['Conciliado at'] || c['Conciliado ate'] || ''

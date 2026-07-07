@@ -283,17 +283,22 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // TRAVA DE CONCILIADO
       let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
-      let conciliadoTime = 0;
-      if (contaMatch && contaMatch.conciliado_ate) {
-          conciliadoTime = parseDataBR(contaMatch.conciliado_ate);
-      }
+      let cTimeAte = (contaMatch && contaMatch.conciliado_ate) ? parseDataBR(contaMatch.conciliado_ate) : 0;
+      let cTimeDesde = (contaMatch && contaMatch.conciliado_desde) ? parseDataBR(contaMatch.conciliado_desde) : 0;
 
-      if (conciliadoTime > 0) {
+      if (cTimeAte > 0) {
           let origLen = dadosExtrato.length;
-          dadosExtrato = dadosExtrato.filter(t => parseDataBR(t.data) > conciliadoTime);
+          dadosExtrato = dadosExtrato.filter(t => {
+             let tTime = parseDataBR(t.data);
+             if (cTimeDesde > 0) {
+                 return !(tTime >= cTimeDesde && tTime <= cTimeAte);
+             } else {
+                 return tTime > cTimeAte;
+             }
+          });
           let ignored = origLen - dadosExtrato.length;
           if (ignored > 0) {
-              feedbackConsole.innerHTML += `<span style="color:var(--color-warning);">Trava de Conciliação: ${ignored} itens do extrato ignorados (<= ${contaMatch.conciliado_ate}).</span>\n`;
+              feedbackConsole.innerHTML += `<span style="color:var(--color-warning);">Trava de Conciliação: ${ignored} itens do extrato ignorados (no período bloqueado).</span>\n`;
           }
       }
 
@@ -309,7 +314,16 @@ document.addEventListener('DOMContentLoaded', () => {
          let matchConta = String(L.conta).trim().toLowerCase() === contaDoExtrato;
          let tTime = parseDataBR(L.data);
          let matchTempo = (tTime >= (minTime - 3*86400000) && tTime <= (maxTime + 3*86400000));
-         let matchConciliado = tTime > conciliadoTime; // Trava: não tocar no que já está conciliado
+         
+         let isBlocked = false;
+         if (cTimeAte > 0) {
+             if (cTimeDesde > 0) {
+                 isBlocked = (tTime >= cTimeDesde && tTime <= cTimeAte);
+             } else {
+                 isBlocked = (tTime <= cTimeAte);
+             }
+         }
+         let matchConciliado = !isBlocked; // Trava: não tocar no que está no período bloqueado
          return matchConta && matchTempo && matchConciliado;
       });
 
@@ -716,10 +730,21 @@ document.addEventListener('DOMContentLoaded', () => {
              if (t.isPasso3Mirror && !t.sugestaoExistente) {
                  let destAccount = contasInfo.find(c => c.nome.toLowerCase() === String(t.conta).trim().toLowerCase());
                  if (destAccount && destAccount.conciliado_ate) {
-                     let cTime = parseDataBR(destAccount.conciliado_ate);
+                     let cTimeAte = parseDataBR(destAccount.conciliado_ate);
+                     let cTimeDesde = destAccount.conciliado_desde ? parseDataBR(destAccount.conciliado_desde) : 0;
                      let tTime = parseDataBR(t.data);
-                     if (cTime > 0 && tTime <= cTime) {
-                         lockError = `Ação Bloqueada: Você não pode transferir para a conta '${destAccount.nome}' na data ${t.data}, pois ela já está conciliada (até ${destAccount.conciliado_ate}).`;
+                     
+                     let isBlocked = false;
+                     if (cTimeAte > 0) {
+                         if (cTimeDesde > 0) {
+                             isBlocked = (tTime >= cTimeDesde && tTime <= cTimeAte);
+                         } else {
+                             isBlocked = (tTime <= cTimeAte);
+                         }
+                     }
+                     
+                     if (isBlocked) {
+                         lockError = `Ação Bloqueada: Você não pode transferir para a conta '${destAccount.nome}' na data ${t.data}, pois ela já está conciliada.`;
                          break;
                      }
                  }
@@ -905,8 +930,19 @@ function renderizarPasso3(txs) {
        const contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
        let tTime = parseDataBR(t.data);
        contasInfo.forEach(c => {
-         let cTime = c.conciliado_ate ? parseDataBR(c.conciliado_ate) : 0;
-         if (cTime > 0 && tTime <= cTime) {
+         let cTimeAte = c.conciliado_ate ? parseDataBR(c.conciliado_ate) : 0;
+         let cTimeDesde = c.conciliado_desde ? parseDataBR(c.conciliado_desde) : 0;
+         
+         let isBlocked = false;
+         if (cTimeAte > 0) {
+             if (cTimeDesde > 0) {
+                 isBlocked = (tTime >= cTimeDesde && tTime <= cTimeAte);
+             } else {
+                 isBlocked = (tTime <= cTimeAte);
+             }
+         }
+         
+         if (isBlocked) {
              contasOptions += `<option value="${c.nome}" disabled>${c.nome} [BLOQUEADA - Conciliada]</option>`;
          } else {
              contasOptions += `<option value="${c.nome}">${c.nome}</option>`;
