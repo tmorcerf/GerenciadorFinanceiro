@@ -63,11 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let contas = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
     
+    let contasToRender = contas.filter(c => c.conciliado_ate && String(c.conciliado_ate).trim() !== '');
+    
+    contasToRender.sort((a, b) => {
+        const parseDt = (str) => {
+            let p = String(str).split('/');
+            if (p.length === 3) return new Date(p[2], parseInt(p[1]) - 1, p[0]).getTime();
+            p = String(str).split('-');
+            if (p.length === 3) return new Date(p[0], parseInt(p[1]) - 1, p[2]).getTime();
+            return 0;
+        };
+        return parseDt(a.conciliado_ate) - parseDt(b.conciliado_ate);
+    });
+
     let html = '';
-    contas.forEach(c => {
-       if (c.conciliado_ate && String(c.conciliado_ate).trim() !== '') {
-          html += `<span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05);"><strong style="color:var(--text-primary); margin-right:4px;">${c.nome}</strong> ${c.conciliado_ate}</span>`;
-       }
+    contasToRender.forEach(c => {
+       html += `<span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05);"><strong style="color:var(--text-primary); margin-right:4px;">${c.nome}</strong> ${c.conciliado_ate}</span>`;
     });
     
     if (html === '') {
