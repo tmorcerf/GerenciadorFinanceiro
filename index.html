@@ -109,7 +109,7 @@
 
     <div class="sidebar-footer">
       <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">v 0.9.0087</span>
+      <span style="font-size: 0.75rem;">v 0.9.0089 - 06/07/2026, 21:05:15</span>
     </div>
   </aside>
 
@@ -393,15 +393,39 @@
           </div>
         </div>
         
-        <!-- Right Side: Feedback Console -->
-        <div class="glass-card" style="flex: 2; min-width: 300px; display: flex; flex-direction: column;">
-          <h3 style="margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 1.1rem;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 12 12 12 8"></polyline><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            Status da Sincronização
-          </h3>
+        <!-- Right Side: Feedback Console & Reconciliation info -->
+        <div class="glass-card" style="flex: 2; min-width: 300px; display: flex; flex-direction: column; position: relative;">
+          
+          <!-- Reconciliation Dates Row -->
+          <div id="reconciliation-dates-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 1.1rem;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 12 12 12 8"></polyline><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              Status da Sincronização
+            </h3>
+            
+            <button id="btn-view-doc" style="display: none; background: rgba(59, 130, 246, 0.15); color: var(--color-accent); border: 1px solid var(--color-accent); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; align-items: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='rgba(59, 130, 246, 0.25)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.15)'">
+              <i class="fas fa-file-invoice"></i> Ver Documento Analisado
+            </button>
+          </div>
+          
           <div id="importFeedbackConsole" style="flex: 1; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 0.9rem; color: var(--text-muted); overflow-y: auto; max-height: 250px; white-space: pre-wrap;">Aguardando arquivo...</div>
           
           <div id="importResumo" style="display: none; margin-top: 15px; padding: 15px; background: rgba(78, 205, 196, 0.1); border-left: 4px solid var(--accent-blue); border-radius: 4px;"></div>
+        </div>
+      </div>
+
+      <!-- Modal Ver Documento -->
+      <div id="docModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.85); align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+        <div style="background-color: var(--bg-card); margin: auto; padding: 0; border: 1px solid var(--border-color); width: 85%; height: 85%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
+            <h3 id="docModalTitle" style="margin:0; color:var(--text-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;"><i class="fas fa-search"></i> Visualização de Documento</h3>
+            <span id="closeDocModal" style="color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--color-expense)'" onmouseout="this.style.color='var(--text-muted)'">&times;</span>
+          </div>
+          <div id="docModalContent" style="flex:1; width:100%; background: #fff;"></div>
         </div>
       </div>
 
@@ -425,22 +449,67 @@
         </style>
         <div id="import-table-content" style="padding: 0 1.5rem 1.5rem 1.5rem;">
           
-          <div id="ia-mind-container" style="display:none; margin-bottom: 1.5rem; background: rgba(30, 37, 51, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <h4 style="margin: 0 0 10px 0; color: var(--color-warning);"><i class="fas fa-robot"></i> Mente da IA (<span id="ia-mind-title"></span>)</h4>
-            <p id="ia-mind-text" style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;"></p>
+          <style>
+            .thought-bubble {
+              position: relative;
+              background: rgba(30, 37, 51, 0.85);
+              padding: 20px;
+              border-radius: 20px;
+              border: 1px solid var(--border-color);
+              margin-bottom: 1.5rem;
+              margin-left: 30px;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            }
+            .thought-bubble::before {
+              content: '';
+              position: absolute;
+              left: -20px;
+              top: 20px;
+              width: 25px;
+              height: 25px;
+              background: rgba(30, 37, 51, 0.85);
+              border-radius: 50%;
+              border: 1px solid var(--border-color);
+            }
+            .thought-bubble::after {
+              content: '';
+              position: absolute;
+              left: -35px;
+              top: 40px;
+              width: 12px;
+              height: 12px;
+              background: rgba(30, 37, 51, 0.85);
+              border-radius: 50%;
+              border: 1px solid var(--border-color);
+            }
+          </style>
+          <div id="ia-mind-container" style="display:none; position: relative;">
+            <div style="position: absolute; left: -15px; top: -15px; font-size: 2.5rem; color: var(--color-warning); filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); z-index: 2;">
+              <i class="fas fa-robot"></i>
+            </div>
+            <div class="thought-bubble">
+              <h4 style="margin: 0 0 8px 0; color: var(--color-warning); font-size: 1.05rem;">Mente da IA (<span id="ia-mind-title"></span>)</h4>
+              <p id="ia-mind-text" style="margin: 0; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; line-height: 1.5;"></p>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
+            <button id="btnSalvarImportacaoNova" style="background: linear-gradient(135deg, var(--color-income), #059669); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-income-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+              Confirmar e Prosseguir (IA) <i class="fas fa-arrow-right"></i>
+            </button>
           </div>
 
           <div style="overflow-x:auto; max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px;">
             <table id="unified-table" class="step-1-active" style="width:100%; border-collapse: collapse; font-size: 0.85rem; color:var(--text-primary);">
               <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
                 <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                  <th class="col-acao" style="padding:10px;">AÇÃO</th>
-                  <th class="col-data" style="padding:10px;">DATA</th>
-                  <th class="col-desc" style="padding:10px;">DESCRIÇÃO</th>
-                  <th class="col-conta" style="padding:10px;">CONTA</th>
-                  <th class="col-valor" style="padding:10px; text-align:right;">VALOR</th>
-                  <th class="col-cat" style="padding:10px;">CATEGORIA</th>
-                  <th class="col-subcat" style="padding:10px;">SUBCATEGORIA</th>
+                  <th class="col-acao" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('acao')">AÇÃO <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-data" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('data')">DATA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-desc" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('descricao')">DESCRIÇÃO <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-conta" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('conta')">CONTA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-valor" style="padding:10px; text-align:right; cursor:pointer;" onclick="sortUnifiedTable('valor')">VALOR <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-cat" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('categoria')">CATEGORIA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-subcat" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('subcategoria')">SUBCATEGORIA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-parc" style="padding:10px; text-align:center;" title="Parcelamento?">PARC.</th>
                 </tr>
               </thead>
@@ -453,10 +522,7 @@
         
         <!-- Passo 3 Container -->
         <div id="passo3-container" style="display: none; padding: 0 1.5rem 1.5rem 1.5rem;"></div>
-        <div style="display: flex; justify-content: flex-end; padding: 1.5rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
-          <button id="btnSalvarImportacaoNova" style="background: linear-gradient(135deg, var(--color-income), #059669); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-income-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-            Confirmar e Prosseguir (IA) <i class="fas fa-arrow-right"></i>
-          </button>
+        <div id="bottom-bar" style="display: flex; justify-content: flex-end; padding: 1.5rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
         </div>
       </div>
     </div>

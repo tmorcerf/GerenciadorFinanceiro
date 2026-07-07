@@ -21,6 +21,62 @@ document.addEventListener('DOMContentLoaded', () => {
   const feedbackConsole = document.getElementById('importFeedbackConsole');
   const resumoDiv = document.getElementById('importResumo');
 
+  // Variáveis e refs pro Modal do Documento
+  let currentFileUrl = null;
+  let currentFileType = null;
+  const btnViewDoc = document.getElementById('btn-view-doc');
+  const docModal = document.getElementById('docModal');
+  const closeDocModal = document.getElementById('closeDocModal');
+  const docModalContent = document.getElementById('docModalContent');
+
+  if (btnViewDoc && docModal) {
+     btnViewDoc.addEventListener('click', () => {
+        if (!currentFileUrl) return;
+        let contentHtml = '';
+        if (currentFileType.includes('pdf')) {
+           contentHtml = `<iframe src="${currentFileUrl}" width="100%" height="100%" style="border:none;"></iframe>`;
+        } else if (currentFileType.includes('image')) {
+           contentHtml = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#eee; overflow:auto;"><img src="${currentFileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`;
+        } else {
+           contentHtml = `<iframe src="${currentFileUrl}" width="100%" height="100%" style="border:none; background:#fff;"></iframe>`;
+        }
+        docModalContent.innerHTML = contentHtml;
+        docModal.style.display = 'flex';
+     });
+     
+     closeDocModal.addEventListener('click', () => {
+        docModal.style.display = 'none';
+        docModalContent.innerHTML = '';
+     });
+     
+     window.addEventListener('click', (e) => {
+        if (e.target === docModal) {
+           docModal.style.display = 'none';
+           docModalContent.innerHTML = '';
+        }
+     });
+  }
+
+  const updateReconciliationDatesUI = () => {
+    const container = document.getElementById('reconciliation-dates-container');
+    if (!container) return;
+    
+    let contas = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
+    
+    let html = '';
+    contas.forEach(c => {
+       if (c.conciliado_ate && String(c.conciliado_ate).trim() !== '') {
+          html += `<span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05);"><strong style="color:var(--text-primary); margin-right:4px;">${c.nome}</strong> ${c.conciliado_ate}</span>`;
+       }
+    });
+    
+    if (html === '') {
+       html = '<span style="font-size: 0.8rem; color: var(--text-muted);">Nenhuma data de conciliação registrada.</span>';
+    }
+    
+    container.innerHTML = html;
+  };
+
   if (!uploadInput) return;
 
   // Drag and drop magic
@@ -68,6 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const file = e.target.files[0];
     if (!file) return;
     window.currentImportFile = file;
+
+    // Object URL para visualização do documento
+    if (currentFileUrl) URL.revokeObjectURL(currentFileUrl);
+    currentFileUrl = URL.createObjectURL(file);
+    currentFileType = file.type || file.name.split('.').pop().toLowerCase();
+    
+    if (btnViewDoc) btnViewDoc.style.display = 'inline-flex';
+    updateReconciliationDatesUI();
 
     // Reset UI e Estados
     resultContainer.style.display = 'none';
@@ -345,6 +409,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let valColor = (t.valor && String(t.valor).includes('-')) ? 'var(--color-expense)' : 'var(--color-income)';
       
+      let formatValor = t.valor !== undefined && t.valor !== null && !isNaN(parseFloat(t.valor)) 
+          ? parseFloat(t.valor).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}) 
+          : (t.valor || '');
+      
       let catOptions = '<option value="">-- Selecione --</option>';
       let catFound = false;
       catKeys.forEach(k => {
@@ -375,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <td class="col-data" style="padding:10px; white-space: nowrap;">${t.data || ''}</td>
           <td class="col-desc" style="padding:10px;">${t.descricao || ''}</td>
           <td class="col-conta" style="padding:10px;">${t.conta || contaDoExtrato || ''}</td>
-          <td class="col-valor" style="padding:10px; white-space: nowrap; text-align:right; color: ${valColor}; font-weight: 600;">${t.valor || ''}</td>
+          <td class="col-valor" style="padding:10px; white-space: nowrap; text-align:right; color: ${valColor}; font-weight: 600;">${formatValor}</td>
           <td class="col-cat" style="padding:10px;">
             <select class="import-sel-cat" data-index="${index}" data-tipo="${tipo}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
               ${catOptions}
@@ -446,6 +514,55 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  // Lógica de ordenação global
+  window.currentSortCol = '';
+  window.currentSortAsc = true;
+  window.sortUnifiedTable = function(col) {
+    if (!dadosSincronizacao) return;
+
+    if (window.currentSortCol === col) {
+      window.currentSortAsc = !window.currentSortAsc;
+    } else {
+      window.currentSortCol = col;
+      window.currentSortAsc = true;
+    }
+
+    const sortFn = (a, b) => {
+       // "Corretos" items have their data inside `.planilha` when rendering, but for sorting:
+       let itemA = a.planilha ? a.planilha : a;
+       let itemB = b.planilha ? b.planilha : b;
+
+       let valA = itemA[col] || '';
+       let valB = itemB[col] || '';
+
+       if (col === 'valor') {
+          valA = parseFloat(valA) || 0;
+          valB = parseFloat(valB) || 0;
+       } else if (col === 'data') {
+          // Simplistic date sort assuming DD/MM/YYYY
+          let pA = String(valA).split('/');
+          let pB = String(valB).split('/');
+          if (pA.length === 3 && pB.length === 3) {
+             valA = new Date(pA[2], pA[1]-1, pA[0]).getTime();
+             valB = new Date(pB[2], pB[1]-1, pB[0]).getTime();
+          }
+       } else {
+          valA = String(valA).toLowerCase();
+          valB = String(valB).toLowerCase();
+       }
+
+       if (valA < valB) return window.currentSortAsc ? -1 : 1;
+       if (valA > valB) return window.currentSortAsc ? 1 : -1;
+       return 0;
+    };
+
+    if (dadosSincronizacao.sobrando) dadosSincronizacao.sobrando.sort(sortFn);
+    if (dadosSincronizacao.faltantes) dadosSincronizacao.faltantes.sort(sortFn);
+    if (dadosSincronizacao.corretos) dadosSincronizacao.corretos.sort(sortFn);
+
+    renderizarTabelaUnificada();
+  };
 
   // FLUXO DO BOTÃO PRINCIPAL
   btnSalvar.addEventListener('click', async () => {
