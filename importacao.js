@@ -15,7 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnImport = document.getElementById('btn-import-novo');
   let btnImportOriginal = '';
   
+  let btnImportOriginal = '';
+  
   const resultContainer = document.getElementById('import-result-container');
+  const btnCategorizar = document.getElementById('btn-categorizar-ia');
   const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
   const uploadZone = document.getElementById('upload-zone-container');
   const feedbackConsole = document.getElementById('importFeedbackConsole');
@@ -157,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset UI e Estados
     resultContainer.style.display = 'none';
+    if (btnCategorizar) btnCategorizar.style.display = 'none';
     btnSalvar.style.display = 'none';
     
     // Não podemos dar innerHTML = '' no import-table-content senão destruímos a tabela unificada e o ia-mind-container!
@@ -186,7 +190,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btnImport.disabled = true;
     }
     
-    btnSalvar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-arrow-right"></i>';
+    if (btnCategorizar) btnCategorizar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
+    btnSalvar.innerHTML = 'Confirmar Importação <i class="fas fa-check"></i>';
     
     try {
       feedbackConsole.innerHTML = `Arquivo carregado: ${file.name}\n`;
@@ -350,21 +355,33 @@ document.addEventListener('DOMContentLoaded', () => {
       
       feedbackConsole.innerHTML += `Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`;
 
+      resultContainer.style.display = 'block';
+      document.getElementById('ia-mind-container').style.display = 'flex';
+      
+      // Se não tem itens, não mostra botões
+      if (dadosExtrato.length > 0) {
+        if (faltantes.length > 0) {
+            if (btnCategorizar) {
+                btnCategorizar.style.display = 'inline-flex';
+                btnCategorizar.disabled = false;
+            }
+        } else {
+            isCategorizado = true;
+        }
+        btnSalvar.style.display = 'inline-flex';
+      }
+
       renderizarTabelaUnificada();
       
-      resultContainer.style.display = 'block';
       resumoDiv.style.display = 'block';
       resumoDiv.innerHTML = `<strong>Resumo:</strong> <span style="color:var(--accent-blue)">+${faltantes.length} novos</span> | <span style="color:#ef4444">-${sobrando.length} a excluir</span> | <span style="color:var(--text-muted)">${corretos.length} corretos mantidos</span>`;
 
-      if (faltantes.length > 0) {
-         btnSalvar.style.display = 'inline-flex';
-         btnSalvar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
-      } else if (sobrando.length > 0) {
+      if (faltantes.length === 0 && sobrando.length > 0) {
          // Não tem faltantes, mas tem sobrando -> Vai direto pro fim
          isCategorizado = true;
          btnSalvar.style.display = 'inline-flex';
          btnSalvar.innerHTML = 'Sincronizar Exclusões <i class="fas fa-save"></i>';
-      } else {
+      } else if (faltantes.length === 0 && sobrando.length === 0) {
          feedbackConsole.innerHTML += `\n<span style="color:var(--color-income);">A planilha já está 100% idêntica ao extrato!</span>`;
       }
 
@@ -586,14 +603,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarTabelaUnificada();
   };
 
-  // FLUXO DO BOTÃO PRINCIPAL
-  btnSalvar.addEventListener('click', async () => {
-    // ESTADO 1: Acabou de fazer a triagem, vai categorizar os faltantes
-    if (!isCategorizado) {
+  // FLUXO DE CATEGORIZACAO
+  if (btnCategorizar) {
+    btnCategorizar.addEventListener('click', async () => {
        if (dadosSincronizacao.faltantes.length > 0) {
          try {
-           btnSalvar.disabled = true;
-           btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
+           btnCategorizar.disabled = true;
+           btnCategorizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
            feedbackConsole.innerHTML += `\nEnviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`;
            
            const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};
@@ -608,11 +624,6 @@ document.addEventListener('DOMContentLoaded', () => {
            });
            const resultCat = await resCat.json();
            
-           if (resultCat.debug) {
-             console.log("DEBUG APPS SCRIPT:", resultCat.debug);
-             feedbackConsole.innerHTML += `\n<span style="color: var(--accent-orange);">DEBUG BACKEND: Importando ${resultCat.debug.contasSendoImportadas.length} contas. Histórico possui ${resultCat.debug.historicoStr.split('\n').length - 2} linhas.</span>\n`;
-           }
-           
            if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
            
            dadosSincronizacao.faltantes = resultCat.data || dadosSincronizacao.faltantes; 
@@ -626,18 +637,22 @@ document.addEventListener('DOMContentLoaded', () => {
            
            btnSalvar.innerHTML = 'Prosseguir para Transferências <i class="fas fa-arrow-right"></i>';
            btnSalvar.disabled = false;
+           btnCategorizar.style.display = 'none'; // Ocultar o botão depois de categorizar
            return; 
 
          } catch (err) {
            alert("Erro na IA: " + err.message);
-           feedbackConsole.innerHTML += `\\n<span style="color:#ef4444">Erro: ${err.message}</span>`;
-           btnSalvar.disabled = false;
-           btnSalvar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
+           feedbackConsole.innerHTML += `\n<span style="color:#ef4444">Erro: ${err.message}</span>`;
+           btnCategorizar.disabled = false;
+           btnCategorizar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
            return;
          }
        }
-    }
+    });
+  }
     
+  // FLUXO DO BOTÃO PRINCIPAL (IMPORTAR)
+  btnSalvar.addEventListener('click', async () => {
     // ESTADO 2: Já categorizou (ou não tinha faltantes), vai processar as transferências (Passo 3)
     if (isCategorizado && !isPasso3Ativo && dadosSincronizacao.faltantes.length > 0) {
        const txNormais = [];

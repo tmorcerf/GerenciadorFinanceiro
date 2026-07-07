@@ -109,7 +109,7 @@
 
     <div class="sidebar-footer">
       <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">v 0.9.0091 - 06/07/2026, 21:09:39</span>
+      <span style="font-size: 0.75rem;">v 0.9.0092 - 06/07/2026, 21:59:03</span>
     </div>
   </aside>
 
@@ -494,8 +494,8 @@
           </div>
 
           <div style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem;">
-            <button id="btnSalvarImportacaoNova" style="background: linear-gradient(135deg, var(--color-income), #059669); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-income-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
-              Confirmar e Prosseguir (IA) <i class="fas fa-arrow-right"></i>
+            <button id="btn-categorizar-ia" style="background: linear-gradient(135deg, var(--color-accent), #2563eb); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-accent-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+              Categorizar Faltantes (IA) <i class="fas fa-magic"></i>
             </button>
           </div>
 
@@ -523,6 +523,9 @@
         <!-- Passo 3 Container -->
         <div id="passo3-container" style="display: none; padding: 0 1.5rem 1.5rem 1.5rem;"></div>
         <div id="bottom-bar" style="display: flex; justify-content: flex-end; padding: 1.5rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
+            <button id="btnSalvarImportacaoNova" style="background: linear-gradient(135deg, var(--color-income), #059669); color: #fff; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 600; font-size: 1.05rem; cursor: pointer; display: none; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-income-glow); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+              Confirmar Importação <i class="fas fa-check"></i>
+            </button>
         </div>
       </div>
     </div>
