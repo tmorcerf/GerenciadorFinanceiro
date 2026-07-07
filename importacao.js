@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnImport = document.getElementById('btn-import-novo');
   let btnImportOriginal = '';
   
-  let btnImportOriginal = '';
+
   
   const resultContainer = document.getElementById('import-result-container');
   const btnCategorizar = document.getElementById('btn-categorizar-ia');
