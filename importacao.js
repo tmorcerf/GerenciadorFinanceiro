@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
      });
   }
 
-  const updateReconciliationDatesUI = () => {
+  window.updateReconciliationDatesUI = () => {
     const container = document.getElementById('reconciliation-dates-container');
     if (!container) return;
     
@@ -76,6 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     container.innerHTML = html;
   };
+
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      if (el.dataset.target === 'panel-import') {
+        if (window.updateReconciliationDatesUI) window.updateReconciliationDatesUI();
+      }
+    });
+  });
+  
+  // Tenta rodar de cara caso os dados já estejam carregados
+  setTimeout(() => { if (window.updateReconciliationDatesUI) window.updateReconciliationDatesUI(); }, 1500);
 
   if (!uploadInput) return;
 
