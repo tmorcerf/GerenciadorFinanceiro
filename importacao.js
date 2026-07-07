@@ -703,10 +703,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // ESTADO 3: Já tratou tudo, salva no Google Sheets
     try {
       if (isPasso3Ativo) {
-         let unselected = transacoesPasso3.filter(t => t.isPasso3Mirror && !t.conta);
+         let unselected = transacoesPasso3.filter(t => t.isPasso3Mirror && !t.conta && !t.sugestaoExistente);
          if (unselected.length > 0) {
             alert("Por favor, selecione a conta de destino/origem para todas as transferências!");
             return;
+         }
+
+         // VALIDAÇÃO DA TRAVA DE CONCILIAÇÃO
+         let contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
+         let lockError = null;
+         for (let t of transacoesPasso3) {
+             if (t.isPasso3Mirror && !t.sugestaoExistente) {
+                 let destAccount = contasInfo.find(c => c.nome.toLowerCase() === String(t.conta).trim().toLowerCase());
+                 if (destAccount && destAccount.conciliado_ate) {
+                     let cTime = parseDataBR(destAccount.conciliado_ate);
+                     let tTime = parseDataBR(t.data);
+                     if (cTime > 0 && tTime <= cTime) {
+                         lockError = `Ação Bloqueada: Você não pode transferir para a conta '${destAccount.nome}' na data ${t.data}, pois ela já está conciliada (até ${destAccount.conciliado_ate}).`;
+                         break;
+                     }
+                 }
+             }
+         }
+         
+         if (lockError) {
+             alert(lockError);
+             return;
          }
       }
 
@@ -881,8 +903,14 @@ function renderizarPasso3(txs) {
        descColor = '#8b5cf6';
        let contasOptions = '<option value="">-- Selecione a Conta --</option>';
        const contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
+       let tTime = parseDataBR(t.data);
        contasInfo.forEach(c => {
-         contasOptions += `<option value="${c.nome}">${c.nome}</option>`;
+         let cTime = c.conciliado_ate ? parseDataBR(c.conciliado_ate) : 0;
+         if (cTime > 0 && tTime <= cTime) {
+             contasOptions += `<option value="${c.nome}" disabled>${c.nome} [BLOQUEADA - Conciliada]</option>`;
+         } else {
+             contasOptions += `<option value="${c.nome}">${c.nome}</option>`;
+         }
        });
        
        extraDesc = `<strong>Contrapartida: ${t.descricao}</strong>`;
