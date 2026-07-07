@@ -280,23 +280,40 @@ document.addEventListener('DOMContentLoaded', () => {
       if (_df && _df.lancamentos) {
          baseLocal = _df.lancamentos;
       }
+      
+      // TRAVA DE CONCILIADO
+      let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
+      let conciliadoTime = 0;
+      if (contaMatch && contaMatch.conciliado_ate) {
+          conciliadoTime = parseDataBR(contaMatch.conciliado_ate);
+      }
 
-      feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\\n`;
+      if (conciliadoTime > 0) {
+          let origLen = dadosExtrato.length;
+          dadosExtrato = dadosExtrato.filter(t => parseDataBR(t.data) > conciliadoTime);
+          let ignored = origLen - dadosExtrato.length;
+          if (ignored > 0) {
+              feedbackConsole.innerHTML += `<span style="color:var(--color-warning);">Trava de Conciliação: ${ignored} itens do extrato ignorados (<= ${contaMatch.conciliado_ate}).</span>\n`;
+          }
+      }
+
+      feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\n`;
       let debugLocal = baseLocal.filter(l => String(l.conta).trim().toLowerCase() === contaDoExtrato);
-      feedbackConsole.innerHTML += `DEBUG: Temos ${debugLocal.length} itens na base local para a conta '${contaDoExtrato}'.\\n`;
+      feedbackConsole.innerHTML += `DEBUG: Temos ${debugLocal.length} itens na base local para a conta '${contaDoExtrato}'.\n`;
       if (debugLocal.length > 0) {
           let l = debugLocal[0];
-          feedbackConsole.innerHTML += `Exemplo: data=${l.data}, valor=${l.valor}, tTime=${parseDataBR(l.data)}.\\n`;
+          feedbackConsole.innerHTML += `Exemplo: data=${l.data}, valor=${l.valor}, tTime=${parseDataBR(l.data)}.\n`;
       }
 
       let poolLocal = baseLocal.filter(L => {
          let matchConta = String(L.conta).trim().toLowerCase() === contaDoExtrato;
          let tTime = parseDataBR(L.data);
          let matchTempo = (tTime >= (minTime - 3*86400000) && tTime <= (maxTime + 3*86400000));
-         return matchConta && matchTempo;
+         let matchConciliado = tTime > conciliadoTime; // Trava: não tocar no que já está conciliado
+         return matchConta && matchTempo && matchConciliado;
       });
 
-      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período do extrato.\\n`;
+      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período do extrato (pós-trava).\n`;
 
       let faltantes = [];
       let corretos = [];
