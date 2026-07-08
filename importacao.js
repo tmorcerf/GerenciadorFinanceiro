@@ -287,7 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
       feedbackConsole.innerHTML += `Período identificado: ${dataInicio} até ${dataFim}.\n`;
 
       let baseLocal = [];
-      const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
       if (_df && _df.lancamentos) {
          baseLocal = _df.lancamentos;
       }
