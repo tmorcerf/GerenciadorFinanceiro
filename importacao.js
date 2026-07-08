@@ -236,11 +236,26 @@ document.addEventListener('DOMContentLoaded', () => {
       cabecalhoAtual = cabecalho;
       analiseExtracao = json.analise_ia || "";
 
-      const contaDoExtrato = String(cabecalho['Nome da conta'] || cabecalho['conta'] || '').trim().toLowerCase();
-      feedbackConsole.innerHTML += `\n<span style="color: var(--accent-blue);">Sucesso! Extraídas ${dadosExtrato.length} transações. Conta: ${cabecalho['Nome da conta'] || 'Desconhecida'}</span>\n`;
+      feedbackConsole.innerHTML += `\n<span style="color: var(--accent-blue);">Sucesso! Extraídas ${dadosExtrato.length} transações.</span>\n`;
 
       if (dadosExtrato.length === 0) {
         throw new Error("Nenhuma transação encontrada no arquivo.");
+      }
+
+      // DETECTAR CARTÃO DE CRÉDITO E VENCIMENTO
+      const contaDoExtrato = String(cabecalho['Nome da conta'] || cabecalho['conta'] || '').trim().toLowerCase();
+      const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+      let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
+      let isCartaoCredito = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
+      let vencimentoFatura = cabecalho['vencimento'] || cabecalho['Vencimento'] || cabecalho['Data de Vencimento'] || null;
+
+      if (isCartaoCredito) {
+         if (!vencimentoFatura) {
+            vencimentoFatura = prompt(`Conta "${contaMatch.nome}" identificada como Cartão de Crédito.\nQual é a data de VENCIMENTO DESTA FATURA? (Ex: 15/06/2026)`);
+            if (!vencimentoFatura) {
+               throw new Error("A data de vencimento é obrigatória para importar faturas de Cartão de Crédito.");
+            }
+         }
       }
 
       let minTime = Infinity;
@@ -249,6 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
          // Garantir que a transação tenha a conta preenchida (importante para a IA puxar o histórico da conta correta depois)
          if (!t.conta && cabecalho && (cabecalho['Nome da conta'] || cabecalho['conta'])) {
             t.conta = cabecalho['Nome da conta'] || cabecalho['conta'];
+         }
+         
+         // Se for cartão de crédito, aplica a data de vencimento para todas as transações importadas
+         if (isCartaoCredito && vencimentoFatura) {
+            t.vencimento = vencimentoFatura;
          }
          
          let time = parseDataBR(t.data);
@@ -273,11 +293,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       // TRAVA DE CONCILIADO
-      let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
+      // contaMatch já foi obtido acima
       let cTimeAte = (contaMatch && contaMatch.conciliado_ate) ? parseDataBR(contaMatch.conciliado_ate) : 0;
       let cTimeDesde = (contaMatch && contaMatch.conciliado_desde) ? parseDataBR(contaMatch.conciliado_desde) : 0;
 
-      if (cTimeAte > 0) {
+      if (cTimeAte > 0 && !isCartaoCredito) {
           let origLen = dadosExtrato.length;
           dadosExtrato = dadosExtrato.filter(t => {
              let tTime = parseDataBR(t.data);
@@ -290,6 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
           let ignored = origLen - dadosExtrato.length;
           if (ignored > 0) {
               feedbackConsole.innerHTML += `<span style="color:var(--color-warning);">Trava de Conciliação: ${ignored} itens do extrato ignorados (no período bloqueado).</span>\n`;
+          }
+      } else if (cTimeAte > 0 && isCartaoCredito) {
+          // Para cartão de crédito, usamos a data de vencimento da fatura para checar a trava
+          let tTimeVencimento = parseDataBR(vencimentoFatura);
+          if (tTimeVencimento > 0 && tTimeVencimento <= cTimeAte) {
+              throw new Error(`Esta fatura com vencimento em ${vencimentoFatura} já está no período conciliado (até ${contaMatch.conciliado_ate}).`);
           }
       }
 
@@ -366,11 +392,20 @@ document.addEventListener('DOMContentLoaded', () => {
           });
       }
 
-      // Itens "sobrando" (para excluir) só devem ser aqueles que caem EXATAMENTE no período do extrato. 
-      // Se caírem na "margem de 3 dias" fora do extrato e não casarem, apenas ignoramos.
+      // Itens "sobrando" (para excluir) só devem ser aqueles que caem EXATAMENTE no período do extrato (ou na mesma fatura para cartão)
       let sobrando = poolLocal.filter(loc => {
-         let tTime = parseDataBR(loc.data);
-         return (tTime >= minTime && tTime <= maxTime);
+         if (isCartaoCredito && vencimentoFatura) {
+             let vTime = parseDataBR(loc.vencimento);
+             let fTime = parseDataBR(vencimentoFatura);
+             if (vTime > 0 && fTime > 0) {
+                 return vTime === fTime; // Só exclui se a transação for da mesma fatura atual
+             } else {
+                 return false; // Se a transação local não tem vencimento ou algo falhou, mais seguro não excluir
+             }
+         } else {
+             let tTime = parseDataBR(loc.data);
+             return (tTime >= minTime && tTime <= maxTime);
+         }
       });
 
       dadosSincronizacao = { corretos, faltantes, sobrando };
@@ -655,20 +690,56 @@ document.addEventListener('DOMContentLoaded', () => {
            feedbackConsole.innerHTML += `\nEnviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`;
            
            const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};
+           const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+           const contaExtrato = String(cabecalhoAtual['Nome da conta'] || cabecalhoAtual['conta'] || '').trim().toLowerCase();
+           const contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaExtrato) : null;
+           const isCartao = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
+
            const resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
              method: 'POST',
              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
              body: JSON.stringify({
                action: 'categorizar_v2',
                transacoes: dadosSincronizacao.faltantes,
-               categoriasTree: categoriasTree
+               categoriasTree: categoriasTree,
+               isCartaoCredito: isCartao
              })
            });
            const resultCat = await resCat.json();
            
            if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
            
-           dadosSincronizacao.faltantes = resultCat.data || dadosSincronizacao.faltantes; 
+           let transacoesProcessadas = resultCat.data || dadosSincronizacao.faltantes;
+           
+           if (isCartao) {
+               let projetadas = [];
+               transacoesProcessadas.forEach(t => {
+                   projetadas.push(t);
+                   if (t.parcelamento_info && t.parcelamento_info.parcelas_total > 1) {
+                       let pTotal = parseInt(t.parcelamento_info.parcelas_total);
+                       let pAtual = parseInt(t.parcelamento_info.parcela_atual);
+                       if (!isNaN(pTotal) && !isNaN(pAtual) && pAtual === 1) {
+                           for (let i = 2; i <= pTotal; i++) {
+                               let newT = JSON.parse(JSON.stringify(t)); // clone
+                               newT.cod = t.cod + "_parc_" + i;
+                               newT.parcelamento_info = { parcela_atual: i, parcelas_total: pTotal };
+                               newT.parcelamento = false; // Apenas a primeira fica true para a lógica antiga, mas info fica mantida
+                               if (typeof addMonthsStr === 'function') {
+                                  newT.vencimento = addMonthsStr(t.vencimento, i - 1);
+                                  newT.data = addMonthsStr(t.data, i - 1); // Desloca a data da compra tb para bater com o vencimento
+                               }
+                               newT.descricao = t.descricao + ` (Parcela ${i}/${pTotal})`;
+                               projetadas.push(newT);
+                           }
+                           t.descricao = t.descricao + ` (Parcela 1/${pTotal})`;
+                       }
+                   }
+               });
+               dadosSincronizacao.faltantes = projetadas;
+           } else {
+               dadosSincronizacao.faltantes = transacoesProcessadas;
+           }
+
            analiseCategorizacao = resultCat.analise_ia || "Categorização concluída.";
            feedbackConsole.innerHTML += ` Concluído!\n`;
 
