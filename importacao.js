@@ -577,6 +577,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <td class="col-parc" style="padding:10px; text-align:center;">
             -
           </td>
+          <td class="col-conf" style="padding:10px; text-align:center; font-weight:bold; color:var(--text-secondary);">
+            ${t.confianca || '-'}
+          </td>
         </tr>
       `;
     };

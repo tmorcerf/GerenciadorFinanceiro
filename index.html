@@ -110,7 +110,7 @@
 
     <div class="sidebar-footer">
       <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">v 0.9.035 - 08/07/2026, 20:45:34</span>
+      <span style="font-size: 0.75rem;">v 0.9.036 - 08/07/2026, 20:57:36</span>
     </div>
   </aside>
 
@@ -444,7 +444,8 @@
         <!-- Tabela de Triagem e Categorização (Unificada) -->
         <style>
           .step-1-active .col-conta,
-          .step-3-active .col-parc {
+          .step-3-active .col-parc,
+          .step-3-active .col-conf {
             display: none !important;
           }
         </style>
@@ -512,6 +513,7 @@
                   <th class="col-cat" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('categoria')">CATEGORIA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-subcat" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('subcategoria')">SUBCATEGORIA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-parc" style="padding:10px; text-align:center;" title="Parcelamento?">PARC.</th>
+                  <th class="col-conf" style="padding:10px; text-align:center;" title="Confiança da IA">🤖</th>
                 </tr>
               </thead>
               <tbody id="unified-table-body">
@@ -794,10 +796,11 @@
   </script>
 <script src="dados.js"></script>
   <script src="app.js?v=37"></script>
-  <script src="importacao.js?v=5"></script>
+  <script src="importacao.js?v=6"></script>
 </body>
 </html>
 <!-- VersÃƒÂ£o: 11/06/2026 20:20 (IntegraÃƒÂ§ÃƒÂ£o Gem TSV) -->
+
 
 
 
