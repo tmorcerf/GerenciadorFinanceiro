@@ -817,6 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
        const txPasso3 = [];
        
        dadosSincronizacao.faltantes.forEach(t => {
+         if (t.ignorar) return;
          const cat = (t.categoria || '').toLowerCase();
          const isTransfer = cat.includes('transfer') || cat.includes('pagamento de cart') || cat.includes('investimento') || cat.includes('aplica');
          const isParcel = t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim';
@@ -906,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
       }
       
-      let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...finalPasso3] : dadosSincronizacao.faltantes;
+      let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...finalPasso3] : dadosSincronizacao.faltantes.filter(t => !t.ignorar);
 
       const contaDoExtrato = dadosSincronizacao.faltantes.length > 0 ? dadosSincronizacao.faltantes[0].conta : 
                              (dadosSincronizacao.corretos.length > 0 ? dadosSincronizacao.corretos[0].extrato.conta : "");
@@ -939,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const payload = {
         action: 'sincronizar_periodo', 
         lancamentosNovos: transacoesFinaisFaltantes,
-        idsParaExcluir: dadosSincronizacao.sobrando.map(s => s.id || s.cod), 
+        idsParaExcluir: dadosSincronizacao.sobrando.filter(s => !s.ignorar).map(s => s.id || s.cod), 
         contaDoExtrato: String(contaDoExtrato).trim().toLowerCase(),
         dataMaxStr: rawMaxStr
       };
