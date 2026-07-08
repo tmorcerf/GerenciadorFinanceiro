@@ -2129,7 +2129,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <div style="display:flex; flex-direction:column; justify-content:center; margin-bottom:10px; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 6px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px;">
                   <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${cleanSub}</span>
-                  <span style="font-size:0.85rem; color:var(--color-expense); font-weight:700;">${formatBRL(Math.abs(t.valor))}</span>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:0.85rem; color:var(--color-expense); font-weight:700;">${formatBRL(Math.abs(t.valor))}</span>
+                    <i class="fas fa-pencil-alt" style="color:var(--text-muted); cursor:pointer;" title="Editar Lançamento" onclick="window.openEditTransactionModal('${t.cod}')" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'"></i>
+                  </div>
                 </div>
                 <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${t.obs || t.conta}">${t.obs || t.conta}</div>
               </div>
@@ -3178,7 +3181,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let total = 0;
       let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${itemes.length} lanamento${itemes.length > 1 ? 's' : ''}</div>`;
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Conta</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Conta</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:center; width:40px;"></th></tr></thead><tbody>`;
 
       itemes.forEach(item => {
         total += item.valor;
@@ -3189,6 +3192,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td style="color:var(--text-primary); font-size:0.9rem;">${item.obs || '-'}</td>
           <td style="font-size:0.85rem;"><span class="badge" style="background:var(--bg-sidebar); border:1px solid var(--border-color); color:var(--text-secondary);">${item.categoria}</span></td>
           <td style="text-align:right; font-weight:600; color:${valColor};">${formatBRL(item.valor)}</td>
+          <td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td>
         </tr>`;
       });
 
@@ -3232,7 +3236,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${totalItens} lanamento${totalItens > 1 ? 's' : ''} nao periodo</div>`;
       html += warnHtml;
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th><th style="text-align:center; width:40px;"></th></tr></thead><tbody>`;
 
       // Exibe a ordem decrescente (mais recentes nao topo) para que o usuario veja os ultimos logo de cara
       displayItemes.reverse().forEach(item => {
@@ -3243,8 +3247,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td>${item.obs || '-'}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
-          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td>
-        </tr>`;
+          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
       });
       html += `</tbody></table>`;
 
@@ -4043,22 +4046,201 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
     });
 
+window.openEditTransactionModal = function(cod) {
+  const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
+  if(!t) return;
+  document.getElementById('edit-tx-id').value = t.cod;
+  document.getElementById('edit-tx-original-data').value = t.data;
+  document.getElementById('edit-tx-original-valor').value = t.valor;
 
+  let dateVal = '';
+  if(t.data) {
+    const parts = t.data.split('/');
+    if(parts.length === 3) dateVal = parts[2] + '-' + parts[1] + '-' + parts[0];
+  }
+  document.getElementById('edit-tx-data').value = dateVal;
 
+  const contaSelect = document.getElementById('edit-tx-conta');
+  contaSelect.innerHTML = '';
+  window.dadosFinanceiros.contas.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.nome; opt.textContent = c.nome;
+    if(c.nome === t.conta) opt.selected = true;
+    contaSelect.appendChild(opt);
+  });
 
+  document.getElementById('edit-tx-valor').value = Math.abs(t.valor).toFixed(2).replace('.', ',');
+  document.getElementById('edit-tx-obs').value = t.obs || '';
 
+  const catSelect = document.getElementById('edit-tx-categoria');
+  catSelect.innerHTML = '';
+  Object.keys(window.dicionarioGeral || window.dadosFinanceiros.categoriasDict).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    if(c.toLowerCase() === (t.categoria||'').toLowerCase()) opt.selected = true;
+    catSelect.appendChild(opt);
+  });
 
+  const subSelect = document.getElementById('edit-tx-subcategoria');
+  const updateSubcats = () => {
+    subSelect.innerHTML = '<option value="">Sem Subcategoria</option>';
+    const cat = catSelect.value;
+    const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict;
+    if(dict[cat]) {
+      dict[cat].forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub; opt.textContent = sub;
+        if(sub.toLowerCase() === (t.subcategoria||'').toLowerCase()) opt.selected = true;
+        subSelect.appendChild(opt);
+      });
+    }
+  };
+  updateSubcats();
+  catSelect.onchange = () => {
+    updateSubcats();
+    checkTransfer();
+  };
 
+  const transferBlock = document.getElementById('edit-tx-transfer-block');
+  const checkTransfer = () => {
+    if(catSelect.value.toLowerCase().includes('transfer')) {
+      transferBlock.style.display = 'block';
+    } else {
+      transferBlock.style.display = 'none';
+      document.getElementById('edit-tx-create-contrapartida').checked = false;
+    }
+  };
+  checkTransfer();
 
+  const contrapartidaDestBlock = document.getElementById('edit-tx-contrapartida-dest-block');
+  const cbContra = document.getElementById('edit-tx-create-contrapartida');
+  cbContra.onchange = () => {
+    contrapartidaDestBlock.style.display = cbContra.checked ? 'block' : 'none';
+  };
+  cbContra.checked = false;
+  contrapartidaDestBlock.style.display = 'none';
 
+  const destContaSelect = document.getElementById('edit-tx-contrapartida-conta');
+  destContaSelect.innerHTML = '';
+  window.dadosFinanceiros.contas.forEach(c => {
+    if(c.nome !== t.conta) {
+      const opt = document.createElement('option');
+      opt.value = c.nome; opt.textContent = c.nome;
+      destContaSelect.appendChild(opt);
+    }
+  });
 
+  document.getElementById('editTransactionModal').classList.add('show');
+};
 
+document.getElementById('edit-tx-cancel')?.addEventListener('click', () => {
+  document.getElementById('editTransactionModal').classList.remove('show');
+});
 
+document.getElementById('edit-tx-save')?.addEventListener('click', () => {
+  const id = document.getElementById('edit-tx-id').value;
+  const origData = document.getElementById('edit-tx-original-data').value;
+  const origValor = parseFloat(document.getElementById('edit-tx-original-valor').value);
+  
+  const dVal = document.getElementById('edit-tx-data').value;
+  let newDataStr = origData;
+  if(dVal) {
+    const parts = dVal.split('-');
+    newDataStr = parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
 
+  const rawVal = document.getElementById('edit-tx-valor').value.replace('.', '').replace(',', '.');
+  let newVal = parseFloat(rawVal);
+  if(isNaN(newVal)) {
+    alert('Valor inválido!');
+    return;
+  }
+  
+  const selectedCat = document.getElementById('edit-tx-categoria').value;
+  if (!selectedCat.toLowerCase().includes('transfer')) {
+     const isExpense = origValor < 0;
+     if(isExpense) newVal = -Math.abs(newVal);
+     else newVal = Math.abs(newVal);
+  } else {
+     newVal = -Math.abs(newVal); 
+  }
 
+  if (newDataStr !== origData || Math.abs(newVal) !== Math.abs(origValor)) {
+    if(!confirm('Você está alterando a Data ou o Valor desta transação. Isso pode afetar a conciliação do seu extrato. Tem certeza?')) {
+      return;
+    }
+  }
 
+  const payload = {
+    action: 'editar_lancamento',
+    cod: id,
+    novaData: newDataStr,
+    novaConta: document.getElementById('edit-tx-conta').value,
+    novoValor: newVal,
+    novaCategoria: selectedCat,
+    novaSubcategoria: document.getElementById('edit-tx-subcategoria').value,
+    novaObs: document.getElementById('edit-tx-obs').value
+  };
 
+  const createContra = document.getElementById('edit-tx-create-contrapartida').checked;
+  if(createContra) {
+    payload.contraPartida = {
+      data: newDataStr,
+      conta: document.getElementById('edit-tx-contrapartida-conta').value,
+      valor: Math.abs(newVal),
+      categoria: selectedCat,
+      subcategoria: payload.novaSubcategoria,
+      obs: payload.novaObs + ' (Entrada de Transferência)'
+    };
+  }
 
+  const btn = document.getElementById('edit-tx-save');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+  btn.disabled = true;
 
-
+  fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    const tx = window.dadosFinanceiros.lancamentos.find(l => l.cod == id);
+    if(tx) {
+      tx.data = payload.novaData;
+      tx.conta = payload.novaConta;
+      tx.valor = payload.novoValor;
+      tx.categoria = payload.novaCategoria;
+      tx.subcategoria = payload.novaSubcategoria;
+      tx.obs = payload.novaObs;
+    }
+    if(payload.contraPartida) {
+      const maxId = Math.max(...window.dadosFinanceiros.lancamentos.map(l => parseInt(l.cod) || 0));
+      window.dadosFinanceiros.lancamentos.push({
+        cod: maxId + 1,
+        data: payload.contraPartida.data,
+        vencimento: '',
+        conta: payload.contraPartida.conta,
+        obs: payload.contraPartida.obs,
+        valor: payload.contraPartida.valor,
+        categoria: payload.contraPartida.categoria,
+        subcategoria: payload.contraPartida.subcategoria
+      });
+    }
+    
+    alert('Lançamento atualizado com sucesso!');
+    document.getElementById('editTransactionModal').classList.remove('show');
+    
+    if (typeof processRawData === 'function') {
+      processRawData(window.dadosFinanceiros.lancamentos);
+      const activeNav = document.querySelector('.nav-item.active');
+      if (activeNav) activeNav.click(); 
+    }
+  }).catch(err => {
+    alert('Erro ao salvar: ' + err);
+  }).finally(() => {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  });
+});
 

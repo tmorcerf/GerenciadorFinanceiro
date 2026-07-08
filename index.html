@@ -109,7 +109,7 @@
 
     <div class="sidebar-footer">
       <span>Controle Financeiro</span>
-      <span style="font-size: 0.75rem;">v 0.9.014 - 08/07/2026, 18:08:54</span>
+      <span style="font-size: 0.75rem;">v 0.9.015 - 08/07/2026, 18:40:15</span>
     </div>
   </aside>
 
@@ -716,6 +716,61 @@
         <button class="tx-modal-close" id="detailedModalClose" style="top: 15px; right: 15px;">&times;</button>
       </div>
       <div class="tx-modal-body" id="detailedModalBody" style="margin-top:0;">
+      </div>
+    </div>
+  </div>
+
+  <div id="editTransactionModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <h2 style="margin-bottom: 15px;">Editar Lançamento</h2>
+      <input type="hidden" id="edit-tx-id">
+      <input type="hidden" id="edit-tx-original-data">
+      <input type="hidden" id="edit-tx-original-valor">
+      
+      <div style="margin-bottom: 10px;">
+        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Data</label>
+        <input type="date" id="edit-tx-data" class="modern-input" style="width:100%;">
+      </div>
+      
+      <div style="margin-bottom: 10px;">
+        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Conta</label>
+        <select id="edit-tx-conta" class="modern-input" style="width:100%;"></select>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Valor (R$)</label>
+        <input type="text" id="edit-tx-valor" class="modern-input" style="width:100%; text-align:right;">
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Categoria</label>
+        <select id="edit-tx-categoria" class="modern-input" style="width:100%;"></select>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Subcategoria</label>
+        <select id="edit-tx-subcategoria" class="modern-input" style="width:100%;"></select>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Observações</label>
+        <input type="text" id="edit-tx-obs" class="modern-input" style="width:100%;">
+      </div>
+
+      <div id="edit-tx-transfer-block" style="display:none; padding:15px; background:rgba(255,255,255,0.05); border-radius:8px; margin-bottom:15px;">
+        <p style="font-size:0.9rem; margin-bottom:10px;"><strong>Transferência detectada!</strong> Deseja criar a contra-partida automaticamente?</p>
+        <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:0.9rem;">
+          <input type="checkbox" id="edit-tx-create-contrapartida"> Criar contra-partida
+        </label>
+        <div id="edit-tx-contrapartida-dest-block" style="display:none;">
+          <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Conta de Destino / Origem</label>
+          <select id="edit-tx-contrapartida-conta" class="modern-input" style="width:100%;"></select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top:20px;">
+        <button class="btn btn-secondary" id="edit-tx-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="edit-tx-save">Salvar Alterações</button>
       </div>
     </div>
   </div>
