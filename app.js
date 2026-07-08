@@ -4047,7 +4047,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     });
 
 window.openEditTransactionModal = function(cod) {
-  const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
+  const t = dadosFinanceiros.lancamentos.find(l => l.cod == cod);
   if(!t) return;
   document.getElementById('edit-tx-id').value = t.cod;
   document.getElementById('edit-tx-original-data').value = t.data;
@@ -4062,7 +4062,7 @@ window.openEditTransactionModal = function(cod) {
 
   const contaSelect = document.getElementById('edit-tx-conta');
   contaSelect.innerHTML = '';
-  window.dadosFinanceiros.contas.forEach(c => {
+  dadosFinanceiros.contas.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c.nome; opt.textContent = c.nome;
     if(c.nome === t.conta) opt.selected = true;
@@ -4122,7 +4122,7 @@ window.openEditTransactionModal = function(cod) {
 
   const destContaSelect = document.getElementById('edit-tx-contrapartida-conta');
   destContaSelect.innerHTML = '';
-  window.dadosFinanceiros.contas.forEach(c => {
+  dadosFinanceiros.contas.forEach(c => {
     if(c.nome !== t.conta) {
       const opt = document.createElement('option');
       opt.value = c.nome; opt.textContent = c.nome;
@@ -4243,4 +4243,6 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     btn.disabled = false;
   });
 });
+
+
 
