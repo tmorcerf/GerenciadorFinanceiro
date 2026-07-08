@@ -731,6 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                projetadas.push(newT);
                            }
                            t.descricao = t.descricao + ` (Parcela 1/${pTotal})`;
+                           t.parcelamento = false; // Como já foi projetado automaticamente, não deve aparecer no Passo 2
                        }
                    }
                });
