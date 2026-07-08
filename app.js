@@ -1580,6 +1580,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       prevNow.setMonth(prevNow.getMonth() - 1);
       const prevMonthStr = `${prevNow.getFullYear()}-${String(prevNow.getMonth() + 1).padStart(2, '0')}`;
 
+      let prev2Now = new Date();
+      prev2Now.setMonth(prev2Now.getMonth() - 2);
+      const prev2MonthStr = `${prev2Now.getFullYear()}-${String(prev2Now.getMonth() + 1).padStart(2, '0')}`;
+
       // Handle both string and object
       let period = typeof tabData === 'string' ? tabData : (tabData.period || 'current');
       let startStr = typeof tabData === 'object' ? tabData.start : '';
@@ -1599,6 +1603,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           
           if (period === 'current' && yyyy_mm !== currMonthStr) return false;
           if (period === 'previous' && yyyy_mm !== prevMonthStr) return false;
+          if (period === 'last3' && yyyy_mm !== currMonthStr && yyyy_mm !== prevMonthStr && yyyy_mm !== prev2MonthStr) return false;
           if (period === 'year' && parts[2] !== currYearStr) return false;
           if (period === 'last_year' && parts[2] !== (parseInt(currYearStr) - 1).toString()) return false;
           if (period === 'custom') {
