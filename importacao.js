@@ -247,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
       let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
       let isCartaoCredito = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
-      let vencimentoFatura = cabecalho['vencimento'] || cabecalho['Vencimento'] || cabecalho['Data de Vencimento'] || null;
+      let vencimentoFatura = cabecalho['Vencimento da fatura'] || cabecalho['vencimento'] || cabecalho['Vencimento'] || cabecalho['Data de Vencimento'] || null;
+      if (vencimentoFatura && vencimentoFatura.toLowerCase().includes('obrigatório')) vencimentoFatura = null;
 
       if (isCartaoCredito) {
          if (!vencimentoFatura) {
