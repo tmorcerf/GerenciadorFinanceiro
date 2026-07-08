@@ -4204,7 +4204,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
   btn.disabled = true;
 
-  fetch(API_URL, {
+  fetch(window.APPS_SCRIPT_WEBAPP_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
