@@ -3236,7 +3236,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${totalItens} lanamento${totalItens > 1 ? 's' : ''} nao periodo</div>`;
       html += warnHtml;
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th><th style="text-align:center; width:40px;">Editar</th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th><th style="text-align:center; width:60px;">Editar</th></tr></thead><tbody>`;
 
       // Exibe a ordem decrescente (mais recentes nao topo) para que o usuario veja os ultimos logo de cara
       displayItemes.reverse().forEach(item => {
@@ -3247,7 +3247,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td>${item.obs || '-'}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
-          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
+          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal(`${item.cod}`)"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color=`var(--color-accent)`" onmouseout="this.style.color=`var(--text-muted)`"></i></td></tr>`;
       });
       html += `</tbody></table>`;
 
@@ -4243,6 +4243,10 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     btn.disabled = false;
   });
 });
+
+
+
+
 
 
 
