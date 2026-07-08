@@ -613,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
            if (newCat && newCat.trim() !== "") {
                val = newCat.trim();
                // Adiciona ao dicionário local para aparecer nos outros selects
-               let dic = (typeof categoriasDict !== 'undefined') ? categoriasDict : ((window.dadosFinanceiros && window.dadosFinanceiros.categoriasDict) ? window.dadosFinanceiros.categoriasDict : {});
+               let dic = window.dicionarioGeral || {};
                if (!dic[val]) dic[val] = [];
            } else {
                e.target.value = t.categoria || "";
@@ -640,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
            const newSub = prompt(`Digite o nome da nova SUBCATEGORIA para '${t.categoria}':`);
            if (newSub && newSub.trim() !== "") {
                val = newSub.trim();
-               let dic = (typeof categoriasDict !== 'undefined') ? categoriasDict : ((window.dadosFinanceiros && window.dadosFinanceiros.categoriasDict) ? window.dadosFinanceiros.categoriasDict : {});
+               let dic = window.dicionarioGeral || {};
                if (dic[t.categoria] && !dic[t.categoria].includes(val)) {
                    dic[t.categoria].push(val);
                }
