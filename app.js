@@ -2153,14 +2153,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if(!o) return;
       const html = buildDetailedBudgetCard(o);
       document.getElementById('detailedModalBody').innerHTML = html;
-      document.getElementById('detailedModal').classList.add('show');
+      document.getElementById('detailedModal').classList.add('active');
       
       const modal = document.getElementById('detailedModal');
       modal.querySelectorAll('.card-period-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           document.querySelectorAll('.emoji-dropdown-menu.show').forEach(m => {
-             if(m !== btn.nextElementSibling) m.classList.remove('show');
+             if(m !== btn.nextElementSibling) m.classList.remove('active');
           });
           btn.nextElementSibling.classList.toggle('show');
         });
@@ -2169,7 +2169,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         opt.addEventListener('click', (e) => {
           e.stopPropagation();
           setBudgetCardPeriod(cat, opt.dataset.val);
-          opt.parentElement.classList.remove('show');
+          opt.parentElement.classList.remove('active');
           openDetailedCardModal(cat);
           if (typeof renderBudgets === 'function') renderBudgets();
         });
@@ -4128,11 +4128,11 @@ window.openEditTransactionModal = function(cod) {
     }
   });
 
-  document.getElementById('editTransactionModal').classList.add('show');
+  document.getElementById('editTransactionModal').classList.add('active');
 };
 
 document.getElementById('edit-tx-cancel')?.addEventListener('click', () => {
-  document.getElementById('editTransactionModal').classList.remove('show');
+  document.getElementById('editTransactionModal').classList.remove('active');
 });
 
 document.getElementById('edit-tx-save')?.addEventListener('click', () => {
@@ -4227,7 +4227,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     }
     
     alert('Lançamento atualizado com sucesso!');
-    document.getElementById('editTransactionModal').classList.remove('show');
+    document.getElementById('editTransactionModal').classList.remove('active');
     
     if (typeof processRawData === 'function') {
       processRawData(window.dadosFinanceiros.lancamentos);
@@ -4241,6 +4241,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     btn.disabled = false;
   });
 });
+
 
 
 
