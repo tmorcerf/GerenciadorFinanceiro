@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                finalPasso3.push(t);
             }
-         });
+});
       }
       
       let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...finalPasso3] : dadosSincronizacao.faltantes;
@@ -795,17 +795,37 @@ document.addEventListener('DOMContentLoaded', () => {
       const contaDoExtrato = dadosSincronizacao.faltantes.length > 0 ? dadosSincronizacao.faltantes[0].conta : 
                              (dadosSincronizacao.corretos.length > 0 ? dadosSincronizacao.corretos[0].extrato.conta : "");
 
+      let rawMaxStr = transacoesFinaisFaltantes.length > 0 || dadosSincronizacao.corretos.length > 0 
+           ? [...transacoesFinaisFaltantes, ...dadosSincronizacao.corretos.map(c => c.extrato)].reduce((acc, curr) => {
+               let tTime = parseDataBR(curr.data);
+               return tTime > acc.time ? {time: tTime, str: curr.data} : acc;
+             }, {time: 0, str: ""}).str 
+           : "";
+
+       if (rawMaxStr) {
+          let p = rawMaxStr.split('/');
+          if (p.length === 3) {
+             let maxDateObj = new Date(p[2], parseInt(p[1])-1, p[0]);
+             maxDateObj.setHours(0,0,0,0);
+             let today = new Date();
+             today.setHours(0,0,0,0);
+             
+             if (maxDateObj.getTime() === today.getTime()) {
+                maxDateObj.setDate(maxDateObj.getDate() - 1);
+                let nd = String(maxDateObj.getDate()).padStart(2, '0');
+                let nm = String(maxDateObj.getMonth() + 1).padStart(2, '0');
+                let ny = maxDateObj.getFullYear();
+                rawMaxStr = `${nd}/${nm}/${ny}`;
+             }
+          }
+       }
+
       const payload = {
         action: 'sincronizar_periodo', 
         lancamentosNovos: transacoesFinaisFaltantes,
         idsParaExcluir: dadosSincronizacao.sobrando.map(s => s.id || s.cod), 
         contaDoExtrato: String(contaDoExtrato).trim().toLowerCase(),
-        dataMaxStr: transacoesFinaisFaltantes.length > 0 || dadosSincronizacao.corretos.length > 0 
-           ? [...transacoesFinaisFaltantes, ...dadosSincronizacao.corretos.map(c => c.extrato)].reduce((acc, curr) => {
-               let tTime = parseDataBR(curr.data);
-               return tTime > acc.time ? {time: tTime, str: curr.data} : acc;
-             }, {time: 0, str: ""}).str 
-           : ""
+        dataMaxStr: rawMaxStr
       };
 
       const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
