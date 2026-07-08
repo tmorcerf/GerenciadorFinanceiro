@@ -3082,7 +3082,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <div class="drilldown-item-row">
               <span style="color:var(--text-muted);">${item.data}</span>
               <span style="color:var(--text-primary);">${item.obs || item.conta || '-'}</span>
-              <span style="color:${color}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</span><span style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></span></div>
+              <span style="color:${color}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</span><span style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></span></div>
           `;
         });
         html += `</div>`;
@@ -3191,7 +3191,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td style="color:var(--text-primary); font-size:0.9rem;">${item.obs || '-'}</td>
           <td style="font-size:0.85rem;"><span class="badge" style="background:var(--bg-sidebar); border:1px solid var(--border-color); color:var(--text-secondary);">${item.categoria}</span></td>
           <td style="text-align:right; font-weight:600; color:${valColor};">${formatBRL(item.valor)}</td>
-          <td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td>
+          <td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td>
         </tr>`;
       });
 
@@ -3246,7 +3246,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td>${item.obs || '-'}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
-          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
+          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
       });
       html += `</tbody></table>`;
 
@@ -4242,6 +4242,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     btn.disabled = false;
   });
 });
+
 
 
 
