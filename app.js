@@ -4128,6 +4128,13 @@ window.openEditTransactionModal = function(cod) {
     }
   });
 
+  const isConciliado = t.conciliado === true;
+  document.getElementById('edit-tx-data').disabled = isConciliado;
+  document.getElementById('edit-tx-conta').disabled = isConciliado;
+  document.getElementById('edit-tx-valor').disabled = isConciliado;
+  document.getElementById('edit-tx-obs').disabled = isConciliado;
+  document.getElementById('edit-tx-create-contrapartida').disabled = isConciliado;
+
   document.getElementById('editTransactionModal').classList.add('active');
 };
 
