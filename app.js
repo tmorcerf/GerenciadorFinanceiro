@@ -3082,8 +3082,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             <div class="drilldown-item-row">
               <span style="color:var(--text-muted);">${item.data}</span>
               <span style="color:var(--text-primary);">${item.obs || item.conta || '-'}</span>
-              <span style="color:${color}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</span>
-            </div>
+              <span style="color:${color}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</span><span style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal(`${item.cod}`)"><i class="fas fa-pencil-alt" style="color:var(--text-muted);" onmouseover="this.style.color=`var(--color-accent)`" onmouseout="this.style.color=`var(--text-muted)`"></i></span></div>
           `;
         });
         html += `</div>`;
@@ -4243,6 +4242,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     btn.disabled = false;
   });
 });
+
 
 
 
