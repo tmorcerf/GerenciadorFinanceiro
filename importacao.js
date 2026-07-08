@@ -710,8 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (isPasso3Ativo) {
          let unselected = transacoesPasso3.filter(t => t.isPasso3Mirror && !t.conta && !t.sugestaoExistente);
          if (unselected.length > 0) {
-            alert("Por favor, selecione a conta de destino/origem para todas as transferências!");
-            return;
+            let desejaProsseguir = confirm(`Você deixou ${unselected.length} transferência(s) sem conta de contrapartida. A contrapartida não será gerada no sistema para ela(s). Deseja prosseguir assim mesmo?`);
+            if (!desejaProsseguir) return;
          }
 
          // VALIDAÇÃO DA TRAVA DE CONCILIAÇÃO
@@ -761,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
                }
                finalPasso3.push(t);
             } else if (t.isPasso3Mirror) {
-               if (!t.sugestaoExistente) {
+               if (!t.sugestaoExistente && t.conta && t.conta.trim() !== '') {
                   finalPasso3.push(t);
                }
             } else {
