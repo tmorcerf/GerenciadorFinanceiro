@@ -134,15 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, false);
   }
 
-  function parseDataBR(str) {
-    if (!str) return 0;
-    let p = str.split('/');
-    if (p.length === 3) return new Date(p[2], parseInt(p[1]) - 1, p[0], 0, 0, 0).getTime();
-    p = str.split('-'); 
-    if (p.length === 3) return new Date(p[0], parseInt(p[1]) - 1, p[2], 0, 0, 0).getTime();
-    return 0;
-  }
-
 
 
   uploadInput.addEventListener('change', async (e) => {
@@ -818,6 +809,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+function parseDataBR(str) {
+  if (!str) return 0;
+  let p = str.split('/');
+  if (p.length === 3) return new Date(p[2], parseInt(p[1]) - 1, p[0], 0, 0, 0).getTime();
+  p = str.split('-'); 
+  if (p.length === 3) return new Date(p[0], parseInt(p[1]) - 1, p[2], 0, 0, 0).getTime();
+  return 0;
+}
 
 function buscarPossiveisContraPartidas(txMirror) {
     if (!window.dadosFinanceiros || !window.dadosFinanceiros.lancamentos) return [];
