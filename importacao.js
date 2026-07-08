@@ -368,7 +368,13 @@ document.addEventListener('DOMContentLoaded', () => {
          let matchIdx = poolLocal.findIndex(loc => {
             let dataOk = isDataIgual(ext.data, loc.data);
             let valOk = isValorIgual(ext.valor, loc.valor);
-            return dataOk && valOk;
+            let vencOk = true;
+            if (isCartaoCredito && vencimentoFatura && loc.vencimento) {
+               let t1 = parseDataBR(vencimentoFatura);
+               let t2 = parseDataBR(loc.vencimento);
+               if (t1 > 0 && t2 > 0) vencOk = (t1 === t2);
+            }
+            return dataOk && valOk && vencOk;
          });
 
          if (matchIdx !== -1) {
@@ -397,8 +403,11 @@ document.addEventListener('DOMContentLoaded', () => {
          if (isCartaoCredito && vencimentoFatura) {
              let vTime = parseDataBR(loc.vencimento);
              let fTime = parseDataBR(vencimentoFatura);
+             let tTime = parseDataBR(loc.data);
              if (vTime > 0 && fTime > 0) {
-                 return vTime === fTime; // Só exclui se a transação for da mesma fatura atual
+                 // Só exclui se a transação for da mesma fatura atual E a data de compra for menor ou igual à última compra que veio no extrato (maxTime)
+                 // Assim evitamos excluir lançamentos manuais feitos para o final do mês ao importar extratos parciais no meio do mês
+                 return (vTime === fTime) && (tTime <= maxTime);
              } else {
                  return false; // Se a transação local não tem vencimento ou algo falhou, mais seguro não excluir
              }
@@ -726,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                newT.parcelamento = false; // Apenas a primeira fica true para a lógica antiga, mas info fica mantida
                                if (typeof addMonthsStr === 'function') {
                                   newT.vencimento = addMonthsStr(t.vencimento, i - 1);
-                                  newT.data = addMonthsStr(t.data, i - 1); // Desloca a data da compra tb para bater com o vencimento
+                                  // Mantemos newT.data (data da compra) intacta para o matching com a fatura dos próximos meses
                                }
                                newT.descricao = t.descricao + ` (Parcela ${i}/${pTotal})`;
                                projetadas.push(newT);
