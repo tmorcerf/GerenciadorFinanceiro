@@ -4210,7 +4210,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   }).then(() => {
-    const tx = window.dadosFinanceiros.lancamentos.find(l => l.cod == id);
+    const tx = dadosFinanceiros.lancamentos.find(l => l.cod == id);
     if(tx) {
       tx.data = payload.novaData;
       tx.conta = payload.novaConta;
@@ -4220,8 +4220,8 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
       tx.obs = payload.novaObs;
     }
     if(payload.contraPartida) {
-      const maxId = Math.max(...window.dadosFinanceiros.lancamentos.map(l => parseInt(l.cod) || 0));
-      window.dadosFinanceiros.lancamentos.push({
+      const maxId = Math.max(...dadosFinanceiros.lancamentos.map(l => parseInt(l.cod) || 0));
+      dadosFinanceiros.lancamentos.push({
         cod: maxId + 1,
         data: payload.contraPartida.data,
         vencimento: '',
@@ -4237,7 +4237,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     document.getElementById('editTransactionModal').classList.remove('active');
     
     if (typeof processRawData === 'function') {
-      processRawData(window.dadosFinanceiros.lancamentos);
+      processRawData(dadosFinanceiros.lancamentos);
       const activeNav = document.querySelector('.nav-item.active');
       if (activeNav) activeNav.click(); 
     }
