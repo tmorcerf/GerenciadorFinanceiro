@@ -3129,7 +3129,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         <div style="font-size:0.8rem; color:var(--text-muted);">${itemes.length} lanamento${itemes.length > 1 ? 's' : ''}</div>
       </div>`;
 
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Conta</th><th style="text-align:right">Valor</th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Conta</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>`;
       itemes.sort((a,b) => {
         const dA = parseDateString(a.data), dB = parseDateString(b.data);
         return (dA||0) - (dB||0);
@@ -3139,8 +3139,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td style="color:var(--text-muted);">${item.data}</td>
           <td>${item.obs || '-'}</td>
           <td style="color:var(--text-secondary);">${item.conta || '-'}</td>
-          <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</td>
-        </tr>`;
+          <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
       });
       html += `</tbody></table>`;
 
@@ -4242,6 +4241,8 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     btn.disabled = false;
   });
 });
+
+
 
 
 
