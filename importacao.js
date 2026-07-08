@@ -498,9 +498,20 @@ document.addEventListener('DOMContentLoaded', () => {
         subcatOptions += `<option value="${t.subcategoria}" selected>⚠️ ${t.subcategoria} (Não encontrada)</option>`;
       }
 
+      let checkIgnorarHtml = '';
+      if (tipo === "Adicionar" || tipo === "Excluir") {
+        checkIgnorarHtml = `<div style="margin-top: 5px;"><label style="cursor:pointer; font-size:0.75rem; color:var(--text-primary); font-weight:normal; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="import-chk-ignorar" data-index="${index}" data-tipo="${tipo}" ${t.ignorar ? 'checked' : ''}> Ignorar</label></div>`;
+      }
+      
+      let opacityStr = t.ignorar ? '0.4' : '1';
+      let decoStr = t.ignorar ? 'line-through' : 'none';
+
       return `
-        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-          <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">${icon} ${tipo}</td>
+        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s; opacity:${opacityStr}; text-decoration:${decoStr};" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+          <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">
+             <div>${icon} ${tipo}</div>
+             ${checkIgnorarHtml}
+          </td>
           <td class="col-data" style="padding:10px; white-space: nowrap;">${t.data || ''}</td>
           <td class="col-desc" style="padding:10px;">${t.descricao || ''}</td>
           <td class="col-conta" style="padding:10px;">${t.conta || contaDoExtrato || ''}</td>
@@ -516,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
           </td>
           <td class="col-parc" style="padding:10px; text-align:center;">
-            <input type="checkbox" class="import-chk-parcel" data-index="${index}" data-tipo="${tipo}" ${t.parcelamento ? 'checked' : ''} style="cursor:pointer; transform:scale(1.2);">
+            -
           </td>
         </tr>
       `;
@@ -565,13 +576,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    document.querySelectorAll('.import-chk-parcel').forEach(chk => {
+    document.querySelectorAll('.import-chk-ignorar').forEach(chk => {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         const tipo = e.target.getAttribute('data-tipo');
         let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
-        t.parcelamento = e.target.checked;
+        t.ignorar = e.target.checked;
+        
+        const tr = e.target.closest('tr');
+        if (t.ignorar) {
+           tr.style.opacity = '0.4';
+           tr.style.textDecoration = 'line-through';
+        } else {
+           tr.style.opacity = '1';
+           tr.style.textDecoration = 'none';
+        }
       });
     });
   }
