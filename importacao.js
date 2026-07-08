@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         catOptions += `<option value="${k}" ${selected}>${k}</option>`;
       });
       if (t.categoria && !catFound) {
-        catOptions += `<option value="${t.categoria}" selected>⚠️ ${t.categoria} (Não encontrada)</option>`;
+        catOptions += `<option value="${t.categoria}" selected>✨ ${t.categoria} (Nova)</option>`;
       }
 
       let subcatOptions = '<option value="">-- Selecione --</option>';
@@ -539,7 +539,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
       if (t.subcategoria && !subcatFound) {
-        subcatOptions += `<option value="${t.subcategoria}" selected>⚠️ ${t.subcategoria} (Não encontrada)</option>`;
+        subcatOptions += `<option value="${t.subcategoria}" selected>✨ ${t.subcategoria} (Nova)</option>`;
+      }
+      catOptions += `<option value="__NEW__" style="font-weight:bold; color:var(--color-accent);">➕ Adicionar Nova...</option>`;
+      if (t.categoria) {
+         subcatOptions += `<option value="__NEW__" style="font-weight:bold; color:var(--color-accent);">➕ Adicionar Nova...</option>`;
       }
 
       let checkIgnorarHtml = '';
@@ -603,7 +607,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
 
-        t.categoria = e.target.value;
+        let val = e.target.value;
+        if (val === '__NEW__') {
+           const newCat = prompt("Digite o nome da nova CATEGORIA:");
+           if (newCat && newCat.trim() !== "") {
+               val = newCat.trim();
+               // Adiciona ao dicionário local para aparecer nos outros selects
+               let dic = (typeof categoriasDict !== 'undefined') ? categoriasDict : ((window.dadosFinanceiros && window.dadosFinanceiros.categoriasDict) ? window.dadosFinanceiros.categoriasDict : {});
+               if (!dic[val]) dic[val] = [];
+           } else {
+               e.target.value = t.categoria || "";
+               return;
+           }
+        }
+
+        t.categoria = val;
         t.subcategoria = ''; // reset
 
         renderizarTabelaUnificada();
@@ -616,7 +634,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const tipo = e.target.getAttribute('data-tipo');
         let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
-        t.subcategoria = e.target.value;
+        
+        let val = e.target.value;
+        if (val === '__NEW__') {
+           const newSub = prompt(`Digite o nome da nova SUBCATEGORIA para '${t.categoria}':`);
+           if (newSub && newSub.trim() !== "") {
+               val = newSub.trim();
+               let dic = (typeof categoriasDict !== 'undefined') ? categoriasDict : ((window.dadosFinanceiros && window.dadosFinanceiros.categoriasDict) ? window.dadosFinanceiros.categoriasDict : {});
+               if (dic[t.categoria] && !dic[t.categoria].includes(val)) {
+                   dic[t.categoria].push(val);
+               }
+           } else {
+               e.target.value = t.subcategoria || "";
+               return;
+           }
+        }
+        
+        t.subcategoria = val;
+        renderizarTabelaUnificada();
       });
     });
 
