@@ -3266,8 +3266,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const filtered = getFilteredTransactions(period);
       const itemes = filtered.filter(l => (l.conta || '').toLowerCase().trim() === nomeConta.toLowerCase().trim());
 
+      const contaObj = dadosFinanceiros.contas.find(c => (c.nome || c.conta || '').toLowerCase() === nomeConta.toLowerCase()) || {};
+      let titleHtml = nomeConta;
+      if (contaObj.conciliado_ate) {
+        titleHtml += ` <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 10px;"><i class="fas fa-check-circle" style="color:var(--color-income);"></i> Conciliado até ${contaObj.conciliado_ate}</span>`;
+      }
+
       if (itemes.length === 0) {
-        showGlassModal(nomeConta, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado para esta conta nao periodo.</p>');
+        showGlassModal(titleHtml, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado para esta conta no periodo.</p>');
         return;
       }
 
@@ -3311,8 +3317,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
       });
       html += `</tbody></table>`;
-
-      showGlassModal(`Extrato: ${nomeConta}`, html);
+      showGlassModal(`Extrato: ${titleHtml}`, html);
     };
 
     // NEW: Show cartões de credito modal
@@ -3990,7 +3995,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <li style="display: flex; justify-content: space-between; align-itemes: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 6px;">
             <div style="display:flex; align-itemes:center; gap:1rem; flex:1;">
               <i class="fas fa-wallet" style="color:var(--color-income);"></i>
-              <input type="text" value="${c.nome}" onchange="window.renameAccount(${idx}, this.value)" style="background:transparent; border:none; color:var(--text-primary); font-size:1rem; width:80%;">
+              <div style="display:flex; flex-direction:column; flex:1;">
+                <input type="text" value="${c.nome}" onchange="window.renameAccount(${idx}, this.value)" style="background:transparent; border:none; color:var(--text-primary); font-size:1rem; width:80%;">
+                ${c.conciliado_ate ? `<span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; opacity: 0.7;"><i class="fas fa-check-circle" style="font-size: 0.7rem; color: var(--color-income);"></i> Conciliado até ${c.conciliado_ate}</span>` : ''}
+              </div>
             </div>
             <button onclick="window.removeAccount(${idx})" style="background:transparent; border:none; color:var(--color-expense); cursor:pointer;"><i class="fas fa-trash"></i></button>
           </li>
