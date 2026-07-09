@@ -1452,68 +1452,70 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     let isAppInitialized = false;
 
-    // Elementos de UI de Login
-    const loginScreen = document.getElementById('login-screen');
-    const userProfilePic = document.getElementById('user-profile-pic');
-    const userProfileName = document.getElementById('user-profile-name');
-    const userProfileEmail = document.getElementById('user-profile-email');
-    const btnLogout = document.getElementById('btn-logout');
-    const btnLoginGoogle = document.getElementById('btn-login-google');
-    const loadingScreen = document.getElementById('loading-screen');
+    function bootstrapApp() {
+      // Elementos de UI de Login
+      const loginScreen = document.getElementById('login-screen');
+      const userProfilePic = document.getElementById('user-profile-pic');
+      const userProfileName = document.getElementById('user-profile-name');
+      const userProfileEmail = document.getElementById('user-profile-email');
+      const btnLogout = document.getElementById('btn-logout');
+      const btnLoginGoogle = document.getElementById('btn-login-google');
+      const loadingScreen = document.getElementById('loading-screen');
 
-    // Login Handle
-    if (btnLoginGoogle) {
-      btnLoginGoogle.addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        window.firebaseAuth.signInWithPopup(provider).catch(err => {
-          console.error("Erro no login:", err);
-          alert("Erro ao fazer login: " + err.message);
+      // Login Handle
+      if (btnLoginGoogle) {
+        btnLoginGoogle.addEventListener('click', () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          window.firebaseAuth.signInWithPopup(provider).catch(err => {
+            console.error("Erro no login:", err);
+            alert("Erro ao fazer login: " + err.message);
+          });
         });
-      });
-    }
-
-    // Logout Handle
-    if (btnLogout) {
-      btnLogout.addEventListener('click', () => {
-        if(confirm("Deseja realmente sair?")) {
-          window.firebaseAuth.signOut();
-        }
-      });
-    }
-
-    // Listener Global de Autenticação
-    window.firebaseAuth.onAuthStateChanged(async (user) => {
-      if (user) {
-        // Logado
-        loginScreen.style.display = 'none';
-        
-        // Atualiza Sidebar
-        if (userProfilePic) {
-           userProfilePic.src = user.photoURL || '';
-           userProfilePic.style.display = 'block';
-        }
-        if (userProfileName) userProfileName.textContent = user.displayName || 'Usuário';
-        if (userProfileEmail) userProfileEmail.textContent = user.email || '';
-        if (btnLogout) btnLogout.style.display = 'block';
-
-        // Inicializa o App com os dados do usuário
-        loadingScreen.style.display = 'flex';
-        await initApp();
-        loadingScreen.style.display = 'none';
-      } else {
-        // Deslogado
-        loginScreen.style.display = 'flex';
-        loadingScreen.style.display = 'none';
-
-        if (userProfilePic) {
-           userProfilePic.src = '';
-           userProfilePic.style.display = 'none';
-        }
-        if (userProfileName) userProfileName.textContent = 'Visitante';
-        if (userProfileEmail) userProfileEmail.textContent = 'Faça login para usar';
-        if (btnLogout) btnLogout.style.display = 'none';
       }
-    });
+
+      // Logout Handle
+      if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+          if(confirm("Deseja realmente sair?")) {
+            window.firebaseAuth.signOut();
+          }
+        });
+      }
+
+      // Listener Global de Autenticação
+      window.firebaseAuth.onAuthStateChanged(async (user) => {
+        if (user) {
+          // Logado
+          loginScreen.style.display = 'none';
+          
+          // Atualiza Sidebar
+          if (userProfilePic) {
+             userProfilePic.src = user.photoURL || '';
+             userProfilePic.style.display = 'block';
+          }
+          if (userProfileName) userProfileName.textContent = user.displayName || 'Usuário';
+          if (userProfileEmail) userProfileEmail.textContent = user.email || '';
+          if (btnLogout) btnLogout.style.display = 'block';
+
+          // Inicializa o App com os dados do usuário
+          loadingScreen.style.display = 'flex';
+          await initApp();
+          loadingScreen.style.display = 'none';
+        } else {
+          // Deslogado
+          loginScreen.style.display = 'flex';
+          loadingScreen.style.display = 'none';
+
+          if (userProfilePic) {
+             userProfilePic.src = '';
+             userProfilePic.style.display = 'none';
+          }
+          if (userProfileName) userProfileName.textContent = 'Visitante';
+          if (userProfileEmail) userProfileEmail.textContent = 'Faça login para usar';
+          if (btnLogout) btnLogout.style.display = 'none';
+        }
+      });
+    }
 
     async function initApp() {
       if (isAppInitialized) {
@@ -3125,7 +3127,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       window.showReceitasDespesasModal(type, getTabPeriod('visao-geral'));
     }
 
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', bootstrapApp);
 
     // Funes Globais de Modal
     window.showGlassModal = function(title, htmlContent) {
