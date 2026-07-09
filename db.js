@@ -8,16 +8,16 @@ class Database {
   // --- LEITURA ---
   async loadAllData() {
     try {
-      const uid = window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : null;
-      if (!uid) throw new Error("Usuário não autenticado.");
+      const gid = window.userGroupId;
+      if (!gid) throw new Error("Grupo de usuário não definido.");
 
       const [lancamentosSnap, contasSnap, categoriasSnap, orcamentosSnap, auditoriaSnap, importsSnap] = await Promise.all([
-        this.db.collection('Lancamentos').where('userId', '==', uid).get(),
-        this.db.collection('Contas').where('userId', '==', uid).get(),
-        this.db.collection('Categorias').where('userId', '==', uid).get(),
-        this.db.collection('Orcamentos').where('userId', '==', uid).get(),
-        this.db.collection('Auditoria').where('userId', '==', uid).get(),
-        this.db.collection('Imports').where('userId', '==', uid).get()
+        this.db.collection('Lancamentos').where('groupId', '==', gid).get(),
+        this.db.collection('Contas').where('groupId', '==', gid).get(),
+        this.db.collection('Categorias').where('groupId', '==', gid).get(),
+        this.db.collection('Orcamentos').where('groupId', '==', gid).get(),
+        this.db.collection('Auditoria').where('groupId', '==', gid).get(),
+        this.db.collection('Imports').where('groupId', '==', gid).get()
       ]);
 
       const dados = {
@@ -71,8 +71,8 @@ class Database {
   // --- GRAVAÇÃO ---
 
   async sincronizarPeriodo(lancamentosNovos, idsParaExcluir, contaDoExtrato, dataMaxStr) {
-    const uid = window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : null;
-    if (!uid) throw new Error("Usuário não autenticado.");
+    const gid = window.userGroupId;
+    if (!gid) throw new Error("Grupo não definido.");
 
     const batch = this.db.batch();
 
@@ -81,7 +81,7 @@ class Database {
       lancamentosNovos.forEach(lanc => {
         const docRef = this.db.collection('Lancamentos').doc();
         batch.set(docRef, {
-          userId: uid,
+          groupId: gid,
           cod: lanc.cod || `TX_${new Date().getTime()}_${Math.floor(Math.random()*1000)}`,
           data: lanc.data || '',
           descricao: lanc.descricao || '',
@@ -99,7 +99,7 @@ class Database {
     // 2. Excluir ids
     if (idsParaExcluir && idsParaExcluir.length > 0) {
       for (const id of idsParaExcluir) {
-         const snapshot = await this.db.collection('Lancamentos').where('userId', '==', uid).where('cod', '==', String(id)).get();
+         const snapshot = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(id)).get();
          snapshot.forEach(doc => {
             batch.delete(doc.ref);
          });
@@ -108,7 +108,7 @@ class Database {
 
     // 3. Atualizar Conciliação da Conta
     if (contaDoExtrato && dataMaxStr) {
-       const contasSnap = await this.db.collection('Contas').where('userId', '==', uid).where('nome', '==', contaDoExtrato).get();
+       const contasSnap = await this.db.collection('Contas').where('groupId', '==', gid).where('nome', '==', contaDoExtrato).get();
        contasSnap.forEach(doc => {
           batch.update(doc.ref, { conciliado_ate: dataMaxStr });
        });
@@ -118,10 +118,10 @@ class Database {
   }
 
   async editarLancamento(cod, newData) {
-     const uid = window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : null;
-     if (!uid) throw new Error("Usuário não autenticado.");
+     const gid = window.userGroupId;
+     if (!gid) throw new Error("Grupo não definido.");
 
-     const snapshot = await this.db.collection('Lancamentos').where('userId', '==', uid).where('cod', '==', String(cod)).get();
+     const snapshot = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod)).get();
      if (snapshot.empty) throw new Error("Lançamento não encontrado");
      
      const docId = snapshot.docs[0].id;
@@ -129,10 +129,10 @@ class Database {
   }
 
   async excluirLancamento(cod) {
-     const uid = window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : null;
-     if (!uid) throw new Error("Usuário não autenticado.");
+     const gid = window.userGroupId;
+     if (!gid) throw new Error("Grupo não definido.");
 
-     const snapshot = await this.db.collection('Lancamentos').where('userId', '==', uid).where('cod', '==', String(cod)).get();
+     const snapshot = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod)).get();
      if (snapshot.empty) throw new Error("Lançamento não encontrado");
      
      const docId = snapshot.docs[0].id;
@@ -140,10 +140,10 @@ class Database {
   }
 
   async saveContaConfig(payload) {
-     const uid = window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : null;
-     if (!uid) throw new Error("Usuário não autenticado.");
+     const gid = window.userGroupId;
+     if (!gid) throw new Error("Grupo não definido.");
 
-     const snapshot = await this.db.collection('Contas').where('userId', '==', uid).where('nome', '==', payload.originalNome).get();
+     const snapshot = await this.db.collection('Contas').where('groupId', '==', gid).where('nome', '==', payload.originalNome).get();
      if (!snapshot.empty) {
         const docId = snapshot.docs[0].id;
         await this.db.collection('Contas').doc(docId).update({
@@ -157,7 +157,7 @@ class Database {
         });
      } else {
         await this.db.collection('Contas').add({
-           userId: uid,
+           groupId: gid,
            nome: payload.novoNome || payload.originalNome,
            tipo: payload.tipo,
            banco: payload.banco,

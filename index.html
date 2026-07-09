@@ -139,7 +139,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.902 - 09/07/2026, 18:35:40</span>
+        <span style="font-size: 0.75rem;">v 0.9.903 - 09/07/2026, 18:41:31</span>
       </div>
     </div>
   </aside>
@@ -600,7 +600,52 @@
             </div>
             <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Adicione, edite ou remova as contas bancÃƒÂ¡rias e cartÃƒÂµes de crÃƒÂ©dito reconhecidos pela InteligÃƒÂªncia Artificial.</p>
           </div>
+
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-expense)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-group\']').click();">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+              <div style="background: rgba(239, 68, 68, 0.1); color: var(--color-expense); padding: 1rem; border-radius: 12px;">
+                <i class="fas fa-users" style="font-size: 1.5rem;"></i>
+              </div>
+              <h3 style="margin: 0; font-size: 1.2rem;">Meu Grupo (Família)</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Compartilhe os lançamentos com seu cônjuge. Visualize seu Código de Grupo ou entre em um Grupo existente.</p>
+          </div>
           
+        </div>
+      </div>
+      
+      <!-- 8.5. PANEL: GROUP SETTINGS -->
+      <div id="panel-group" class="dashboard-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-users" style="color: var(--color-expense);"></i> Meu Grupo (Família)
+          </h2>
+          <div style="display: flex; gap: 1rem;">
+            <button class="btn btn-secondary" onclick="document.querySelector('.nav-item[data-target=\'panel-settings\']').click();"><i class="fas fa-arrow-left"></i> Voltar</button>
+          </div>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">No Corta Gastos, o seu Grupo dita quais lançamentos você enxerga. Duas pessoas no mesmo grupo acessam exatamente a mesma base de dados, perfeito para o controle doméstico do casal.</p>
+        
+        <div class="metric-card" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div>
+            <h3 style="margin: 0 0 10px 0;">Seu Código de Grupo Atual:</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="group-id-display" class="form-control" readonly style="flex: 1; font-family: monospace; font-size: 1.1rem; color: var(--color-primary); background: rgba(0,0,0,0.2);">
+              <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('group-id-display').value); alert('Código copiado!')"><i class="fas fa-copy"></i> Copiar</button>
+            </div>
+            <small style="color: var(--text-muted); display: block; margin-top: 5px;">Mande este código para sua esposa (ou marido) colocar no aplicativo dela.</small>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1);">
+
+          <div>
+            <h3 style="margin: 0 0 10px 0;">Entrar em um Grupo Existente:</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Atenção: Ao entrar no grupo de outra pessoa, você passará a ver os lançamentos DELA, e os seus lançamentos atuais ficarão ocultos (eles não serão apagados, apenas ficam no seu grupo antigo).</p>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" id="new-group-id-input" class="form-control" placeholder="Cole o código do parceiro aqui" style="flex: 1; font-family: monospace;">
+              <button class="btn btn-primary" id="btn-join-group"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+            </div>
+          </div>
         </div>
       </div>
       

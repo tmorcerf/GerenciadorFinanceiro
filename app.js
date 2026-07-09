@@ -1462,6 +1462,35 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const btnLoginGoogle = document.getElementById('btn-login-google');
       const loadingScreen = document.getElementById('loading-screen');
 
+      // Elementos de Grupo
+      const groupIdDisplay = document.getElementById('group-id-display');
+      const newGroupIdInput = document.getElementById('new-group-id-input');
+      const btnJoinGroup = document.getElementById('btn-join-group');
+
+      if (btnJoinGroup) {
+        btnJoinGroup.addEventListener('click', async () => {
+          const newId = newGroupIdInput.value.trim();
+          if (!newId) return;
+          if (newId === window.userGroupId) {
+             alert('Você já está neste grupo!');
+             return;
+          }
+          if (confirm(`Tem certeza que deseja mudar seu grupo para ${newId}? Seus lançamentos atuais ficarão invisíveis (mas seguros no banco).`)) {
+             try {
+                // Atualiza o perfil no Users
+                await window.firebaseDB.collection('Users').doc(window.firebaseAuth.currentUser.uid).update({
+                   groupId: newId
+                });
+                alert('Grupo alterado com sucesso! O aplicativo será recarregado.');
+                window.location.reload();
+             } catch (err) {
+                console.error("Erro ao mudar de grupo", err);
+                alert("Erro ao mudar de grupo: " + err.message);
+             }
+          }
+        });
+      }
+
       // Login Handle
       if (btnLoginGoogle) {
         btnLoginGoogle.addEventListener('click', () => {
@@ -1496,6 +1525,26 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (userProfileName) userProfileName.textContent = user.displayName || 'Usuário';
           if (userProfileEmail) userProfileEmail.textContent = user.email || '';
           if (btnLogout) btnLogout.style.display = 'block';
+
+          // Lógica de Grupos (Família)
+          const userDocRef = window.firebaseDB.collection('Users').doc(user.uid);
+          const userDoc = await userDocRef.get();
+          if (!userDoc.exists) {
+            // Cria usuário com groupId = seu próprio uid
+            await userDocRef.set({
+              email: user.email,
+              name: user.displayName,
+              groupId: user.uid, // O grupo padrão é o próprio UID
+              createdAt: new Date().toISOString()
+            });
+            window.userGroupId = user.uid;
+          } else {
+            window.userGroupId = userDoc.data().groupId || user.uid;
+          }
+
+          if (groupIdDisplay) {
+            groupIdDisplay.value = window.userGroupId;
+          }
 
           // Inicializa o App com os dados do usuário
           loadingScreen.style.display = 'flex';
