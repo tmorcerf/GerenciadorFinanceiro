@@ -16,6 +16,7 @@
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" href="icon.png" type="image/png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Corta Gastos">
@@ -139,7 +140,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.904 - 09/07/2026, 19:06:08</span>
+        <span style="font-size: 0.75rem;">v 0.9.905 - 09/07/2026, 19:35:29</span>
       </div>
     </div>
   </aside>
@@ -618,32 +619,53 @@
       <div id="panel-group" class="dashboard-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-users" style="color: var(--color-expense);"></i> Meu Grupo (Família)
+            <i class="fas fa-users" style="color: var(--color-expense);"></i> Gestão Familiar (Grupo)
           </h2>
           <div style="display: flex; gap: 1rem;">
             <button class="btn btn-secondary" onclick="document.querySelector('.nav-item[data-target=\'panel-settings\']').click();"><i class="fas fa-arrow-left"></i> Voltar</button>
           </div>
         </div>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">No Corta Gastos, o seu Grupo dita quais lançamentos você enxerga. Duas pessoas no mesmo grupo acessam exatamente a mesma base de dados, perfeito para o controle doméstico do casal.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">No Corta Gastos, o seu Grupo dita quais lançamentos você enxerga. Pessoas no mesmo grupo acessam exatamente a mesma base de dados, perfeito para o controle doméstico do casal.</p>
         
-        <div class="metric-card" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-          <div>
-            <h3 style="margin: 0 0 10px 0;">Seu Código de Grupo Atual:</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="text" id="group-id-display" class="form-control" readonly style="flex: 1; font-family: monospace; font-size: 1.1rem; color: var(--color-primary); background: rgba(0,0,0,0.2);">
-              <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('group-id-display').value); alert('Código copiado!')"><i class="fas fa-copy"></i> Copiar</button>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+          
+          <!-- Card: Convite -->
+          <div class="metric-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="margin: 0 0 10px 0; color: var(--color-primary);"><i class="fas fa-key"></i> Seu Código Convite</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Compartilhe este código com o seu parceiro(a) para que ele(a) possa acessar a mesma base de dados que você no próprio celular.</p>
             </div>
-            <small style="color: var(--text-muted); display: block; margin-top: 5px;">Mande este código para sua esposa (ou marido) colocar no aplicativo dela.</small>
+            <div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="group-id-display" class="form-control" readonly style="flex: 1; font-family: monospace; font-size: 1.1rem; color: var(--color-primary); background: rgba(0,0,0,0.2); border: 1px dashed var(--color-primary);">
+                <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('group-id-display').value); alert('Código copiado!')"><i class="fas fa-copy"></i></button>
+              </div>
+            </div>
           </div>
 
-          <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1);">
+          <!-- Card: Entrar em um Grupo -->
+          <div class="metric-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="margin: 0 0 10px 0; color: var(--color-expense);"><i class="fas fa-sign-in-alt"></i> Juntar-se a um Grupo</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Recebeu um código convite? Cole abaixo para entrar. Seus dados atuais serão isolados e você passará a ver a base do dono do código.</p>
+            </div>
+            <div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="new-group-id-input" class="form-control" placeholder="Cole o código aqui" style="flex: 1; font-family: monospace;">
+                <button class="btn btn-primary" id="btn-join-group">Entrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <div>
-            <h3 style="margin: 0 0 10px 0;">Entrar em um Grupo Existente:</h3>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px;">Atenção: Ao entrar no grupo de outra pessoa, você passará a ver os lançamentos DELA, e os seus lançamentos atuais ficarão ocultos (eles não serão apagados, apenas ficam no seu grupo antigo).</p>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <input type="text" id="new-group-id-input" class="form-control" placeholder="Cole o código do parceiro aqui" style="flex: 1; font-family: monospace;">
-              <button class="btn btn-primary" id="btn-join-group"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+        <!-- Lista de Membros -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 style="margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px; font-size: 1.2rem;">
+            <i class="fas fa-user-friends" style="color: var(--color-accent);"></i> Membros da sua Família
+          </h3>
+          <div id="family-members-container" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="text-align: center; color: var(--text-muted); padding: 1rem;">
+              <i class="fas fa-spinner fa-spin"></i> Carregando membros...
             </div>
           </div>
         </div>

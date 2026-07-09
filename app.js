@@ -1645,6 +1645,48 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
+    async function renderFamilyMembers() {
+      const container = document.getElementById('family-members-container');
+      if (!container || !window.userGroupId) return;
+
+      container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 1rem;"><i class="fas fa-spinner fa-spin"></i> Carregando membros...</div>';
+
+      try {
+        const usersSnap = await window.firebaseDB.collection('Users').where('groupId', '==', window.userGroupId).get();
+        if (usersSnap.empty) {
+          container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Nenhum membro encontrado neste grupo.</div>';
+          return;
+        }
+
+        let html = '';
+        usersSnap.forEach(doc => {
+          const user = doc.data();
+          const isMe = doc.id === (window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : null);
+          const name = user.name || 'Usuário Anônimo';
+          const email = user.email || 'Sem email';
+          const avatar = name.charAt(0).toUpperCase();
+
+          html += `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(0,0,0,0.1); border-radius: 8px; border-left: 4px solid ${isMe ? 'var(--color-income)' : 'var(--color-primary)'};">
+              <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 1.2rem;">
+                  ${avatar}
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">${name} ${isMe ? '<span style="font-size: 0.75rem; color: var(--color-income); background: rgba(34,197,94,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Você</span>' : ''}</span>
+                  <span style="color: var(--text-muted); font-size: 0.8rem;">${email}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        console.error("Erro ao carregar membros do grupo:", err);
+        container.innerHTML = '<div style="color: var(--color-expense); font-size: 0.9rem;">Erro ao carregar membros. Verifique sua conexão.</div>';
+      }
+    }
+
     function setupNavigation() {
       sidebarLinks.forEach(link => {
         link.addEventListener('click', (e) => {
@@ -1666,6 +1708,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               } else if (targetPanel === 'panel-budgets') {
                 setTimeout(() => {
                   if (typeof renderBudgets === 'function') renderBudgets();
+                }, 10);
+              } else if (targetPanel === 'panel-group') {
+                setTimeout(() => {
+                  if (typeof renderFamilyMembers === 'function') renderFamilyMembers();
                 }, 10);
               }
             } else {
@@ -2755,6 +2801,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       html += `</div>`;
       container.innerHTML = html;
+
+      // Update Charts
+      if (!monthlyChart) {
+        if (typeof initCharts === 'function') initCharts();
+      } else {
+        if (typeof updateCharts === 'function') updateCharts();
+      }
 
       setTimeout(() => {
         const compCard = document.getElementById('card-composicao-saldos');
