@@ -2562,11 +2562,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               ${isCC ? `
                 <div style="display:flex; justify-content:space-between; margin-top:0.8rem; font-size:0.75rem; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 6px;">
                   <div>
-                    <div style="color:var(--text-muted); font-size:0.65rem;">Fatura Atual (Ms)</div>
+                    <div style="color:var(--text-muted); font-size:0.65rem;">Última Fechada</div>
                     <div style="color:${faturaAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaAtual)}</div>
                   </div>
                   <div style="text-align:right;">
-                    <div style="color:var(--text-muted); font-size:0.65rem;">Prxima Fatura</div>
+                    <div style="color:var(--text-muted); font-size:0.65rem;">Projeção Próxima</div>
                     <div style="color:${faturaProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaProxima)}</div>
                   </div>
                 </div>
@@ -3688,11 +3688,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             
             <div style="display:flex; justify-content:space-between; margin-top:0.8rem; font-size:0.75rem; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 6px;">
               <div>
-                <div style="color:var(--text-muted); font-size:0.65rem;">Fatura Atual</div>
+                <div style="color:var(--text-muted); font-size:0.65rem;">Última Fechada</div>
                 <div style="color:${faturaAtualCC < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaAtualCC)}</div>
               </div>
               <div style="text-align:right;">
-                <div style="color:var(--text-muted); font-size:0.65rem;">Prxima Fatura</div>
+                <div style="color:var(--text-muted); font-size:0.65rem;">Projeção Próxima</div>
                 <div style="color:${faturaProximaCC < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(faturaProximaCC)}</div>
               </div>
             </div>
