@@ -1744,34 +1744,41 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           
           sidebarLinks.forEach(l => l.classList.remove('active'));
           link.classList.add('active');
-          
-          panels.forEach(panel => {
-            if (panel.id === targetPanel) {
-              panel.classList.add('active');
-              if (targetPanel === 'panel-investments') {
-                setTimeout(() => {
-                  if (typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard();
-                }, 10);
-              } else if (targetPanel === 'panel-budgets') {
-                setTimeout(() => {
-                  if (typeof renderBudgets === 'function') renderBudgets();
-                }, 10);
-              } else if (targetPanel === 'panel-group') {
-                setTimeout(() => {
-                  if (typeof renderFamilyMembers === 'function') renderFamilyMembers();
-                }, 10);
-              } else if (targetPanel === 'panel-credit-cards') {
-                setTimeout(() => {
-                  if (typeof renderCreditCardsDashboard === 'function') renderCreditCardsDashboard();
-                }, 10);
-              }
-            } else {
-              panel.classList.remove('active');
-            }
-          });
+          window.switchToPanel(targetPanel);
         });
       });
     }
+
+    window.switchToPanel = function(targetPanelId) {
+      if (!targetPanelId) return;
+      
+      // Remove class active de todos os links e adiciona no correto
+      const allLinks = document.querySelectorAll('.nav-item[data-target]');
+      allLinks.forEach(l => {
+        if (l.getAttribute('data-target') === targetPanelId) l.classList.add('active');
+        else l.classList.remove('active');
+      });
+
+      // Troca os painéis
+      const allPanels = document.querySelectorAll('.dashboard-panel');
+      allPanels.forEach(panel => {
+        if (panel.id === targetPanelId) {
+          panel.classList.add('active');
+          // Lazy load callbacks
+          if (targetPanelId === 'panel-investments') {
+            setTimeout(() => { if (typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard(); }, 10);
+          } else if (targetPanelId === 'panel-budgets') {
+            setTimeout(() => { if (typeof renderBudgets === 'function') renderBudgets(); }, 10);
+          } else if (targetPanelId === 'panel-group') {
+            setTimeout(() => { if (typeof renderFamilyMembers === 'function') renderFamilyMembers(); }, 10);
+          } else if (targetPanelId === 'panel-credit-cards') {
+            setTimeout(() => { if (typeof renderCreditCardsDashboard === 'function') renderCreditCardsDashboard(); }, 10);
+          }
+        } else {
+          panel.classList.remove('active');
+        }
+      });
+    };
 
     function setupSwipeNavigation() {
       let touchStartX = 0;
