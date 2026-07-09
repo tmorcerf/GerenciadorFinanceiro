@@ -1570,7 +1570,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (isAppInitialized) {
         // Se já inicializou e logou de novo (re-login), apenas recarrega dados
         await loadDataFromFirebase();
-        refreshUI();
+        updateAllViews();
         return;
       }
       isAppInitialized = true;
@@ -1581,9 +1581,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const success = await loadDataFromFirebase();
       
       if (!success) return; // Stop if data is not loaded
+      function updateAllViews() {
+        if (typeof updateOverview === 'function') updateOverview();
+        if (typeof renderBudgets === 'function') renderBudgets();
+        if (typeof renderImportConciliacao === 'function') renderImportConciliacao();
+        if (typeof renderAccounts === 'function') renderAccounts();
+        if (typeof renderInvestments === 'function') renderInvestments();
+        if (typeof renderAudit === 'function') renderAudit();
+        if (typeof populateCategoryFilter === 'function') populateCategoryFilter();
+        if (typeof renderTransactionsTable === 'function') renderTransactionsTable();
+      }
 
-      refreshUI();
-      
+      updateAllViews();
       // Captura de arquivo compartilhado nativamente
       await checkSharedFile();
 
