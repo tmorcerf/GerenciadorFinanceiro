@@ -2349,7 +2349,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
          const val = Math.abs(tx.valor);
          if (val > biggestExpense) {
             biggestExpense = val;
-            biggestExpenseName = tx.obs || "-";
+            biggestExpenseName = tx.obs || tx.descricao || "-";
          }
       });
       let statusText = " Dentro da Meta";
@@ -2388,7 +2388,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
            txHtml += `
              <li style="display:flex; justify-content:space-between; font-size:0.85rem; align-itemes:center; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.03);">
                <span style="color:var(--text-secondary); font-size:0.75rem; min-width:45px;">${tx.data.substring(0,5)}</span>
-               <span style="color:var(--text-primary); flex:1; margin:0 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tx.obs || '-'}">${tx.obs || '-'}</span>
+               <span style="color:var(--text-primary); flex:1; margin:0 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${tx.obs || tx.descricao || '-'}">${tx.obs || tx.descricao || '-'}</span>
                <span style="color:var(--color-expense); font-weight:500;">${formatBRL(Math.abs(tx.valor))}</span>
              </li>
            `;
@@ -3453,7 +3453,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           html += `
             <div class="drilldown-item-row">
               <span style="color:var(--text-muted);">${item.data}</span>
-              <span style="color:var(--text-primary);">${item.obs || item.conta || '-'}</span>
+              <span style="color:var(--text-primary);">${item.obs || item.descricao || item.conta || '-'}</span>
               <span style="color:${color}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</span><span style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></span></div>
           `;
         });
@@ -3509,7 +3509,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
-          <td>${item.obs || '-'}</td>
+          <td>${item.obs || item.descricao || '-'}</td>
           <td style="color:var(--text-secondary);">${item.conta || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
       });
@@ -3559,7 +3559,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         html += `<tr>
           <td style="color:var(--text-muted); font-size:0.85rem; white-space:nowrap;">${item.data}</td>
           <td style="font-size:0.85rem; color:var(--text-secondary);">${item.conta}</td>
-          <td style="color:var(--text-primary); font-size:0.9rem;">${item.obs || '-'}</td>
+          <td style="color:var(--text-primary); font-size:0.9rem;">${item.obs || item.descricao || '-'}</td>
           <td style="font-size:0.85rem;"><span class="badge" style="background:var(--bg-sidebar); border:1px solid var(--border-color); color:var(--text-secondary);">${item.categoria}</span></td>
           <td style="text-align:right; font-weight:600; color:${valColor};">${formatBRL(item.valor)}</td>
           <td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td>
@@ -3620,7 +3620,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const saldoClass = item._saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
-          <td>${item.obs || '-'}</td>
+          <td>${item.obs || item.descricao || '-'}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
           <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
