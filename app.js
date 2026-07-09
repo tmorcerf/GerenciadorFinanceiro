@@ -2089,6 +2089,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       valueExpense.textContent = formatBRL(Math.abs(expenses));
       valueSavings.textContent = formatBRL(net);
       
+      // Animação de fade (feedback visual do seletor)
+      [valueIncome, valueExpense, valueSavings].forEach(el => {
+        if (el && el.parentElement) {
+          el.parentElement.style.transition = 'none';
+          el.parentElement.style.opacity = '0.3';
+          setTimeout(() => {
+            el.parentElement.style.transition = 'opacity 0.4s ease';
+            el.parentElement.style.opacity = '1';
+          }, 50);
+        }
+      });
+
       if (net >= 0) {
         valueSavings.style.color = 'var(--color-income)';
       } else {
@@ -2097,7 +2109,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const savingsTrend = document.getElementById('value-savings-trend');
       if (savingsTrend) {
-        savingsTrend.textContent = net >= 0 ? 'Positivo nao periodo' : 'Negativo nao periodo';
+        savingsTrend.textContent = net >= 0 ? 'Positivo no período' : 'Negativo no período';
       }
 
       // Render Top 5 Gastos
@@ -2789,43 +2801,43 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       const temAtraso = (count60 + count30 + count10) > 0;
       
-      const top5 = todasContasAtraso.filter(c => c.diffDays > 10).slice(0, 5);
+      const top5 = todasContasAtraso.slice(0, 5);
       
       let alertaHtml = '';
       if (temAtraso) {
         alertaHtml += `<div style="display:flex; justify-content:space-between; width:100%; margin-bottom:0.8rem;">
-          <div style="display:flex; flex-direction:column; align-itemes:center;">
+          <div style="display:flex; flex-direction:column; align-items:center;">
             <span style="font-size:1.2rem; font-weight:700; color:var(--color-expense);">${count60}</span>
             <span style="font-size:0.65rem; color:var(--text-muted);">> 60d</span>
           </div>
-          <div style="display:flex; flex-direction:column; align-itemes:center;">
+          <div style="display:flex; flex-direction:column; align-items:center;">
             <span style="font-size:1.2rem; font-weight:700; color:#eab308;">${count30}</span>
             <span style="font-size:0.65rem; color:var(--text-muted);">> 30d</span>
           </div>
-          <div style="display:flex; flex-direction:column; align-itemes:center;">
+          <div style="display:flex; flex-direction:column; align-items:center;">
             <span style="font-size:1.2rem; font-weight:700; color:var(--text-primary);">${count10}</span>
             <span style="font-size:0.65rem; color:var(--text-muted);">> 10d</span>
           </div>
         </div>`;
-        
-        alertaHtml += `<div style="width:100%; text-align:left; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem;">`;
-        top5.forEach(c => {
-          let color = 'var(--text-primary)';
-          if (c.diffDays > 60) color = 'var(--color-expense)';
-          else if (c.diffDays > 30) color = '#eab308';
-          
-          alertaHtml += `<div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.25rem;">
-            <span style="color:var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 75%;">${c.nome || c.conta || 'Conta'}</span>
-            <span style="color:${color}; font-weight:600;">${c.diffDays}d</span>
-          </div>`;
-        });
-        alertaHtml += `</div>`;
       } else {
-        alertaHtml = `<div style="display:flex; flex-direction:column; align-itemes:center; justify-content:center; height:100%; width:100%;">
+        alertaHtml += `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; margin-bottom:0.8rem;">
            <div style="font-size:1.8rem; font-weight:700; color:var(--color-income); margin-bottom:0.5rem;"><i class="fas fa-check-circle"></i></div>
            <div style="font-size:0.85rem; color:var(--text-muted);">Tudo em dia!</div>
         </div>`;
       }
+      
+      alertaHtml += `<div style="width:100%; text-align:left; border-top:1px solid rgba(255,255,255,0.1); padding-top:0.5rem;">`;
+      top5.forEach(c => {
+        let color = 'var(--text-primary)';
+        if (c.diffDays > 60) color = 'var(--color-expense)';
+        else if (c.diffDays > 30) color = '#eab308';
+        
+        alertaHtml += `<div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.25rem;">
+          <span style="color:var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 75%;">${c.nome || c.conta || 'Conta'}</span>
+          <span style="color:${color}; font-weight:600;">${c.diffDays}d</span>
+        </div>`;
+      });
+      alertaHtml += `</div>`;
 
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem;">

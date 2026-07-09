@@ -141,7 +141,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.913 - 09/07/2026, 20:37:32</span>
+        <span style="font-size: 0.75rem;">v 0.9.914 - 09/07/2026, 20:56:06</span>
       </div>
     </div>
   </aside>
@@ -190,7 +190,7 @@
         <!-- Income -->
         <div class="card income-card clickable-card" id="card-income">
           <div class="card-header">
-            <span>Receitas do PerÃƒÂ­odo</span>
+            <span>Receitas do Período</span>
             <div class="card-icon">
               <svg viewBox="0 0 24 24"><path d="M12 19V5m-7 7l7-7 7 7"/></svg>
             </div>
@@ -575,7 +575,7 @@
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
           
-          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-categories')">
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-categories'); window.renderEditCategories();">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
               <div style="background: rgba(129, 140, 248, 0.1); color: var(--color-primary); padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-tags" style="font-size: 1.5rem;"></i>
@@ -595,7 +595,7 @@
             <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Analise inconsistências financeiras, transações não mapeadas e verifique logs avançados do sistema de importação.</p>
           </div>
 
-          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-accent)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.showContasModal()">
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-accent)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-accounts-edit'); window.renderEditAccounts();">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
               <div style="background: rgba(56, 189, 248, 0.1); color: var(--color-accent); padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-university" style="font-size: 1.5rem;"></i>
