@@ -2573,7 +2573,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               ` : ''}
 
               <div style="display:flex; justify-content:space-between; align-itemes:center; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
-                <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">Clique para ver extrato</div>
+                <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">
+                  Clique para ver extrato
+                  ${c.conciliado_ate ? `<div style="font-size:0.65rem; opacity:0.6; margin-top:3px;"><i class="fas fa-check-circle"></i> Conciliado até: ${c.conciliado_ate}</div>` : ''}
+                </div>
                 ${c.uultima_movimentacao ? `<div style="font-size: 0.75rem; font-weight:600; color: ${getDateColor(c.uultima_movimentacao)};"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.uultima_movimentacao}</div>` : ''}
               </div>
             </div>
@@ -2773,7 +2776,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <div class="card-icon">${invIcon}</div>
             </div>
             <div class="card-value" style="font-size:1.6rem; color:#8b5cf6;">${formatBRL(c.saldo)}</div>
-            <div class="card-trend" style="color:var(--text-muted);">${pctOfTotal}% do total  Clique para ver extrato</div>
+            <div class="card-trend" style="color:var(--text-muted);">
+              ${pctOfTotal}% do total  Clique para ver extrato
+              ${c.conciliado_ate ? `<div style="font-size:0.65rem; opacity:0.6; margin-top:3px;"><i class="fas fa-check-circle"></i> Conciliado até: ${c.conciliado_ate}</div>` : ''}
+            </div>
           </div>
         `;
       });
