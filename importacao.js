@@ -948,12 +948,22 @@ document.addEventListener('DOMContentLoaded', () => {
         dataMaxStr: rawMaxStr
       };
 
-      const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-      const jsonRes = await res.json();
+      let jsonRes = { status: "success" };
+      if (window.USE_FIREBASE) {
+         await window.DB.sincronizarPeriodo(
+             payload.lancamentosNovos,
+             payload.idsParaExcluir,
+             payload.contaDoExtrato,
+             payload.dataMaxStr
+         );
+      } else {
+          const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+          });
+          jsonRes = await res.json();
+      }
       
       if (jsonRes.status === "error") throw new Error(jsonRes.message);
 

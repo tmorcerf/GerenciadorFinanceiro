@@ -1406,13 +1406,70 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     };
 
+    // --- FIREBASE INTEGRATION ---
+    async function loadDataFromFirebase() {
+        try {
+            console.log("Carregando dados do Firebase...");
+            const dbDados = await window.DB.loadAllData();
+            
+            // Map Firebase data to existing in-memory structure
+            dadosFinanceiros.lancamentos = dbDados.lancamentos || [];
+            dadosFinanceiros.contas = dbDados.contas || [];
+            dadosFinanceiros.orcamento = dbDados.orcamentos || [];
+            dadosFinanceiros.auditoria = dbDados.auditoria || [];
+            dadosFinanceiros.importacoes = dbDados.importsInfo || [];
+            
+            window.dicionarioGeral = dbDados.categoriasDict || {};
+
+            // Hide loading screen
+            const loading = document.getElementById('loading-screen');
+            if (loading) {
+              loading.style.opacity = '0';
+              setTimeout(() => {
+                loading.style.visibility = 'hidden';
+                loading.style.display = 'none';
+              }, 500);
+            }
+            
+            return true;
+        } catch (err) {
+            console.error("Erro ao carregar Firebase:", err);
+            const loading = document.getElementById('loading-screen');
+            if (loading) {
+              loading.querySelector('div:last-child').innerHTML = `
+                <div style="text-align: center; color: var(--color-expense);">
+                  <p style="font-weight:600; margin-bottom:0.5rem;">Erro no Firebase</p>
+                  <p style="font-size:0.9rem; color:var(--text-secondary); max-width:400px; line-height:1.4;">${err.message}</p>
+                </div>
+              `;
+              document.querySelector('.spinner').style.display = 'none';
+            }
+            return false;
+        }
+    }
+
+    window.USE_FIREBASE = false; // Mude para true após migrar os dados
+
     async function init() {
       setupNavigation();
       setupSwipeNavigation();
       
-      const success = await loadDataFromSheets();
-      if (!success) return; // Stop if sheets are not loaded
-
+      let success = false;
+      if (window.USE_FIREBASE) {
+          // Wait for auth
+          const user = await new Promise((resolve) => {
+             window.firebaseAuth.onAuthStateChanged(u => resolve(u));
+          });
+          if (!user) {
+             const provider = new firebase.auth.GoogleAuthProvider();
+             await window.firebaseAuth.signInWithPopup(provider);
+          }
+          success = await loadDataFromFirebase();
+      } else {
+          success = await loadDataFromSheets();
+      }
+      
+      if (!success) return; // Stop if data is not loaded
 
       updateOverview();
       renderBudgets();
@@ -4210,12 +4267,30 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
   btn.disabled = true;
 
-  fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).then(() => {
+  let savePromise;
+  if (window.USE_FIREBASE) {
+     savePromise = window.DB.editarLancamento(payload.cod, {
+         data: payload.novaData,
+         conta: payload.novaConta,
+         valor: payload.novoValor,
+         categoria: payload.novaCategoria,
+         subcategoria: payload.novaSubcategoria,
+         obs: payload.novaObs
+     }).then(() => {
+         if (payload.contraPartida) {
+             return window.DB.sincronizarPeriodo([payload.contraPartida], [], null, null);
+         }
+     });
+  } else {
+      savePromise = fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+  }
+
+  savePromise.then(() => {
     const tx = dadosFinanceiros.lancamentos.find(l => l.cod == id);
     if(tx) {
       tx.data = payload.novaData;
