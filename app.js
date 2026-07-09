@@ -1558,6 +1558,41 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             groupIdDisplay.value = window.userGroupId;
           }
 
+          // ===== PROCESSA CONVITE POR LINK =====
+          const urlParams = new URLSearchParams(window.location.search);
+          const inviteCode = urlParams.get('invite');
+          if (inviteCode) {
+            try {
+              loadingScreen.style.display = 'flex';
+              const inviteRef = window.firebaseDB.collection('Invites').doc(inviteCode);
+              const inviteSnap = await inviteRef.get();
+              if (inviteSnap.exists) {
+                const inviteData = inviteSnap.data();
+                if (inviteData.groupId === window.userGroupId) {
+                  alert('Você já está no grupo deste convite!');
+                } else if (confirm(`Deseja entrar no grupo familiar associado a este convite? Seus lançamentos atuais ficarão isolados (mas seguros).`)) {
+                  // Entrar no grupo
+                  await window.firebaseDB.collection('Users').doc(user.uid).update({
+                    groupId: inviteData.groupId
+                  });
+                  window.userGroupId = inviteData.groupId;
+                  // Queimar o convite
+                  await inviteRef.delete();
+                  alert('Bem-vindo(a)! Você entrou no grupo com sucesso.');
+                }
+                // Limpar URL independente da escolha
+                window.history.replaceState({}, document.title, window.location.pathname);
+              } else {
+                alert('Este link de convite é inválido ou já foi utilizado.');
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+            } catch (err) {
+              console.error("Erro ao processar convite:", err);
+              alert("Erro ao processar o convite. Você tem permissão?");
+            }
+          }
+          // =====================================
+
           // Inicializa o App com os dados do usuário
           loadingScreen.style.display = 'flex';
           await initApp();
@@ -1735,6 +1770,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                   <span style="color: var(--text-muted); font-size: 0.8rem;">${email}</span>
                 </div>
               </div>
+              ${!isMe ? `<button onclick="window.removeMember('${doc.id}', '${name}')" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem; background: rgba(239,68,68,0.1); color: var(--color-expense); border: 1px solid var(--color-expense);"><i class="fas fa-user-minus"></i> Remover</button>` : ''}
             </div>
           `;
         });
@@ -1744,6 +1780,59 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         container.innerHTML = '<div style="color: var(--color-expense); font-size: 0.9rem;">Erro ao carregar membros. Verifique sua conexão.</div>';
       }
     }
+
+    // ===== GESTÃO FAMILIAR: CONVITES E REMOÇÃO =====
+    window.generateInviteLink = async function() {
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+      btn.disabled = true;
+
+      try {
+        // Gera um ID de 8 caracteres alfanuméricos
+        const inviteId = 'INV-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        
+        await window.firebaseDB.collection('Invites').doc(inviteId).set({
+          groupId: window.userGroupId,
+          createdBy: window.firebaseAuth.currentUser.uid,
+          createdAt: new Date().toISOString()
+        });
+
+        // Monta a URL completa do site + ?invite=ID
+        const baseUrl = window.location.href.split('?')[0];
+        const fullLink = `${baseUrl}?invite=${inviteId}`;
+        
+        const inputDisplay = document.getElementById('invite-link-display');
+        if (inputDisplay) {
+          inputDisplay.value = fullLink;
+        }
+      } catch (err) {
+        console.error("Erro ao gerar convite:", err);
+        alert("Erro ao gerar convite. Você tem permissão?");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    };
+
+    window.removeMember = async function(memberUid, memberName) {
+      if (!confirm(`ATENÇÃO: Você tem certeza que deseja expulsar ${memberName} do seu Grupo Familiar?`)) {
+        return;
+      }
+
+      try {
+        // Redefine o groupId do membro para ser o seu próprio UID (isolando-o)
+        await window.firebaseDB.collection('Users').doc(memberUid).update({
+          groupId: memberUid
+        });
+        alert(`${memberName} foi removido(a) do grupo com sucesso.`);
+        renderFamilyMembers(); // Recarrega a lista
+      } catch (err) {
+        console.error("Erro ao remover membro:", err);
+        alert("Erro ao remover membro. Atualize as regras do Firestore no Console do Firebase conforme as instruções.");
+      }
+    };
+    // ================================================
 
     function setupNavigation() {
       sidebarLinks.forEach(link => {
