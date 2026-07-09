@@ -9,7 +9,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
 // Error Handler
     window.onerror = function(mesg, url, lineNo, columnNo, error) {
-      alert("ERRO NO DASHBOARD!\n\nMensagem: " + mesg + "\nLinha: " + lineNo + "\nColuna: " + columnNo + "\n\nCopie essa mensagem e mande para a IA!");
+      const errHtml = `<div id="error-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#1e293b;padding:25px;border-radius:12px;border:2px solid #ef4444;max-width:500px;width:100%;">
+          <h2 style="color:#ef4444;margin-top:0;margin-bottom:15px;display:flex;align-items:center;gap:10px;"><i class="fas fa-exclamation-triangle"></i> ERRO NO DASHBOARD!</h2>
+          <p style="color:#cbd5e1;font-size:0.95rem;margin-bottom:15px;">Por favor, copie essa mensagem e mande para a IA consertar:</p>
+          <textarea readonly style="width:100%;height:120px;background:#0f172a;color:#f8fafc;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;font-family:monospace;font-size:0.85rem;margin-bottom:20px;resize:none;">Mensagem: ${mesg}\nLinha: ${lineNo}\nColuna: ${columnNo}</textarea>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button onclick="document.querySelector('textarea').select(); document.execCommand('copy'); alert('Copiado!');" style="background:#3b82f6;color:white;border:none;padding:10px 15px;border-radius:6px;cursor:pointer;font-weight:600;"><i class="fas fa-copy"></i> Copiar Erro</button>
+            <button onclick="document.getElementById('error-overlay').remove();" style="background:transparent;border:1px solid #475569;color:#cbd5e1;padding:10px 15px;border-radius:6px;cursor:pointer;">Fechar</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.insertAdjacentHTML('beforeend', errHtml);
       return false;
     };
     // ==========================================
@@ -3734,7 +3745,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     };
 // Global Error Handler for Debugging Google Sites Limitations
     window.onerror = function(mesg, url, lineNo, columnNo, error) {
-      alert("ERRO NO DASHBOARD!\n\nMensagem: " + mesg + "\nLinha: " + lineNo + "\nColuna: " + columnNo + "\n\nPor favor, copie essa mensagem e mande para a IA consertar!");
+      const errHtml = `<div id="error-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#1e293b;padding:25px;border-radius:12px;border:2px solid #ef4444;max-width:500px;width:100%;">
+          <h2 style="color:#ef4444;margin-top:0;margin-bottom:15px;display:flex;align-items:center;gap:10px;"><i class="fas fa-exclamation-triangle"></i> ERRO NO DASHBOARD!</h2>
+          <p style="color:#cbd5e1;font-size:0.95rem;margin-bottom:15px;">Por favor, copie essa mensagem e mande para a IA consertar:</p>
+          <textarea readonly style="width:100%;height:120px;background:#0f172a;color:#f8fafc;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;font-family:monospace;font-size:0.85rem;margin-bottom:20px;resize:none;">Mensagem: ${mesg}\nLinha: ${lineNo}\nColuna: ${columnNo}</textarea>
+          <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button onclick="document.querySelector('textarea').select(); document.execCommand('copy'); alert('Copiado!');" style="background:#3b82f6;color:white;border:none;padding:10px 15px;border-radius:6px;cursor:pointer;font-weight:600;"><i class="fas fa-copy"></i> Copiar Erro</button>
+            <button onclick="document.getElementById('error-overlay').remove();" style="background:transparent;border:1px solid #475569;color:#cbd5e1;padding:10px 15px;border-radius:6px;cursor:pointer;">Fechar</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.insertAdjacentHTML('beforeend', errHtml);
       return false;
     };
 
