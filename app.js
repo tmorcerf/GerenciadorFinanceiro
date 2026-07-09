@@ -95,7 +95,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function formatBRL(val) {
-      return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (val === undefined || val === null || isNaN(val)) val = 0;
+      return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
