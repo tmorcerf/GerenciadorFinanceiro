@@ -1632,6 +1632,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (typeof renderImportConciliacao === 'function') renderImportConciliacao();
         if (typeof renderAccounts === 'function') renderAccounts();
         if (typeof renderInvestments === 'function') renderInvestments();
+        if (typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard();
+        if (typeof renderCreditCardsDashboard === 'function') renderCreditCardsDashboard();
         if (typeof renderAudit === 'function') renderAudit();
         if (typeof populateCategoryFilter === 'function') populateCategoryFilter();
         if (typeof renderTransactionsTable === 'function') renderTransactionsTable();
@@ -1758,6 +1760,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 setTimeout(() => {
                   if (typeof renderFamilyMembers === 'function') renderFamilyMembers();
                 }, 10);
+              } else if (targetPanel === 'panel-credit-cards') {
+                setTimeout(() => {
+                  if (typeof renderCreditCardsDashboard === 'function') renderCreditCardsDashboard();
+                }, 10);
               }
             } else {
               panel.classList.remove('active');
@@ -1873,7 +1879,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         // Global search query
         if (searchQuery !== '') {
-          const obs = (l.obs || '').toLowerCase();
+          const obs = (l.obs || l.descricao || '').toLowerCase();
           const cat = (l.categoria || '').toLowerCase();
           const sub = (l.subcategoria || '').toLowerCase();
           if (!obs.includes(searchQuery) && !cat.includes(searchQuery) && !sub.includes(searchQuery)) {
@@ -2159,7 +2165,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           <td>${l.data || '-'}</td>
           <td>${l.vencimento || '-'}</td>
           <td>${l.conta || '-'}</td>
-          <td>${l.obs || '-'}</td>
+          <td>${l.obs || l.descricao || '-'}</td>
           <td><span class="badge ${badgeClass}">${l.categoria || 'Outros'}</span></td>
           <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
           <td class="${valClass}">${valPrefix}${formatBRL(l.valor)}</td>
@@ -2393,7 +2399,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                     <i class="fas fa-pencil-alt" style="color:var(--text-muted); cursor:pointer;" title="Editar Lançamento" onclick="window.openEditTransactionModal('${t.cod}')" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'"></i>
                   </div>
                 </div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${t.obs || t.conta}">${t.obs || t.conta}</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${t.obs || t.descricao || t.conta}">${t.obs || t.descricao || t.conta}</div>
               </div>
             `;
           });
@@ -4335,7 +4341,7 @@ window.openEditTransactionModal = function(cod) {
   });
 
   document.getElementById('edit-tx-valor').value = Math.abs(t.valor).toFixed(2).replace('.', ',');
-  document.getElementById('edit-tx-obs').value = t.obs || '';
+  document.getElementById('edit-tx-obs').value = t.obs || t.descricao || '';
 
   const catSelect = document.getElementById('edit-tx-categoria');
   catSelect.innerHTML = '';
