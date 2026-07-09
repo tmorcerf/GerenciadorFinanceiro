@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentFileUrl = URL.createObjectURL(file);
     currentFileType = file.type || file.name.split('.').pop().toLowerCase();
     
-    if (btnViewDoc) btnViewDoc.style.display = 'inline-flex';
+    if (btnViewDoc) btnViewDoc.style.display = 'flex';
     updateReconciliationDatesUI();
 
     // Reset UI e Estados
