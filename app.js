@@ -1450,42 +1450,93 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
-    async function init() {
+    let isAppInitialized = false;
+
+    // Elementos de UI de Login
+    const loginScreen = document.getElementById('login-screen');
+    const userProfilePic = document.getElementById('user-profile-pic');
+    const userProfileName = document.getElementById('user-profile-name');
+    const userProfileEmail = document.getElementById('user-profile-email');
+    const btnLogout = document.getElementById('btn-logout');
+    const btnLoginGoogle = document.getElementById('btn-login-google');
+    const loadingScreen = document.getElementById('loading-screen');
+
+    // Login Handle
+    if (btnLoginGoogle) {
+      btnLoginGoogle.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        window.firebaseAuth.signInWithPopup(provider).catch(err => {
+          console.error("Erro no login:", err);
+          alert("Erro ao fazer login: " + err.message);
+        });
+      });
+    }
+
+    // Logout Handle
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        if(confirm("Deseja realmente sair?")) {
+          window.firebaseAuth.signOut();
+        }
+      });
+    }
+
+    // Listener Global de Autenticação
+    window.firebaseAuth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Logado
+        loginScreen.style.display = 'none';
+        
+        // Atualiza Sidebar
+        if (userProfilePic) {
+           userProfilePic.src = user.photoURL || '';
+           userProfilePic.style.display = 'block';
+        }
+        if (userProfileName) userProfileName.textContent = user.displayName || 'Usuário';
+        if (userProfileEmail) userProfileEmail.textContent = user.email || '';
+        if (btnLogout) btnLogout.style.display = 'block';
+
+        // Inicializa o App com os dados do usuário
+        loadingScreen.style.display = 'flex';
+        await initApp();
+        loadingScreen.style.display = 'none';
+      } else {
+        // Deslogado
+        loginScreen.style.display = 'flex';
+        loadingScreen.style.display = 'none';
+
+        if (userProfilePic) {
+           userProfilePic.src = '';
+           userProfilePic.style.display = 'none';
+        }
+        if (userProfileName) userProfileName.textContent = 'Visitante';
+        if (userProfileEmail) userProfileEmail.textContent = 'Faça login para usar';
+        if (btnLogout) btnLogout.style.display = 'none';
+      }
+    });
+
+    async function initApp() {
+      if (isAppInitialized) {
+        // Se já inicializou e logou de novo (re-login), apenas recarrega dados
+        await loadDataFromFirebase();
+        refreshUI();
+        return;
+      }
+      isAppInitialized = true;
+
       setupNavigation();
       setupSwipeNavigation();
       
-      let success = false;
-      if (window.USE_FIREBASE) {
-          // Wait for auth
-          const user = await new Promise((resolve) => {
-             window.firebaseAuth.onAuthStateChanged(u => resolve(u));
-          });
-          if (!user) {
-             const provider = new firebase.auth.GoogleAuthProvider();
-             await window.firebaseAuth.signInWithPopup(provider);
-          }
-          success = await loadDataFromFirebase();
-      } else {
-          success = await loadDataFromSheets();
-      }
+      const success = await loadDataFromFirebase();
       
       if (!success) return; // Stop if data is not loaded
 
-      updateOverview();
-      renderBudgets();
-      renderImportConciliacao();
-      renderAccounts();
-      renderInvestments();
-      renderAudit();
-      // Removemos as chamadas para renderTransactionsTable pois criaremos o Executive Summary
-      
-      initCharts();
-      renderInvestmentsDashboard();
-      renderCreditCardsDashboard();
+      refreshUI();
       
       // Captura de arquivo compartilhado nativamente
       await checkSharedFile();
 
+      // Events listeners
       // Events listeners
       bindTabPeriodSelectors();
 

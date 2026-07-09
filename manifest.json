@@ -1,7 +1,7 @@
 {
-  "name": "Orçamento Familiar",
-  "short_name": "Orçamento",
-  "description": "Dashboard Financeiro Pessoal",
+  "name": "Corta Gastos",
+  "short_name": "Corta Gastos",
+  "description": "Plataforma de Gestão Financeira Inteligente",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
