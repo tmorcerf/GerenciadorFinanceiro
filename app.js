@@ -1448,7 +1448,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
     }
 
-    window.USE_FIREBASE = false; // Mude para true após migrar os dados
+    window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
     async function init() {
       setupNavigation();
