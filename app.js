@@ -1582,7 +1582,51 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const success = await loadDataFromFirebase();
       
       if (!success) return; // Stop if data is not loaded
+      
+      function recalculateBalances() {
+        if (!dadosFinanceiros.contas || !dadosFinanceiros.lancamentos) return;
+        
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        let nextMonth = currentMonth + 1;
+        let nextYear = currentYear;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
+
+        dadosFinanceiros.contas.forEach(c => {
+          c.saldo = parseFloat(c.saldo_inicial) || 0;
+          c.fatura_atual = 0;
+          c.fatura_proxima = 0;
+        });
+
+        dadosFinanceiros.lancamentos.forEach(l => {
+          const conta = dadosFinanceiros.contas.find(c => c.nome === l.conta);
+          if (!conta) return;
+
+          const val = parseFloat(l.valor) || 0;
+          
+          const isCartao = (conta.tipo || '').toLowerCase().includes('cart');
+          if (!isCartao) {
+             conta.saldo += val;
+          } else {
+             conta.saldo += val; // Total debt
+             const d = parseDateString(l.data || l.vencimento);
+             if (d) {
+               if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                 conta.fatura_atual += val;
+               } else if (d.getMonth() === nextMonth && d.getFullYear() === nextYear) {
+                 conta.fatura_proxima += val;
+               }
+             }
+          }
+        });
+      }
+
       function updateAllViews() {
+        recalculateBalances();
         if (typeof updateOverview === 'function') updateOverview();
         if (typeof renderBudgets === 'function') renderBudgets();
         if (typeof renderImportConciliacao === 'function') renderImportConciliacao();
@@ -2131,7 +2175,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     function normalizeCat(c) { return (c || '').trim().toLowerCase(); }
 
     function getCardData(o, cardPeriod) {
-      const annualLimit = Math.abs(o.orcamento);
+      const annualLimit = Math.abs(parseFloat(o.valor_mensal) || parseFloat(o.orcamento) || 0);
       const activePeriod = cardPeriod || document.getElementById('month-filter').value;
       let periodMonths = 12;
       if (activePeriod === 'current' || activePeriod === 'previous') periodMonths = 1;
@@ -2734,37 +2778,24 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         `;
 
         const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        let nextMonth = currentMonth + 1;
-        let nextYear = currentYear;
-        if (nextMonth > 11) {
-          nextMonth = 0;
-          nextYear++;
+        const today = now.getDate();
+
+        if (groupName === 'Cartões de Credito') {
+           contas.sort((a, b) => {
+              const diaA = parseInt(a.dia_vencimento) || 31;
+              const diaB = parseInt(b.dia_vencimento) || 31;
+              const nextDateA = new Date(now.getFullYear(), now.getMonth() + (diaA < today ? 1 : 0), diaA);
+              const nextDateB = new Date(now.getFullYear(), now.getMonth() + (diaB < today ? 1 : 0), diaB);
+              return nextDateA - nextDateB;
+           });
         }
 
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
           const isCC = groupName === 'Cartões de Credito';
           
-          let faturaAtual = 0;
-          let faturaProxima = 0;
-          
-          if (isCC) {
-            const lancamentosConta = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === c.nome.toLowerCase());
-            lancamentosConta.forEach(l => {
-               const dateStr = l.vencimento || l.data; 
-               if (!dateStr) return;
-               const d = parseDateString(dateStr);
-               if (!d) return;
-               
-               if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-                   faturaAtual += l.valor;
-               } else if (d.getMonth() === nextMonth && d.getFullYear() === nextYear) {
-                   faturaProxima += l.valor;
-               }
-            });
-          }
+          let faturaAtual = c.fatura_atual || 0;
+          let faturaProxima = c.fatura_proxima || 0;
 
           html += `
             <div class="card ${colorMap[groupName]}-card clickable-card" data-conta-name="${cName}" style="cursor:pointer; ${isCC ? 'border-top: 3px solid var(--color-expense);' : ''}">
