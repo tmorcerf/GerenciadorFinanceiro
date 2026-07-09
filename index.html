@@ -141,7 +141,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.909 - 09/07/2026, 20:21:29</span>
+        <span style="font-size: 0.75rem;">v 0.9.910 - 09/07/2026, 20:23:25</span>
       </div>
     </div>
   </aside>
@@ -575,7 +575,7 @@
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
           
-          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-categories\']').click();">
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-categories')">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
               <div style="background: rgba(129, 140, 248, 0.1); color: var(--color-primary); padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-tags" style="font-size: 1.5rem;"></i>
@@ -585,7 +585,7 @@
             <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Gerencie as categorias e subcategorias utilizadas pela Inteligência Artificial. Adicione novas regras e treine o modelo.</p>
           </div>
 
-          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-income)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-audit\']').click();">
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-income)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-audit')">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
               <div style="background: rgba(245, 158, 11, 0.1); color: var(--color-warning); padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-search-dollar" style="font-size: 1.5rem;"></i>
@@ -605,7 +605,7 @@
             <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Adicione, edite ou remova as contas bancárias e cartões de crédito reconhecidos pela Inteligência Artificial.</p>
           </div>
 
-          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-expense)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="document.querySelector('.nav-item[data-target=\'panel-group\']').click();">
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-expense)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-group')">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
               <div style="background: rgba(239, 68, 68, 0.1); color: var(--color-expense); padding: 1rem; border-radius: 12px;">
                 <i class="fas fa-users" style="font-size: 1.5rem;"></i>
