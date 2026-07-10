@@ -3892,7 +3892,27 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
          };
       });
 
-      return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues, favoriteDatasets, favoriteLabels: favorites };
+      const favoriteLabels = favorites.map(fav => {
+         const budget = favData[fav].budget;
+         let isExploding = false;
+         if (budget > 0) {
+            for (let i = 0; i < 4; i++) {
+               const spent = favData[fav].spent[i];
+               const pct = (spent / budget) * 100;
+               if (pct > 120) {
+                   isExploding = true;
+                   break;
+               }
+            }
+         }
+         let label = fav.charAt(0).toUpperCase() + fav.slice(1);
+         if (isExploding) {
+             label = `💣 ${label} 💣`;
+         }
+         return label;
+      });
+
+      return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues, favoriteDatasets, favoriteLabels };
     }
 
     function showModalDetails(type) {
