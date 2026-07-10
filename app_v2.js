@@ -2793,7 +2793,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible; ${isTopArea ? 'min-height: 420px; display: flex; flex-direction: column;' : ''}">
           <div class="budget-title-row" style="display:flex; justify-content:space-between; align-itemes:center; flex-wrap:wrap; gap:10px;">
             <div style="display:flex; align-itemes:center; gap: 6px;">
-              <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar">&#9733;</span>
+              <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5em; margin-right: 5px;">&#9733;</span>
               <span class="budget-cat-name" style="margin-left:4px;">${o.categoria}</span>
             </div>
             <div style="display:flex; align-itemes:center; gap: 10px;">
@@ -2830,24 +2830,39 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
          const normCat = normalizeCat(o.categoria).replace(/\s+/g, '-');
          
          html += `<div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem; flex-grow: 1; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
-            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;">
-               <i class="fas fa-cog"></i> Configurar Orçamento
+            <style>
+               .no-spinners::-webkit-outer-spin-button,
+               .no-spinners::-webkit-inner-spin-button {
+                  -webkit-appearance: none;
+                  margin: 0;
+               }
+               .no-spinners {
+                  -moz-appearance: textfield;
+               }
+            </style>
+            
+            <div style="width:100%; height:180px; margin-bottom: 1.5rem;"><canvas id="favCatChart-${normCat}"></canvas></div>
+
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 1rem;">
+               <i class="fas fa-cog"></i> Configurar Meta
             </div>
             <div style="display: flex; gap: 10px; align-items: flex-end;">
                <div style="flex: 1;">
-                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor</label>
-                  <input type="number" id="cat-config-valor-${normCat}" value="${currentConfigValor}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
+                  <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor</label>
+                  <div style="display:flex; align-items:center; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0 8px;">
+                     <span style="color:var(--text-muted); font-size:0.8rem; margin-right:4px;">R$</span>
+                     <input type="number" id="cat-config-valor-${normCat}" value="${currentConfigValor}" class="no-spinners" style="flex:1; width:100%; min-width: 0; background: transparent; border: none; color: var(--text-primary); padding: 6px 0; outline: none;">
+                  </div>
                </div>
                <div style="flex: 1;">
-                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Período</label>
-                  <select id="cat-config-periodo-${normCat}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
+                  <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Período</label>
+                  <select id="cat-config-periodo-${normCat}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 8px; border-radius: 4px; outline: none; font-size: 0.85rem; height: 30px;">
                      <option value="mensal" ${currentConfigPeriodo === 'mensal' ? 'selected' : ''}>Mensal</option>
                      <option value="anual" ${currentConfigPeriodo === 'anual' ? 'selected' : ''}>Anual</option>
                   </select>
                </div>
-               <button id="cat-config-save-btn-${normCat}" data-cat="${o.categoria}" class="btn btn-primary dash-cat-save-btn" style="padding: 6px 12px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-save"></i></button>
+               <button id="cat-config-save-btn-${normCat}" data-cat="${o.categoria}" class="btn btn-primary dash-cat-save-btn" style="padding: 0 12px; height: 30px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-save"></i></button>
             </div>
-            <div style="width:100%; height:180px; margin-top: 1.5rem;"><canvas id="favCatChart-${normCat}"></canvas></div>
          </div>`;
       }
 
@@ -4212,7 +4227,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                          borderWidth: 2,
                          borderDash: [4, 4],
                          label: {
-                            display: true,
+                            display: false,
                             content: 'Orçamento: ' + formatBRL(budget),
                             position: 'end',
                             backgroundColor: 'rgba(239, 68, 68, 0.9)',
