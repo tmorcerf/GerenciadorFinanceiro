@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.954 - 10/07/2026, 19:26:54</span>
+        <span style="font-size: 0.75rem;">v 0.9.955 - 10/07/2026, 19:42:41</span>
       </div>
     </div>
   </aside>
@@ -288,7 +288,7 @@
           <!-- Período -->
           <select id="transactions-period-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
             <option value="all">Todo o Período</option>
-            <option value="current">Mês Atual</option>
+            <option value="current" selected>Mês Atual</option>
             <option value="previous">Mês Passado</option>
             <option value="3months">Últimos 3 Meses</option>
             <option value="6months">Últimos 6 Meses</option>
@@ -309,6 +309,10 @@
           <!-- Ordem -->
           <button id="transactions-sort-btn" class="btn btn-secondary" style="padding: 0.5rem; font-size: 0.9rem;" title="Alternar Ordem">
             <i class="fas fa-sort-amount-down"></i>
+          </button>
+          <!-- Exportar CSV -->
+          <button onclick="window.exportTransactionsCSV()" class="btn btn-secondary" style="padding:0.5rem 0.8rem; font-size:0.85rem; display:flex; align-items:center; gap:6px; white-space:nowrap;" title="Exportar página atual para CSV">
+            <i class="fas fa-file-csv"></i> Exportar CSV
           </button>
           <!-- Busca -->
           <div style="position: relative;">

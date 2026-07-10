@@ -79,8 +79,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let txPeriodFilter = 'current';
     let txCustomStart = '';
     let txCustomEnd = '';
-    let txSortOrder = 'desc';
-    const rowsPerPage = 15;
+    let txSortOrder = 'asc';
+    const rowsPerPage = 100;
 
     let monthlyChart = null;
     let categoryChart = null;
@@ -2614,7 +2614,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         row.innerHTML = `
           <td>${l.data || '-'}</td>
           <td>${l.conta || '-'}</td>
-          <td><span class="badge ${badgeClass}">${l.categoria || 'Outros'}</span></td>
+          <td style="color:var(--text-primary); font-size:0.88rem;">${l.categoria || 'Outros'}</td>
           <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
           <td>${l.obs || l.descricao || '-'}</td>
           <td class="${valClass}" style="text-align: right;">${valPrefix}${formatBRL(l.valor)}</td>
@@ -2630,6 +2630,35 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     function getFavorites() {
       return JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
     }
+
+    // Export current page of transactions as CSV
+    window.exportTransactionsCSV = function() {
+      const rows = [['Data','Conta','Categoria','Subcategoria','Descricao','Valor']];
+      const tbody = document.querySelector('#transactions-table tbody');
+      if (!tbody) return;
+      tbody.querySelectorAll('tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        if (tds.length < 6) return;
+        rows.push([
+          tds[0].textContent.trim(),
+          tds[1].textContent.trim(),
+          tds[2].textContent.trim(),
+          tds[3].textContent.trim(),
+          tds[4].textContent.trim(),
+          tds[5].textContent.trim()
+        ]);
+      });
+      const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lancamentos.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
 
     function normalizeCat(c) { return (c || '').trim().toLowerCase(); }
 
