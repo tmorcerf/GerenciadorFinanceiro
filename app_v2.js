@@ -3785,18 +3785,29 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
     }
 
-    function updateCharts() {
+    function updateMonthlyChart() {
+      if (!monthlyChart) return;
       const chartData = getChartsFilteredData();
       monthlyChart.data.labels = chartData.monthlyLabels;
       monthlyChart.data.datasets[0].data = chartData.monthlyIncome;
       monthlyChart.data.datasets[1].data = chartData.monthlyExpense.map(Math.abs);
       monthlyChart.update();
+    }
 
+    function updateCategoryChart() {
+      if (!categoryChart) return;
+      const chartData = getChartsFilteredData();
       categoryChart.data.labels = chartData.categoryLabels;
       categoryChart.data.datasets[0].data = chartData.categoryValues;
       categoryChart.update();
+    }
+
+    function updateCharts() {
+      updateMonthlyChart();
+      updateCategoryChart();
       
       if (favoriteCategoriesChart) {
+        const chartData = getChartsFilteredData();
         if (chartData.favoriteDatasets.length === 0) {
           document.getElementById('favorite-categories-empty').style.display = 'block';
           document.getElementById('favorite-categories-chart').style.display = 'none';
