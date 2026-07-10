@@ -5,63 +5,66 @@ class Database {
     this.db = window.firebaseDB;
   }
 
+  // Wrapper helper para aproveitar o cache e o resume token
+  getCollectionData(queryRef) {
+    return new Promise((resolve, reject) => {
+      let resolved = false;
+      // Ao deixar o onSnapshot aberto, o SDK do Firebase magicamente atualiza o cache (IndexedDB)
+      // em background enviando apenas os Diffs (documentos alterados). O custo despenca!
+      queryRef.onSnapshot(
+        { includeMetadataChanges: false },
+        (snapshot) => {
+          if (!resolved) {
+            resolved = true;
+            const docs = [];
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              data.firebaseId = doc.id;
+              docs.push(data);
+            });
+            resolve(docs);
+          }
+        },
+        (err) => {
+          if (!resolved) reject(err);
+        }
+      );
+    });
+  }
+
   // --- LEITURA ---
   async loadAllData() {
     try {
       const gid = window.userGroupId;
       if (!gid) throw new Error("Grupo de usuário não definido.");
 
-      const [lancamentosSnap, contasSnap, categoriasSnap, orcamentosSnap, auditoriaSnap, importsSnap] = await Promise.all([
-        this.db.collection('Lancamentos').where('groupId', '==', gid).get(),
-        this.db.collection('Contas').where('groupId', '==', gid).get(),
-        this.db.collection('Categorias').where('groupId', '==', gid).get(),
-        this.db.collection('Orcamentos').where('groupId', '==', gid).get(),
-        this.db.collection('Auditoria').where('groupId', '==', gid).get(),
-        this.db.collection('Imports').where('groupId', '==', gid).get()
+      // Em vez de usar .get() (que custa milhares de leituras toda vez), 
+      // delegamos para o getCollectionData que usa .onSnapshot() (custa quase zero com cache ativado).
+      const [lancamentos, contas, categorias, orcamentos, auditoria, importsInfo] = await Promise.all([
+        this.getCollectionData(this.db.collection('Lancamentos').where('groupId', '==', gid)),
+        this.getCollectionData(this.db.collection('Contas').where('groupId', '==', gid)),
+        this.getCollectionData(this.db.collection('Categorias').where('groupId', '==', gid)),
+        this.getCollectionData(this.db.collection('Orcamentos').where('groupId', '==', gid)),
+        this.getCollectionData(this.db.collection('Auditoria').where('groupId', '==', gid)),
+        this.getCollectionData(this.db.collection('Imports').where('groupId', '==', gid))
       ]);
 
-      const dados = {
-        lancamentos: [],
-        contas: [],
-        categoriasDict: {}, // formato esperado: { "Alimentacao": ["Restaurante", "Mercado"] }
-        orcamentos: [],
-        auditoria: [],
-        importsInfo: []
+      const categoriasDict = {};
+      categorias.forEach(cat => {
+         if (!categoriasDict[cat.nome]) categoriasDict[cat.nome] = [];
+         if (cat.subcategorias && Array.isArray(cat.subcategorias)) {
+            categoriasDict[cat.nome] = cat.subcategorias;
+         }
+      });
+
+      return {
+        lancamentos,
+        contas,
+        categoriasDict,
+        orcamentos,
+        auditoria,
+        importsInfo
       };
-
-      lancamentosSnap.forEach(doc => {
-        let data = doc.data();
-        data.firebaseId = doc.id; // Guarda o ID do firebase
-        dados.lancamentos.push(data);
-      });
-
-      contasSnap.forEach(doc => {
-        dados.contas.push({ ...doc.data(), firebaseId: doc.id });
-      });
-
-      categoriasSnap.forEach(doc => {
-        let cat = doc.data();
-        if (!dados.categoriasDict[cat.nome]) {
-           dados.categoriasDict[cat.nome] = [];
-        }
-        if (cat.subcategorias && Array.isArray(cat.subcategorias)) {
-           dados.categoriasDict[cat.nome] = cat.subcategorias;
-        }
-      });
-
-      orcamentosSnap.forEach(doc => {
-        dados.orcamentos.push({ ...doc.data(), firebaseId: doc.id });
-      });
-
-      auditoriaSnap.forEach(doc => {
-        dados.auditoria.push({ ...doc.data(), firebaseId: doc.id });
-      });
-
-      importsSnap.forEach(doc => {
-        dados.importsInfo.push({ ...doc.data(), firebaseId: doc.id });
-      });
-
-      return dados;
     } catch (err) {
       console.error("Erro ao carregar dados do Firebase:", err);
       throw err;

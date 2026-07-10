@@ -11,6 +11,13 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// Habilita persistência offline para economizar leituras
+db.enablePersistence({ synchronizeTabs: true })
+  .catch((err) => {
+    console.warn("Erro ao habilitar persistência do Firestore:", err);
+  });
+
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
