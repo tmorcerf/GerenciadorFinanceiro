@@ -2783,14 +2783,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const now = new Date();
       now.setHours(0,0,0,0);
       
+      window.getLastTransactionDateForAccount = function(accountName) {
+        if (!dadosFinanceiros || !dadosFinanceiros.lancamentos) return null;
+        const name = (accountName || '').toLowerCase();
+        let maxDate = null;
+        dadosFinanceiros.lancamentos.forEach(l => {
+           if ((l.conta || '').toLowerCase() === name) {
+              const d = parseDateString(l.data);
+              if (d) {
+                 if (!maxDate || d.getTime() > maxDate.getTime()) {
+                    maxDate = d;
+                 }
+              }
+           }
+        });
+        if (maxDate) {
+           const day = String(maxDate.getDate()).padStart(2, '0');
+           const month = String(maxDate.getMonth() + 1).padStart(2, '0');
+           const year = maxDate.getFullYear();
+           return `${day}/${month}/${year}`;
+        }
+        return null;
+      };
+
       const todasContasAtraso = [];
       dadosFinanceiros.contas.forEach(c => {
-        if (!c.uultima_movimentacao) return;
-        const d = parseDateString(c.uultima_movimentacao);
+        const dateStr = c.uultima_movimentacao || window.getLastTransactionDateForAccount(c.nome || c.conta);
+        if (!dateStr) return;
+        const d = parseDateString(dateStr);
         if (d) {
           d.setHours(0,0,0,0);
           const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
-          todasContasAtraso.push({ ...c, diffDays });
+          todasContasAtraso.push({ ...c, diffDays, displayDate: dateStr });
         }
       });
       todasContasAtraso.sort((a,b) => b.diffDays - a.diffDays);
@@ -3692,8 +3716,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const contasComAtraso = [];
       dadosFinanceiros.contas.forEach(c => {
         let diffDays = 0;
-        if (c.uultima_movimentacao) {
-          const d = parseDateString(c.uultima_movimentacao);
+        const dateStr = c.uultima_movimentacao || window.getLastTransactionDateForAccount(c.nome || c.conta);
+        if (dateStr) {
+          const d = parseDateString(dateStr);
           if (d) {
             d.setHours(0,0,0,0);
             diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
@@ -3701,20 +3726,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             diffDays = 999;
           }
         } else {
-           diffDays = 999; // Se nao tem data, assume o maior atraso possvel
+           diffDays = 999; // Se nao tem data, assume o maior atraso possivel
         }
-        contasComAtraso.push({ ...c, diffDays });
+        contasComAtraso.push({ ...c, diffDays, displayDate: dateStr });
       });
       
       contasComAtraso.sort((a,b) => b.diffDays - a.diffDays);
 
-      let html = `<div style="margin-bottom:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">Acompanhamento de Conciliao Bancria</div>`;
-      html += `<table class="extrato-table"><thead><tr><th>Conta</th><th>lt. Movimentao</th><th style="text-align:right">Status</th></tr></thead><tbody>`;
+      let html = `<div style="margin-bottom:1.5rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">Acompanhamento de Conciliação Bancária</div>`;
+      html += `<table class="extrato-table"><thead><tr><th>Conta</th><th>Data de Conciliação</th><th style="text-align:right">Status</th></tr></thead><tbody>`;
 
       contasComAtraso.forEach(item => {
         let atrasoText = '';
         let color = 'var(--text-primary)';
-        if (item.diffDays === 999 || !item.uultima_movimentacao) {
+        if (item.diffDays === 999 || !item.displayDate) {
            atrasoText = 'Sem registro';
            color = 'var(--text-muted)';
         } else {
@@ -3726,7 +3751,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         html += `<tr>
           <td style="color:var(--text-primary); font-weight:500;">${item.nome || item.conta || '-'}</td>
-          <td style="color:var(--text-muted);">${item.uultima_movimentacao || '-'}</td>
+          <td style="color:var(--text-muted);">${item.displayDate || '-'}</td>
           <td style="text-align:right; font-weight:600; color:${color};">${atrasoText}</td>
         </tr>`;
       });
