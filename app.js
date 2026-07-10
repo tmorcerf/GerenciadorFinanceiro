@@ -4345,7 +4345,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (!list) return;
         
         if (!window.editContas) {
-          window.editContas = JSON.parse(JSON.stringify(window.contasAtivas || []));
+          window.editContas = JSON.parse(JSON.stringify((typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros.contas : null) || window.contasAtivas || []));
         }
         
         list.innerHTML = window.editContas.map((c, idx) => `
