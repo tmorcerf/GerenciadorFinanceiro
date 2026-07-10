@@ -2216,7 +2216,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             else if (data.pct > 70) barColor = 'var(--color-warning)';
 
             favHtml += `
-              <div class="budget-mini-item">
+              <div class="budget-mini-item clickable-card" onclick="window.showCategoryDrilldown('${o.categoria}', '${cardPer}')" style="cursor: pointer;" title="Ver lançamentos">
                 <div class="budget-mini-header">
                   <span class="budget-mini-title">${o.categoria} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal; margin-left: 4px;">(${periodLabel})</span></span>
                   <span class="budget-mini-values">
