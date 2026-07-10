@@ -143,7 +143,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.918 - 09/07/2026, 22:18:44</span>
+        <span style="font-size: 0.75rem;">v 0.9.919 - 09/07/2026, 22:22:42</span>
       </div>
     </div>
   </aside>
@@ -234,7 +234,7 @@
         <!-- Top 5 Gastos Card -->
         <div class="card expense-card">
           <div class="card-header">
-            <span>Top 5 Gastos do PerÃƒÂ­odo</span>
+            <span>Top 5 Gastos do Período</span>
             <div class="card-icon" style="background-color: var(--color-expense-glow); color: var(--color-expense);">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M17 17H7m10-4H7m6-4H7"/></svg>
             </div>
@@ -333,7 +333,7 @@
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Resumo de Faturas</h2>
       </div>
       <div id="credit-cards-dashboard">
-        <!-- Resumo e GrÃƒÂ¡fico injetados aqui -->
+        <!-- Resumo e Gráfico injetados aqui -->
       </div>
     </div>
 
@@ -351,7 +351,7 @@
           </select>
           <div id="investimentos-custom-date" style="display: none; align-items: center; gap: 5px;">
             <input type="date" id="investimentos-date-start" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
-            <span style="font-size: 0.8rem; color: var(--text-secondary);">atÃƒÂ©</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">até</span>
             <input type="date" id="investimentos-date-end" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
           </div>
         </div>
@@ -360,30 +360,30 @@
       <div id="investments-dashboard" style="margin-bottom: 2.5rem; display: none;">
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div class="card clickable-card" style="border-top: 3px solid var(--color-income); cursor: pointer;" onclick="showInvestmentsModal('aportes')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do PerÃƒÂ­odo</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do Período</span></div>
             <div id="inv-dash-aportes" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card clickable-card" style="border-top: 3px solid #8b5cf6; cursor: pointer;" onclick="showInvestmentsModal('rendimentos')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento LÃƒÂ­quido</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento Líquido</span></div>
             <div id="inv-dash-rendimento" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card clickable-card" style="border-top: 3px solid var(--color-expense); cursor: pointer;" onclick="showInvestmentsModal('resgates')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do PerÃƒÂ­odo</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do Período</span></div>
             <div id="inv-dash-resgates" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento LÃƒÂ­quido</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento Líquido</span></div>
             <div id="inv-dash-crescimento" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">R$ 0,00</div>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
-            <div class="card-header"><span style="font-weight:600;">EvoluÃƒÂ§ÃƒÂ£o: Aportes, Rendimentos e Resgates</span></div>
+            <div class="card-header"><span style="font-weight:600;">Evolução: Aportes, Rendimentos e Resgates</span></div>
             <div style="flex:1; position:relative; min-height:0;"><canvas id="inv-history-chart"></canvas></div>
           </div>
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
-            <div class="card-header"><span style="font-weight:600;">ComposiÃƒÂ§ÃƒÂ£o da Carteira</span></div>
+            <div class="card-header"><span style="font-weight:600;">Composição da Carteira</span></div>
             <div style="flex:1; position:relative; min-height:0; display:flex; align-items:center; justify-content:center;">
               <canvas id="inv-composition-chart"></canvas>
             </div>
@@ -397,7 +397,7 @@
 
     <!-- 4. PANEL: AUDIT -->
     <div id="panel-audit" class="dashboard-panel">
-      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de ConsistÃƒÂªncia</h2>
+      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de Consistência</h2>
       <div id="audit-container" class="audit-container">
         <!-- Content loaded via JavaScript -->
       </div>
@@ -725,7 +725,7 @@
             <tr>
               <th>Data</th>
               <th>Conta</th>
-              <th>DescriÃƒÂ§ÃƒÂ£o</th>
+              <th>Descrição</th>
               <th>Categoria</th>
               <th>Valor</th>
             </tr>
@@ -759,7 +759,7 @@
     </div>
     <div style="padding: 15px; background: #1e293b;">
       <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 0; margin-bottom: 12px; line-height: 1.4;">Tem alguma ideia genial para melhorar o sistema? Conta pra mim, eu leio tudo!</p>
-      <textarea id="feedbackText" placeholder="Digite sua sugestÃƒÂ£o aqui..." style="width: 100%; height: 90px; padding: 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: #0f172a; color: #f8fafc; resize: none; font-size: 0.9rem; margin-bottom: 15px; font-family: inherit; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#818cf8';" onblur="this.style.borderColor='rgba(255,255,255,0.15)';"></textarea>
+      <textarea id="feedbackText" placeholder="Digite sua sugestão aqui..." style="width: 100%; height: 90px; padding: 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: #0f172a; color: #f8fafc; resize: none; font-size: 0.9rem; margin-bottom: 15px; font-family: inherit; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#818cf8';" onblur="this.style.borderColor='rgba(255,255,255,0.15)';"></textarea>
       <button id="btnSubmitFeedback" style="width: 100%; padding: 12px; background: #818cf8; color: #0f172a; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.95rem; transition: background 0.2s, transform 0.1s;" onmouseover="this.style.background='#6366f1';" onmouseout="this.style.background='#818cf8';" onmousedown="this.style.transform='scale(0.98)';" onmouseup="this.style.transform='scale(1)';">
         Enviar Ideia
       </button>
@@ -866,7 +866,7 @@
   <script src="importacao.js?v=7"></script>
 </body>
 </html>
-<!-- VersÃƒÂ£o: 11/06/2026 20:20 (IntegraÃƒÂ§ÃƒÂ£o Gem TSV) -->
+<!-- Versão: 11/06/2026 20:20 (Integração Gem TSV) -->
 
 
 
