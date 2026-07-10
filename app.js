@@ -2114,7 +2114,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     function bindTabPeriodSelectors() {
       const tabs = [
-        { filterId: 'visao-geral-filter', startId: 'visao-geral-date-start', endId: 'visao-geral-date-end', customId: 'visao-geral-custom-date', tabId: 'visao-geral', updateFn: () => { updateOverview(); updateCharts(); } },
         { filterId: 'investimentos-filter', startId: 'investimentos-date-start', endId: 'investimentos-date-end', customId: 'investimentos-custom-date', tabId: 'investimentos', updateFn: () => { if(typeof renderInvestmentsDashboard === 'function') renderInvestmentsDashboard(); if(typeof renderInvestments === 'function') renderInvestments(); } },
         { filterId: 'orcamento-dashboard-filter', startId: null, endId: null, customId: null, tabId: 'orcamentos-dash', updateFn: () => { renderBudgets(); } }
       ];
@@ -2158,7 +2157,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function updateOverview() {
-      const filtered = getFilteredTransactions(getTabPeriod('visao-geral'));
+      // Default overview top cards to current month since global filter was removed
+      const filtered = getFilteredTransactions('current');
       
       let income = 0;
       let expenses = 0;
@@ -2230,7 +2230,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (favListEl && dadosFinanceiros && dadosFinanceiros.orcamento) {
         const favorites = getFavorites();
         let favHtml = '';
-        const dashPeriod = document.getElementById('visao-geral-filter')?.value || 'current';
+        const dashPeriod = 'current';
 
         dadosFinanceiros.orcamento.forEach(o => {
           if (o.categoria === 'TOTAL' || o.categoria === 'Sobra') return;
@@ -3739,7 +3739,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function getChartsFilteredData() {
-      const filteredMonthly = getFilteredTransactions(getTabPeriod('visao-geral'));
+      // Bar Chart: Last 6 months history
+      const filteredMonthly = getFilteredTransactions('6months');
       const monthlyData = {};
       
       filteredMonthly.forEach(l => {
@@ -3769,7 +3770,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const monthlyIncome = sortedMonths.map(m => monthlyData[m].income);
       const monthlyExpense = sortedMonths.map(m => monthlyData[m].expense);
 
-      const filteredCategory = getFilteredTransactions(getTabPeriod('visao-geral'));
+      // Pie Chart: Current month breakdown
+      const filteredCategory = getFilteredTransactions('current');
       const categoryData = {};
       filteredCategory.forEach(l => {
         if (l.valor >= 0) return;
@@ -3894,7 +3896,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function showModalDetails(type) {
-      window.showReceitasDespesasModal(type, getTabPeriod('visao-geral'));
+      window.showReceitasDespesasModal(type, 'current');
     }
 
     document.addEventListener('DOMContentLoaded', bootstrapApp);
