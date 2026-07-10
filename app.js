@@ -1634,7 +1634,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (!success) return; // Stop if data is not loaded
       
       function recalculateBalances() {
-        if (!dadosFinanceiros.contas || !dadosFinanceiros.lancamentos) return;
+        if (!dadosFinanceiros) return;
         
         const now = new Date();
         const currentMonth = now.getMonth();
@@ -1647,14 +1647,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
 
         dadosFinanceiros.contas.forEach(c => {
-          c.saldo = parseFloat(c.saldo_inicial) || 0;
+          c.saldo = 0; // Starts at 0 to avoid double counting if a transaction exists
           c.fatura_atual = 0;
           c.fatura_proxima = 0;
+          c._has_saldo_tx = false;
         });
 
         dadosFinanceiros.lancamentos.forEach(l => {
           const conta = dadosFinanceiros.contas.find(c => c.nome === l.conta);
           if (!conta) return;
+
+          if ((l.categoria || '').toLowerCase().trim() === 'saldo inicial') {
+            conta._has_saldo_tx = true;
+          }
 
           const val = parseFloat(l.valor) || 0;
           
@@ -1672,6 +1677,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                }
              }
           }
+        });
+
+        // Add the DB saldo_inicial ONLY if they didn't use a transaction for it
+        dadosFinanceiros.contas.forEach(c => {
+           if (!c._has_saldo_tx && c.saldo_inicial) {
+               c.saldo += (parseFloat(c.saldo_inicial) || 0);
+           }
         });
       }
 
