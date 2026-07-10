@@ -1,25 +1,25 @@
 :root {
-      /* Theme: Clean Minimalist / Green Ninja */
-      --bg-main: #f8fafc;           /* Off-white/slate-50 background */
-      --bg-sidebar: #ffffff;        /* Pure white sidebar */
-      --bg-card: #ffffff;           /* White cards */
-      --bg-card-hover: #f1f5f9;     /* Subtle gray hover state */
-      --border-color: #e2e8f0;      /* Light gray borders */
+      /* Theme: Premium Gamified Dark Mode */
+      --bg-main: #0f172a;           /* Deep slate background */
+      --bg-sidebar: #1e293b;        /* Slightly lighter slate for sidebar */
+      --bg-card: rgba(30, 41, 59, 0.7); /* Semi-transparent slate for glassmorphism */
+      --bg-card-hover: rgba(51, 65, 85, 0.9);
+      --border-color: rgba(255, 255, 255, 0.1);
       
-      --text-primary: #0f172a;      /* Dark slate for high contrast */
-      --text-secondary: #475569;    /* Medium slate */
-      --text-muted: #64748b;        /* Light slate */
+      --text-primary: #f8fafc;      /* White text */
+      --text-secondary: #cbd5e1;    /* Light gray text */
+      --text-muted: #94a3b8;        /* Muted gray text */
       
-      --color-income: #10b981;       /* Emerald/Ninja Green */
-      --color-income-glow: rgba(16, 185, 129, 0.15);
-      --color-expense: #ef4444;      /* Clean Red */
-      --color-expense-glow: rgba(239, 68, 68, 0.15);
-      --color-accent: #10b981;       /* Brand color is Ninja Green */
-      --color-accent-glow: rgba(16, 185, 129, 0.2);
-      --color-warning: #fbbf24;      /* Gold for points */
+      --color-income: #10b981;       /* Neon Emerald */
+      --color-income-glow: rgba(16, 185, 129, 0.3);
+      --color-expense: #f43f5e;      /* Neon Rose */
+      --color-expense-glow: rgba(244, 63, 94, 0.3);
+      --color-accent: #8b5cf6;       /* Neon Purple */
+      --color-accent-glow: rgba(139, 92, 246, 0.3);
+      --color-warning: #fbbf24;      /* Gold */
       
       --sidebar-width: 260px;
-      --transition-speed: 0.25s;
+      --transition-speed: 0.3s;
     }
 
     * {
@@ -37,11 +37,11 @@
       background: var(--bg-main);
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.2);
     }
 
     body {
@@ -52,8 +52,8 @@
       display: flex;
       overflow-x: hidden;
       background-image: 
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.05), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 25%);
     }
 
     /* Sidebar Styling */
@@ -219,7 +219,9 @@
 
     .card {
       background-color: var(--bg-card);
-      border: 2px solid var(--border-color);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
       border-radius: 20px;
       padding: 1.5rem;
       display: flex;
@@ -227,12 +229,13 @@
       position: relative;
       overflow: hidden;
       transition: all var(--transition-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 
     .card:hover {
-      transform: translateY(-6px) scale(1.02);
+      transform: translateY(-6px) scale(1.01);
       background-color: var(--bg-card-hover);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
       border-color: var(--color-accent);
     }
 
@@ -282,9 +285,10 @@
     }
     .budget-mini-bar {
       height: 8px;
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 4px;
       overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
     }
     .budget-mini-fill {
       height: 100%;
@@ -552,7 +556,7 @@
     }
 
     tr:hover td {
-      background-color: rgba(255, 255, 255, 0.01);
+      background-color: rgba(255, 255, 255, 0.05);
     }
 
     .val-col {
@@ -592,7 +596,7 @@
     .badge-transfer {
       background-color: var(--color-accent-glow);
       color: var(--color-accent);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      border: 1px solid rgba(139, 92, 246, 0.25);
     }
 
     .pagination {

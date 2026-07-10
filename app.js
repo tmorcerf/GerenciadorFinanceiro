@@ -75,6 +75,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let searchQuery = '';
     let currentPage = 1;
     let txAccountFilter = 'all';
+    let txCategoryFilter = 'all';
     let txPeriodFilter = 'current';
     let txSortOrder = 'desc';
     const rowsPerPage = 15;
@@ -1754,6 +1755,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
       }
 
+      const catFilterSelect = document.getElementById('transactions-category-filter');
+      if (catFilterSelect) {
+        catFilterSelect.addEventListener('change', (e) => {
+          txCategoryFilter = e.target.value;
+          currentPage = 1;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+        });
+      }
+
       const sortBtn = document.getElementById('transactions-sort-btn');
       if (sortBtn) {
         sortBtn.addEventListener('click', () => {
@@ -2398,6 +2408,28 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }, 0);
     }
 
+    function populateCategoryFilter() {
+      if (!dadosFinanceiros || !dadosFinanceiros.lancamentos) return;
+      const catSelect = document.getElementById('transactions-category-filter');
+      if (!catSelect || catSelect.options.length > 1) return; // Already populated
+
+      const uniqueCats = new Set();
+      dadosFinanceiros.lancamentos.forEach(l => {
+         const c = (l.categoria || '').trim();
+         if (c) uniqueCats.add(c);
+      });
+
+      const sortedCats = Array.from(uniqueCats).sort((a, b) => a.localeCompare(b));
+      sortedCats.forEach(cat => {
+         const opt = document.createElement('option');
+         opt.value = cat;
+         opt.textContent = cat;
+         catSelect.appendChild(opt);
+      });
+      // Sync state from UI on first load
+      txCategoryFilter = catSelect.value;
+    }
+
     function renderTransactionsTable() {
       if (!dadosFinanceiros || !dadosFinanceiros.lancamentos) return;
 
@@ -2423,6 +2455,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (!l.data) return false;
         if (txAccountFilter !== 'all') {
           if ((l.conta || '').toLowerCase() !== txAccountFilter.toLowerCase()) return false;
+        }
+        if (txCategoryFilter !== 'all') {
+          if ((l.categoria || '').toLowerCase() !== txCategoryFilter.toLowerCase()) return false;
         }
         return true;
       });
@@ -2572,7 +2607,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       else if (activePeriod === 'custom') {
          periodMonths = 1; // Simplified fallback
       }
-      const limit = annualLimit * (periodMonths / 12);
+      const limit = annualLimit * periodMonths;
       let dynamicSpent = 0;
       const catTxs = [];
       const now = new Date();
@@ -3756,7 +3791,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
            const orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(fav));
            if (orcObj) {
               const annualLimit = Math.abs(parseFloat(orcObj.valor_mensal) || parseFloat(orcObj.orcamento) || 0);
-              favData[fav].budget = annualLimit / 12; // Orçamento mensal real
+              favData[fav].budget = annualLimit; // Assuming spreadsheet is ALREADY monthly!
            }
         }
       });
@@ -3786,11 +3821,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
          const bgColors = favorites.map(fav => {
             const spent = favData[fav].spent[mObj.monthIndex];
             const budget = favData[fav].budget;
-            if (budget === 0) return 'rgba(59, 130, 246, 0.7)'; // fallback blue if no budget
+            if (budget === 0) return 'rgba(139, 92, 246, 0.9)'; // Neon Purple fallback
             const pct = (spent / budget) * 100;
-            if (pct > 100) return 'rgba(239, 68, 68, 0.8)'; // Red
-            if (pct >= 80) return 'rgba(234, 179, 8, 0.8)'; // Yellow
-            return 'rgba(16, 185, 129, 0.8)'; // Green
+            if (pct > 100) return 'rgba(244, 63, 94, 0.9)'; // Neon Rose
+            if (pct >= 80) return 'rgba(251, 191, 36, 0.9)'; // Neon Gold
+            return 'rgba(16, 185, 129, 0.9)'; // Neon Emerald
          });
          
          return {
