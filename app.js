@@ -3613,7 +3613,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           favoriteCategoriesChart = new Chart(ctxFav.getContext('2d'), {
             type: 'bar',
             data: {
-              labels: chartData.monthlyLabels,
+              labels: chartData.favoriteLabels,
               datasets: chartData.favoriteDatasets
             },
             options: {
@@ -3655,7 +3655,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         } else {
           document.getElementById('favorite-categories-empty').style.display = 'none';
           document.getElementById('favorite-categories-chart').style.display = 'block';
-          favoriteCategoriesChart.data.labels = chartData.monthlyLabels;
+          favoriteCategoriesChart.data.labels = chartData.favoriteLabels;
           favoriteCategoriesChart.data.datasets = chartData.favoriteDatasets;
           favoriteCategoriesChart.update();
         }
@@ -3722,38 +3722,73 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         categoryValues = sortedCategories.map(c => categoryData[c]);
       }
 
-      // Novo cálculo para Favoritos mês a mês
+      // Novo cálculo para Favoritos mês a mês (Últimos 4 meses)
       const favorites = getFavorites() || [];
       const favData = {};
-      favorites.forEach(fav => { favData[fav] = {}; });
       
-      filteredMonthly.forEach(l => {
-        if (!l.data || l.valor >= 0) return;
-        const parts = l.data.split('/');
-        const monthYear = `${parts[1]}/${parts[2]}`;
-        const cat = (l.categoria || '');
-        if (cat.toLowerCase().includes('transfer') || cat.toLowerCase().includes('saldo inicial')) return;
-        
-        favorites.forEach(fav => {
-           if (normalizeCat(cat) === normalizeCat(fav)) {
-              if (!favData[fav][monthYear]) favData[fav][monthYear] = 0;
-              favData[fav][monthYear] += Math.abs(l.valor);
-           }
+      const now = new Date();
+      const last4Months = [];
+      for (let i = 3; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mStr = String(d.getMonth() + 1).padStart(2, '0');
+        const yStr = d.getFullYear();
+        last4Months.push({
+           key: `${mStr}/${yStr}`,
+           label: getMonthLabel(`${mStr}/${yStr}`),
+           monthIndex: 3 - i
         });
-      });
+      }
 
-      const colors = ['#f43f5e', '#3b82f6', '#10b981', '#eab308', '#8b5cf6', '#ec4899', '#f97316', '#06b6d4', '#14b8a6', '#64748b'];
-      const favoriteDatasets = favorites.map((fav, i) => {
+      favorites.forEach(fav => { 
+        favData[fav] = { budget: 0, spent: [0, 0, 0, 0] };
+        if (dadosFinanceiros && dadosFinanceiros.orcamento) {
+           const orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(fav));
+           if (orcObj) favData[fav].budget = Math.abs(parseFloat(orcObj.valor_mensal) || parseFloat(orcObj.orcamento) || 0);
+        }
+      });
+      
+      if (dadosFinanceiros && dadosFinanceiros.lancamentos) {
+        dadosFinanceiros.lancamentos.forEach(l => {
+          if (!l.data || l.valor >= 0) return;
+          const d = parseDateString(l.data || l.vencimento);
+          if (!d) return;
+          
+          const cat = (l.categoria || '');
+          if (cat.toLowerCase().includes('transfer') || cat.toLowerCase().includes('saldo inicial')) return;
+          
+          const favMatch = favorites.find(f => normalizeCat(f) === normalizeCat(cat));
+          if (favMatch) {
+             const mKey = String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+             const monthObj = last4Months.find(m => m.key === mKey);
+             if (monthObj) {
+                favData[favMatch].spent[monthObj.monthIndex] += Math.abs(l.valor);
+             }
+          }
+        });
+      }
+
+      const favoriteDatasets = last4Months.map(mObj => {
+         const dataForMonth = favorites.map(fav => favData[fav].spent[mObj.monthIndex]);
+         const bgColors = favorites.map(fav => {
+            const spent = favData[fav].spent[mObj.monthIndex];
+            const budget = favData[fav].budget;
+            if (budget === 0) return 'rgba(59, 130, 246, 0.7)'; // fallback blue if no budget
+            const pct = (spent / budget) * 100;
+            if (pct > 100) return 'rgba(239, 68, 68, 0.8)'; // Red
+            if (pct >= 80) return 'rgba(234, 179, 8, 0.8)'; // Yellow
+            return 'rgba(16, 185, 129, 0.8)'; // Green
+         });
+         
          return {
-            label: fav,
-            data: sortedMonths.map(m => favData[fav][m] || 0),
-            backgroundColor: colors[i % colors.length],
-            borderRadius: 6,
+            label: mObj.label,
+            data: dataForMonth,
+            backgroundColor: bgColors,
+            borderRadius: 4,
             borderSkipped: false
          };
       });
 
-      return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues, favoriteDatasets };
+      return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues, favoriteDatasets, favoriteLabels: favorites };
     }
 
     function showModalDetails(type) {
