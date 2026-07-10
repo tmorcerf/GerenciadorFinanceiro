@@ -4010,9 +4010,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     // NEW: Show category drilldown (used by Top 5 and Budget cards)
     window.showCategoryDrilldown = function(categoria, period = 'current') {
+      const normalizeCat = (c) => (c || '').trim().toLowerCase();
       const filtered = getFilteredTransactions(period);
       const itemes = filtered.filter(l => {
-        return (l.categoria || '').toLowerCase().trim() === categoria.toLowerCase().trim();
+        return normalizeCat(l.categoria) === normalizeCat(categoria);
       });
 
       const favs = JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
@@ -4153,6 +4154,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     };
 
     function renderCategoryDrilldownChart(categoria) {
+       const normalizeCat = (c) => (c || '').trim().toLowerCase();
        const ctx = document.getElementById('favCatChart');
        if (!ctx) return;
 
