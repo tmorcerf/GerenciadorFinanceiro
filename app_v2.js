@@ -2823,34 +2823,32 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           </div>`;
 
       if (isTopArea) {
-        const txs = getFilteredTransactions(cardPer).filter(l => (l.categoria || '').toLowerCase().trim() === o.categoria.toLowerCase().trim());
-        txs.sort((a,b) => parseDateString(b.data).getTime() - parseDateString(a.data).getTime());
-        const topTxs = txs.slice(0, 5);
-        if (topTxs.length > 0) {
-          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); flex-grow: 1; display: flex; flex-direction: column;">`;
-          html += `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.8rem; font-weight: 600; text-transform: uppercase;">Últimos Lançamentos:</div>`;
-          topTxs.forEach(t => {
-            let cleanSub = t.subcategoria || 'Sem subcategoria';
-            if (cleanSub.includes(' - ')) {
-              cleanSub = cleanSub.split(' - ').slice(1).join(' - ').trim();
-            }
-            html += `
-              <div style="display:flex; flex-direction:column; justify-content:center; margin-bottom:10px; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 6px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2px;">
-                  <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${cleanSub}</span>
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:0.85rem; color:var(--color-expense); font-weight:700;">${formatBRL(Math.abs(t.valor))}</span>
-                    <i class="fas fa-pencil-alt" style="color:var(--text-muted); cursor:pointer;" title="Editar Lançamento" onclick="window.openEditTransactionModal('${t.cod}')" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-muted)'"></i>
-                  </div>
-                </div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${t.obs || t.descricao || t.conta}">${t.obs || t.descricao || t.conta}</div>
-              </div>
-            `;
-          });
-          html += `</div>`;
-        } else {
-          html += `<div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); font-size:0.8rem; color:var(--text-muted); text-align:center; flex-grow: 1;">Nenhum gasto no período.</div>`;
-        }
+         const normalizeCat = (c) => (c || '').trim().toLowerCase();
+         const orcObj = (dadosFinanceiros.orcamento || []).find(x => normalizeCat(x.categoria) === normalizeCat(o.categoria));
+         const currentConfigValor = orcObj ? (orcObj.config_valor || orcObj.orcamento || 0) : 0;
+         const currentConfigPeriodo = orcObj ? (orcObj.config_periodo || 'mensal') : 'mensal';
+         const normCat = normalizeCat(o.categoria).replace(/\s+/g, '-');
+         
+         html += `<div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem; flex-grow: 1; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;">
+               <i class="fas fa-cog"></i> Configurar Orçamento
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+               <div style="flex: 1;">
+                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor</label>
+                  <input type="number" id="cat-config-valor-${normCat}" value="${currentConfigValor}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
+               </div>
+               <div style="flex: 1;">
+                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Período</label>
+                  <select id="cat-config-periodo-${normCat}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
+                     <option value="mensal" ${currentConfigPeriodo === 'mensal' ? 'selected' : ''}>Mensal</option>
+                     <option value="anual" ${currentConfigPeriodo === 'anual' ? 'selected' : ''}>Anual</option>
+                  </select>
+               </div>
+               <button id="cat-config-save-btn-${normCat}" data-cat="${o.categoria}" class="btn btn-primary dash-cat-save-btn" style="padding: 6px 12px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-save"></i></button>
+            </div>
+            <div style="width:100%; height:180px; margin-top: 1.5rem;"><canvas id="favCatChart-${normCat}"></canvas></div>
+         </div>`;
       }
 
       html += `</div>`;
@@ -2879,7 +2877,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           e.stopPropagation();
           setBudgetCardPeriod(cat, opt.dataset.val);
           opt.parentElement.classList.remove('active');
-          openDetailedCardModal(cat);
+          window.showCategoryDrilldown(cat, 'current');
           if (typeof renderBudgets === 'function') renderBudgets();
         });
       });
@@ -2893,7 +2891,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             favs.push(normalizeCat(cat));
           }
           localStorage.setItem('budgetFavorites', JSON.stringify(favs));
-          openDetailedCardModal(cat);
+          window.showCategoryDrilldown(cat, 'current');
           renderBudgets();
         });
       });
@@ -2978,6 +2976,59 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       budgetContainer.innerHTML = html;
 
       setTimeout(() => {
+        const normalizeCat = (c) => (c || '').trim().toLowerCase();
+        
+        // Init Save buttons
+        document.querySelectorAll('.dash-cat-save-btn').forEach(btn => {
+           btn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const cat = btn.dataset.cat;
+              const normCat = normalizeCat(cat).replace(/\s+/g, '-');
+              const valInput = document.getElementById('cat-config-valor-' + normCat).value;
+              const perInput = document.getElementById('cat-config-periodo-' + normCat).value;
+              const val = parseFloat(valInput) || 0;
+              const annualVal = perInput === 'mensal' ? val * 12 : val;
+              
+              btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+              try {
+                 if (window.DB && window.DB.saveOrcamentoConfig) {
+                    await window.DB.saveOrcamentoConfig({ categoria: cat, orcamento: annualVal, config_valor: val, config_periodo: perInput });
+                 }
+                 if (!dadosFinanceiros.orcamento) dadosFinanceiros.orcamento = [];
+                 let orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(cat));
+                 if (orcObj) {
+                    orcObj.orcamento = annualVal;
+                    orcObj.config_valor = val;
+                    orcObj.config_periodo = perInput;
+                 } else {
+                    dadosFinanceiros.orcamento.push({ categoria: cat, orcamento: annualVal, config_valor: val, config_periodo: perInput });
+                 }
+                 
+                 btn.innerHTML = '<i class="fas fa-check"></i>';
+                 btn.style.background = 'var(--color-income)';
+                 setTimeout(() => {
+                     btn.innerHTML = '<i class="fas fa-save"></i>';
+                     btn.style.background = '';
+                     if (typeof updateDashboardCharts === 'function') updateDashboardCharts();
+                 }, 1500);
+              } catch(err) {
+                 console.error(err);
+                 btn.innerHTML = '<i class="fas fa-times"></i>';
+                 setTimeout(() => btn.innerHTML = '<i class="fas fa-save"></i>', 2000);
+              }
+           });
+        });
+
+        // Init Charts
+        favItemes.forEach(o => {
+           if (typeof renderDashboardFavoriteChart === 'function') {
+               renderDashboardFavoriteChart(o.categoria);
+           }
+        });
+      }, 200);
+
+
+      setTimeout(() => {
         // Change event for period selects
         budgetContainer.querySelectorAll('.budget-period-select').forEach(sel => {
           sel.addEventListener('change', (e) => {
@@ -3007,7 +3058,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         budgetContainer.querySelectorAll('.clickable-card').forEach(card => {
           card.addEventListener('click', () => {
             const cat = card.dataset.budgetCat;
-            if (cat) openDetailedCardModal(cat);
+            if (cat) window.showCategoryDrilldown(cat, 'current');
           });
         });
       }, 0);
@@ -4020,7 +4071,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const isFav = favs.some(f => normalizeCat(f) === normalizeCat(categoria));
 
       if (itemes.length === 0 && !isFav) {
-        showGlassModal(categoria, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado para esta categoria no periodo.</p>');
+        showGlassModal(categoria, '<p style="color:var(--text-muted); text-align:center;">Nenhum lançamento encontrado para esta categoria no período.</p>');
         return;
       }
 
@@ -4031,44 +4082,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let html = `<div style="margin-bottom:1rem; text-align:center;">
         <div style="font-size:1.6rem; font-weight:bold; color:${color};">${formatBRL(mainTotal)}</div>
-        <div style="font-size:0.8rem; color:var(--text-muted);">${itemes.length} lanamento${itemes.length > 1 ? 's' : ''}</div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">${itemes.length} lançamento${itemes.length > 1 ? 's' : ''}</div>
       </div>`;
 
-      if (isFav) {
-         // Configuração do Orçamento
-         const orcObj = (dadosFinanceiros.orcamento || []).find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
-         const currentConfigValor = orcObj ? (orcObj.config_valor || orcObj.orcamento || 0) : 0;
-         const currentConfigPeriodo = orcObj ? (orcObj.config_periodo || 'mensal') : 'mensal';
-
-         html += `<div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;">
-               <i class="fas fa-cog"></i> Configurar Orçamento
-            </div>
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-               <div style="flex: 1;">
-                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor</label>
-                  <input type="number" id="cat-config-valor" value="${currentConfigValor}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
-               </div>
-               <div style="flex: 1;">
-                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Período</label>
-                  <select id="cat-config-periodo" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
-                     <option value="mensal" ${currentConfigPeriodo === 'mensal' ? 'selected' : ''}>Mensal</option>
-                     <option value="anual" ${currentConfigPeriodo === 'anual' ? 'selected' : ''}>Anual</option>
-                  </select>
-               </div>
-               <button id="cat-config-save-btn" class="btn btn-primary" style="padding: 6px 12px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-save"></i></button>
-            </div>
-         </div>`;
-
-         // Chart.js Canvas
-         html += `<div style="width:100%; height:200px; margin-bottom: 1.5rem;"><canvas id="favCatChart"></canvas></div>`;
-      }
-
-      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Conta</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>`;
       
       let displayItems = itemes.sort((a,b) => {
         const dA = parseDateString(a.data), dB = parseDateString(b.data);
-        return (dB||0) - (dA||0); // Sort DESCENDING (newest first) for the modal list
+        return (dB||0) - (dA||0);
       });
 
       if (isFav) {
@@ -4090,72 +4111,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       showGlassModal(`Categoria: ${categoria}`, html);
-
-      if (isFav) {
-         // Add save button event listener
-         setTimeout(() => {
-            const saveBtn = document.getElementById('cat-config-save-btn');
-            if (saveBtn) {
-               saveBtn.addEventListener('click', async () => {
-                  const valInput = document.getElementById('cat-config-valor').value;
-                  const perInput = document.getElementById('cat-config-periodo').value;
-                  const val = parseFloat(valInput) || 0;
-                  const annualVal = perInput === 'mensal' ? val * 12 : val;
-                  
-                  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                  
-                  try {
-                     if (window.DB && window.DB.saveOrcamentoConfig) {
-                        await window.DB.saveOrcamentoConfig({
-                           categoria: categoria,
-                           orcamento: annualVal,
-                           config_valor: val,
-                           config_periodo: perInput
-                        });
-                     }
-                     
-                     // Update memory
-                     if (!dadosFinanceiros.orcamento) dadosFinanceiros.orcamento = [];
-                     let orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
-                     if (orcObj) {
-                        orcObj.orcamento = annualVal;
-                        orcObj.config_valor = val;
-                        orcObj.config_periodo = perInput;
-                     } else {
-                        dadosFinanceiros.orcamento.push({
-                           categoria: categoria,
-                           orcamento: annualVal,
-                           config_valor: val,
-                           config_periodo: perInput
-                        });
-                     }
-                     
-                     saveBtn.innerHTML = '<i class="fas fa-check"></i>';
-                     saveBtn.style.background = 'var(--color-income)';
-                     setTimeout(() => { 
-                         saveBtn.innerHTML = '<i class="fas fa-save"></i>'; 
-                         saveBtn.style.background = '';
-                         if (typeof updateDashboardCharts === 'function') updateDashboardCharts();
-                         // Re-render modal chart
-                         window.showCategoryDrilldown(categoria, period);
-                     }, 1000);
-                  } catch(e) {
-                     console.error(e);
-                     alert('Erro ao salvar configuração.');
-                     saveBtn.innerHTML = '<i class="fas fa-save"></i>';
-                  }
-               });
-            }
-
-            // Render Chart
-            renderCategoryDrilldownChart(categoria);
-         }, 50);
-      }
     };
 
-    function renderCategoryDrilldownChart(categoria) {
+    function renderDashboardFavoriteChart(categoria) {
        const normalizeCat = (c) => (c || '').trim().toLowerCase();
-       const ctx = document.getElementById('favCatChart');
+       const normCat = normalizeCat(categoria).replace(/\s+/g, '-');
+       const ctx = document.getElementById('favCatChart-' + normCat);
        if (!ctx) return;
 
        const orcObj = (dadosFinanceiros.orcamento || []).find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
