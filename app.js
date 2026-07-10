@@ -2085,9 +2085,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const net = income + expenses;
 
-      valueIncome.textContent = formatBRL(income);
-      valueExpense.textContent = formatBRL(Math.abs(expenses));
-      valueSavings.textContent = formatBRL(net);
+      if (valueIncome) valueIncome.textContent = formatBRL(income);
+      if (valueExpense) valueExpense.textContent = formatBRL(Math.abs(expenses));
+      if (valueSavings) valueSavings.textContent = formatBRL(net);
       
       // Animação de fade (feedback visual do seletor)
       [valueIncome, valueExpense, valueSavings].forEach(el => {
@@ -2101,15 +2101,55 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
       });
 
-      if (net >= 0) {
-        valueSavings.style.color = 'var(--color-income)';
-      } else {
-        valueSavings.style.color = 'var(--color-expense)';
+      if (valueSavings) {
+        if (net >= 0) {
+          valueSavings.style.color = 'var(--color-income)';
+        } else {
+          valueSavings.style.color = 'var(--color-expense)';
+        }
       }
 
       const savingsTrend = document.getElementById('value-savings-trend');
       if (savingsTrend) {
         savingsTrend.textContent = net >= 0 ? 'Positivo no período' : 'Negativo no período';
+      }
+
+      // Render Dashboard Favorites (Novo Cartão)
+      const favListEl = document.getElementById('favorite-budgets-list');
+      if (favListEl && dadosFinanceiros && dadosFinanceiros.orcamento) {
+        const favorites = getFavorites();
+        let favHtml = '';
+        const dashPeriod = document.getElementById('visao-geral-filter')?.value || 'current';
+
+        dadosFinanceiros.orcamento.forEach(o => {
+          if (o.categoria === 'TOTAL' || o.categoria === 'Sobra') return;
+          if (favorites.includes(normalizeCat(o.categoria))) {
+            const data = getCardData(o, dashPeriod);
+            let barColor = 'var(--color-income)';
+            if (data.perc > 90) barColor = 'var(--color-expense)';
+            else if (data.perc > 70) barColor = 'var(--color-warning)';
+
+            favHtml += `
+              <div class="budget-mini-item">
+                <div class="budget-mini-header">
+                  <span class="budget-mini-title">${o.categoria}</span>
+                  <span class="budget-mini-values">
+                    ${formatBRL(data.spent)} / ${formatBRL(data.limit)}
+                  </span>
+                </div>
+                <div class="budget-mini-bar">
+                  <div class="budget-mini-fill" style="width: ${Math.min(data.perc, 100)}%; background-color: ${barColor};"></div>
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        if (favHtml === '') {
+          favListEl.innerHTML = '<div style="text-align:center; color: var(--text-muted); font-size:0.85rem; padding-top: 1rem;">Nenhum favorito selecionado. Vá em Orçamentos e clique na estrela!</div>';
+        } else {
+          favListEl.innerHTML = favHtml;
+        }
       }
 
       // Render Top 5 Gastos

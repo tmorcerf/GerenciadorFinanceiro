@@ -210,6 +210,12 @@
       gap: 1.5rem;
       margin-bottom: 2.5rem;
     }
+    
+    @media (min-width: 768px) {
+      .span-2-cols {
+        grid-column: span 2;
+      }
+    }
 
     .card {
       background-color: var(--bg-card);
@@ -247,6 +253,43 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    /* Budget Mini Bars */
+    .budget-mini-item {
+      margin-bottom: 0.8rem;
+    }
+    .budget-mini-item:last-child {
+      margin-bottom: 0;
+    }
+    .budget-mini-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+    .budget-mini-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60%;
+    }
+    .budget-mini-values {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+    }
+    .budget-mini-bar {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .budget-mini-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease, background-color 0.3s ease;
     }
 
     .card-icon svg {
