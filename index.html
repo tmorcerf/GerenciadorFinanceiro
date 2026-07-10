@@ -149,7 +149,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.934 - 10/07/2026, 16:42:08</span>
+        <span style="font-size: 0.75rem;">v 0.9.935 - 10/07/2026, 16:47:15</span>
       </div>
     </div>
   </aside>
@@ -285,7 +285,15 @@
             <option value="3months">Últimos 3 Meses</option>
             <option value="6months">Últimos 6 Meses</option>
             <option value="year">Este Ano</option>
+            <option value="custom">Personalizado</option>
           </select>
+          <!-- Custom Dates (Hidden by default) -->
+          <div id="transactions-custom-dates" style="display: none; gap: 8px; align-items: center;">
+             <input type="date" id="transactions-date-start" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.4rem; font-size:0.85rem; outline:none;">
+             <span style="color:var(--text-muted); font-size:0.85rem;">até</span>
+             <input type="date" id="transactions-date-end" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.4rem; font-size:0.85rem; outline:none;">
+             <button id="transactions-custom-btn" style="background:var(--color-accent); color:#fff; border:none; border-radius:8px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.85rem; font-weight:600;">Ir</button>
+          </div>
           <!-- Categoria -->
           <select id="transactions-category-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer; max-width: 200px;">
             <option value="all">Todas as Categorias</option>

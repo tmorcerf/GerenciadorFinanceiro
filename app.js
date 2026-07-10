@@ -77,6 +77,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let txAccountFilter = 'all';
     let txCategoryFilter = 'all';
     let txPeriodFilter = 'current';
+    let txCustomStart = '';
+    let txCustomEnd = '';
     let txSortOrder = 'desc';
     const rowsPerPage = 15;
 
@@ -1747,12 +1749,31 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       const perFilterSelect = document.getElementById('transactions-period-filter');
+      const customDatesDiv = document.getElementById('transactions-custom-dates');
+      const customStartInp = document.getElementById('transactions-date-start');
+      const customEndInp = document.getElementById('transactions-date-end');
+      const customBtn = document.getElementById('transactions-custom-btn');
+
       if (perFilterSelect) {
         perFilterSelect.addEventListener('change', (e) => {
           txPeriodFilter = e.target.value;
-          currentPage = 1;
-          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+          if (txPeriodFilter === 'custom') {
+             if(customDatesDiv) customDatesDiv.style.display = 'flex';
+          } else {
+             if(customDatesDiv) customDatesDiv.style.display = 'none';
+             currentPage = 1;
+             if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+          }
         });
+      }
+
+      if (customBtn) {
+         customBtn.addEventListener('click', () => {
+            if(customStartInp) txCustomStart = customStartInp.value;
+            if(customEndInp) txCustomEnd = customEndInp.value;
+            currentPage = 1;
+            if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+         });
       }
 
       const catFilterSelect = document.getElementById('transactions-category-filter');
@@ -2500,6 +2521,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              if (d < sixMonthsAgo) return false;
           }
           if (txPeriodFilter === 'year' && parts[2] !== currYearStr) return false;
+          if (txPeriodFilter === 'custom') {
+             const d = parseDateString(l.data);
+             const sD = txCustomStart ? new Date(txCustomStart + "T00:00:00") : new Date(0);
+             const eD = txCustomEnd ? new Date(txCustomEnd + "T23:59:59") : new Date("2100-01-01");
+             if (d < sD || d > eD) return false;
+          }
         }
 
         // Global search query
@@ -3658,7 +3685,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                 legend: { position: 'top', labels: { color: '#94a3b8', font: { family: 'Outfit' }, boxWidth: 12 } },
                 tooltip: {
                   callbacks: {
-                    label: function(context) { return ` ${context.dataset.label}: ${formatBRL(context.raw)}`; }
+                    label: function(context) { return ` ${context.dataset.label}: ${context.raw}%`; }
                   }
                 }
               },
@@ -3817,7 +3844,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       const favoriteDatasets = last4Months.map(mObj => {
-         const dataForMonth = favorites.map(fav => favData[fav].spent[mObj.monthIndex]);
+         const dataForMonth = favorites.map(fav => {
+            const spent = favData[fav].spent[mObj.monthIndex];
+            const budget = favData[fav].budget;
+            if (budget === 0) return 0;
+            let pct = (spent / budget) * 100;
+            if (pct > 120) pct = 120; // Cap at 120%
+            return parseFloat(pct.toFixed(1));
+         });
          const bgColors = favorites.map(fav => {
             const spent = favData[fav].spent[mObj.monthIndex];
             const budget = favData[fav].budget;
