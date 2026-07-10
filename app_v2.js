@@ -3844,8 +3844,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const monthlyIncome = sortedMonths.map(m => monthlyData[m].income);
       const monthlyExpense = sortedMonths.map(m => monthlyData[m].expense);
 
-      // Pie Chart: Current month breakdown
-      const filteredCategory = getFilteredTransactions('current');
+      // Pie Chart: Category breakdown (uses its own period selector)
+      const categorySelect = document.getElementById('category-distribution-period');
+      const categoryPeriod = categorySelect ? categorySelect.value : 'current';
+      const filteredCategory = getFilteredTransactions(categoryPeriod);
       const categoryData = {};
       filteredCategory.forEach(l => {
         if (l.valor >= 0) return;

@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.952 - 10/07/2026, 19:20:23</span>
+        <span style="font-size: 0.75rem;">v 0.9.953 - 10/07/2026, 19:23:04</span>
       </div>
     </div>
   </aside>
@@ -246,7 +246,18 @@
 
         <!-- Category Chart -->
         <div class="card chart-card">
-          <div class="chart-title">Distribuição de Gastos</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div class="chart-title" style="margin-bottom:0;">Distribuição de Gastos</div>
+            <select id="category-distribution-period" onchange="if(typeof updateCharts === 'function') updateCharts()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.78rem; outline:none; cursor:pointer; font-family:inherit;">
+              <option value="current" selected>Mês Atual</option>
+              <option value="previous">Mês Anterior</option>
+              <option value="3months">Últimos 3 Meses</option>
+              <option value="6months">Últimos 6 Meses</option>
+              <option value="year">Ano Atual</option>
+              <option value="last_year">Ano Anterior</option>
+              <option value="all">Todo Período</option>
+            </select>
+          </div>
           <div class="chart-container">
             <canvas id="category-distribution-chart"></canvas>
           </div>
