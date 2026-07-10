@@ -2067,6 +2067,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (period === 'current' && yyyy_mm !== currMonthStr) return false;
           if (period === 'previous' && yyyy_mm !== prevMonthStr) return false;
           if (period === 'last3' && yyyy_mm !== currMonthStr && yyyy_mm !== prevMonthStr && yyyy_mm !== prev2MonthStr) return false;
+          if (period === '3months') {
+            const d = parseDateString(l.data);
+            const cutoff = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+            if (d < cutoff) return false;
+          }
+          if (period === '6months') {
+            const d = parseDateString(l.data);
+            const cutoff = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+            if (d < cutoff) return false;
+          }
           if (period === 'year' && parts[2] !== currYearStr) return false;
           if (period === 'last_year' && parts[2] !== (parseInt(currYearStr) - 1).toString()) return false;
           if (period === 'custom') {
@@ -3801,8 +3811,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function getChartsFilteredData() {
-      // Bar Chart: Last 6 months history
-      const filteredMonthly = getFilteredTransactions('6months');
+      // Bar Chart: Period filter
+      const monthlySelect = document.getElementById('monthly-evolution-period');
+      const monthlyPeriod = monthlySelect ? monthlySelect.value : '6months';
+      const filteredMonthly = getFilteredTransactions(monthlyPeriod);
       const monthlyData = {};
       
       filteredMonthly.forEach(l => {
