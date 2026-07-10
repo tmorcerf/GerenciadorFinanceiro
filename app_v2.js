@@ -4015,8 +4015,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return (l.categoria || '').toLowerCase().trim() === categoria.toLowerCase().trim();
       });
 
-      if (itemes.length === 0) {
-        showGlassModal(categoria, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado para esta categoria nao periodo.</p>');
+      const favs = JSON.parse(localStorage.getItem('budgetFavorites') || '[]');
+      const isFav = favs.some(f => normalizeCat(f) === normalizeCat(categoria));
+
+      if (itemes.length === 0 && !isFav) {
+        showGlassModal(categoria, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado para esta categoria no periodo.</p>');
         return;
       }
 
@@ -4030,11 +4033,48 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         <div style="font-size:0.8rem; color:var(--text-muted);">${itemes.length} lanamento${itemes.length > 1 ? 's' : ''}</div>
       </div>`;
 
+      if (isFav) {
+         // Configuração do Orçamento
+         const orcObj = (dadosFinanceiros.orcamento || []).find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
+         const currentConfigValor = orcObj ? (orcObj.config_valor || orcObj.orcamento || 0) : 0;
+         const currentConfigPeriodo = orcObj ? (orcObj.config_periodo || 'mensal') : 'mensal';
+
+         html += `<div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.8rem; display: flex; align-items: center; gap: 6px;">
+               <i class="fas fa-cog"></i> Configurar Orçamento
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+               <div style="flex: 1;">
+                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Valor</label>
+                  <input type="number" id="cat-config-valor" value="${currentConfigValor}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
+               </div>
+               <div style="flex: 1;">
+                  <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Período</label>
+                  <select id="cat-config-periodo" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 4px; outline: none;">
+                     <option value="mensal" ${currentConfigPeriodo === 'mensal' ? 'selected' : ''}>Mensal</option>
+                     <option value="anual" ${currentConfigPeriodo === 'anual' ? 'selected' : ''}>Anual</option>
+                  </select>
+               </div>
+               <button id="cat-config-save-btn" class="btn btn-primary" style="padding: 6px 12px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-save"></i></button>
+            </div>
+         </div>`;
+
+         // Chart.js Canvas
+         html += `<div style="width:100%; height:200px; margin-bottom: 1.5rem;"><canvas id="favCatChart"></canvas></div>`;
+      }
+
       html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Conta</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody>`;
-      itemes.sort((a,b) => {
+      
+      let displayItems = itemes.sort((a,b) => {
         const dA = parseDateString(a.data), dB = parseDateString(b.data);
-        return (dA||0) - (dB||0);
-      }).forEach(item => {
+        return (dB||0) - (dA||0); // Sort DESCENDING (newest first) for the modal list
+      });
+
+      if (isFav) {
+         displayItems = displayItems.slice(0, 10);
+      }
+
+      displayItems.forEach(item => {
         const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
@@ -4044,8 +4084,188 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
       html += `</tbody></table>`;
 
+      if (isFav && itemes.length > 10) {
+         html += `<div style="text-align:center; margin-top:10px; font-size:0.8rem; color:var(--text-muted);">Mostrando os últimos 10. Vá na aba Lançamentos para ver todos.</div>`;
+      }
+
       showGlassModal(`Categoria: ${categoria}`, html);
+
+      if (isFav) {
+         // Add save button event listener
+         setTimeout(() => {
+            const saveBtn = document.getElementById('cat-config-save-btn');
+            if (saveBtn) {
+               saveBtn.addEventListener('click', async () => {
+                  const valInput = document.getElementById('cat-config-valor').value;
+                  const perInput = document.getElementById('cat-config-periodo').value;
+                  const val = parseFloat(valInput) || 0;
+                  const annualVal = perInput === 'mensal' ? val * 12 : val;
+                  
+                  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                  
+                  try {
+                     if (window.DB && window.DB.saveOrcamentoConfig) {
+                        await window.DB.saveOrcamentoConfig({
+                           categoria: categoria,
+                           orcamento: annualVal,
+                           config_valor: val,
+                           config_periodo: perInput
+                        });
+                     }
+                     
+                     // Update memory
+                     if (!dadosFinanceiros.orcamento) dadosFinanceiros.orcamento = [];
+                     let orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
+                     if (orcObj) {
+                        orcObj.orcamento = annualVal;
+                        orcObj.config_valor = val;
+                        orcObj.config_periodo = perInput;
+                     } else {
+                        dadosFinanceiros.orcamento.push({
+                           categoria: categoria,
+                           orcamento: annualVal,
+                           config_valor: val,
+                           config_periodo: perInput
+                        });
+                     }
+                     
+                     saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+                     saveBtn.style.background = 'var(--color-income)';
+                     setTimeout(() => { 
+                         saveBtn.innerHTML = '<i class="fas fa-save"></i>'; 
+                         saveBtn.style.background = '';
+                         if (typeof updateDashboardCharts === 'function') updateDashboardCharts();
+                         // Re-render modal chart
+                         window.showCategoryDrilldown(categoria, period);
+                     }, 1000);
+                  } catch(e) {
+                     console.error(e);
+                     alert('Erro ao salvar configuração.');
+                     saveBtn.innerHTML = '<i class="fas fa-save"></i>';
+                  }
+               });
+            }
+
+            // Render Chart
+            renderCategoryDrilldownChart(categoria);
+         }, 50);
+      }
     };
+
+    function renderCategoryDrilldownChart(categoria) {
+       const ctx = document.getElementById('favCatChart');
+       if (!ctx) return;
+
+       const orcObj = (dadosFinanceiros.orcamento || []).find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
+       const annualBudget = orcObj ? (Math.abs(parseFloat(orcObj.orcamento) || parseFloat(orcObj.valor_mensal) || 0)) : 0;
+       const budget = annualBudget / 12;
+
+       // Get last 7 months
+       const now = new Date();
+       const months = [];
+       for (let i = 6; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const mStr = String(d.getMonth() + 1).padStart(2, '0');
+          const yStr = d.getFullYear();
+          months.push({
+             key: `${mStr}/${yStr}`,
+             label: getMonthLabel(`${mStr}/${yStr}`)
+          });
+       }
+
+       // Calculate spent per month
+       const spentData = [0, 0, 0, 0, 0, 0, 0];
+       if (dadosFinanceiros && dadosFinanceiros.lancamentos) {
+          dadosFinanceiros.lancamentos.forEach(l => {
+             if (!l.data || l.valor >= 0) return;
+             const cat = (l.categoria || '');
+             if (normalizeCat(cat) === normalizeCat(categoria)) {
+                const d = parseDateString(l.data || l.vencimento);
+                if (d) {
+                   const mKey = String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+                   const idx = months.findIndex(m => m.key === mKey);
+                   if (idx !== -1) {
+                      spentData[idx] += Math.abs(l.valor);
+                   }
+                }
+             }
+          });
+       }
+
+       const bgColors = spentData.map(spent => {
+          if (budget === 0) return 'rgba(59, 130, 246, 0.7)'; // fallback blue
+          const pct = (spent / budget) * 100;
+          if (pct > 100) return 'rgba(239, 68, 68, 0.8)'; // Red
+          if (pct >= 80) return 'rgba(234, 179, 8, 0.8)'; // Yellow
+          return 'rgba(16, 185, 129, 0.8)'; // Green
+       });
+
+       new Chart(ctx, {
+          type: 'bar',
+          data: {
+             labels: months.map(m => m.label),
+             datasets: [{
+                label: 'Gasto',
+                data: spentData,
+                backgroundColor: bgColors,
+                borderRadius: 4
+             }]
+          },
+          options: {
+             responsive: true,
+             maintainAspectRatio: false,
+             plugins: {
+                legend: { display: false },
+                tooltip: {
+                   callbacks: {
+                      label: (ctx) => {
+                         const val = ctx.raw;
+                         let str = formatBRL(val);
+                         if (budget > 0) {
+                            str += ` (${((val/budget)*100).toFixed(1)}%)`;
+                         }
+                         return str;
+                      }
+                   }
+                },
+                annotation: budget > 0 ? {
+                   annotations: {
+                      line1: {
+                         type: 'line',
+                         yMin: budget,
+                         yMax: budget,
+                         borderColor: 'rgba(239, 68, 68, 0.7)',
+                         borderWidth: 2,
+                         borderDash: [4, 4],
+                         label: {
+                            display: true,
+                            content: 'Orçamento: ' + formatBRL(budget),
+                            position: 'end',
+                            backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                            font: { size: 10 }
+                         }
+                      }
+                   }
+                } : {}
+             },
+             scales: {
+                x: {
+                   grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                   ticks: { color: 'var(--text-muted)', font: { size: 10 } }
+                },
+                y: {
+                   grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                   ticks: {
+                      color: 'var(--text-muted)',
+                      font: { size: 10 },
+                      callback: (val) => 'R$ ' + val.toLocaleString('pt-BR')
+                   },
+                   beginAtZero: true
+                }
+             }
+          }
+       });
+    }
 
     // NEW: Show extrato completo de uma conta
     window.showInvestmentsModal = function(type) {

@@ -171,6 +171,29 @@ class Database {
         });
      }
   }
+
+  async saveOrcamentoConfig(payload) {
+     const gid = window.userGroupId;
+     if (!gid) throw new Error("Grupo não definido.");
+
+     const snapshot = await this.db.collection('Orcamentos').where('groupId', '==', gid).where('categoria', '==', payload.categoria).get();
+     if (!snapshot.empty) {
+        const docId = snapshot.docs[0].id;
+        await this.db.collection('Orcamentos').doc(docId).update({
+           orcamento: parseFloat(payload.orcamento || 0),
+           config_valor: parseFloat(payload.config_valor || 0),
+           config_periodo: payload.config_periodo || 'mensal'
+        });
+     } else {
+        await this.db.collection('Orcamentos').add({
+           groupId: gid,
+           categoria: payload.categoria,
+           orcamento: parseFloat(payload.orcamento || 0),
+           config_valor: parseFloat(payload.config_valor || 0),
+           config_periodo: payload.config_periodo || 'mensal'
+        });
+     }
+  }
 }
 
 window.DB = new Database();
