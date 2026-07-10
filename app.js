@@ -74,6 +74,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     // State Variables
     let searchQuery = '';
     let currentPage = 1;
+    let txAccountFilter = 'all';
+    let txPeriodFilter = 'current';
+    let txSortOrder = 'desc';
     const rowsPerPage = 15;
 
     let monthlyChart = null;
@@ -1696,11 +1699,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       if (nextPageBtn) {
         nextPageBtn.addEventListener('click', () => {
-          const totalPages = Math.ceil(getFilteredTransactions().length / rowsPerPage);
-          if (currentPage < totalPages) {
-            currentPage++;
-            if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
-          }
+          currentPage++;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
         });
       }
 
@@ -1717,6 +1717,34 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         searchInput.addEventListener('input', (e) => {
           searchQuery = e.target.value.toLowerCase();
           currentPage = 1;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+        });
+      }
+
+      // New Lançamentos Toolbar Events
+      const accFilterSelect = document.getElementById('transactions-account-filter');
+      if (accFilterSelect) {
+        accFilterSelect.addEventListener('change', (e) => {
+          txAccountFilter = e.target.value;
+          currentPage = 1;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+        });
+      }
+
+      const perFilterSelect = document.getElementById('transactions-period-filter');
+      if (perFilterSelect) {
+        perFilterSelect.addEventListener('change', (e) => {
+          txPeriodFilter = e.target.value;
+          currentPage = 1;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+        });
+      }
+
+      const sortBtn = document.getElementById('transactions-sort-btn');
+      if (sortBtn) {
+        sortBtn.addEventListener('click', () => {
+          txSortOrder = txSortOrder === 'desc' ? 'asc' : 'desc';
+          sortBtn.innerHTML = txSortOrder === 'desc' ? '<i class="fas fa-sort-amount-down"></i>' : '<i class="fas fa-sort-amount-up"></i>';
           if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
         });
       }
@@ -2331,16 +2359,100 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     }
 
     function renderTransactionsTable() {
-      const filtered = getFilteredTransactions();
+      if (!dadosFinanceiros || !dadosFinanceiros.lancamentos) return;
+
+      // 1. Populate Account Filter Dropdown (only once)
+      const accFilterSelect = document.getElementById('transactions-account-filter');
+      if (accFilterSelect && accFilterSelect.options.length <= 1 && dadosFinanceiros.contas.length > 0) {
+        dadosFinanceiros.contas.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.nome;
+          opt.textContent = c.nome;
+          accFilterSelect.appendChild(opt);
+        });
+        // Sync state from UI on first load
+        txAccountFilter = accFilterSelect.value;
+        const perFilterSelect = document.getElementById('transactions-period-filter');
+        if (perFilterSelect) {
+          perFilterSelect.value = txPeriodFilter;
+        }
+      }
+
+      // 2. Filter by Account
+      let baseTxs = dadosFinanceiros.lancamentos.filter(l => {
+        if (!l.data) return false;
+        if (txAccountFilter !== 'all') {
+          if ((l.conta || '').toLowerCase() !== txAccountFilter.toLowerCase()) return false;
+        }
+        return true;
+      });
+
+      // 3. Sort Chronologically (Oldest to Newest) to calculate running balance
+      baseTxs.sort((a, b) => {
+        const dA = parseDateString(a.data);
+        const dB = parseDateString(b.data);
+        return (dA || 0) - (dB || 0);
+      });
+
+      // 4. Calculate Running Balance
+      let runningBalance = 0;
+      baseTxs.forEach(tx => {
+        runningBalance += tx.valor;
+        tx._saldo_do_dia = runningBalance;
+      });
+
+      // 5. Filter by Period (using the same logic as getFilteredTransactions)
+      let now = new Date();
+      const currMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const currYearStr = `${now.getFullYear()}`;
+      let prevNow = new Date(); prevNow.setMonth(prevNow.getMonth() - 1);
+      const prevMonthStr = `${prevNow.getFullYear()}-${String(prevNow.getMonth() + 1).padStart(2, '0')}`;
+      let prev2Now = new Date(); prev2Now.setMonth(prev2Now.getMonth() - 2);
+      const prev2MonthStr = `${prev2Now.getFullYear()}-${String(prev2Now.getMonth() + 1).padStart(2, '0')}`;
+
+      let filtered = baseTxs.filter(l => {
+        if (txPeriodFilter !== 'all') {
+          const parts = l.data.split('/');
+          if (parts.length !== 3) return false;
+          const yyyy_mm = `${parts[2]}-${parts[1]}`;
+          if (txPeriodFilter === 'current' && yyyy_mm !== currMonthStr) return false;
+          if (txPeriodFilter === 'previous' && yyyy_mm !== prevMonthStr) return false;
+          if (txPeriodFilter === '3months' && yyyy_mm !== currMonthStr && yyyy_mm !== prevMonthStr && yyyy_mm !== prev2MonthStr) return false;
+          if (txPeriodFilter === '6months') {
+             // simplified logic for 6 months
+             const d = parseDateString(l.data);
+             const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+             if (d < sixMonthsAgo) return false;
+          }
+          if (txPeriodFilter === 'year' && parts[2] !== currYearStr) return false;
+        }
+
+        // Global search query
+        if (searchQuery !== '') {
+          const obs = (l.obs || l.descricao || '').toLowerCase();
+          const cat = (l.categoria || '').toLowerCase();
+          const sub = (l.subcategoria || '').toLowerCase();
+          if (!obs.includes(searchQuery) && !cat.includes(searchQuery) && !sub.includes(searchQuery)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      // 6. Apply Final Sort Order (Ascending or Descending)
+      if (txSortOrder === 'desc') {
+        filtered.reverse(); // Since it was already ascending, reverse makes it descending (Newest first)
+      }
+
+      // 7. Pagination
       const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
-      
       if (currentPage > totalPages) currentPage = totalPages;
 
       const startIdx = (currentPage - 1) * rowsPerPage;
       const endIdx = Math.min(startIdx + rowsPerPage, filtered.length);
       const pageItemes = filtered.slice(startIdx, endIdx);
 
-      pageInfo.textContent = `Pgina ${currentPage} de ${totalPages} (Total: ${filtered.length})`;
+      pageInfo.textContent = `Página ${currentPage} de ${totalPages} (Total: ${filtered.length})`;
       prevPageBtn.disabled = currentPage === 1;
       nextPageBtn.disabled = currentPage === totalPages;
 
@@ -2349,8 +2461,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (pageItemes.length === 0) {
         transactionsTableBody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-              Nenhum lanamento encontrado para os filtros selecionados.
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              Nenhum lançamento encontrado para os filtros selecionados.
             </td>
           </tr>
         `;
@@ -2381,14 +2493,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           badgeClass = 'badge-income';
         }
 
+        let saldoDiaHtml = '-';
+        if (txAccountFilter !== 'all') {
+          const saldoColor = l._saldo_do_dia >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+          saldoDiaHtml = `<span style="color: ${saldoColor}; font-weight: 600;">${formatBRL(l._saldo_do_dia)}</span>`;
+        }
+
         row.innerHTML = `
           <td>${l.data || '-'}</td>
-          <td>${l.vencimento || '-'}</td>
           <td>${l.conta || '-'}</td>
-          <td>${l.obs || l.descricao || '-'}</td>
           <td><span class="badge ${badgeClass}">${l.categoria || 'Outros'}</span></td>
           <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
-          <td class="${valClass}">${valPrefix}${formatBRL(l.valor)}</td>
+          <td>${l.obs || l.descricao || '-'}</td>
+          <td class="${valClass}" style="text-align: right;">${valPrefix}${formatBRL(l.valor)}</td>
+          <td style="text-align: right;">${saldoDiaHtml}</td>
+          <td style="text-align: center; width: 50px;">
+            <i class="fas fa-pencil-alt" style="color:var(--text-muted); cursor:pointer;" onclick="window.openEditTransactionModal('${l.cod}')" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'" title="Editar"></i>
+          </td>
         `;
         transactionsTableBody.appendChild(row);
       });

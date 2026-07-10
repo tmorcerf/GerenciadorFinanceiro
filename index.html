@@ -149,7 +149,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.923 - 10/07/2026, 07:31:00</span>
+        <span style="font-size: 0.75rem;">v 0.9.924 - 10/07/2026, 07:42:21</span>
       </div>
     </div>
   </aside>
@@ -271,10 +271,29 @@
     <div id="panel-transactions" class="dashboard-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px;">
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Lançamentos</h2>
-        <div style="display: flex; gap: 10px; align-items: center;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <!-- Conta -->
+          <select id="transactions-account-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
+            <option value="all">Todas as Contas</option>
+            <!-- Preenchido via JS -->
+          </select>
+          <!-- Período -->
+          <select id="transactions-period-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
+            <option value="all">Todo o Período</option>
+            <option value="current">Mês Atual</option>
+            <option value="previous">Mês Passado</option>
+            <option value="3months">Últimos 3 Meses</option>
+            <option value="6months">Últimos 6 Meses</option>
+            <option value="year">Este Ano</option>
+          </select>
+          <!-- Ordem -->
+          <button id="transactions-sort-btn" class="btn btn-secondary" style="padding: 0.5rem; font-size: 0.9rem;" title="Alternar Ordem">
+            <i class="fas fa-sort-amount-down"></i>
+          </button>
+          <!-- Busca -->
           <div style="position: relative;">
             <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
-            <input type="text" id="search-input" placeholder="Buscar..." style="padding-left: 30px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-family: inherit; font-size: 0.9rem; padding-top: 0.5rem; padding-bottom: 0.5rem; width: 250px;">
+            <input type="text" id="search-input" placeholder="Buscar..." style="padding-left: 30px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-family: inherit; font-size: 0.9rem; padding-top: 0.5rem; padding-bottom: 0.5rem; width: 200px;">
           </div>
         </div>
       </div>
@@ -287,8 +306,10 @@
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Data</th>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Conta</th>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Categoria</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Subcategoria</th>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Descrição</th>
                 <th style="padding: 1rem; text-align: right; font-weight: 600; border-bottom: 1px solid var(--border-color);">Valor (R$)</th>
+                <th style="padding: 1rem; text-align: right; font-weight: 600; border-bottom: 1px solid var(--border-color);">Saldo do Dia</th>
                 <th style="padding: 1rem; text-align: center; font-weight: 600; border-bottom: 1px solid var(--border-color);">Ações</th>
               </tr>
             </thead>
