@@ -1670,9 +1670,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              conta.saldo += val; // Total debt
              const d = parseDateString(l.data || l.vencimento);
              if (d) {
-               if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+               const monthsDiff = (d.getFullYear() - currentYear) * 12 + (d.getMonth() - currentMonth);
+               if (monthsDiff <= 0) {
                  conta.fatura_atual += val;
-               } else if (d.getMonth() === nextMonth && d.getFullYear() === nextYear) {
+               } else if (monthsDiff === 1) {
                  conta.fatura_proxima += val;
                }
              }
@@ -2263,7 +2264,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             if (!d) return;
             const monthsDiff = (d.getFullYear() - currentYear) * 12 + (d.getMonth() - currentMonth);
             
-            if (monthsDiff === 0) {
+            if (monthsDiff <= 0) {
               faturaAtual += l.valor;
               if (!vencimentoAtual) vencimentoAtual = d.getDate();
             } else if (monthsDiff === 1) {
@@ -2291,12 +2292,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           upcomingBillsList.innerHTML = '<li style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0; text-align:center;">Nenhuma fatura próxima</li>';
         } else {
           faturas.forEach(f => {
+            const isProx = f.tipo === 'Próxima';
             const li = document.createElement('li');
-            li.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; font-size: 0.85rem;";
+            li.className = "clickable-card";
+            li.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; font-size: 0.85rem; padding: 0.6rem; border-radius: 8px; transition: background 0.2s; cursor: pointer;";
+            li.setAttribute("onclick", `window.showFaturaModal('${f.nome.replace(' (Mês seg.)', '')}', '${isProx ? 'next' : 'current'}')`);
+            li.setAttribute("onmouseover", "this.style.background='rgba(255,255,255,0.05)'");
+            li.setAttribute("onmouseout", "this.style.background='transparent'");
+            
             li.innerHTML = `
               <div style="display:flex; flex-direction:column;">
                 <span style="font-weight:600; color:var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 150px;">${f.nome}</span>
-                <span style="color:var(--text-muted); font-size:0.75rem;">Vence dia ${String(f.dia).padStart(2, '0')}</span>
+                <span style="color:var(--text-muted); font-size:0.75rem;">
+                  <i class="fas fa-calendar-day" style="margin-right: 4px;"></i>Vence dia ${String(f.dia).padStart(2, '0')}
+                </span>
               </div>
               <div style="font-weight:700; color:${f.valor < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">
                 ${formatBRL(Math.abs(f.valor))}
@@ -3948,6 +3957,56 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           el.addEventListener('click', () => window.showExtratoContaModal(el.dataset.contaExtrato));
         });
       }, 50);
+    };
+
+    // NEW: Show modal para fatura especifica
+    window.showFaturaModal = function(nomeCartao, tipoPeriodo) {
+      const isProx = tipoPeriodo === 'next';
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      const itemes = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === nomeCartao.toLowerCase());
+
+      const faturaItems = itemes.filter(l => {
+        const d = parseDateString(l.vencimento || l.data);
+        if (!d) return false;
+        const monthsDiff = (d.getFullYear() - currentYear) * 12 + (d.getMonth() - currentMonth);
+        if (isProx) return monthsDiff === 1;
+        return monthsDiff <= 0;
+      });
+
+      if (faturaItems.length === 0) {
+        showGlassModal(`Fatura: ${nomeCartao}`, '<p style="color:var(--text-muted); text-align:center;">Nenhum lanamento encontrado nesta fatura.</p>');
+        return;
+      }
+
+      faturaItems.sort((a,b) => {
+        const dA = parseDateString(a.data), dB = parseDateString(b.data);
+        return (dA||0) - (dB||0);
+      });
+
+      let saldoAcum = 0;
+      faturaItems.forEach(item => {
+        saldoAcum += item.valor;
+        item._saldoAcum = saldoAcum;
+      });
+
+      let html = `<div style="margin-bottom:1rem; text-align:center; font-size:0.85rem; color:var(--text-muted);">${faturaItems.length} lanamento${faturaItems.length > 1 ? 's' : ''}</div>`;
+      html += `<table class="extrato-table"><thead><tr><th>Data</th><th>Descricao</th><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">Saldo</th><th style="text-align:center; width:60px;">Editar</th></tr></thead><tbody>`;
+
+      faturaItems.reverse().forEach(item => {
+        const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+        const saldoClass = item._saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
+        html += `<tr>
+          <td style="color:var(--text-muted);">${item.data}</td>
+          <td>${item.obs || item.descricao || '-'}</td>
+          <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
+          <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
+          <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
+      });
+      html += `</tbody></table>`;
+      showGlassModal(`Fatura ${isProx ? 'Próxima' : 'Atual'}: ${nomeCartao}`, html);
     };
 
     // NEW: Show patrimnio total modal

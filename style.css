@@ -1098,7 +1098,7 @@
     /* ===== NEW: Extrato table inside modal ===== */
     .extrato-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     .extrato-table th { text-align: left; padding: 0.6rem 0.5rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); font-weight: 500; }
-    .extrato-table td { padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .extrato-table td { padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text-primary); }
     .extrato-saldo-pos { color: var(--color-income); font-weight: 600; }
     .extrato-saldo-neg { color: var(--color-expense); font-weight: 600; }
 
