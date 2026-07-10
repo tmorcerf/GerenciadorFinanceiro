@@ -3723,7 +3723,18 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       }
 
       // Novo cálculo para Favoritos mês a mês (Últimos 4 meses)
-      const favorites = getFavorites() || [];
+      let rawFavorites = getFavorites() || [];
+      // Remove duplicatas (case insensitive)
+      const favorites = [];
+      const seenFavs = new Set();
+      rawFavorites.forEach(f => {
+         const norm = normalizeCat(f);
+         if (!seenFavs.has(norm)) {
+            seenFavs.add(norm);
+            favorites.push(f);
+         }
+      });
+      
       const favData = {};
       
       const now = new Date();
@@ -3743,7 +3754,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         favData[fav] = { budget: 0, spent: [0, 0, 0, 0] };
         if (dadosFinanceiros && dadosFinanceiros.orcamento) {
            const orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(fav));
-           if (orcObj) favData[fav].budget = Math.abs(parseFloat(orcObj.valor_mensal) || parseFloat(orcObj.orcamento) || 0);
+           if (orcObj) {
+              const annualLimit = Math.abs(parseFloat(orcObj.valor_mensal) || parseFloat(orcObj.orcamento) || 0);
+              favData[fav].budget = annualLimit / 12; // Orçamento mensal real
+           }
         }
       });
       
