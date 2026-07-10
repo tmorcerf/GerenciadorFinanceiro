@@ -143,7 +143,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.920 - 10/07/2026, 06:50:45</span>
+        <span style="font-size: 0.75rem;">v 0.9.921 - 10/07/2026, 06:59:44</span>
       </div>
     </div>
   </aside>
@@ -203,29 +203,29 @@
           </div>
         </div>
 
-        <!-- Savings -->
-        <div class="card saving-card clickable-card" id="card-savings">
+        <!-- Savings (Saldo Corrente) -->
+        <div class="card saving-card" id="card-savings">
           <div class="card-header">
-            <span>Saldo Corrente</span>
+            <span>Saldos das Contas</span>
             <div class="card-icon">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><path d="M3.5 21a9 9 0 0 1 17 0"/></svg>
             </div>
           </div>
           <div class="card-value" id="value-savings">R$ 0,00</div>
-          <div class="card-trend up" id="value-savings-trend">
-            Clique para ver detalhes
+          <div id="savings-account-list" style="margin-top: 1rem; display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem;">
+            <!-- Loaded dynamically in app.js -->
           </div>
         </div>
 
-        <!-- Top 5 Gastos Card -->
-        <div class="card expense-card">
+        <!-- Upcoming Bills (Próximas Faturas) -->
+        <div class="card expense-card" id="card-upcoming-bills">
           <div class="card-header">
-            <span>Top 5 Gastos do Período</span>
-            <div class="card-icon" style="background-color: var(--color-expense-glow); color: var(--color-expense);">
-              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M17 17H7m10-4H7m6-4H7"/></svg>
+            <span>Próximas Faturas</span>
+            <div class="card-icon" style="background-color: rgba(239, 68, 68, 0.1); color: var(--color-expense);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             </div>
           </div>
-          <ul class="top-5-list" id="top-5-list">
+          <ul class="top-5-list" id="upcoming-bills-list" style="flex:1;">
             <!-- Loaded dynamically in app.js -->
           </ul>
         </div>

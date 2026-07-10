@@ -2087,10 +2087,9 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       if (valueIncome) valueIncome.textContent = formatBRL(income);
       if (valueExpense) valueExpense.textContent = formatBRL(Math.abs(expenses));
-      if (valueSavings) valueSavings.textContent = formatBRL(net);
       
-      // Animação de fade (feedback visual do seletor)
-      [valueIncome, valueExpense, valueSavings].forEach(el => {
+      // Animação de fade para income/expense
+      [valueIncome, valueExpense].forEach(el => {
         if (el && el.parentElement) {
           el.parentElement.style.transition = 'none';
           el.parentElement.style.opacity = '0.3';
@@ -2101,17 +2100,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
       });
 
-      if (valueSavings) {
-        if (net >= 0) {
-          valueSavings.style.color = 'var(--color-income)';
-        } else {
-          valueSavings.style.color = 'var(--color-expense)';
+      // Saldo Corrente (Total das Contas)
+      const savingsListEl = document.getElementById('savings-account-list');
+      if (valueSavings || savingsListEl) {
+        let totalCC = 0;
+        let savingsHtml = '';
+        if (dadosFinanceiros && dadosFinanceiros.contas) {
+          dadosFinanceiros.contas.forEach(c => {
+            const t = (c.tipo || '').toLowerCase();
+            // Somente Contas Correntes (ignora cartões e investimentos)
+            if (!t.includes('cart') && !t.includes('credito') && !t.includes('investimento') && !t.includes('aplicao') && !t.includes('corretora') && !t.includes('aplicacao') && !t.includes('poupana') && !t.includes('poupanca')) {
+              totalCC += c.saldo;
+              savingsHtml += `
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.2rem; align-items:center;">
+                  <span style="color:var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 65%;">
+                    ${c.nome}
+                  </span>
+                  <span style="color:${c.saldo < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">
+                    ${formatBRL(c.saldo)}
+                  </span>
+                </div>
+              `;
+            }
+          });
         }
-      }
-
-      const savingsTrend = document.getElementById('value-savings-trend');
-      if (savingsTrend) {
-        savingsTrend.textContent = net >= 0 ? 'Positivo no período' : 'Negativo no período';
+        
+        if (valueSavings) {
+          valueSavings.textContent = formatBRL(totalCC);
+          valueSavings.style.color = totalCC >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+        }
+        if (savingsListEl) {
+          savingsListEl.innerHTML = savingsHtml || '<div style="color:var(--text-muted); text-align:center;">Nenhuma conta.</div>';
+        }
       }
 
       // Render Dashboard Favorites (Novo Cartão)
@@ -2152,48 +2172,71 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         }
       }
 
-      // Render Top 5 Gastos
-      const filteredTop5 = getFilteredTransactions(getTabPeriod('visao-geral'));
-      const expenseGroup = {};
-      filteredTop5.forEach(l => {
-        if (l.valor >= 0) return;
-        const cat = l.categoria || 'Outros';
-        if (cat.toLowerCase().includes('transfer') || cat.toLowerCase().includes('saldo inicial')) return;
+      // Render Próximas Faturas (Substitui Top 5)
+      const upcomingBillsList = document.getElementById('upcoming-bills-list');
+      if (upcomingBillsList && dadosFinanceiros && dadosFinanceiros.contas) {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        let faturas = [];
         
-        if (!expenseGroup[cat]) expenseGroup[cat] = 0;
-        expenseGroup[cat] += Math.abs(l.valor);
-      });
-      
-      const sortedExpenses = Object.keys(expenseGroup).map(cat => ({
-        name: cat,
-        value: expenseGroup[cat]
-      })).sort((a, b) => b.value - a.value);
-      
-      const top5 = sortedExpenses.slice(0, 5);
-      const maxExpense = top5.length > 0 ? top5[0].value : 1;
-      
-      const top5List = document.getElementById('top-5-list');
-      if (top5List) {
-        top5List.innerHTML = '';
-        if (top5.length === 0) {
-          top5List.innerHTML = '<li style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">Sem gastos nao periodo</li>';
+        const cartoes = dadosFinanceiros.contas.filter(c => {
+          const t = (c.tipo || '').toLowerCase();
+          return t.includes('cart') || t.includes('credito') || t.includes('credito');
+        });
+        
+        cartoes.forEach(c => {
+          let faturaAtual = 0;
+          let faturaProxima = 0;
+          let vencimentoAtual = null;
+          let vencimentoProxima = null;
+          
+          const lancamentosConta = dadosFinanceiros.lancamentos.filter(l => (l.conta || '').toLowerCase() === c.nome.toLowerCase());
+          lancamentosConta.forEach(l => {
+            const d = parseDateString(l.vencimento || l.data);
+            if (!d) return;
+            const monthsDiff = (d.getFullYear() - currentYear) * 12 + (d.getMonth() - currentMonth);
+            
+            if (monthsDiff === 0) {
+              faturaAtual += l.valor;
+              if (!vencimentoAtual) vencimentoAtual = d.getDate();
+            } else if (monthsDiff === 1) {
+              faturaProxima += l.valor;
+              if (!vencimentoProxima) vencimentoProxima = d.getDate();
+            }
+          });
+          
+          if (faturaAtual !== 0) {
+            faturas.push({ nome: c.nome || c.conta || 'Cartão', dia: vencimentoAtual || 1, valor: faturaAtual, tipo: 'Atual' });
+          }
+          if (faturaProxima !== 0) {
+             // Só exibe a próxima se a atual estiver vazia/zerada ou para dar contexto futuro
+             // Vamos empurrar as próximas também para a lista
+             faturas.push({ nome: c.nome + ' (Mês seg.)', dia: vencimentoProxima || 1, valor: faturaProxima, tipo: 'Próxima' });
+          }
+        });
+        
+        faturas.sort((a, b) => a.dia - b.dia);
+        // Exibe apenas as 5 mais próximas
+        faturas = faturas.slice(0, 5);
+        
+        upcomingBillsList.innerHTML = '';
+        if (faturas.length === 0) {
+          upcomingBillsList.innerHTML = '<li style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0; text-align:center;">Nenhuma fatura próxima</li>';
         } else {
-          top5.forEach(item => {
-            const pctOfMax = (item.value / maxExpense) * 100;
+          faturas.forEach(f => {
             const li = document.createElement('li');
-            li.className = 'top-5-item clickable';
-            li.dataset.catName = item.name;
+            li.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; font-size: 0.85rem;";
             li.innerHTML = `
-              <div class="top-5-info-row">
-                <span class="top-5-name">${item.name}</span>
-                <span class="top-5-value">${formatBRL(item.value)}</span>
+              <div style="display:flex; flex-direction:column;">
+                <span style="font-weight:600; color:var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 150px;">${f.nome}</span>
+                <span style="color:var(--text-muted); font-size:0.75rem;">Vence dia ${String(f.dia).padStart(2, '0')}</span>
               </div>
-              <div class="top-5-bar-bg">
-                <div class="top-5-bar-fill" style="width: ${pctOfMax}%"></div>
+              <div style="font-weight:700; color:${f.valor < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">
+                ${formatBRL(Math.abs(f.valor))}
               </div>
             `;
-            li.addEventListener('click', () => window.showCategoryDrilldown(item.name, getTabPeriod('visao-geral')));
-            top5List.appendChild(li);
+            upcomingBillsList.appendChild(li);
           });
         }
       }
