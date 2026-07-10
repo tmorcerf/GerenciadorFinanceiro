@@ -3893,11 +3893,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       });
 
       const favoriteLabels = favorites.map(fav => {
-         const budget = favData[fav].budget;
+         const budget = favData[fav].budget || 0;
          let isExploding = false;
          if (budget > 0) {
             for (let i = 0; i < 4; i++) {
-               const spent = favData[fav].spent[i];
+               const spent = favData[fav].spent[i] || 0;
                const pct = (spent / budget) * 100;
                if (pct > 120) {
                    isExploding = true;
@@ -3909,7 +3909,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
          if (isExploding) {
              label = `💣 ${label} 💣`;
          }
-         return label;
+         const budgetStr = `R$ ${budget.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+         return [label, budgetStr];
       });
 
       return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues, favoriteDatasets, favoriteLabels };
