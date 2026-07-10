@@ -4116,8 +4116,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     function renderDashboardFavoriteChart(categoria) {
        const normalizeCat = (c) => (c || '').trim().toLowerCase();
        const normCat = normalizeCat(categoria).replace(/\s+/g, '-');
-       const ctx = document.getElementById('favCatChart-' + normCat);
+              const ctx = document.getElementById('favCatChart-' + normCat);
        if (!ctx) return;
+
+       if (window.Chart && typeof Chart.getChart === 'function') {
+           const existingChart = Chart.getChart(ctx);
+           if (existingChart) existingChart.destroy();
+       } else if (window.Chart) {
+           Chart.helpers && Chart.helpers.each(Chart.instances, function(instance) {
+               if (instance.chart.canvas.id === 'favCatChart-' + normCat) {
+                   instance.destroy();
+               }
+           });
+       }
 
        const orcObj = (dadosFinanceiros.orcamento || []).find(o => normalizeCat(o.categoria) === normalizeCat(categoria));
        const annualBudget = orcObj ? (Math.abs(parseFloat(orcObj.orcamento) || parseFloat(orcObj.valor_mensal) || 0)) : 0;
