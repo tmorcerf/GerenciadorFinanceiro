@@ -73,6 +73,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     // State Variables
     let searchQuery = '';
+    let currentPage = 1;
     const rowsPerPage = 15;
 
     let monthlyChart = null;
@@ -1700,6 +1701,23 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             currentPage++;
             if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
           }
+        });
+      }
+
+      if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+          }
+        });
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          searchQuery = e.target.value.toLowerCase();
+          currentPage = 1;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
         });
       }
 
