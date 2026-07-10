@@ -2624,12 +2624,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     function normalizeCat(c) { return (c || '').trim().toLowerCase(); }
 
     function getCardData(o, cardPeriod) {
-      let monthlyBudget = 0;
-      if (o.valor_mensal) {
-          monthlyBudget = Math.abs(parseFloat(o.valor_mensal));
-      } else {
-          monthlyBudget = Math.abs(parseFloat(o.orcamento) / 12 || 0);
-      }
+      const annualBudget = Math.abs(parseFloat(o.orcamento) || parseFloat(o.valor_mensal) || 0);
+      let monthlyBudget = annualBudget / 12;
       const activePeriod = cardPeriod || document.getElementById('month-filter').value;
       let periodMonths = 12;
       if (activePeriod === 'current' || activePeriod === 'previous') periodMonths = 1;
@@ -3833,12 +3829,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (dadosFinanceiros && dadosFinanceiros.orcamento) {
            const orcObj = dadosFinanceiros.orcamento.find(o => normalizeCat(o.categoria) === normalizeCat(fav));
            if (orcObj) {
-              let monthlyBudget = 0;
-              if (orcObj.valor_mensal) {
-                  monthlyBudget = Math.abs(parseFloat(orcObj.valor_mensal));
-              } else {
-                  monthlyBudget = Math.abs(parseFloat(orcObj.orcamento) / 12 || 0);
-              }
+              const annualBudget = Math.abs(parseFloat(orcObj.orcamento) || parseFloat(orcObj.valor_mensal) || 0);
+              let monthlyBudget = annualBudget / 12;
               favData[fav].budget = monthlyBudget;
            }
         }
