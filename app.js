@@ -2202,21 +2202,29 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         dadosFinanceiros.orcamento.forEach(o => {
           if (o.categoria === 'TOTAL' || o.categoria === 'Sobra') return;
           if (favorites.includes(normalizeCat(o.categoria))) {
-            const data = getCardData(o, dashPeriod);
+            const cardPer = getBudgetCardPeriod(o.categoria);
+            const data = getCardData(o, cardPer);
+            
+            let periodLabel = 'Mês Atual';
+            if (cardPer === 'previous') periodLabel = 'Mês Passado';
+            else if (cardPer === '3months') periodLabel = '3 Meses';
+            else if (cardPer === '6months') periodLabel = '6 Meses';
+            else if (cardPer === 'year') periodLabel = 'Ano';
+
             let barColor = 'var(--color-income)';
-            if (data.perc > 90) barColor = 'var(--color-expense)';
-            else if (data.perc > 70) barColor = 'var(--color-warning)';
+            if (data.pct > 90) barColor = 'var(--color-expense)';
+            else if (data.pct > 70) barColor = 'var(--color-warning)';
 
             favHtml += `
               <div class="budget-mini-item">
                 <div class="budget-mini-header">
-                  <span class="budget-mini-title">${o.categoria}</span>
+                  <span class="budget-mini-title">${o.categoria} <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal; margin-left: 4px;">(${periodLabel})</span></span>
                   <span class="budget-mini-values">
                     ${formatBRL(data.spent)} / ${formatBRL(data.limit)}
                   </span>
                 </div>
                 <div class="budget-mini-bar">
-                  <div class="budget-mini-fill" style="width: ${Math.min(data.perc, 100)}%; background-color: ${barColor};"></div>
+                  <div class="budget-mini-fill" style="width: ${Math.min(data.pct, 100)}%; background-color: ${barColor};"></div>
                 </div>
               </div>
             `;
