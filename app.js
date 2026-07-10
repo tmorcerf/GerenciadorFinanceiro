@@ -2245,6 +2245,12 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
+        let nextMonth = currentMonth + 1;
+        let nextYear = currentYear;
+        if (nextMonth > 11) {
+          nextMonth = 0;
+          nextYear++;
+        }
         let faturas = [];
         
         const cartoes = dadosFinanceiros.contas.filter(c => {
@@ -2274,16 +2280,20 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
           
           if (faturaAtual !== 0) {
-            faturas.push({ nome: c.nome || c.conta || 'Cartão', dia: vencimentoAtual || 1, valor: faturaAtual, tipo: 'Atual' });
+            faturas.push({ nome: c.nome || c.conta || 'Cartão', dia: vencimentoAtual || 1, mes: currentMonth, ano: currentYear, valor: faturaAtual, tipo: 'Atual' });
           }
           if (faturaProxima !== 0) {
              // Só exibe a próxima se a atual estiver vazia/zerada ou para dar contexto futuro
              // Vamos empurrar as próximas também para a lista
-             faturas.push({ nome: c.nome + ' (Mês seg.)', dia: vencimentoProxima || 1, valor: faturaProxima, tipo: 'Próxima' });
+             faturas.push({ nome: c.nome + ' (Mês seg.)', dia: vencimentoProxima || 1, mes: nextMonth, ano: nextYear, valor: faturaProxima, tipo: 'Próxima' });
           }
         });
         
-        faturas.sort((a, b) => a.dia - b.dia);
+        faturas.sort((a, b) => {
+          const dateA = new Date(a.ano, a.mes, a.dia);
+          const dateB = new Date(b.ano, b.mes, b.dia);
+          return dateA - dateB;
+        });
         // Exibe apenas as 5 mais próximas
         faturas = faturas.slice(0, 5);
         
@@ -2304,7 +2314,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               <div style="display:flex; flex-direction:column;">
                 <span style="font-weight:600; color:var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 150px;">${f.nome}</span>
                 <span style="color:var(--text-muted); font-size:0.75rem;">
-                  <i class="fas fa-calendar-day" style="margin-right: 4px;"></i>Vence dia ${String(f.dia).padStart(2, '0')}
+                  <i class="fas fa-calendar-day" style="margin-right: 4px;"></i>Vence ${String(f.dia).padStart(2, '0')}/${String(f.mes + 1).padStart(2, '0')}
                 </span>
               </div>
               <div style="font-weight:700; color:${f.valor < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">
