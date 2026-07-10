@@ -81,6 +81,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
     let monthlyChart = null;
     let categoryChart = null;
+    let favoriteCategoriesChart = null;
     let invHistoryChart = null;
     let invCompChart = null;
     let budgetConsumptionChart = null;
@@ -3598,7 +3599,43 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           },
           cutout: '70%'
         }
+        }
       });
+      
+      const ctxFav = document.getElementById('favorite-categories-chart');
+      if (ctxFav) {
+        if (chartData.favoriteDatasets.length === 0) {
+          document.getElementById('favorite-categories-empty').style.display = 'block';
+          ctxFav.style.display = 'none';
+        } else {
+          document.getElementById('favorite-categories-empty').style.display = 'none';
+          ctxFav.style.display = 'block';
+          
+          favoriteCategoriesChart = new Chart(ctxFav.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: chartData.monthlyLabels,
+              datasets: chartData.favoriteDatasets
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'top', labels: { color: '#94a3b8', font: { family: 'Outfit' }, boxWidth: 12 } },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) { return ` ${context.dataset.label}: ${formatBRL(context.raw)}`; }
+                  }
+                }
+              },
+              scales: {
+                x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: 'Outfit' } } },
+                y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#94a3b8', font: { family: 'Outfit' } } }
+              }
+            }
+          });
+        }
+      }
     }
 
     function updateCharts() {
@@ -3611,6 +3648,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       categoryChart.data.labels = chartData.categoryLabels;
       categoryChart.data.datasets[0].data = chartData.categoryValues;
       categoryChart.update();
+      
+      if (favoriteCategoriesChart) {
+        if (chartData.favoriteDatasets.length === 0) {
+          document.getElementById('favorite-categories-empty').style.display = 'block';
+          document.getElementById('favorite-categories-chart').style.display = 'none';
+        } else {
+          document.getElementById('favorite-categories-empty').style.display = 'none';
+          document.getElementById('favorite-categories-chart').style.display = 'block';
+          favoriteCategoriesChart.data.labels = chartData.monthlyLabels;
+          favoriteCategoriesChart.data.datasets = chartData.favoriteDatasets;
+          favoriteCategoriesChart.update();
+        }
+      }
     }
 
     function getChartsFilteredData() {
@@ -3673,7 +3723,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         categoryValues = sortedCategories.map(c => categoryData[c]);
       }
 
-      return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues };
+      // Novo cálculo para Favoritos mês a mês
+      const favorites = getFavorites() || [];
+      const favData = {};
+      favorites.forEach(fav => { favData[fav] = {}; });
+      
+      filteredMonthly.forEach(l => {
+        if (!l.data || l.valor >= 0) return;
+        const parts = l.data.split('/');
+        const monthYear = `${parts[1]}/${parts[2]}`;
+        const cat = (l.categoria || '');
+        if (cat.toLowerCase().includes('transfer') || cat.toLowerCase().includes('saldo inicial')) return;
+        
+        favorites.forEach(fav => {
+           if (normalizeCat(cat) === normalizeCat(fav)) {
+              if (!favData[fav][monthYear]) favData[fav][monthYear] = 0;
+              favData[fav][monthYear] += Math.abs(l.valor);
+           }
+        });
+      });
+
+      const colors = ['#f43f5e', '#3b82f6', '#10b981', '#eab308', '#8b5cf6', '#ec4899', '#f97316', '#06b6d4', '#14b8a6', '#64748b'];
+      const favoriteDatasets = favorites.map((fav, i) => {
+         return {
+            label: fav,
+            data: sortedMonths.map(m => favData[fav][m] || 0),
+            backgroundColor: colors[i % colors.length],
+            borderRadius: 6,
+            borderSkipped: false
+         };
+      });
+
+      return { monthlyLabels, monthlyIncome, monthlyExpense, categoryLabels, categoryValues, favoriteDatasets };
     }
 
     function showModalDetails(type) {
