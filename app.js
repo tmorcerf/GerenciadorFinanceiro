@@ -3691,7 +3691,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
               },
               scales: {
                 x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { family: 'Outfit' } } },
-                y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#94a3b8', font: { family: 'Outfit' } } }
+                y: { 
+                  min: 0, 
+                  max: 120,
+                  grid: { color: 'rgba(255, 255, 255, 0.04)' }, 
+                  ticks: { 
+                    color: '#94a3b8', 
+                    font: { family: 'Outfit' },
+                    callback: function(value) { return value + '%'; }
+                  } 
+                }
               }
             }
           });
