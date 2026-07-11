@@ -1673,7 +1673,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              conta.saldo += val;
           } else {
              conta.saldo += val; // Total debt
-             const d = parseDateString(l.data || l.vencimento);
+             const d = parseDateString(l.vencimento || l.data);
              if (d) {
                const monthsDiff = (d.getFullYear() - currentYear) * 12 + (d.getMonth() - currentMonth);
                if (monthsDiff <= 0) {
@@ -2058,11 +2058,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const eD = endStr ? new Date(endStr + "T23:59:59") : new Date("2100-01-01");
 
       return dadosFinanceiros.lancamentos.filter(l => {
-        if (!l.data) return false;
+        if (!(l.vencimento || l.data)) return false;
         
         // Month filter (decentralized)
         if (period !== 'all') {
-          const parts = l.data.split('/');
+          const parts = (l.vencimento || l.data || '').split('/');
           if (parts.length !== 3) return false;
           const yyyy_mm = `${parts[2]}-${parts[1]}`;
           
@@ -2070,19 +2070,19 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (period === 'previous' && yyyy_mm !== prevMonthStr) return false;
           if (period === 'last3' && yyyy_mm !== currMonthStr && yyyy_mm !== prevMonthStr && yyyy_mm !== prev2MonthStr) return false;
           if (period === '3months') {
-            const d = parseDateString(l.data);
+            const d = parseDateString(l.vencimento || l.data);
             const cutoff = new Date(now.getFullYear(), now.getMonth() - 2, 1);
             if (d < cutoff) return false;
           }
           if (period === '6months') {
-            const d = parseDateString(l.data);
+            const d = parseDateString(l.vencimento || l.data);
             const cutoff = new Date(now.getFullYear(), now.getMonth() - 5, 1);
             if (d < cutoff) return false;
           }
           if (period === 'year' && parts[2] !== currYearStr) return false;
           if (period === 'last_year' && parts[2] !== (parseInt(currYearStr) - 1).toString()) return false;
           if (period === 'custom') {
-            const d = parseDateString(l.data);
+            const d = parseDateString(l.vencimento || l.data);
             if (d < sD || d > eD) return false;
           }
         }
@@ -2520,7 +2520,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let filtered = baseTxs.filter(l => {
         if (txPeriodFilter !== 'all') {
-          const parts = l.data.split('/');
+          const parts = (l.vencimento || l.data || '').split('/');
           if (parts.length !== 3) return false;
           const yyyy_mm = `${parts[2]}-${parts[1]}`;
           if (txPeriodFilter === 'current' && yyyy_mm !== currMonthStr) return false;
@@ -2528,13 +2528,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (txPeriodFilter === '3months' && yyyy_mm !== currMonthStr && yyyy_mm !== prevMonthStr && yyyy_mm !== prev2MonthStr) return false;
           if (txPeriodFilter === '6months') {
              // simplified logic for 6 months
-             const d = parseDateString(l.data);
+             const d = parseDateString(l.vencimento || l.data);
              const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
              if (d < sixMonthsAgo) return false;
           }
           if (txPeriodFilter === 'year' && parts[2] !== currYearStr) return false;
           if (txPeriodFilter === 'custom') {
-             const d = parseDateString(l.data);
+             const d = parseDateString(l.vencimento || l.data);
              const sD = txCustomStart ? new Date(txCustomStart + "T00:00:00") : new Date(0);
              const eD = txCustomEnd ? new Date(txCustomEnd + "T23:59:59") : new Date("2100-01-01");
              if (d < sD || d > eD) return false;
@@ -2725,7 +2725,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         dadosFinanceiros.lancamentos.forEach(l => {
           if ((l.categoria || '').toLowerCase().trim() !== o.categoria.toLowerCase().trim() || l.valor >= 0) return;
           if (activePeriod !== 'all') {
-            const p = (l.data || '').split('/');
+            const p = (l.vencimento || l.data || '').split('/');
             if (p.length === 3) {
               const lym = p[2] + '-' + p[1].padStart(2,'0');
               const lYear = p[2];
@@ -3269,7 +3269,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         let maxDate = null;
         dadosFinanceiros.lancamentos.forEach(l => {
            if ((l.conta || '').toLowerCase() === name) {
-              const d = parseDateString(l.data);
+              const d = parseDateString(l.vencimento || l.data);
               if (d) {
                  if (!maxDate || d.getTime() > maxDate.getTime()) {
                     maxDate = d;
@@ -3904,7 +3904,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       filteredMonthly.forEach(l => {
         if (!l.data) return;
-        const parts = l.data.split('/');
+        const parts = (l.vencimento || l.data || '').split('/');
         const monthYear = `${parts[1]}/${parts[2]}`;
         const cat = (l.categoria || '').toLowerCase();
         if (cat.includes('transfer') || cat.includes('saldo inicial')) return;
@@ -4003,8 +4003,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       
       if (dadosFinanceiros && dadosFinanceiros.lancamentos) {
         dadosFinanceiros.lancamentos.forEach(l => {
-          if (!l.data || l.valor >= 0) return;
-          const d = parseDateString(l.data || l.vencimento);
+          if (!(l.vencimento || l.data) || l.valor >= 0) return;
+          const d = parseDateString(l.vencimento || l.data);
           if (!d) return;
           
           const cat = (l.categoria || '');
@@ -4265,10 +4265,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
        const spentData = [0, 0, 0, 0, 0, 0, 0];
        if (dadosFinanceiros && dadosFinanceiros.lancamentos) {
           dadosFinanceiros.lancamentos.forEach(l => {
-             if (!l.data || l.valor >= 0) return;
+             if (!(l.vencimento || l.data) || l.valor >= 0) return;
              const cat = (l.categoria || '');
              if (normalizeCat(cat) === normalizeCat(categoria)) {
-                const d = parseDateString(l.data || l.vencimento);
+                const d = parseDateString(l.vencimento || l.data);
                 if (d) {
                    const mKey = String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
                    const idx = months.findIndex(m => m.key === mKey);
@@ -5753,7 +5753,7 @@ window.flipCardAndShowTransactions = function(categoria, monthKey, monthLabel) {
     
     const txs = dadosFinanceiros.lancamentos.filter(l => {
        if (normalizeCat(l.categoria) !== normalizeCat(categoria)) return false;
-       const dStr = l.data || l.vencimento;
+       const dStr = l.vencimento || l.data;
        if (!dStr) return false;
        
        let d;
@@ -5771,10 +5771,10 @@ window.flipCardAndShowTransactions = function(categoria, monthKey, monthLabel) {
 
     txs.sort((a,b) => {
         let da, db;
-        const pa = (a.data || a.vencimento).split('/');
+        const pa = (a.vencimento || a.data).split('/');
         if (pa.length === 3) da = new Date(pa[2], pa[1]-1, pa[0]); else da = new Date(a.data || a.vencimento);
         
-        const pb = (b.data || b.vencimento).split('/');
+        const pb = (b.vencimento || b.data).split('/');
         if (pb.length === 3) db = new Date(pb[2], pb[1]-1, pb[0]); else db = new Date(b.data || b.vencimento);
         
         return db - da;
