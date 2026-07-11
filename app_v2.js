@@ -3166,11 +3166,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           });
         });
 
-        budgetContainer.querySelectorAll('.clickable-card').forEach(card => {
-          card.addEventListener('click', () => {
-            const cat = card.dataset.budgetCat;
-            if (cat) window.showCategoryDrilldown(cat, 'current');
-          });
+        // Clique desativado
         });
       }, 0);
     }
@@ -4305,6 +4301,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              }]
           },
           options: {
+             animation: false,
              onClick: (e, elements) => {
                  if (elements.length > 0) {
                      const index = elements[0].index;
@@ -5792,7 +5789,7 @@ window.flipCardAndShowTransactions = function(categoria, monthKey, monthLabel) {
            return `
            <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem;">
                <div style="display:flex; flex-direction:column; overflow:hidden; padding-right: 8px;">
-                   <span style="color:var(--text-primary); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${t.obs || 'Sem descrição'}</span>
+                   <span style="color:var(--text-primary); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${t.obs || t.descricao || 'Sem descrição'}</span>
                    <span style="color:var(--text-muted); font-size: 0.7rem;">${t.data} ${t.conta ? '- ' + t.conta : ''}</span>
                </div>
                <span style="color:${t.valor < 0 ? 'var(--color-expense)' : 'var(--color-income)'}; font-weight:600; white-space: nowrap;">${formatBRL(t.valor)}</span>
