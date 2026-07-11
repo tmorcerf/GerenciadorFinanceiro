@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.973 - 11/07/2026, 08:39:56</span>
+        <span style="font-size: 0.75rem;">v 0.9.974 - 11/07/2026, 08:53:18</span>
       </div>
     </div>
   </aside>
@@ -328,6 +328,7 @@
             <thead style="background-color: var(--bg-dashboard); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
               <tr>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('data')" data-sort-col="data">Data</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('vencimento')" data-sort-col="vencimento">Vencimento</th>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('conta')" data-sort-col="conta">Conta</th>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('categoria')" data-sort-col="categoria">Categoria</th>
                 <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('subcategoria')" data-sort-col="subcategoria">Subcategoria</th>
@@ -855,9 +856,9 @@
     </div>
   </div>
 
-  <div id="editTransactionModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-      <h2 style="margin-bottom: 15px;">Editar Lançamento</h2>
+  <div id="editTransactionModal" class="modal-overlay" style="z-index:10000;">
+    <div class="modal-content" style="max-width:500px; animation: slideUp 0.25s ease-out;">
+      <h2 style="margin-bottom:18px; display:flex; align-items:center; gap:10px;"><span style="background:var(--color-accent); color:#fff; border-radius:50%; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700;"><i class="fas fa-pencil-alt"></i></span>Editar Lançamento</h2>
       <input type="hidden" id="edit-tx-id">
       <input type="hidden" id="edit-tx-original-data">
       <input type="hidden" id="edit-tx-original-valor">
@@ -903,10 +904,14 @@
         </div>
       </div>
 
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top:20px;">
-        <button class="btn btn-secondary" id="edit-tx-cancel">Cancelar</button>
-        <button class="btn btn-danger" id="edit-tx-delete" style="background:var(--color-expense); color:#fff; border:none; border-radius:8px; padding:0.6rem 1.5rem; font-weight:600; cursor:pointer;">Apagar</button>
-        <button class="btn btn-primary" id="edit-tx-save">Salvar Alterações</button>
+      <div style="display: flex; gap: 10px; justify-content: space-between; margin-top:20px;">
+        <div>
+           <button class="btn btn-danger" id="edit-tx-delete" style="background: transparent; color: var(--color-expense); border: 1px solid var(--color-expense); border-radius:8px; padding:0.6rem 1rem; font-weight:600; cursor:pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='transparent'" title="Apagar Lançamento"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+           <button class="btn btn-secondary" id="edit-tx-cancel">Cancelar</button>
+           <button class="btn btn-primary" id="edit-tx-save">Salvar Alterações</button>
+        </div>
       </div>
     </div>
   </div>

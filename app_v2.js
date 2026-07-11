@@ -5348,6 +5348,15 @@ window.openEditTransactionModal = function(cod) {
     if(parts.length === 3) dateVal = parts[2] + '-' + parts[1] + '-' + parts[0];
   }
   document.getElementById('edit-tx-data').value = dateVal;
+  let vencVal = '';
+  if(t.vencimento) {
+    const vparts = t.vencimento.split('/');
+    if(vparts.length === 3) vencVal = vparts[2] + '-' + vparts[1] + '-' + vparts[0];
+  } else if (t.data) {
+    // fallback se não tiver vencimento
+    vencVal = dateVal;
+  }
+  document.getElementById('edit-tx-vencimento').value = vencVal;
 
   const contaSelect = document.getElementById('edit-tx-conta');
   contaSelect.innerHTML = '';
