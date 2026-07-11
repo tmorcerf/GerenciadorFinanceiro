@@ -5689,8 +5689,10 @@ window.saveNewTransaction = function() {
     document.getElementById('newTransactionModal').classList.remove('active');
     alert('Lançamento incluído com sucesso!');
 
-    if (typeof processRawData === 'function') {
-      processRawData(dadosFinanceiros.lancamentos);
+    if (typeof window.initApp === 'function') {
+      window.initApp();
+    } else if (typeof renderTransactionsTable === 'function') {
+      renderTransactionsTable();
     }
     const activeNav = document.querySelector('.nav-item.active');
     if (activeNav) activeNav.click();
