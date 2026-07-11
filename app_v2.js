@@ -2870,11 +2870,11 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const normCat = normalizeCat(o.categoria).replace(/\s+/g, '-');
       
       let html = `
-        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible; perspective: 1000px; ${isTopArea ? 'min-height: 420px; display: flex; flex-direction: column;' : ''}">
-          <div class="flip-card-inner" style="display:grid; grid-template-areas:'inner'; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; width: 100%; height: 100%; flex: 1;">
+        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible; min-width: 0; min-height: 0; perspective: 1000px; ${isTopArea ? 'min-height: 420px; display: flex; flex-direction: column;' : ''}">
+          <div class="flip-card-inner" style="display:grid; grid-template-areas:'inner'; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; width: 100%; height: 100%; flex: 1; min-width: 0; min-height: 0;">
             
             <!-- FRENTE DO CARTAO -->
-            <div class="flip-card-front" style="grid-area: inner; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; height: 100%;">
+            <div class="flip-card-front" style="grid-area: inner; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0;">
               <div class="budget-title-row" style="display:flex; justify-content:space-between; align-itemes:center; flex-wrap:wrap; gap:10px;">
                 <div style="display:flex; align-itemes:center; gap: 6px;">
                   <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5em; margin-right: 5px;">&#9733;</span>
@@ -2949,7 +2949,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       if (isTopArea) {
          html += `
             <!-- VERSO DO CARTAO -->
-            <div class="flip-card-back" style="grid-area: inner; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: rotateY(180deg); display: flex; flex-direction: column; height: 100%; background: var(--bg-card); border-radius: 8px; padding: 10px;">
+            <div class="flip-card-back" style="grid-area: inner; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: rotateY(180deg); display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; background: var(--bg-card); border-radius: 8px; padding: 10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
                     <h4 style="margin:0; font-size: 0.9rem; color:var(--text-primary); display:flex; align-items:center; gap: 6px;"><i class="fas fa-list"></i> <span id="back-month-${normCat}"></span></h4>
                     <button class="btn btn-icon close-flip" onclick="event.stopPropagation(); this.closest('.flip-card-inner').classList.remove('flipped');" style="padding: 4px 8px; font-size: 0.8rem; background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; border-radius: 4px;"><i class="fas fa-undo"></i> Voltar</button>
@@ -3570,15 +3570,6 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                }]
             },
             options: {
-             onClick: (e, elements) => {
-                 if (elements.length > 0) {
-                     const index = elements[0].index;
-                     const clickedMonth = months[index];
-                     if (window.flipCardAndShowTransactions) {
-                         window.flipCardAndShowTransactions(categoria, clickedMonth.key, clickedMonth.label);
-                     }
-                 }
-             },
              responsive: true,
                maintainAspectRatio: false,
                cutout: '70%',
@@ -4314,6 +4305,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
              }]
           },
           options: {
+             onClick: (e, elements) => {
+                 if (elements.length > 0) {
+                     const index = elements[0].index;
+                     const clickedMonth = months[index];
+                     if (window.flipCardAndShowTransactions) {
+                         window.flipCardAndShowTransactions(categoria, clickedMonth.key, clickedMonth.label);
+                     }
+                 }
+             },
              responsive: true,
              maintainAspectRatio: false,
              plugins: {
