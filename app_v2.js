@@ -5501,15 +5501,132 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
   });
 });
 
+// ============================================================
+// NOVO LANÇAMENTO MANUAL
+// ============================================================
+window.openNewTransactionModal = function() {
+  const modal = document.getElementById('newTransactionModal');
+  if (!modal) return;
 
+  // Set today's date
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  document.getElementById('new-tx-data').value = y + '-' + m + '-' + d;
 
+  // Fill contas
+  const contaSelect = document.getElementById('new-tx-conta');
+  contaSelect.innerHTML = '';
+  (dadosFinanceiros.contas || []).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.nome; opt.textContent = c.nome;
+    contaSelect.appendChild(opt);
+  });
 
+  // Fill categorias
+  const catSelect = document.getElementById('new-tx-categoria');
+  catSelect.innerHTML = '';
+  const dict = window.dicionarioGeral || {};
+  Object.keys(dict).sort().forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat; opt.textContent = cat;
+    catSelect.appendChild(opt);
+  });
+  window._updateNewTxSubcats();
 
+  // Reset fields
+  document.getElementById('new-tx-valor').value = '';
+  document.getElementById('new-tx-obs').value = '';
+  document.getElementById('new-tx-tipo').value = 'despesa';
 
+  modal.style.display = 'flex';
+};
 
+window._updateNewTxSubcats = function() {
+  const cat = document.getElementById('new-tx-categoria')?.value;
+  const subSel = document.getElementById('new-tx-subcategoria');
+  if (!subSel) return;
+  subSel.innerHTML = '<option value="">-- Nenhuma --</option>';
+  const dict = window.dicionarioGeral || {};
+  (dict[cat] || []).forEach(sub => {
+    const opt = document.createElement('option');
+    opt.value = sub; opt.textContent = sub;
+    subSel.appendChild(opt);
+  });
+};
 
+window._updateNewTxValorSign = function() {};
 
+window.saveNewTransaction = function() {
+  const dataVal = document.getElementById('new-tx-data').value;
+  if (!dataVal) { alert('Informe a data!'); return; }
+  const parts = dataVal.split('-');
+  const dataStr = parts[2] + '/' + parts[1] + '/' + parts[0];
 
+  const rawVal = document.getElementById('new-tx-valor').value.replace('.', '').replace(',', '.');
+  let valor = parseFloat(rawVal);
+  if (isNaN(valor) || valor === 0) { alert('Informe um valor válido!'); return; }
 
+  const tipo = document.getElementById('new-tx-tipo').value;
+  valor = tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor);
 
+  const conta    = document.getElementById('new-tx-conta').value;
+  const cat      = document.getElementById('new-tx-categoria').value;
+  const sub      = document.getElementById('new-tx-subcategoria').value;
+  const obs      = document.getElementById('new-tx-obs').value;
+
+  if (!conta) { alert('Selecione uma conta!'); return; }
+  if (!cat)   { alert('Selecione uma categoria!'); return; }
+
+  const btn = document.getElementById('new-tx-save');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+  btn.disabled = true;
+
+  const novoLanc = { data: dataStr, conta, valor, categoria: cat, subcategoria: sub, obs };
+
+  let savePromise;
+  if (window.USE_FIREBASE) {
+    savePromise = window.DB.sincronizarPeriodo([novoLanc], [], null, null);
+  } else {
+    savePromise = fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'salvar_ia', transacoes: [novoLanc] })
+    });
+  }
+
+  savePromise.then(() => {
+    // Add locally so the table updates immediately
+    const maxId = Math.max(...dadosFinanceiros.lancamentos.map(l => parseInt(l.cod) || 0), 0);
+    dadosFinanceiros.lancamentos.push({
+      cod: String(maxId + 1),
+      data: dataStr, vencimento: '', conta, obs,
+      valor, categoria: cat, subcategoria: sub
+    });
+
+    document.getElementById('newTransactionModal').style.display = 'none';
+    alert('Lançamento incluído com sucesso!');
+
+    if (typeof processRawData === 'function') {
+      processRawData(dadosFinanceiros.lancamentos);
+    }
+    const activeNav = document.querySelector('.nav-item.active');
+    if (activeNav) activeNav.click();
+
+  }).catch(err => {
+    alert('Erro ao salvar: ' + err);
+  }).finally(() => {
+    btn.innerHTML = origText;
+    btn.disabled = false;
+  });
+};
+
+// Close modal clicking outside
+document.addEventListener('click', e => {
+  const modal = document.getElementById('newTransactionModal');
+  if (modal && e.target === modal) modal.style.display = 'none';
+});
 
