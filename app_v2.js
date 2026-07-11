@@ -321,7 +321,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         <div style="text-align:center; padding: 3rem 1rem;">
           <i class="fas fa-robot fa-spin" style="font-size: 4rem; color: var(--color-primary); margin-bottom: 1.5rem;"></i>
           <h3 style="color: var(--text-primary); margin-bottom:0.5rem;">Analisando ${fileName}...</h3>
-          <p id="funny-loading-mesg" style="color: var(--text-secondary); font-size: 1.1rem; height: 3rem; display: flex; align-itemes: center; justify-content: center; font-style: italic;">${mesgs[0]}</p>
+          <p id="funny-loading-mesg" style="color: var(--text-secondary); font-size: 1.1rem; height: 3rem; display: flex; align-items: center; justify-content: center; font-style: italic;">${mesgs[0]}</p>
         </div>
       `);
 
@@ -4873,36 +4873,38 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       const renderFaturasList = (list) => {
         if (list.length === 0) return '<div style="color:var(--text-muted); font-size:0.75rem; margin-top:0.5rem;">Sem faturas</div>';
-        return '<div style="margin-top:0.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:0.5rem;">' + list.map(f => `
+        return '<div style="margin-top:0.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:0.5rem;">' + list.map(f => {
+          const v = -f.valor;
+          return `
           <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:0.3rem;">
             <span style="color:var(--text-secondary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 65%;"><span style="color:var(--text-muted); margin-right:4px;">Dia ${String(f.dia).padStart(2, '0')}</span> ${f.nome}</span>
-            <span style="color:${f.valor < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(f.valor)}</span>
+            <span style="color:${v < 0 ? 'var(--color-expense)' : 'var(--text-primary)'}; font-weight:600;">${formatBRL(v)}</span>
           </div>
-        `).join('') + '</div>';
+        `}).join('') + '</div>';
       };
 
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem; align-itemes: stretch;">
           <div class="card bg-card" style="display:flex; flex-direction:column;">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Ms Atual</div>
-            <div style="font-size:1.8rem; font-weight:700; color:${totalAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalAtual)}</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Mês Atual</div>
+            <div style="font-size:1.8rem; font-weight:700; color:${-totalAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(-totalAtual)}</div>
             <div style="margin-top:auto;">${renderFaturasList(faturasAtual)}</div>
           </div>
           <div class="card bg-card" style="display:flex; flex-direction:column;">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Proximo Ms</div>
-            <div style="font-size:1.8rem; font-weight:700; color:${totalProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalProxima)}</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Próximo Mês</div>
+            <div style="font-size:1.8rem; font-weight:700; color:${-totalProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(-totalProxima)}</div>
             <div style="margin-top:auto;">${renderFaturasList(faturasProxima)}</div>
           </div>
           <div class="card bg-card" style="display:flex; flex-direction:column;">
             <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Faturas Futuras (+2 meses)</div>
-            <div style="font-size:1.8rem; font-weight:700; color:${totalFuturo < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(totalFuturo)}</div>
+            <div style="font-size:1.8rem; font-weight:700; color:${-totalFuturo < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(-totalFuturo)}</div>
           </div>
         </div>
       `;
 
       html += `
         <div class="card charts-container" style="margin-bottom: 2rem;">
-          <h3 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">Projeo de Faturas (Proximos 6 Meses)</h3>
+          <h3 style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;">Projeção de Faturas (Próximos 6 Meses)</h3>
           <div style="height: 250px; position: relative;">
             <canvas id="creditCardsProjectionChart"></canvas>
           </div>
