@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.960 - 10/07/2026, 22:26:19</span>
+        <span style="font-size: 0.75rem;">v 0.9.961 - 10/07/2026, 22:30:35</span>
       </div>
     </div>
   </aside>
@@ -309,10 +309,7 @@
           <select id="transactions-category-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer; max-width: 200px;">
             <option value="all">Todas as Categorias</option>
           </select>
-          <!-- Ordem -->
-          <button id="transactions-sort-btn" class="btn btn-secondary" style="padding: 0.5rem; font-size: 0.9rem;" title="Alternar Ordem">
-            <i class="fas fa-sort-amount-down"></i>
-          </button>
+          
           <!-- Exportar CSV -->
           <button onclick="window.exportTransactionsCSV()" class="btn btn-secondary" style="padding:0.5rem 0.8rem; font-size:0.85rem; display:flex; align-items:center; gap:6px; white-space:nowrap;" title="Exportar página atual para CSV">
             <i class="fas fa-file-csv"></i> Exportar CSV
@@ -330,12 +327,12 @@
           <table id="transactions-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
             <thead style="background-color: var(--bg-dashboard); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
               <tr>
-                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Data</th>
-                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Conta</th>
-                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Categoria</th>
-                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Subcategoria</th>
-                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color);">Descrição</th>
-                <th style="padding: 1rem; text-align: right; font-weight: 600; border-bottom: 1px solid var(--border-color);">Valor (R$)</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('data')" data-sort-col="data">Data</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('conta')" data-sort-col="conta">Conta</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('categoria')" data-sort-col="categoria">Categoria</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('subcategoria')" data-sort-col="subcategoria">Subcategoria</th>
+                <th style="padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('descricao')" data-sort-col="descricao">Descrição</th>
+                <th style="padding: 1rem; text-align: right; font-weight: 600; border-bottom: 1px solid var(--border-color); cursor: pointer; user-select: none;" onclick="window.toggleTxSort('valor')" data-sort-col="valor">Valor (R$)</th>
                 <th style="padding: 1rem; text-align: right; font-weight: 600; border-bottom: 1px solid var(--border-color);">Saldo do Dia</th>
                 <th style="padding: 1rem; text-align: center; font-weight: 600; border-bottom: 1px solid var(--border-color);">Ações</th>
               </tr>
@@ -908,6 +905,7 @@
 
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top:20px;">
         <button class="btn btn-secondary" id="edit-tx-cancel">Cancelar</button>
+        <button class="btn btn-danger" id="edit-tx-delete" style="background:var(--color-expense); color:#fff; border:none; border-radius:8px; padding:0.6rem 1.5rem; font-weight:600; cursor:pointer;">Apagar</button>
         <button class="btn btn-primary" id="edit-tx-save">Salvar Alterações</button>
       </div>
     </div>

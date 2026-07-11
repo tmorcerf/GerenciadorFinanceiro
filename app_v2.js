@@ -80,6 +80,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let txCustomStart = '';
     let txCustomEnd = '';
     let txSortOrder = 'asc';
+    let txSortCol = 'data';
     const rowsPerPage = 100;
 
     let monthlyChart = null;
@@ -5364,6 +5365,26 @@ window.openEditTransactionModal = function(cod) {
 
   document.getElementById('editTransactionModal').classList.add('active');
 };
+
+
+document.getElementById('edit-tx-delete')?.addEventListener('click', async () => {
+  const id = document.getElementById('edit-tx-id').value;
+  if (!id) return;
+  if (!confirm('Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita.')) return;
+  
+  dadosFinanceiros.lancamentos = dadosFinanceiros.lancamentos.filter(l => l.id !== id);
+  
+  if (window.db && window.currentUserId) {
+     try {
+       await window.deleteDoc(window.doc(window.db, 'usuarios', window.currentUserId, 'lancamentos', id));
+     } catch(e) {
+       console.error("Erro ao apagar:", e);
+     }
+  }
+  
+  document.getElementById('editTransactionModal').classList.remove('active');
+  window.initApp();
+});
 
 document.getElementById('edit-tx-cancel')?.addEventListener('click', () => {
   document.getElementById('editTransactionModal').classList.remove('active');
