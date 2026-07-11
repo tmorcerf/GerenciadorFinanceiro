@@ -2866,56 +2866,56 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
       const cardPer = getBudgetCardPeriod(o.categoria);
       const d = getCardData(o, cardPer);
       const starClass = isFav ? 'active' : '';
+      const normalizeCat = (c) => (c || '').trim().toLowerCase();
+      const normCat = normalizeCat(o.categoria).replace(/\s+/g, '-');
+      
       let html = `
-        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible; ${isTopArea ? 'min-height: 420px; display: flex; flex-direction: column;' : ''}">
-          <div class="budget-title-row" style="display:flex; justify-content:space-between; align-itemes:center; flex-wrap:wrap; gap:10px;">
-            <div style="display:flex; align-itemes:center; gap: 6px;">
-              <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5em; margin-right: 5px;">&#9733;</span>
-              <span class="budget-cat-name" style="margin-left:4px;">${o.categoria}</span>
-            </div>
-            <div style="display:flex; align-itemes:center; gap: 10px;">
-              <select class="budget-period-select" data-budget-cat="${o.categoria}" onclick="event.stopPropagation()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:2px 5px; font-size:0.8rem; outline:none; cursor:pointer;">
-                <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Mês Atual</option>
-                <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mês Anterior</option>
-                <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>Últimos 3 Meses</option>
-                <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>Últimos 6 Meses</option>
-                <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Ano Atual</option>
-                <option value="last_year" ${cardPer === 'last_year' ? 'selected' : ''}>Ano Anterior</option>
-              </select>
-              <span class="budget-limit" style="font-weight:600;">Teto: ${formatBRL(d.limit)}</span>
-            </div>
-          </div>
-          <div class="budget-progress-bar">
-            <div class="budget-progress-fill ${d.isBurst ? 'over' : ''}" style="width: ${Math.min(d.pct, 100)}%"></div>
-          </div>
-          <div class="budget-values-row">
-            <div>
-              <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">Realizado:</span>
-              <span class="budget-spent">${formatBRL(d.spent)}</span>
-            </div>
-            <div style="text-align: right;">
-              <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">${d.remaining >= 0 ? 'Sobra:' : 'Estourou:'}</span>
-              <span class="budget-remaining ${d.remaining >= 0 ? 'positive' : 'negative'}">${formatBRL(Math.abs(d.remaining))}</span>
-            </div>
-          </div>`;
+        <div class="card budget-card clickable-card" data-budget-cat="${o.categoria}" style="cursor:pointer; position:relative; overflow: visible; perspective: 1000px; ${isTopArea ? 'min-height: 420px; display: flex; flex-direction: column;' : ''}">
+          <div class="flip-card-inner" style="display:grid; grid-template-areas:'inner'; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; width: 100%; height: 100%; flex: 1;">
+            
+            <!-- FRENTE DO CARTAO -->
+            <div class="flip-card-front" style="grid-area: inner; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; height: 100%;">
+              <div class="budget-title-row" style="display:flex; justify-content:space-between; align-itemes:center; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-itemes:center; gap: 6px;">
+                  <span class="budget-star ${starClass}" data-star-cat="${o.categoria}" title="Favoritar" style="font-size: 1.5em; margin-right: 5px;">&#9733;</span>
+                  <span class="budget-cat-name" style="margin-left:4px;">${o.categoria}</span>
+                </div>
+                <div style="display:flex; align-itemes:center; gap: 10px;">
+                  <select class="budget-period-select" data-budget-cat="${o.categoria}" onclick="event.stopPropagation()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:2px 5px; font-size:0.8rem; outline:none; cursor:pointer;">
+                    <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Mês Atual</option>
+                    <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mês Anterior</option>
+                    <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>Últimos 3 Meses</option>
+                    <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>Últimos 6 Meses</option>
+                    <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Ano Atual</option>
+                    <option value="last_year" ${cardPer === 'last_year' ? 'selected' : ''}>Ano Anterior</option>
+                  </select>
+                  <span class="budget-limit" style="font-weight:600;">Teto: ${formatBRL(d.limit)}</span>
+                </div>
+              </div>
+              <div class="budget-progress-bar">
+                <div class="budget-progress-fill ${d.isBurst ? 'over' : ''}" style="width: ${Math.min(d.pct, 100)}%"></div>
+              </div>
+              <div class="budget-values-row">
+                <div>
+                  <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">Realizado:</span>
+                  <span class="budget-spent">${formatBRL(d.spent)}</span>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">${d.remaining >= 0 ? 'Sobra:' : 'Estourou:'}</span>
+                  <span class="budget-remaining ${d.remaining >= 0 ? 'positive' : 'negative'}">${formatBRL(Math.abs(d.remaining))}</span>
+                </div>
+              </div>`;
 
       if (isTopArea) {
-         const normalizeCat = (c) => (c || '').trim().toLowerCase();
          const orcObj = (dadosFinanceiros.orcamento || []).find(x => normalizeCat(x.categoria) === normalizeCat(o.categoria));
          const currentConfigValor = orcObj ? (orcObj.config_valor || orcObj.orcamento || 0) : 0;
          const currentConfigPeriodo = orcObj ? (orcObj.config_periodo || 'mensal') : 'mensal';
-         const normCat = normalizeCat(o.categoria).replace(/\s+/g, '-');
          
          html += `<div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-top: 1rem; flex-grow: 1; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
             <style>
                .no-spinners::-webkit-outer-spin-button,
-               .no-spinners::-webkit-inner-spin-button {
-                  -webkit-appearance: none;
-                  margin: 0;
-               }
-               .no-spinners {
-                  -moz-appearance: textfield;
-               }
+               .no-spinners::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+               .no-spinners { -moz-appearance: textfield; }
             </style>
             
             <div style="width:100%; height:180px; margin-bottom: 1.5rem;"><canvas id="favCatChart-${normCat}"></canvas></div>
@@ -2942,8 +2942,27 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
          </div>`;
       }
+      
+      html += `
+            </div> <!-- End flip-card-front -->`;
 
-      html += `</div>`;
+      if (isTopArea) {
+         html += `
+            <!-- VERSO DO CARTAO -->
+            <div class="flip-card-back" style="grid-area: inner; backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: rotateY(180deg); display: flex; flex-direction: column; height: 100%; background: var(--bg-card); border-radius: 8px; padding: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <h4 style="margin:0; font-size: 0.9rem; color:var(--text-primary); display:flex; align-items:center; gap: 6px;"><i class="fas fa-list"></i> <span id="back-month-${normCat}"></span></h4>
+                    <button class="btn btn-icon close-flip" onclick="event.stopPropagation(); this.closest('.flip-card-inner').classList.remove('flipped');" style="padding: 4px 8px; font-size: 0.8rem; background: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; border-radius: 4px;"><i class="fas fa-undo"></i> Voltar</button>
+                </div>
+                <div id="back-content-${normCat}" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; max-height: 350px;">
+                </div>
+            </div> <!-- End flip-card-back -->`;
+      }
+
+      html += `
+          </div> <!-- End flip-card-inner -->
+        </div> <!-- End budget-card -->`;
+        
       return html;
     }
 
@@ -3551,7 +3570,16 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
                }]
             },
             options: {
-               responsive: true,
+             onClick: (e, elements) => {
+                 if (elements.length > 0) {
+                     const index = elements[0].index;
+                     const clickedMonth = months[index];
+                     if (window.flipCardAndShowTransactions) {
+                         window.flipCardAndShowTransactions(categoria, clickedMonth.key, clickedMonth.label);
+                     }
+                 }
+             },
+             responsive: true,
                maintainAspectRatio: false,
                cutout: '70%',
                plugins: { legend: { position: 'right', labels: { color: '#a0aec0', padding: 15, boxWidth: 12 } } }
