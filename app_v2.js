@@ -5409,18 +5409,27 @@ document.getElementById('edit-tx-delete')?.addEventListener('click', async () =>
   if (!id) return;
   if (!confirm('Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita.')) return;
   
-  dadosFinanceiros.lancamentos = dadosFinanceiros.lancamentos.filter(l => l.id !== id);
+  // Remove do array local
+  dadosFinanceiros.lancamentos = dadosFinanceiros.lancamentos.filter(l => l.cod != id);
   
-  if (window.db && window.currentUserId) {
+  // Remove do banco de dados
+  if (window.USE_FIREBASE && window.DB) {
      try {
-       await window.deleteDoc(window.doc(window.db, 'usuarios', window.currentUserId, 'lancamentos', id));
+       await window.DB.excluirLancamento(id);
      } catch(e) {
        console.error("Erro ao apagar:", e);
+       alert("Erro ao apagar no banco de dados.");
      }
   }
   
+  alert('Lançamento apagado com sucesso!');
   document.getElementById('editTransactionModal').classList.remove('active');
-  window.initApp();
+  
+  if (typeof window.initApp === 'function') {
+    window.initApp();
+  } else if (typeof renderTransactionsTable === 'function') {
+    renderTransactionsTable();
+  }
 });
 
 document.getElementById('edit-tx-cancel')?.addEventListener('click', () => {
