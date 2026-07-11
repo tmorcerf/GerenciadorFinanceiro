@@ -5548,10 +5548,10 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     alert('Lançamento atualizado com sucesso!');
     document.getElementById('editTransactionModal').classList.remove('active');
     
-    if (typeof processRawData === 'function') {
-      processRawData(dadosFinanceiros.lancamentos);
-      const activeNav = document.querySelector('.nav-item.active');
-      if (activeNav) activeNav.click(); 
+    if (typeof window.initApp === 'function') {
+      window.initApp();
+    } else if (typeof renderTransactionsTable === 'function') {
+      renderTransactionsTable();
     }
   }).catch(err => {
     alert('Erro ao salvar: ' + err);
