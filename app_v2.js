@@ -76,6 +76,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let currentPage = 1;
     let txAccountFilter = 'all';
     let txCategoryFilter = 'all';
+let txSubcategoryFilter = 'all';
 let txDateTypeFilter = 'vencimento';
     let txPeriodFilter = 'current';
     let txCustomStart = '';
@@ -2478,6 +2479,46 @@ let txDateTypeFilter = 'vencimento';
       });
       // Sync state from UI on first load
       txCategoryFilter = catSelect.value;
+      populateSubcategoryFilter(); // init
+    }
+
+    
+    function populateSubcategoryFilter() {
+      if (!dadosFinanceiros || !dadosFinanceiros.lancamentos) return;
+      const subSelect = document.getElementById('transactions-subcategory-filter');
+      if (!subSelect) return;
+      
+      const currentSub = subSelect.value;
+      
+      // Clear all but first option
+      while (subSelect.options.length > 1) {
+          subSelect.remove(1);
+      }
+      
+      const uniqueSubs = new Set();
+      dadosFinanceiros.lancamentos.forEach(l => {
+         const c = (l.categoria || '').trim();
+         const s = (l.subcategoria || '').trim();
+         if (txCategoryFilter === 'all' || c.toLowerCase() === txCategoryFilter.toLowerCase()) {
+             if (s) uniqueSubs.add(s);
+         }
+      });
+      
+      const sortedSubs = Array.from(uniqueSubs).sort((a, b) => a.localeCompare(b));
+      sortedSubs.forEach(sub => {
+         const opt = document.createElement('option');
+         opt.value = sub;
+         opt.textContent = sub;
+         subSelect.appendChild(opt);
+      });
+      
+      // Try to restore previous selection if it exists
+      if (Array.from(subSelect.options).some(opt => opt.value === currentSub)) {
+          subSelect.value = currentSub;
+      } else {
+          subSelect.value = 'all';
+      }
+      txSubcategoryFilter = subSelect.value;
     }
 
     function renderTransactionsTable() {

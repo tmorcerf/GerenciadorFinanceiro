@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.978 - 11/07/2026, 09:23:29</span>
+        <span style="font-size: 0.75rem;">v 0.9.979 - 11/07/2026, 09:32:24</span>
       </div>
     </div>
   </aside>
@@ -282,14 +282,9 @@
           <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Lançamentos</h2>
           <button onclick="window.openNewTransactionModal()" id="btn-new-transaction" title="Novo Lançamento" style="width:32px; height:32px; border-radius:50%; background:var(--color-accent); border:none; color:#fff; font-size:1.2rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.2s, box-shadow 0.2s; box-shadow:0 2px 8px rgba(99,102,241,0.4);" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">+</button>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-          <!-- Conta -->
-          <select id="transactions-account-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
-            <option value="all">Todas as Contas</option>
-            <!-- Preenchido via JS -->
-          </select>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           <!-- Período -->
-          <select id="transactions-period-filter" style="margin-right:5px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
+          <select id="transactions-period-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
             <option value="all">Todo o Período</option>
             <option value="current" selected>Mês Atual</option>
             <option value="previous">Mês Passado</option>
@@ -297,7 +292,9 @@
             <option value="6months">Últimos 6 Meses</option>
             <option value="year">Este Ano</option>
             <option value="custom">Personalizado</option>
-          </select>\n<!-- Tipo de Data -->
+          </select>
+
+          <!-- Tipo de Data -->
           <style>
             .tx-switch-label { font-size:0.85rem; cursor:pointer; transition:0.2s; color:var(--text-secondary); }
             .tx-switch-label.active-vencimento { font-weight:600; color:var(--color-accent); }
@@ -307,7 +304,7 @@
             #transactions-date-type-filter:not(:checked) ~ .slider { background-color:var(--color-expense); }
             #transactions-date-type-filter:not(:checked) ~ .slider-btn { transform: translateX(0); }
           </style>
-          <div style="display:flex; align-items:center; gap:8px; background:var(--bg-card); padding:0.3rem 0.8rem; border-radius:20px; border:1px solid var(--border-color); ">
+          <div style="display:flex; align-items:center; gap:8px; background:var(--bg-card); padding:0.3rem 0.8rem; border-radius:20px; border:1px solid var(--border-color);">
             <span id="label-data" class="tx-switch-label active-data" onclick="document.getElementById('transactions-date-type-filter').click()">Data</span>
             <label style="position:relative; display:inline-block; width:44px; height:24px; margin:0;">
               <input type="checkbox" id="transactions-date-type-filter" style="opacity:0; width:0; height:0;">
@@ -316,7 +313,7 @@
             </label>
             <span id="label-vencimento" class="tx-switch-label" onclick="document.getElementById('transactions-date-type-filter').click()">Venc</span>
           </div>
-          
+
           <!-- Custom Dates (Hidden by default) -->
           <div id="transactions-custom-dates" style="display: none; gap: 8px; align-items: center;">
              <input type="date" id="transactions-date-start" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.4rem; font-size:0.85rem; outline:none;">
@@ -324,22 +321,44 @@
              <input type="date" id="transactions-date-end" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.4rem; font-size:0.85rem; outline:none;">
              <button id="transactions-custom-btn" style="background:var(--color-accent); color:#fff; border:none; border-radius:8px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.85rem; font-weight:600;">Ir</button>
           </div>
+
+          <!-- Conta -->
+          <select id="transactions-account-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
+            <option value="all">Todas as Contas</option>
+            <!-- Preenchido via JS -->
+          </select>
+
           <!-- Categoria -->
           <select id="transactions-category-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer; max-width: 200px;">
             <option value="all">Todas as Categorias</option>
           </select>
-          
+
+          <!-- Subcategoria -->
+          <select id="transactions-subcategory-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer; max-width: 200px;">
+            <option value="all">Todas as Subcategorias</option>
+          </select>
+
+          <div style="flex-grow:1;"></div>
+
           <!-- Exportar CSV -->
-          <button onclick="window.exportTransactionsCSV()" class="btn btn-secondary" style="padding:0.5rem 0.8rem; font-size:0.85rem; display:flex; align-items:center; gap:6px; white-space:nowrap;" title="Exportar página atual para CSV">
-            <i class="fas fa-file-csv"></i> Exportar CSV
+          <button onclick="window.exportTransactionsCSV()" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.1rem; transition:0.2s;" title="Exportar CSV" onmouseover="this.style.borderColor='var(--color-accent)'; this.style.color='var(--color-accent)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-primary)'">
+            <i class="fas fa-file-excel"></i>
           </button>
+
           <!-- Busca -->
-          <div style="position: relative;">
-            <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
-            <input type="text" id="search-input" placeholder="Buscar..." style="padding-left: 30px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); font-family: inherit; font-size: 0.9rem; padding-top: 0.5rem; padding-bottom: 0.5rem; width: 200px;">
+          <style>
+             #search-container { position:relative; display:flex; align-items:center; background:var(--bg-card); border-radius:8px; border:1px solid var(--border-color); transition:0.3s; overflow:hidden; }
+             #search-container:focus-within { border-color:var(--color-accent); }
+             #search-input { width:0; opacity:0; padding:0; border:none; transition: width 0.3s, opacity 0.3s, padding 0.3s; background:transparent; color:var(--text-primary); font-size:0.9rem; outline:none; }
+             #search-input.active { width:150px; opacity:1; padding:0.5rem 0.5rem 0.5rem 0; }
+             .search-icon-btn { cursor:pointer; color:var(--text-muted); font-size:1rem; padding:0 0.6rem; height:36px; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+             .search-icon-btn:hover { color:var(--color-accent); }
+          </style>
+          <div id="search-container">
+            <div class="search-icon-btn" onclick="const s = document.getElementById('search-input'); s.classList.toggle('active'); if(s.classList.contains('active')) s.focus();"><i class="fas fa-search"></i></div>
+            <input type="text" id="search-input" placeholder="Buscar...">
           </div>
         </div>
-      </div>
 
       <div class="card" style="padding: 0; overflow: hidden;">
         <div style="overflow-x: auto;">
