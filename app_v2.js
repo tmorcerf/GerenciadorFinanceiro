@@ -739,7 +739,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
             </div>
           </div>
         `;
-        modal.style.display = 'flex';
+        modal.style.display = ''; modal.classList.add('active');
       };
 
       const periodosUnicos = [...new Set(window.currentReviewData.map(d => {
@@ -5540,7 +5540,7 @@ window.openNewTransactionModal = function() {
   document.getElementById('new-tx-obs').value = '';
   document.getElementById('new-tx-tipo').value = 'despesa';
 
-  modal.style.display = 'flex';
+  modal.style.display = ''; modal.classList.add('active');
 };
 
 window._updateNewTxSubcats = function() {
@@ -5607,7 +5607,7 @@ window.saveNewTransaction = function() {
       valor, categoria: cat, subcategoria: sub
     });
 
-    document.getElementById('newTransactionModal').style.display = 'none';
+    document.getElementById('newTransactionModal').classList.remove('active');
     alert('Lançamento incluído com sucesso!');
 
     if (typeof processRawData === 'function') {
@@ -5627,6 +5627,6 @@ window.saveNewTransaction = function() {
 // Close modal clicking outside
 document.addEventListener('click', e => {
   const modal = document.getElementById('newTransactionModal');
-  if (modal && e.target === modal) modal.style.display = 'none';
+  if (modal && e.target === modal) modal.classList.remove('active');
 });
 
