@@ -5539,6 +5539,7 @@ window.openNewTransactionModal = function() {
   document.getElementById('new-tx-valor').value = '';
   document.getElementById('new-tx-obs').value = '';
   document.getElementById('new-tx-tipo').value = 'despesa';
+  window._updateNewTxValorSign();
 
   modal.style.display = ''; modal.classList.add('active');
 };
@@ -5556,7 +5557,18 @@ window._updateNewTxSubcats = function() {
   });
 };
 
-window._updateNewTxValorSign = function() {};
+window._updateNewTxValorSign = function() {
+  const tipo = document.getElementById('new-tx-tipo').value;
+  const catDiv = document.getElementById('new-tx-cat-container');
+  const subDiv = document.getElementById('new-tx-sub-container');
+  if (tipo === 'ajuste') {
+    if (catDiv) catDiv.style.display = 'none';
+    if (subDiv) subDiv.style.display = 'none';
+  } else {
+    if (catDiv) catDiv.style.display = 'block';
+    if (subDiv) subDiv.style.display = 'block';
+  }
+};
 
 window.saveNewTransaction = function() {
   const dataVal = document.getElementById('new-tx-data').value;
@@ -5569,11 +5581,17 @@ window.saveNewTransaction = function() {
   if (isNaN(valor) || valor === 0) { alert('Informe um valor válido!'); return; }
 
   const tipo = document.getElementById('new-tx-tipo').value;
-  valor = tipo === 'despesa' ? -Math.abs(valor) : Math.abs(valor);
+  if (tipo === 'despesa') valor = -Math.abs(valor);
+  else if (tipo === 'receita') valor = Math.abs(valor);
 
   const conta    = document.getElementById('new-tx-conta').value;
-  const cat      = document.getElementById('new-tx-categoria').value;
-  const sub      = document.getElementById('new-tx-subcategoria').value;
+  let cat      = document.getElementById('new-tx-categoria').value;
+  let sub      = document.getElementById('new-tx-subcategoria').value;
+  
+  if (tipo === 'ajuste') {
+    cat = 'Saldo Inicial';
+    sub = '';
+  }
   const obs      = document.getElementById('new-tx-obs').value;
 
   if (!conta) { alert('Selecione uma conta!'); return; }

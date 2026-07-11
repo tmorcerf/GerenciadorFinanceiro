@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.957 - 10/07/2026, 21:59:33</span>
+        <span style="font-size: 0.75rem;">v 0.9.958 - 10/07/2026, 22:07:34</span>
       </div>
     </div>
   </aside>
@@ -962,6 +962,7 @@
           <select id="new-tx-tipo" class="modern-input" style="width:100%;" onchange="window._updateNewTxValorSign()">
             <option value="despesa">💸 Despesa</option>
             <option value="receita">💰 Receita</option>
+            <option value="ajuste">⚖️ Saldo Inicial</option>
           </select>
         </div>
       </div>
@@ -976,13 +977,13 @@
           <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Valor (R$) *</label>
           <input type="text" id="new-tx-valor" class="modern-input" placeholder="0,00" style="width:100%; text-align:right;">
         </div>
-        <div>
+        <div id="new-tx-cat-container">
           <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Categoria *</label>
           <select id="new-tx-categoria" class="modern-input" style="width:100%;" onchange="window._updateNewTxSubcats()"></select>
         </div>
       </div>
 
-      <div style="margin-bottom:12px;">
+      <div id="new-tx-sub-container" style="margin-bottom:12px;">
         <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Subcategoria</label>
         <select id="new-tx-subcategoria" class="modern-input" style="width:100%;"><option value="">-- Nenhuma --</option></select>
       </div>
