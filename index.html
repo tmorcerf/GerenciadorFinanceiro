@@ -150,7 +150,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.975 - 11/07/2026, 08:57:52</span>
+        <span style="font-size: 0.75rem;">v 0.9.976 - 11/07/2026, 09:09:59</span>
       </div>
     </div>
   </aside>
@@ -287,6 +287,11 @@
           <select id="transactions-account-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
             <option value="all">Todas as Contas</option>
             <!-- Preenchido via JS -->
+          </select>
+          <!-- Tipo de Data -->
+          <select id="transactions-date-type-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer; margin-right:5px;">
+            <option value="vencimento">Por Vencimento</option>
+            <option value="data">Por Data da Compra</option>
           </select>
           <!-- Período -->
           <select id="transactions-period-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">

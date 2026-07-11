@@ -76,6 +76,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
     let currentPage = 1;
     let txAccountFilter = 'all';
     let txCategoryFilter = 'all';
+let txDateTypeFilter = 'vencimento';
     let txPeriodFilter = 'current';
     let txCustomStart = '';
     let txCustomEnd = '';
@@ -1749,6 +1750,14 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
       }
 
+      const dateTypeSelect = document.getElementById('transactions-date-type-filter');
+      if (dateTypeSelect) {
+        dateTypeSelect.addEventListener('change', (e) => {
+          txDateTypeFilter = e.target.value;
+          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
+        });
+      }
+
       const perFilterSelect = document.getElementById('transactions-period-filter');
       const customDatesDiv = document.getElementById('transactions-custom-dates');
       const customStartInp = document.getElementById('transactions-date-start');
@@ -2481,6 +2490,10 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         if (perFilterSelect) {
           perFilterSelect.value = txPeriodFilter;
         }
+        const dateTypeSelect = document.getElementById('transactions-date-type-filter');
+        if (dateTypeSelect) {
+          dateTypeSelect.value = txDateTypeFilter;
+        }
       }
 
       // 2. Filter by Account
@@ -2520,7 +2533,8 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
       let filtered = baseTxs.filter(l => {
         if (txPeriodFilter !== 'all') {
-          const parts = (l.vencimento || l.data || '').split('/');
+          const targetDateStr = (txDateTypeFilter === 'data') ? (l.data || l.vencimento) : (l.vencimento || l.data);
+          const parts = (targetDateStr || '').split('/');
           if (parts.length !== 3) return false;
           const yyyy_mm = `${parts[2]}-${parts[1]}`;
           if (txPeriodFilter === 'current' && yyyy_mm !== currMonthStr) return false;
@@ -2528,13 +2542,13 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
           if (txPeriodFilter === '3months' && yyyy_mm !== currMonthStr && yyyy_mm !== prevMonthStr && yyyy_mm !== prev2MonthStr) return false;
           if (txPeriodFilter === '6months') {
              // simplified logic for 6 months
-             const d = parseDateString(l.vencimento || l.data);
+             const d = parseDateString(targetDateStr);
              const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
              if (d < sixMonthsAgo) return false;
           }
           if (txPeriodFilter === 'year' && parts[2] !== currYearStr) return false;
           if (txPeriodFilter === 'custom') {
-             const d = parseDateString(l.vencimento || l.data);
+             const d = parseDateString(targetDateStr);
              const sD = txCustomStart ? new Date(txCustomStart + "T00:00:00") : new Date(0);
              const eD = txCustomEnd ? new Date(txCustomEnd + "T23:59:59") : new Date("2100-01-01");
              if (d < sD || d > eD) return false;
