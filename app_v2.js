@@ -1753,14 +1753,14 @@ let txDateTypeFilter = 'vencimento';
       const dateTypeSelect = document.getElementById('transactions-date-type-filter');
       if (dateTypeSelect) {
         dateTypeSelect.addEventListener('change', (e) => {
-          const isData = e.target.type === 'checkbox' ? e.target.checked : (e.target.value === 'data');
-          txDateTypeFilter = isData ? 'data' : 'vencimento';
+          const isVencimento = e.target.type === 'checkbox' ? e.target.checked : (e.target.value === 'vencimento');
+          txDateTypeFilter = isVencimento ? 'vencimento' : 'data';
           
           if(e.target.type === 'checkbox') {
              const lblV = document.getElementById('label-vencimento');
              const lblD = document.getElementById('label-data');
-             if(lblV) lblV.className = isData ? 'tx-switch-label' : 'tx-switch-label active-vencimento';
-             if(lblD) lblD.className = isData ? 'tx-switch-label active-data' : 'tx-switch-label';
+             if(lblV) lblV.className = isVencimento ? 'tx-switch-label active-vencimento' : 'tx-switch-label';
+             if(lblD) lblD.className = isVencimento ? 'tx-switch-label' : 'tx-switch-label active-data';
           }
           if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
         });
