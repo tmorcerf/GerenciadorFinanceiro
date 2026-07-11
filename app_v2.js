@@ -5561,12 +5561,21 @@ window._updateNewTxValorSign = function() {
   const tipo = document.getElementById('new-tx-tipo').value;
   const catDiv = document.getElementById('new-tx-cat-container');
   const subDiv = document.getElementById('new-tx-sub-container');
+  const dataInput = document.getElementById('new-tx-data');
   if (tipo === 'ajuste') {
     if (catDiv) catDiv.style.display = 'none';
     if (subDiv) subDiv.style.display = 'none';
+    if (dataInput) dataInput.value = '1990-01-01';
   } else {
     if (catDiv) catDiv.style.display = 'block';
     if (subDiv) subDiv.style.display = 'block';
+    if (dataInput && dataInput.value === '1990-01-01') {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const d = String(today.getDate()).padStart(2, '0');
+      dataInput.value = y + '-' + m + '-' + d;
+    }
   }
 };
 
@@ -5574,7 +5583,7 @@ window.saveNewTransaction = function() {
   const dataVal = document.getElementById('new-tx-data').value;
   if (!dataVal) { alert('Informe a data!'); return; }
   const parts = dataVal.split('-');
-  const dataStr = parts[2] + '/' + parts[1] + '/' + parts[0];
+  let dataStr = parts[2] + '/' + parts[1] + '/' + parts[0];
 
   const rawVal = document.getElementById('new-tx-valor').value.replace('.', '').replace(',', '.');
   let valor = parseFloat(rawVal);
@@ -5591,6 +5600,7 @@ window.saveNewTransaction = function() {
   if (tipo === 'ajuste') {
     cat = 'Saldo Inicial';
     sub = '';
+    dataStr = '01/01/1990';
   }
   const obs      = document.getElementById('new-tx-obs').value;
 
