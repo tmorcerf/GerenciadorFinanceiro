@@ -5546,6 +5546,13 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     const parts = dVal.split('-');
     newDataStr = parts[2] + '/' + parts[1] + '/' + parts[0];
   }
+  
+  const vVal = document.getElementById('edit-tx-vencimento').value;
+  let newVencStr = '';
+  if(vVal) {
+    const vparts = vVal.split('-');
+    newVencStr = vparts[2] + '/' + vparts[1] + '/' + vparts[0];
+  }
 
   const rawVal = document.getElementById('edit-tx-valor').value.replace('.', '').replace(',', '.');
   let newVal = parseFloat(rawVal);
@@ -5573,6 +5580,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
     action: 'editar_lancamento',
     cod: id,
     novaData: newDataStr,
+    novoVencimento: newVencStr,
     novaConta: document.getElementById('edit-tx-conta').value,
     novoValor: newVal,
     novaCategoria: selectedCat,
