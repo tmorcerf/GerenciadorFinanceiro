@@ -5750,3 +5750,66 @@ document.addEventListener('click', e => {
   if (modal && e.target === modal) modal.classList.remove('active');
 });
 
+
+window.flipCardAndShowTransactions = function(categoria, monthKey, monthLabel) {
+    const normalizeCat = (c) => (c || '').trim().toLowerCase();
+    const normCat = normalizeCat(categoria).replace(/\s+/g, '-');
+    
+    const txs = dadosFinanceiros.lancamentos.filter(l => {
+       if (normalizeCat(l.categoria) !== normalizeCat(categoria)) return false;
+       const dStr = l.data || l.vencimento;
+       if (!dStr) return false;
+       
+       let d;
+       const parts = dStr.split('/');
+       if (parts.length === 3) {
+           d = new Date(parts[2], parts[1] - 1, parts[0]);
+       } else {
+           d = new Date(dStr);
+       }
+       if (!d || isNaN(d)) return false;
+       
+       const mKey = String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+       return mKey === monthKey;
+    });
+
+    txs.sort((a,b) => {
+        let da, db;
+        const pa = (a.data || a.vencimento).split('/');
+        if (pa.length === 3) da = new Date(pa[2], pa[1]-1, pa[0]); else da = new Date(a.data || a.vencimento);
+        
+        const pb = (b.data || b.vencimento).split('/');
+        if (pb.length === 3) db = new Date(pb[2], pb[1]-1, pb[0]); else db = new Date(b.data || b.vencimento);
+        
+        return db - da;
+    });
+
+    let html = '';
+    if (txs.length === 0) {
+       html = '<p style="color:var(--text-muted); text-align:center; font-size: 0.8rem; margin-top: 2rem;">Nenhum lançamento no período.</p>';
+    } else {
+       html = txs.map(t => {
+           return `
+           <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem;">
+               <div style="display:flex; flex-direction:column; overflow:hidden; padding-right: 8px;">
+                   <span style="color:var(--text-primary); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${t.obs || 'Sem descrição'}</span>
+                   <span style="color:var(--text-muted); font-size: 0.7rem;">${t.data} ${t.conta ? '- ' + t.conta : ''}</span>
+               </div>
+               <span style="color:${t.valor < 0 ? 'var(--color-expense)' : 'var(--color-income)'}; font-weight:600; white-space: nowrap;">${formatBRL(t.valor)}</span>
+           </div>
+           `;
+       }).join('');
+    }
+
+    const titleEl = document.getElementById(`back-month-${normCat}`);
+    const contentEl = document.getElementById(`back-content-${normCat}`);
+    
+    if (titleEl) titleEl.innerText = monthLabel;
+    if (contentEl) contentEl.innerHTML = html;
+
+    const card = document.querySelector(`.budget-card[data-budget-cat="${categoria}"]`);
+    if (card) {
+        const inner = card.querySelector('.flip-card-inner');
+        if (inner) inner.classList.add('flipped');
+    }
+};
