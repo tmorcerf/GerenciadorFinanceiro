@@ -27,25 +27,109 @@
       background: var(--bg-card);
       color: var(--text-primary);
     }
-  .flip-card-inner.flipped { transform: rotateY(180deg); }\n  </style>
+  .flip-card-inner.flipped { transform: rotateY(180deg); }
+  </style>
 </head>
 <body>
 
   <!-- Login Screen -->
-  <div id="login-screen" style="display: none; position: fixed; inset: 0; background: var(--bg-dark); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; padding: 2rem;">
-    <div style="background: var(--bg-card); padding: 3rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: center; max-width: 400px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-      <div style="width: 64px; height: 64px; margin: 0 auto 1.5rem auto; color: var(--color-accent);">
-        <svg viewBox="0 0 24 24" style="width: 100%; height: 100%; fill: var(--color-accent);">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <h1 style="font-size: 1.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Corta Gastos</h1>
-      <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">Sua plataforma inteligente de gestão financeira. Assuma o controle do seu dinheiro.</p>
+  <div id="login-screen" style="display: none; position: fixed; inset: 0; background: url('landing_bg.png') center/cover no-repeat; z-index: 9999; justify-content: center; align-items: center; overflow-y: auto;">
+    <div style="position: absolute; inset: 0; background: rgba(10, 10, 15, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"></div>
+    
+    <div class="landing-container" style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 100vh; padding: 2rem;">
       
-      <button id="btn-login-google" style="width: 100%; background: #ffffff; color: #3c4043; border: 1px solid #dadce0; padding: 0.8rem; border-radius: 8px; font-weight: 500; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: background 0.2s;">
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width: 20px; height: 20px;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.9c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.13-10.36 7.13-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
-        Entrar com Google
-      </button>
+      <!-- Cabeçalho / Logo -->
+      <div style="margin-bottom: 2.5rem; text-align: center; animation: fadeInDown 0.8s ease-out;">
+        <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem auto; background: rgba(0, 255, 170, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0, 255, 170, 0.3); box-shadow: 0 0 30px rgba(0, 255, 170, 0.2);">
+          <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: var(--color-accent);">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 style="font-size: 3.5rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem; letter-spacing: -1px; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">Corta Gastos</h1>
+        <p style="color: rgba(255,255,255,0.8); font-size: 1.15rem; max-width: 550px; margin: 0 auto; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">A sua plataforma inteligente para controle financeiro, gestão de orçamentos e visão clara do futuro.</p>
+      </div>
+
+      <!-- Área Principal Glassmorphism -->
+      <div style="background: rgba(20, 20, 25, 0.65); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; padding: 3.5rem; max-width: 900px; width: 100%; box-shadow: 0 40px 80px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 3.5rem; animation: fadeInUp 0.8s ease-out 0.2s both;">
+        
+        <!-- Features -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2.5rem;">
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
+            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(0, 255, 170, 0.1); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid rgba(0,255,170,0.2);">
+              <i class="fas fa-chart-pie"></i>
+            </div>
+            <h3 style="color: #fff; font-size: 1.15rem; font-weight: 600;">Dashboards Dinâmicos</h3>
+            <p style="color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.6;">Saiba exatamente para onde vai seu dinheiro com gráficos interativos e em tempo real.</p>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
+            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(168, 85, 247, 0.1); color: #a855f7; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid rgba(168,85,247,0.2);">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3 style="color: #fff; font-size: 1.15rem; font-weight: 600;">Sincronização em Nuvem</h3>
+            <p style="color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.6;">Acesse seus dados de qualquer dispositivo, sempre criptografados, atualizados e seguros.</p>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem;">
+            <div style="width: 60px; height: 60px; border-radius: 16px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 1px solid rgba(59,130,246,0.2);">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <h3 style="color: #fff; font-size: 1.15rem; font-weight: 600;">Metas e Orçamentos</h3>
+            <p style="color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.6;">Defina limites por categoria, acompanhe o progresso e não estoure seu orçamento mensal.</p>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 0;">
+
+        <!-- Pricing e CTA -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+          <div style="text-align: center;">
+            <span style="display: inline-block; padding: 6px 12px; background: rgba(0,255,170,0.15); color: var(--color-accent); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(0,255,170,0.3);">Assinatura Premium</span>
+            <div style="margin-top: 0.5rem; display: flex; align-items: flex-end; justify-content: center; gap: 6px;">
+              <span style="font-size: 1.5rem; color: rgba(255,255,255,0.8); font-weight: 500; margin-bottom: 8px;">R$</span>
+              <span style="font-size: 4rem; font-weight: 800; color: #fff; line-height: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.3);">4,90</span>
+              <span style="font-size: 1.1rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">/mês</span>
+            </div>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-top: 0.8rem;">Desbloqueie todo o poder da plataforma sem interrupções e anúncios.</p>
+          </div>
+
+          <style>
+            .landing-btn {
+              background: #ffffff; color: #1a1a1a; border: none; padding: 1.2rem 2.5rem; border-radius: 50px; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(255,255,255,0.2); outline: none; margin-top: 10px;
+            }
+            .landing-btn:hover {
+              transform: translateY(-3px) scale(1.02);
+              box-shadow: 0 15px 35px rgba(255,255,255,0.3);
+            }
+            .landing-btn:active {
+              transform: translateY(1px);
+              box-shadow: 0 5px 15px rgba(255,255,255,0.15);
+            }
+            @keyframes fadeInUp {
+              from { opacity: 0; transform: translateY(40px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeInDown {
+              from { opacity: 0; transform: translateY(-40px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @media (max-width: 768px) {
+              .landing-container { padding: 1rem; }
+              .landing-container h1 { font-size: 2.5rem; }
+              .landing-container > div:last-child { padding: 2rem 1.5rem; gap: 2.5rem; border-radius: 20px; }
+            }
+          </style>
+
+          <button id="btn-login-google" class="landing-btn">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width: 26px; height: 26px;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.9c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.13-10.36 7.13-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg>
+            Assinar e Entrar com Google
+          </button>
+          
+          <div style="font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 0.5rem; text-align: center; line-height: 1.5;">
+            <i class="fas fa-shield-alt" style="margin-right: 4px; color: rgba(255,255,255,0.6);"></i> Pagamento e Autenticação 100% Seguros.<br>
+            Cancele a assinatura online quando quiser.
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -150,7 +234,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.981 - 11/07/2026, 11:47:02</span>
+        <span style="font-size: 0.75rem;">v 0.9.982 - 11/07/2026, 11:49:02</span>
       </div>
     </div>
   </aside>
