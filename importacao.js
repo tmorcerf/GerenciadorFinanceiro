@@ -911,6 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...finalPasso3] : dadosSincronizacao.faltantes.filter(t => !t.ignorar);
+      transacoesFinaisFaltantes.forEach(t => t.vencimento = t.vencimento || t.data);
 
       const contaDoExtrato = dadosSincronizacao.faltantes.length > 0 ? dadosSincronizacao.faltantes[0].conta : 
                              (dadosSincronizacao.corretos.length > 0 ? dadosSincronizacao.corretos[0].extrato.conta : "");

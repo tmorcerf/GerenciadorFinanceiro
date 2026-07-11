@@ -5698,7 +5698,7 @@ window.saveNewTransaction = function() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
   btn.disabled = true;
 
-  const novoLanc = { data: dataStr, conta, valor, categoria: cat, subcategoria: sub, obs };
+  const novoLanc = { data: dataStr, conta, valor, categoria: cat, subcategoria: sub, obs, vencimento: dataStr };
 
   let savePromise;
   if (window.USE_FIREBASE) {
