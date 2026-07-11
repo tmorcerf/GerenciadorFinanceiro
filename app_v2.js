@@ -2651,6 +2651,7 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
 
         row.innerHTML = `
           <td>${l.data || '-'}</td>
+          <td>${l.vencimento || l.data || '-'}</td>
           <td>${l.conta || '-'}</td>
           <td style="color:var(--text-primary); font-size:0.88rem;">${l.categoria || 'Outros'}</td>
           <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
