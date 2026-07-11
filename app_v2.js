@@ -1786,14 +1786,15 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         });
       }
 
-      const sortBtn = document.getElementById('transactions-sort-btn');
-      if (sortBtn) {
-        sortBtn.addEventListener('click', () => {
-          txSortOrder = txSortOrder === 'desc' ? 'asc' : 'desc';
-          sortBtn.innerHTML = txSortOrder === 'desc' ? '<i class="fas fa-sort-amount-down"></i>' : '<i class="fas fa-sort-amount-up"></i>';
-          if(typeof renderTransactionsTable === 'function') renderTransactionsTable();
-        });
-      }
+      window.toggleTxSort = function(col) {
+        if (txSortCol === col) {
+          txSortOrder = txSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+          txSortCol = col;
+          txSortOrder = 'asc';
+        }
+        if (typeof renderTransactionsTable === 'function') renderTransactionsTable();
+      };
 
       // Modal Events
       if (modalCloseBtn) {
@@ -2552,10 +2553,46 @@ if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(naviga
         return true;
       });
 
-      // 6. Apply Final Sort Order (Ascending or Descending)
-      if (txSortOrder === 'desc') {
-        filtered.reverse(); // Since it was already ascending, reverse makes it descending (Newest first)
-      }
+      // 6. Apply Final Sort Order
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (txSortCol === 'data') {
+          valA = window.parseDateString(a.data)?.getTime() || 0;
+          valB = window.parseDateString(b.data)?.getTime() || 0;
+        } else if (txSortCol === 'conta') {
+          valA = (a.conta || '').toLowerCase();
+          valB = (b.conta || '').toLowerCase();
+        } else if (txSortCol === 'categoria') {
+          valA = (a.categoria || '').toLowerCase();
+          valB = (b.categoria || '').toLowerCase();
+        } else if (txSortCol === 'subcategoria') {
+          valA = (a.subcategoria || '').toLowerCase();
+          valB = (b.subcategoria || '').toLowerCase();
+        } else if (txSortCol === 'descricao') {
+          valA = (a.descricao || a.obs || '').toLowerCase();
+          valB = (b.descricao || b.obs || '').toLowerCase();
+        } else if (txSortCol === 'valor') {
+          valA = a.valor || 0;
+          valB = b.valor || 0;
+        } else {
+          valA = window.parseDateString(a.data)?.getTime() || 0;
+          valB = window.parseDateString(b.data)?.getTime() || 0;
+        }
+
+        if (valA < valB) return txSortOrder === 'asc' ? -1 : 1;
+        if (valA > valB) return txSortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+      
+      // Update header indicators
+      setTimeout(() => {
+        document.querySelectorAll('#transactions-table th[data-sort-col]').forEach(th => {
+          th.innerHTML = th.innerHTML.replace(/ ▲| ▼/g, '');
+          if (th.getAttribute('data-sort-col') === txSortCol) {
+            th.innerHTML += txSortOrder === 'asc' ? ' ▲' : ' ▼';
+          }
+        });
+      }, 50);
 
       // 7. Pagination
       const totalPages = Math.ceil(filtered.length / rowsPerPage) || 1;
