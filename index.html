@@ -234,7 +234,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.982 - 11/07/2026, 11:49:02</span>
+        <span style="font-size: 0.75rem;">v 0.9.983 - 12/07/2026, 15:38:18</span>
       </div>
     </div>
   </aside>
@@ -817,9 +817,33 @@
             </div>
             <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Compartilhe os lançamentos com seu cônjuge. Visualize seu Código de Grupo ou entre em um Grupo existente.</p>
           </div>
+          <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#f59e0b';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-ideias'); window.loadIdeias();">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+              <div style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 1rem; border-radius: 12px;">
+                <i class="fas fa-lightbulb" style="font-size: 1.5rem;"></i>
+              </div>
+              <h3 style="margin: 0; font-size: 1.2rem;">Caixinha de Ideias 💡</h3>
+            </div>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Veja todas as sugestões enviadas pelos usuários para melhorar o sistema. Leia, avalie e inspire-se!</p>
+          </div>
           
         </div>
       </div>
+
+      <!-- PANEL: CAIXINHA DE IDEIAS -->
+      <div id="panel-ideias" class="dashboard-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> Caixinha de Ideias
+          </h2>
+          <button class="btn btn-secondary" onclick="window.switchToPanel('panel-settings');"><i class="fas fa-arrow-left"></i> Voltar</button>
+        </div>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Todas as sugestões enviadas pelos usuários através do botão 💡 da plataforma. Use isso para priorizar as próximas melhorias!</p>
+        <div id="ideias-list-container">
+          <div style="text-align: center; color: var(--text-muted); padding: 3rem;"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>
+        </div>
+      </div>
+
       
       <!-- 8.5. PANEL: GROUP SETTINGS -->
       <div id="panel-group" class="dashboard-panel">

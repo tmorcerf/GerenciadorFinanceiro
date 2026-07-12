@@ -4873,6 +4873,69 @@ let txDateTypeFilter = 'vencimento';
         };
       }
     });
+
+    window.loadIdeias = async function() {
+      const container = document.getElementById('ideias-list-container');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:3rem;"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
+
+      const APPS_SCRIPT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwJThDsXgr1YkA6xf4feuv4cU8HUFGyU8qrLnqTzQdnMeNCNVK9CXK7eNL6u6vtB0kIHA/exec';
+
+      try {
+        const resp = await fetch(APPS_SCRIPT_WEBAPP_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'listar_sugestoes' })
+        });
+        const json = await resp.json();
+        const sugestoes = json.sugestoes || [];
+
+        if (sugestoes.length === 0) {
+          container.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:3rem;">
+            <i class="fas fa-inbox" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.4;"></i>
+            Nenhuma sugestão recebida ainda. Incentive os usuários a usarem a Caixinha de Ideias!
+          </div>`;
+          return;
+        }
+
+        let html = `<div style="display:flex;flex-direction:column;gap:1rem;">`;
+        sugestoes.forEach((s, idx) => {
+          let dateStr = '';
+          try {
+            const d = new Date(s.data);
+            if (!isNaN(d)) {
+              dateStr = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+            }
+          } catch(e) { dateStr = s.data; }
+
+          html += `
+          <div class="metric-card" style="display:flex;gap:1rem;align-items:flex-start;border:1px solid rgba(245,158,11,0.15);transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(245,158,11,0.4)'" onmouseout="this.style.borderColor='rgba(245,158,11,0.15)'">
+            <div style="min-width:44px;height:44px;border-radius:50%;background:rgba(245,158,11,0.15);color:#f59e0b;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;">${sugestoes.length - idx}</div>
+            <div style="flex:1;">
+              <p style="margin:0 0 6px 0;font-size:1rem;color:var(--text-primary);line-height:1.5;">${s.texto.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
+              ${dateStr ? `<span style="font-size:0.78rem;color:var(--text-muted);"><i class="fas fa-clock" style="margin-right:4px;"></i>${dateStr}</span>` : ''}
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+
+        const countBadge = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:1.5rem;">
+          <span style="background:rgba(245,158,11,0.15);color:#f59e0b;padding:6px 14px;border-radius:20px;font-weight:700;font-size:0.9rem;border:1px solid rgba(245,158,11,0.3);">
+            <i class="fas fa-lightbulb"></i> ${sugestoes.length} sugestão${sugestoes.length !== 1 ? 'ões' : ''} recebida${sugestoes.length !== 1 ? 's' : ''}
+          </span>
+        </div>`;
+
+        container.innerHTML = countBadge + html;
+      } catch(e) {
+        container.innerHTML = `<div style="text-align:center;color:var(--color-expense);padding:3rem;">
+          <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;display:block;"></i>
+          Erro ao carregar as sugestões: ${e.message}<br><br>
+          <small style="color:var(--text-muted);">Verifique se o Apps Script foi publicado com a nova action <code>listar_sugestoes</code>.</small>
+        </div>`;
+      }
+    };
+
     function renderCreditCardsDashboard() {
       const dashboardEl = document.getElementById('credit-cards-dashboard');
       if (!dashboardEl) return;
