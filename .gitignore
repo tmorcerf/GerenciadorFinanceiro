@@ -9,6 +9,12 @@
 !dados.js
 !sw.js
 !scanner.js
+!shared-file-bridge.js
+!gemini-service.js
+!cortacoins.js
+!app_v2.js
+!firebase-config.js
+!db.js
 
 # Ignore sensitive files and data
 credentials.json

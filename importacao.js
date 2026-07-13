@@ -193,20 +193,37 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-magic fa-bounce"></i> Extraindo dados (aguarde até 30s)...';
       feedbackConsole.innerHTML += "Enviando para a IA extrair transações...\n";
 
-      // Requisição para o backend (SEM contasInfo para pegar tudo do periodo)
-      const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'importar_simples_v2',
+      // Extração via Gemini (com fallback para Apps Script/Claude)
+      const _contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas)
+        ? dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate}))
+        : ((window.dadosFinanceiros && window.dadosFinanceiros.contas)
+          ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate}))
+          : []);
+
+      let json;
+      if (window.GeminiService) {
+        json = await window.GeminiService.extrairExtrato({
           fileContent: fileData.content,
           fileType: fileData.type,
           fileName: file.name,
-          contasInfo: (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate})) : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate})) : [])
-        })
-      });
+          contasInfo: _contasInfo
+        });
+      } else {
+        // Fallback: Apps Script com Claude
+        const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'importar_simples_v2',
+            fileContent: fileData.content,
+            fileType: fileData.type,
+            fileName: file.name,
+            contasInfo: _contasInfo
+          })
+        });
+        json = await _res.json();
+      }
 
-      const json = await res.json();
       if (json.status !== 'success') {
         throw new Error(json.message || "Erro desconhecido na IA.");
       }
@@ -742,17 +759,37 @@ document.addEventListener('DOMContentLoaded', () => {
            const contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaExtrato) : null;
            const isCartao = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
 
-           const resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-             method: 'POST',
-             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-             body: JSON.stringify({
-               action: 'categorizar_v2',
+           // Historico de 180 dias para contexto da IA (melhora drasticamente a precisao)
+           const _dfHist = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+           const historico180dias = (_dfHist && _dfHist.lancamentos)
+             ? _dfHist.lancamentos.filter(l => {
+                 const t = parseDataBR(l.data);
+                 return t > 0 && t > (Date.now() - 180 * 86400000);
+               }).slice(-150)
+             : [];
+
+           let resultCat;
+           if (window.GeminiService) {
+             resultCat = await window.GeminiService.categorizar({
                transacoes: dadosSincronizacao.faltantes,
                categoriasTree: categoriasTree,
-               isCartaoCredito: isCartao
-             })
-           });
-           const resultCat = await resCat.json();
+               isCartaoCredito: isCartao,
+               historico180dias: historico180dias
+             });
+           } else {
+             // Fallback: Apps Script com Claude
+             const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+               method: 'POST',
+               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+               body: JSON.stringify({
+                 action: 'categorizar_v2',
+                 transacoes: dadosSincronizacao.faltantes,
+                 categoriasTree: categoriasTree,
+                 isCartaoCredito: isCartao
+               })
+             });
+             resultCat = await _resCat.json();
+           }
            
            if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
            
@@ -790,6 +827,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
            analiseCategorizacao = resultCat.analise_ia || "Categorização concluída.";
            feedbackConsole.innerHTML += ` Concluído!\n`;
+
+           // CortaCoins: debita 3 moedas por lancamento categorizado com IA
+           if (window.CortaCoins) {
+             const _qtdCat = dadosSincronizacao.faltantes.length;
+             const _resCoin = await window.CortaCoins.debitar(_qtdCat * 3, 'Categorizacao IA: ' + _qtdCat + ' lancamentos');
+             if (_resCoin && !_resCoin.ok) {
+               feedbackConsole.innerHTML += `\n⚠️ CortaCoins: ${_resCoin.msg}`;
+             } else if (_resCoin && !_resCoin.gratuito) {
+               feedbackConsole.innerHTML += `\n🪙 -${_qtdCat * 3} moedas (categorizacao IA)`;
+             }
+           }
 
            isCategorizado = true;
            
@@ -967,6 +1015,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       if (jsonRes.status === "error") throw new Error(jsonRes.message);
+
+      // CortaCoins: credita 1 moeda por lancamento importado
+      if (window.CortaCoins && transacoesFinaisFaltantes.length > 0) {
+        const _novos = transacoesFinaisFaltantes.filter(t => !t.ignorar).length;
+        if (_novos > 0) await window.CortaCoins.creditar(_novos, 'Importacao extrato: ' + _novos + ' lancamentos');
+      }
 
       alert("Sincronização realizada com sucesso! A página será atualizada.");
       window.location.reload();
