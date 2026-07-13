@@ -1,28 +1,35 @@
-﻿// gemini-service.js v3
+// gemini-service.js v3
 // Corta Gastos - Servico Gemini
 // Substituicao do Claude por Gemini 2.5.
 // Chave API: prioridade Firestore > Remote Config > window.GEMINI_API_KEY
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH = 'gemini-3.1-pro-preview';
-  var MODEL_PRO   = 'gemini-3.1-pro-preview';
+  var MODEL_FLASH = 'gemini-3.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelFlash
+  var MODEL_PRO   = 'gemini-3.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelPro
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
 
-  // Obtem a API key em tres fontes, em ordem de prioridade
+  // Obtem a API key e modelos do Firestore AppConfig/gemini
   async function _getApiKey() {
     if (_apiKey) return _apiKey;
 
-    // 1. Firestore /AppConfig/gemini -> apiKey (mais simples e confiavel)
+    // 1. Firestore /AppConfig/gemini -> apiKey + modelFlash + modelPro
     try {
       if (window.firebaseDB) {
         var snap = await window.firebaseDB.collection('AppConfig').doc('gemini').get();
-        if (snap.exists && snap.data().apiKey && snap.data().apiKey.length > 10) {
-          _apiKey = snap.data().apiKey;
-          console.log('[GeminiService] Chave carregada do Firestore/AppConfig.');
-          return _apiKey;
+        if (snap.exists) {
+          var cfg = snap.data();
+          if (cfg.apiKey && cfg.apiKey.length > 10) {
+            _apiKey = cfg.apiKey;
+          }
+          // Permite trocar os modelos direto no Firestore sem mexer no codigo
+          if (cfg.modelFlash && cfg.modelFlash.length > 3) MODEL_FLASH = cfg.modelFlash;
+          if (cfg.modelPro   && cfg.modelPro.length   > 3) MODEL_PRO   = cfg.modelPro;
+          console.log('[GeminiService] Config: key=' + (_apiKey ? 'OK' : 'ausente') +
+                      ' | flash=' + MODEL_FLASH + ' | pro=' + MODEL_PRO);
+          if (_apiKey) return _apiKey;
         }
       }
     } catch (fsErr) {
