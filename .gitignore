@@ -15,6 +15,7 @@
 !app_v2.js
 !firebase-config.js
 !db.js
+!deploy.ps1
 
 # Ignore sensitive files and data
 credentials.json
