@@ -202,12 +202,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let json;
       if (window.GeminiService) {
-        json = await window.GeminiService.extrairExtrato({
-          fileContent: fileData.content,
-          fileType: fileData.type,
-          fileName: file.name,
-          contasInfo: _contasInfo
-        });
+        try {
+          json = await window.GeminiService.extrairExtrato({
+            fileContent: fileData.content,
+            fileType: fileData.type,
+            fileName: file.name,
+            contasInfo: _contasInfo
+          });
+        } catch (geminiErr) {
+          console.warn('[Gemini] Extração falhou, usando Apps Script como backup:', geminiErr.message);
+          feedbackConsole.innerHTML += `⚠️ Gemini indisponível, usando IA de backup...\n`;
+          const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'importar_simples_v2',
+              fileContent: fileData.content,
+              fileType: fileData.type,
+              fileName: file.name,
+              contasInfo: _contasInfo
+            })
+          });
+          json = await _res.json();
+        }
       } else {
         // Fallback: Apps Script com Claude
         const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
@@ -768,14 +785,33 @@ document.addEventListener('DOMContentLoaded', () => {
                }).slice(-150)
              : [];
 
+           // Captura o total original ANTES de projetar parcelas (para cobrar moedas correto)
+           const _qtdOriginalCateg = dadosSincronizacao.faltantes.length;
+
            let resultCat;
            if (window.GeminiService) {
-             resultCat = await window.GeminiService.categorizar({
-               transacoes: dadosSincronizacao.faltantes,
-               categoriasTree: categoriasTree,
-               isCartaoCredito: isCartao,
-               historico180dias: historico180dias
-             });
+             try {
+               resultCat = await window.GeminiService.categorizar({
+                 transacoes: dadosSincronizacao.faltantes,
+                 categoriasTree: categoriasTree,
+                 isCartaoCredito: isCartao,
+                 historico180dias: historico180dias
+               });
+             } catch (geminiCatErr) {
+               console.warn('[Gemini] Categorização falhou, usando Apps Script como backup:', geminiCatErr.message);
+               feedbackConsole.innerHTML += `⚠️ Gemini indisponível, usando IA de backup...\n`;
+               const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                 body: JSON.stringify({
+                   action: 'categorizar_v2',
+                   transacoes: dadosSincronizacao.faltantes,
+                   categoriasTree: categoriasTree,
+                   isCartaoCredito: isCartao
+                 })
+               });
+               resultCat = await _resCat.json();
+             }
            } else {
              // Fallback: Apps Script com Claude
              const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
@@ -828,14 +864,14 @@ document.addEventListener('DOMContentLoaded', () => {
            analiseCategorizacao = resultCat.analise_ia || "Categorização concluída.";
            feedbackConsole.innerHTML += ` Concluído!\n`;
 
-           // CortaCoins: debita 3 moedas por lancamento categorizado com IA
+           // CortaCoins: debita 3 moedas por lancamento original categorizado com IA
+           // Usa _qtdOriginalCateg (antes da projecao de parcelas de cartao)
            if (window.CortaCoins) {
-             const _qtdCat = dadosSincronizacao.faltantes.length;
-             const _resCoin = await window.CortaCoins.debitar(_qtdCat * 3, 'Categorizacao IA: ' + _qtdCat + ' lancamentos');
+             const _resCoin = await window.CortaCoins.debitar(_qtdOriginalCateg * 3, 'Categorizacao IA: ' + _qtdOriginalCateg + ' lancamentos');
              if (_resCoin && !_resCoin.ok) {
                feedbackConsole.innerHTML += `\n⚠️ CortaCoins: ${_resCoin.msg}`;
              } else if (_resCoin && !_resCoin.gratuito) {
-               feedbackConsole.innerHTML += `\n🪙 -${_qtdCat * 3} moedas (categorizacao IA)`;
+               feedbackConsole.innerHTML += `\n🪙 -${_qtdOriginalCateg * 3} moedas (categorizacao IA)`;
              }
            }
 
