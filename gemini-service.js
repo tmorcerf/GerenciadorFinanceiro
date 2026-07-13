@@ -5,8 +5,8 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH = 'gemini-3.1-pro';
-  var MODEL_PRO   = 'gemini-3.1-pro';
+  var MODEL_FLASH = 'gemini-3.5-flash';
+  var MODEL_PRO   = 'gemini-3.5-flash';
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
