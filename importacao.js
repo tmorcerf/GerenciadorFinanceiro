@@ -210,8 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
             contasInfo: _contasInfo
           });
         } catch (geminiErr) {
-          console.warn('[Gemini] Extração falhou, usando Apps Script como backup:', geminiErr.message);
-          feedbackConsole.innerHTML += `⚠️ Gemini indisponível, usando IA de backup...\n`;
+          console.warn('[Gemini] Extração falhou:', geminiErr.message);
+          feedbackConsole.innerHTML += `⚠️ Gemini indisponível (${geminiErr.message.substring(0,80)}), usando IA de backup...\n`;
           const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -798,8 +798,8 @@ document.addEventListener('DOMContentLoaded', () => {
                  historico180dias: historico180dias
                });
              } catch (geminiCatErr) {
-               console.warn('[Gemini] Categorização falhou, usando Apps Script como backup:', geminiCatErr.message);
-               feedbackConsole.innerHTML += `⚠️ Gemini indisponível, usando IA de backup...\n`;
+               console.warn('[Gemini] Categorização falhou:', geminiCatErr.message);
+               feedbackConsole.innerHTML += `⚠️ Gemini indisponível (${geminiCatErr.message.substring(0,80)}), usando IA de backup...\n`;
                const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
                  method: 'POST',
                  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
