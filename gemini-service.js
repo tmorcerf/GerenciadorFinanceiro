@@ -5,8 +5,8 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH = 'gemini-2.5-flash-preview-05-20'; // Extracao (rapido, barato)
-  var MODEL_PRO   = 'gemini-2.5-pro-preview-06-05';   // Categorizacao (inteligente)
+  var MODEL_FLASH = 'gemini-2.5-flash'; // Extracao (rapido, barato)
+  var MODEL_PRO   = 'gemini-2.5-pro';   // Categorizacao (inteligente)
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
