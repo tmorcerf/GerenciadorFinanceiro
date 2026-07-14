@@ -7,6 +7,7 @@ window.GeminiService = (function() {
 
   var MODEL_FLASH = 'gemini-3.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelFlash
   var MODEL_PRO   = 'gemini-3.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelPro
+  var MODEL_BKP   = '';                 // Sobrescrito pelo AppConfig/gemini.modelBkp
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
@@ -27,8 +28,9 @@ window.GeminiService = (function() {
           // Permite trocar os modelos direto no Firestore sem mexer no codigo
           if (cfg.modelFlash && cfg.modelFlash.length > 3) MODEL_FLASH = cfg.modelFlash;
           if (cfg.modelPro   && cfg.modelPro.length   > 3) MODEL_PRO   = cfg.modelPro;
+          if (cfg.modelBkp   && cfg.modelBkp.length   > 3) MODEL_BKP   = cfg.modelBkp;
           console.log('[GeminiService] Config: key=' + (_apiKey ? 'OK' : 'ausente') +
-                      ' | flash=' + MODEL_FLASH + ' | pro=' + MODEL_PRO);
+                      ' | flash=' + MODEL_FLASH + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
           if (_apiKey) return _apiKey;
         }
       }
@@ -88,6 +90,26 @@ window.GeminiService = (function() {
       var errObj = {};
       try { errObj = JSON.parse(errText); } catch(e) {}
       var errMsg = (errObj.error && errObj.error.message) ? errObj.error.message : errText.substring(0, 200);
+
+      // Tenta o modelo de backup antes de desistir
+      if (MODEL_BKP && MODEL_BKP !== model) {
+        console.warn('[GeminiService] ' + model + ' falhou (' + res.status + '), tentando backup: ' + MODEL_BKP);
+        var resBkp = await fetch(API_BASE + '/' + MODEL_BKP + ':generateContent?key=' + apiKey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (resBkp.ok) {
+          var jsonBkp = await resBkp.json();
+          var textBkp = (jsonBkp.candidates && jsonBkp.candidates[0] &&
+                         jsonBkp.candidates[0].content && jsonBkp.candidates[0].content.parts &&
+                         jsonBkp.candidates[0].content.parts[0] &&
+                         jsonBkp.candidates[0].content.parts[0].text) || '{}';
+          var cleanBkp = textBkp.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+          return JSON.parse(cleanBkp);
+        }
+      }
+
       throw new Error('Gemini API [' + res.status + ']: ' + errMsg);
     }
 
