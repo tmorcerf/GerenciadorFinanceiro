@@ -22,6 +22,7 @@
     "@capacitor/android": "^8.4.2",
     "@capacitor/cli": "^8.4.2",
     "@capacitor/core": "^8.4.2",
-    "@capgo/capacitor-inappbrowser": "^8.10.7"
+    "@capgo/capacitor-inappbrowser": "^8.10.7",
+    "cordova-plugin-inappbrowser": "^7.0.0"
   }
 }

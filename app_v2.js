@@ -1535,7 +1535,7 @@ let txDateTypeFilter = 'vencimento';
       if (btnLoginGoogle) {
         btnLoginGoogle.addEventListener('click', () => {
           const provider = new firebase.auth.GoogleAuthProvider();
-          window.firebaseAuth.signInWithRedirect(provider).catch(err => {
+          window.firebaseAuth.signInWithPopup(provider).catch(err => {
             console.error("Erro no login:", err);
             alert("Erro ao fazer login: " + err.message);
           });
