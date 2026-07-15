@@ -2000,6 +2000,19 @@ let txDateTypeFilter = 'vencimento';
           
           sidebarLinks.forEach(l => l.classList.remove('active'));
           link.classList.add('active');
+          
+          // Hooks para carregar dados sob demanda
+          if (targetPanel === 'panel-scanner') {
+              if (window.Scanner && window.Scanner.carregarHistoricoNotas) {
+                  window.Scanner.carregarHistoricoNotas();
+              }
+          }
+          if (targetPanel === 'panel-ofertas') {
+              if (window.DashboardOfertas && window.DashboardOfertas.init) {
+                  window.DashboardOfertas.init();
+              }
+          }
+          
           window.switchToPanel(targetPanel);
         });
       });
@@ -6039,34 +6052,47 @@ window.processarLeituraScanner = async function(textoLido) {
     const statusEl = document.getElementById('scanner-status');
     if (statusEl) {
         statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando leitura...';
-        statusEl.style.color = '#f59e0b'; // Amarelo
+        statusEl.style.color = '#f59e0b';
     }
 
     try {
-        // 1. Extrair a Chave/URL usando a regex original
         const { chave, urlConsulta, isUrl, uf } = ChaveParser.processar(textoLido);
         console.log("Scanner extraiu:", {chave, urlConsulta, uf});
 
         if (statusEl) {
             statusEl.innerHTML = '<i class="fas fa-robot fa-spin"></i> Acessando SEFAZ para baixar produtos...';
-            statusEl.style.color = '#3b82f6'; // Azul
+            statusEl.style.color = '#3b82f6';
         }
 
-        // 2. Extrair dados da nota pela SEFAZ
-        const nfeData = await SefazExtractor.extrair(urlConsulta || textoLido, uf);
-        
-        if (!nfeData || !nfeData.itens || nfeData.itens.length === 0) {
-            throw new Error("Não foi possível ler os itens da nota.");
+        let nfeData;
+        try {
+            nfeData = await SefazExtractor.extrair(urlConsulta || textoLido, uf);
+            if (!nfeData || !nfeData.itens || nfeData.itens.length === 0) {
+                throw new Error("Não foi possível ler os itens da nota.");
+            }
+        } catch (extError) {
+            console.error("Extração SEFAZ falhou", extError);
+            if (chave || urlConsulta) {
+                const userId = firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'anon';
+                await window.db.collection('nfe_notas').doc(chave || Date.now().toString()).set({
+                    chave: chave || '',
+                    urlOriginal: urlConsulta || textoLido,
+                    status: 'pendente',
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    uid: userId
+                });
+                alert("A SEFAZ demorou ou retornou erro. A nota foi salva como PENDENTE. Tente consultar novamente pelo Histórico mais tarde.");
+            }
+            throw extError;
         }
 
-        // 3. Categorizar os produtos com Gemini e CatalogService
         if (statusEl) {
             statusEl.innerHTML = '<i class="fas fa-brain fa-spin"></i> Categorizando os produtos com IA...';
-            statusEl.style.color = '#8b5cf6'; // Roxo
+            statusEl.style.color = '#8b5cf6';
         }
         
-        // Pega o CNPJ do emitente ou usa '00000000000000' como fallback
         const cnpjEmitente = (nfeData.emitente && nfeData.emitente.cnpj) ? nfeData.emitente.cnpj.replace(/\D/g, '') : '00000000000000';
+        const nomeEmitente = nfeData.emitente ? nfeData.emitente.nome : 'NF-e Scanner';
 
         const itensCategorizados = [];
         for (const item of nfeData.itens) {
@@ -6074,60 +6100,100 @@ window.processarLeituraScanner = async function(textoLido) {
             itensCategorizados.push(result);
         }
 
-        // 4. Salvar os itens no banco de dados como lançamentos
+        const userId = firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'anon';
+        const docNotaId = chave || Date.now().toString();
+        const dataNfeStr = nfeData.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/');
+        
+        let totalValor = 0;
+        itensCategorizados.forEach(i => { totalValor += (i.valorCalculado || (i.quantidade * i.valorUnitario)); });
+        
+        await window.db.collection('nfe_notas').doc(docNotaId).set({
+            chave: chave,
+            urlOriginal: urlConsulta || textoLido,
+            uf: uf,
+            emitente: nfeData.emitente || {},
+            dataEmissao: dataNfeStr,
+            valorTotal: totalValor,
+            status: 'concluida',
+            criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+            uid: userId
+        });
+
         if (statusEl) {
             statusEl.innerHTML = '<i class="fas fa-cloud-upload-alt fa-spin"></i> Salvando lançamentos no banco de dados...';
         }
 
-        let totalSincronizado = 0;
-        let totalValor = 0;
-
+        const categoriasAgrupadas = {};
         for (const item of itensCategorizados) {
             const valorFinal = item.valorCalculado || (item.quantidade * item.valorUnitario);
-            const l = {
-                data: nfeData.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/'),
-                vencimento: nfeData.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/'),
-                conta: 'Cofre/Carteira', // Padrão
-                obs: `${item.nomeProduto} - ${nfeData.emitente ? nfeData.emitente.nome : 'NF-e Scanner'}`,
-                valor: -Math.abs(valorFinal), // Despesa
-                categoria: item.categoria || 'Outros',
+            const cat = item.categoria || 'Outros';
+            
+            await window.db.collection('nfe_itens').add({
+                notaId: docNotaId,
+                chave: chave,
+                nomeProduto: item.nomeProduto,
+                ean: item.ean || '',
+                ncm: item.ncm || '',
+                quantidade: item.quantidade,
+                valorUnitario: item.valorUnitario,
+                valorTotal: valorFinal,
+                categoria: cat,
                 subcategoria: item.subcategoria || '',
+                cnpjEmitente: cnpjEmitente,
+                uf: uf,
                 criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-                origem: 'scanner_nfe',
-                chave_nfe: chave
-            };
+                uid: userId
+            });
 
-            await window.db.collection('lancamentos').add(l);
-            totalSincronizado++;
-            totalValor += valorFinal;
+            if (!categoriasAgrupadas[cat]) {
+                categoriasAgrupadas[cat] = 0;
+            }
+            categoriasAgrupadas[cat] += valorFinal;
         }
 
-        // 5. Recompensar o usuário
+        let lancamentosGerados = 0;
+        for (const [cat, somaValor] of Object.entries(categoriasAgrupadas)) {
+            if (somaValor > 0) {
+                const l = {
+                    data: dataNfeStr,
+                    vencimento: dataNfeStr,
+                    conta: 'Cofre/Carteira',
+                    obs: `${nomeEmitente} (Agrupado: ${cat})`,
+                    valor: -Math.abs(somaValor),
+                    categoria: cat,
+                    subcategoria: 'Scanner',
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    origem: 'scanner_nfe',
+                    chave_nfe: chave
+                };
+                await window.db.collection('lancamentos').add(l);
+                lancamentosGerados++;
+            }
+        }
+
         if (window.CortaCoins) {
-            const xpGanho = Math.floor(totalValor);
+            const xpGanho = Math.max(1, Math.floor(totalValor / 10));
             await window.CortaCoins.creditar(xpGanho, `Leitura NF-e ${chave.substring(0,6)}...`);
             
             if (statusEl) {
                 statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Ganhou ${xpGanho} XP.`;
-                statusEl.style.color = '#10b981'; // Verde
+                statusEl.style.color = '#10b981';
             }
-            
-            alert(`✅ Nota importada com sucesso!\n\n${totalSincronizado} produtos salvos.\nVocê ganhou ${xpGanho} CortaCoins! 🎉`);
+            alert(`✅ Nota importada com sucesso!\n\n${lancamentosGerados} despesas agrupadas geradas.\nVocê ganhou ${xpGanho} CortaCoins! 🪙`);
         } else {
             if (statusEl) {
-                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! ${totalSincronizado} itens salvos.`;
-                statusEl.style.color = '#10b981'; // Verde
+                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! ${lancamentosGerados} lançamentos agrupados criados.`;
+                statusEl.style.color = '#10b981';
             }
-            alert(`✅ Nota importada com sucesso! ${totalSincronizado} produtos salvos.`);
+            alert(`✅ Nota importada com sucesso! ${lancamentosGerados} despesas agrupadas criadas.`);
         }
         
     } catch (err) {
         console.error("Erro no scanner:", err);
         if (statusEl) {
             statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro: ${err.message}`;
-            statusEl.style.color = '#ef4444'; // Vermelho
+            statusEl.style.color = '#ef4444';
         }
-        alert("Erro ao processar a nota: " + err.message);
     }
 };
 

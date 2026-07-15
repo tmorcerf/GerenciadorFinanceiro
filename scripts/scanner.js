@@ -170,11 +170,63 @@ window.Scanner = (() => {
         }
     }
 
+    // --- Histórico de Notas ---
+    async function carregarHistoricoNotas() {
+        const historyContainer = document.getElementById('scanner-history-list');
+        if (!historyContainer) return;
+        
+        try {
+            const userId = firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'anon';
+            const snapshot = await window.db.collection('nfe_notas')
+                .where('uid', '==', userId)
+                .orderBy('criadoEm', 'desc')
+                .limit(10)
+                .get();
+
+            if (snapshot.empty) {
+                historyContainer.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center;">Nenhuma nota encontrada.</p>';
+                return;
+            }
+
+            let html = '';
+            snapshot.forEach(doc => {
+                const nota = doc.data();
+                const d = nota.dataEmissao || (nota.criadoEm ? new Date(nota.criadoEm.seconds * 1000).toLocaleDateString('pt-BR') : '');
+                const emitente = nota.emitente?.nome || 'Estabelecimento';
+                const total = nota.valorTotal ? `R$ ${nota.valorTotal.toFixed(2).replace('.',',')}` : '';
+                
+                let statusBadge = '';
+                if (nota.status === 'pendente') {
+                    statusBadge = '<span style="background: #f59e0b; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">Pendente</span>';
+                }
+
+                html += `
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; font-size: 0.95rem;">${emitente} ${statusBadge}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${d} | ${total}</div>
+                        </div>
+                        ${nota.urlOriginal ? `
+                            <button onclick="window.open('${nota.urlOriginal}', '_blank', 'location=yes')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;">
+                                <i class="fas fa-external-link-alt"></i> SEFAZ
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            historyContainer.innerHTML = html;
+        } catch (e) {
+            console.error('Erro ao carregar historico:', e);
+            historyContainer.innerHTML = '<p style="color: #ef4444; font-size: 0.9rem; text-align: center;">Erro ao carregar notas.</p>';
+        }
+    }
+
     // ── API Pública ────────────────────────────────────────────────
     return {
         iniciar,
         parar,
         alternarCamera,
-        estaEscaneando
+        estaEscaneando,
+        carregarHistoricoNotas
     };
 })();
