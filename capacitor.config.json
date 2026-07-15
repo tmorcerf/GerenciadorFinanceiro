@@ -1,5 +1,12 @@
 {
   "appId": "com.tmorcerf.cortagastos",
   "appName": " Corta Gastos",
-  "webDir": "www"
+  "webDir": "www",
+  "server": {
+    "allowNavigation": [
+      "organizaze.firebaseapp.com",
+      "*.firebaseapp.com",
+      "accounts.google.com"
+    ]
+  }
 }
