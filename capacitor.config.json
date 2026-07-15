@@ -1,5 +1,12 @@
 {
   "appId": "com.tmorcerf.cortagastos",
   "appName": " Corta Gastos",
-  "webDir": "www"
+  "webDir": "www",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "655748179229-bptokk67392pp6ualac8g4gfo7qh49fp.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }

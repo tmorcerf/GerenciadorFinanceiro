@@ -1533,12 +1533,23 @@ let txDateTypeFilter = 'vencimento';
 
       // Login Handle
       if (btnLoginGoogle) {
-        btnLoginGoogle.addEventListener('click', () => {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          window.firebaseAuth.signInWithPopup(provider).catch(err => {
-            console.error("Erro no login:", err);
-            alert("Erro ao fazer login: " + err.message);
-          });
+        btnLoginGoogle.addEventListener('click', async () => {
+          if (window.Capacitor && Capacitor.isNativePlatform()) {
+             try {
+               const googleUser = await Capacitor.Plugins.GoogleAuth.signIn();
+               const credential = firebase.auth.GoogleAuthProvider.credential(googleUser.authentication.idToken);
+               await window.firebaseAuth.signInWithCredential(credential);
+             } catch(err) {
+               console.error("Erro no login nativo:", err);
+               alert("Erro ao fazer login (Nativo): " + err.message);
+             }
+          } else {
+             const provider = new firebase.auth.GoogleAuthProvider();
+             window.firebaseAuth.signInWithPopup(provider).catch(err => {
+               console.error("Erro no login web:", err);
+               alert("Erro ao fazer login: " + err.message);
+             });
+          }
         });
       }
 
