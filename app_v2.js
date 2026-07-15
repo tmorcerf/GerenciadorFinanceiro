@@ -1039,24 +1039,25 @@ let txDateTypeFilter = 'vencimento';
           if (transacoesTransferencias.length > 0) {
             transacoesTransferencias.forEach(t => {
                 // Perna 1: Original
+                let contraValor = Number(t.valor) * -1;
+                let contraConta = guessContraPartidaConta(t.conta);
+
                 window.transacoesProcessadasStep4.push({
                    data: t.data || t.vencimento,
                    conta: t.conta,
                    descricao: t.descricao,
                    categoria: t.categoria,
-                   subcategoria: t.subcategoria || '',
+                   subcategoria: contraConta || '',
                    valor: t.valor
                 });
                 
                 // Perna 2: Contra-partida com pre-selecao inteligente
-                let contraValor = Number(t.valor) * -1;
-                let contraConta = guessContraPartidaConta(t.conta);
                 window.transacoesProcessadasStep4.push({
                    data: t.data || t.vencimento,
                    conta: contraConta,
                    descricao: "Contra-partida: " + t.descricao,
                    categoria: t.categoria,
-                   subcategoria: t.subcategoria || '',
+                   subcategoria: t.conta || '',
                    valor: contraValor
                 });
             });
@@ -1268,7 +1269,23 @@ let txDateTypeFilter = 'vencimento';
                  finalTransacoes.push(...window.expandedParcelas);
                }
                if (window.transacoesProcessadasStep4 && window.transacoesProcessadasStep4.length > 0) {
-                 finalTransacoes.push(...window.transacoesProcessadasStep4);
+                 for (let i = 0; i < window.transacoesProcessadasStep4.length; i++) {
+                   let tx = window.transacoesProcessadasStep4[i];
+                   if (i + 1 < window.transacoesProcessadasStep4.length) {
+                     let nextTx = window.transacoesProcessadasStep4[i+1];
+                     if (nextTx.descricao && nextTx.descricao.startsWith("Contra-partida")) {
+                       tx.subcategoria = nextTx.conta || '';
+                       nextTx.subcategoria = tx.conta || '';
+                       finalTransacoes.push(tx);
+                       finalTransacoes.push(nextTx);
+                       i++; 
+                       continue;
+                     }
+                   }
+                   // Zera a subcategoria caso tenha ficado solitária
+                   tx.subcategoria = '';
+                   finalTransacoes.push(tx);
+                 }
                }
                
                const success = await saveTransactions(finalTransacoes, []);
@@ -1537,6 +1554,22 @@ let txDateTypeFilter = 'vencimento';
       // Listener Global de Autenticação
       window.firebaseAuth.onAuthStateChanged(async (user) => {
         if (user) {
+          // ====== ONBOARDING BETA TESTERS ======
+          const BETA_EMAILS = [
+            // Adicione os e-mails dos seus amigos aqui
+            "tmoralescosta@gmail.com", // O dono deve sempre ter acesso
+            "seu.amigo1@gmail.com",
+            "seu.amigo2@gmail.com"
+          ];
+          
+          // Se quiser liberar geral, basta comentar o if abaixo
+          if (!BETA_EMAILS.includes(user.email)) {
+             window.firebaseAuth.signOut();
+             alert(`Acesso Negado!\n\nO Corta Gastos está em fase Beta Fechado.\nO e-mail ${user.email} não tem permissão de acesso no momento.`);
+             return;
+          }
+          // =====================================
+
           // Logado
           loginScreen.style.display = 'none';
           
@@ -1984,9 +2017,14 @@ let txDateTypeFilter = 'vencimento';
             setTimeout(() => { if (typeof renderFamilyMembers === 'function') renderFamilyMembers(); }, 10);
           } else if (targetPanelId === 'panel-credit-cards') {
             setTimeout(() => { if (typeof renderCreditCardsDashboard === 'function') renderCreditCardsDashboard(); }, 10);
+          } else if (targetPanelId === 'panel-scanner') {
+            setTimeout(() => { if (window.Scanner && !window.Scanner.iniciado) window.Scanner.iniciar('scanner-viewfinder'); }, 10);
           }
         } else {
           panel.classList.remove('active');
+          if (panel.id === 'panel-scanner') {
+            if (window.Scanner && window.Scanner.iniciado) window.Scanner.parar();
+          }
         }
       });
     };
@@ -4768,9 +4806,29 @@ let txDateTypeFilter = 'vencimento';
     };
 
     window.showAuditoriaModal = function() {
-      const itemes = dadosFinanceiros.auditoria || [];
+      const itemes = dadosFinanceiros.auditoria ? [...dadosFinanceiros.auditoria] : [];
+
+      // Regra Dinâmica: Soma de Transferências
+      if (dadosFinanceiros.lancamentos) {
+         let somaTransferencias = 0;
+         dadosFinanceiros.lancamentos.forEach(l => {
+            if (l.categoria && l.categoria.toLowerCase().includes('transfer')) {
+               somaTransferencias += (Number(l.valor) || 0);
+            }
+         });
+         // Tolera até 5 centavos por questões de precisão de JavaScript float
+         if (Math.abs(somaTransferencias) > 0.05) {
+             itemes.push({
+                 item: "Diferença nas Transferências",
+                 descricao: `A soma de todas as transferências não está zerando! Saldo residual: <b>${formatBRL(somaTransferencias)}</b>. Existem pernas de transferência sem contra-partida exata (ou valores desiguais).`,
+                 responsavel: "Sistema",
+                 status: "Inconsistente"
+             });
+         }
+      }
+
       if (itemes.length === 0) {
-        showGlassModal('Auditoria', '<p style="color:var(--text-muted); text-align:center;">Tudo certo! Nenhuma pendncia encontrada. ?</p>');
+        showGlassModal('Auditoria', '<p style="color:var(--text-muted); text-align:center;">Tudo certo! Nenhuma pendência encontrada. ✅</p>');
         return;
       }
       let html = `<p style="margin-bottom:1rem; color:var(--text-muted);">Os seguintes itens precisam da sua ateno:</p>`;
@@ -5953,3 +6011,118 @@ window.flipCardAndShowTransactions = function(categoria, monthKey, monthLabel) {
         if (inner) inner.classList.add('flipped');
     }
 };
+
+// ==========================================
+// LÓGICA DO SCANNER NF-E
+// ==========================================
+
+window.mostrarInputManualScanner = function() {
+    const chave = prompt("Cole a chave de acesso da nota (44 números) ou URL do QR Code:");
+    if (!chave) return;
+    window.processarLeituraScanner(chave);
+};
+
+window.processarLeituraScanner = async function(textoLido) {
+    if (window.Scanner) window.Scanner.parar();
+    const statusEl = document.getElementById('scanner-status');
+    if (statusEl) {
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando leitura...';
+        statusEl.style.color = '#f59e0b'; // Amarelo
+    }
+
+    try {
+        // 1. Extrair a Chave/URL usando a regex original
+        const { chave, urlConsulta, isUrl, uf } = ChaveParser.processar(textoLido);
+        console.log("Scanner extraiu:", {chave, urlConsulta, uf});
+
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fas fa-robot fa-spin"></i> Acessando SEFAZ para baixar produtos...';
+            statusEl.style.color = '#3b82f6'; // Azul
+        }
+
+        // 2. Extrair dados da nota pela SEFAZ
+        const nfeData = await SefazExtractor.extrair(urlConsulta || textoLido, uf);
+        
+        if (!nfeData || !nfeData.itens || nfeData.itens.length === 0) {
+            throw new Error("Não foi possível ler os itens da nota.");
+        }
+
+        // 3. Categorizar os produtos com Gemini e CatalogService
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fas fa-brain fa-spin"></i> Categorizando os produtos com IA...';
+            statusEl.style.color = '#8b5cf6'; // Roxo
+        }
+        
+        // Pega o CNPJ do emitente ou usa '00000000000000' como fallback
+        const cnpjEmitente = (nfeData.emitente && nfeData.emitente.cnpj) ? nfeData.emitente.cnpj.replace(/\D/g, '') : '00000000000000';
+
+        const itensCategorizados = [];
+        for (const item of nfeData.itens) {
+            const result = await geminiService.categorizarProduto(item, cnpjEmitente);
+            itensCategorizados.push(result);
+        }
+
+        // 4. Salvar os itens no banco de dados como lançamentos
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="fas fa-cloud-upload-alt fa-spin"></i> Salvando lançamentos no banco de dados...';
+        }
+
+        let totalSincronizado = 0;
+        let totalValor = 0;
+
+        for (const item of itensCategorizados) {
+            const valorFinal = item.valorCalculado || (item.quantidade * item.valorUnitario);
+            const l = {
+                data: nfeData.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/'),
+                vencimento: nfeData.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/'),
+                conta: 'Cofre/Carteira', // Padrão
+                obs: `${item.nomeProduto} - ${nfeData.emitente ? nfeData.emitente.nome : 'NF-e Scanner'}`,
+                valor: -Math.abs(valorFinal), // Despesa
+                categoria: item.categoria || 'Outros',
+                subcategoria: item.subcategoria || '',
+                criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                origem: 'scanner_nfe',
+                chave_nfe: chave
+            };
+
+            await window.db.collection('lancamentos').add(l);
+            totalSincronizado++;
+            totalValor += valorFinal;
+        }
+
+        // 5. Recompensar o usuário
+        if (window.CortaCoins) {
+            const xpGanho = Math.floor(totalValor);
+            await window.CortaCoins.creditar(xpGanho, `Leitura NF-e ${chave.substring(0,6)}...`);
+            
+            if (statusEl) {
+                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Ganhou ${xpGanho} XP.`;
+                statusEl.style.color = '#10b981'; // Verde
+            }
+            
+            alert(`✅ Nota importada com sucesso!\n\n${totalSincronizado} produtos salvos.\nVocê ganhou ${xpGanho} CortaCoins! 🎉`);
+        } else {
+            if (statusEl) {
+                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! ${totalSincronizado} itens salvos.`;
+                statusEl.style.color = '#10b981'; // Verde
+            }
+            alert(`✅ Nota importada com sucesso! ${totalSincronizado} produtos salvos.`);
+        }
+        
+    } catch (err) {
+        console.error("Erro no scanner:", err);
+        if (statusEl) {
+            statusEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro: ${err.message}`;
+            statusEl.style.color = '#ef4444'; // Vermelho
+        }
+        alert("Erro ao processar a nota: " + err.message);
+    }
+};
+
+// Quando o Scanner tiver um resultado, redireciona para a nossa função
+window.addEventListener('scanner_result', function(e) {
+    if (e.detail && e.detail.texto) {
+        window.processarLeituraScanner(e.detail.texto);
+    }
+});
+

@@ -57,6 +57,10 @@ class Database {
          }
       });
 
+      const nomesContas = contas.map(c => c.nome);
+      categoriasDict["Transferência"] = nomesContas;
+      categoriasDict["Transferencias"] = nomesContas;
+
       return {
         lancamentos,
         contas,

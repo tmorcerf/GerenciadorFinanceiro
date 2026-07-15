@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -208,6 +208,12 @@
         <a class="nav-item" data-target="panel-import">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           Importar Extratos
+        </a>
+      </li>
+      <li>
+        <a class="nav-item" href="scanner/index.html">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h5v2H5v3H3V3zm0 13h2v3h3v2H3v-5zm13 5h3v-3h2v5h-5v-2zM18 5V3h5v5h-2V5h-3zM7 7h10v10H7V7z"/></svg>
+          Scanner NF-e
         </a>
       </li>
       <li style="margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);">
@@ -601,6 +607,31 @@
       <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de Consistência</h2>
       <div id="audit-container" class="audit-container">
         <!-- Content loaded via JavaScript -->
+      </div>
+    </div>
+    
+    <!-- PANEL: SCANNER NF-E -->
+    <div id="panel-scanner" class="dashboard-panel">
+      <div style="margin-bottom: 2rem;">
+        <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">Scanner NF-e / NFC-e</h2>
+        <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Escaneie o QR Code das suas notas e ganhe CortaCoins.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: 0 auto; gap: 1.5rem;">
+        <div id="scanner-viewfinder" style="width: 100%; height: 350px; background: #000; border-radius: 12px; overflow: hidden; position: relative;"></div>
+        
+        <div style="display: flex; gap: 1rem; width: 100%;">
+          <button id="btn-flip-camera" class="btn btn-secondary" style="flex: 1;" onclick="if(window.Scanner) Scanner.alternarCamera()">
+            <i class="fas fa-camera-rotate"></i> Trocar Câmera
+          </button>
+          <button id="btn-paste-key" class="btn btn-primary" style="flex: 1;" onclick="window.mostrarInputManualScanner()">
+            <i class="fas fa-keyboard"></i> Colar Chave
+          </button>
+        </div>
+
+        <div id="scanner-status" style="width: 100%; text-align: center; color: var(--text-secondary); font-size: 0.95rem; min-height: 24px;">
+          <!-- Mensagens de status -->
+        </div>
       </div>
     </div>
     
@@ -1104,6 +1135,14 @@
   <script src="shared-file-bridge.js?v=2"></script>
   <script src="gemini-service.js?v=12"></script>
   <script src="cortacoins.js?v=1"></script>
+
+  <!-- Scanner NF-e Modules -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="scripts/chave-parser.js"></script>
+  <script src="scripts/scanner.js"></script>
+  <script src="scripts/sefaz-scripts.js"></script>
+  <script src="scripts/sefaz-extractor.js"></script>
+  <script src="scripts/catalog-service.js"></script>
 
   <!-- New Transaction Modal -->
   <div id="newTransactionModal" class="modal-overlay" style="z-index:10000;">

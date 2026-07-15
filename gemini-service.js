@@ -184,7 +184,24 @@ window.GeminiService = (function() {
     return await _chamarGemini(MODEL_PRO, systemPrompt, userContent);
   }
 
-  return { extrairExtrato, categorizar };
+  // CATEGORIZAR PRODUTO INDIVIDUAL (NF-e Scanner)
+  async function categorizarProduto(nomeProduto, codigoProduto) {
+    var systemPrompt = 'Voce e um assistente especialista em padronizar compras de supermercado e farmacia no Brasil. ' +
+      'Seu objetivo e limpar o nome do produto (removendo abreviacoes confusas) e atribuir uma categoria principal. ' +
+      'Retorne APENAS um JSON valido.';
+
+    var userContent =
+      'NOME DO PRODUTO (bruto da nota): ' + nomeProduto + '\n' +
+      'CODIGO: ' + codigoProduto + '\n\n' +
+      'REGRAS:\n' +
+      '1. Limpe o nome: expanda abreviacoes (ex: "LG COST ANG" -> "Linguica de Costela Angus", "CR LEITE" -> "Creme de Leite").\n' +
+      '2. Escolha uma categoria de supermercado (ex: "Mercado > Acougue", "Mercado > Limpeza", "Farmacia > Remedios").\n' +
+      '3. Retorne EXATAMENTE este formato JSON: {"nomeLimpo": "Nome Formatado", "categoria": "Categoria Sugerida"}\n';
+
+    return await _chamarGemini(MODEL_FLASH, systemPrompt, userContent);
+  }
+
+  return { extrairExtrato, categorizar, categorizarProduto };
 
 })();
 

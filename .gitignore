@@ -17,6 +17,16 @@
 !db.js
 !deploy.ps1
 
+# Scanner Module overrides
+!scanner/
+!scanner/**
+!scanner/js/*.js
+
+# Capacitor / Build folders
+node_modules/
+android/
+www/
+
 # Ignore sensitive files and data
 credentials.json
 .env
