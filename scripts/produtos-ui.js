@@ -92,7 +92,9 @@ class ProdutosUI {
             try {
                 await window.DB.db.collection('Produtos').doc(id).update({
                     descricao_oficial: newName.trim(),
-                    atualizado_em: new Date().toISOString()
+                    atualizado_em: new Date().toISOString(),
+                    groupId: window.userGroupId,
+                    userId: window.firebase.auth().currentUser.uid
                 });
                 
                 // Update local state temporarily so it renders immediately
@@ -157,7 +159,9 @@ class ProdutosUI {
                                 categoria: prod.categoria,
                                 volume_quantidade: prod.volume_quantidade,
                                 unidade_medida: prod.unidade_medida,
-                                atualizado_em: new Date().toISOString()
+                                atualizado_em: new Date().toISOString(),
+                                groupId: window.userGroupId,
+                                userId: window.firebase.auth().currentUser.uid
                             });
                         }
                     }
