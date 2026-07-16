@@ -251,19 +251,40 @@ window.App = (() => {
         }
 
         try {
-            const salva = await Storage.salvar(_notaAtual);
-            
-            // Injetar produtos no Banco de Dados
+            // Injetar produtos no Banco de Dados com NOME CORRETO
             if (window.DB && _notaAtual.itens) {
-                const produtosToSave = _notaAtual.itens
-                    .filter(i => i.codigo && /^\d{8,14}$/.test(i.codigo)) // Apenas códigos numéricos longos (prováveis EAN/GTIN)
-                    .map(i => ({
-                        ean: i.codigo,
-                        descricao: i.descricao,
-                        preco: i.valorUnitario || (i.valorTotal / (i.quantidade || 1)) || 0
-                    }));
+                const itensComEan = _notaAtual.itens.filter(i => i.codigo && /^\d{8,14}$/.test(i.codigo));
                 
-                if (produtosToSave.length > 0) {
+                if (itensComEan.length > 0) {
+                    _atualizarStatus(`Buscando nomes reais de ${itensComEan.length} produtos...`, 'loading');
+                    toast(`Buscando nomes reais na internet... aguarde!`, 'warning');
+                    
+                    const produtosToSave = [];
+                    for (const i of itensComEan) {
+                        let descricao = i.descricao; // Fallback para o nome abreviado da SEFAZ
+                        
+                        try {
+                            const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${i.codigo}.json`);
+                            const data = await resp.json();
+                            if (data.status === 1 && data.product) {
+                                let nome = data.product.product_name_pt || data.product.product_name;
+                                if (nome) {
+                                    if (data.product.brands) nome += ` - ${data.product.brands}`;
+                                    if (data.product.quantity) nome += ` (${data.product.quantity})`;
+                                    descricao = nome;
+                                }
+                            }
+                        } catch (e) {
+                            console.error(`Erro ao buscar produto ${i.codigo}:`, e);
+                        }
+
+                        produtosToSave.push({
+                            ean: i.codigo,
+                            descricao: descricao,
+                            preco: i.valorUnitario || (i.valorTotal / (i.quantidade || 1)) || 0
+                        });
+                    }
+
                     try {
                         await window.DB.saveProdutosBatch(produtosToSave);
                         console.log(`[App] ${produtosToSave.length} produtos injetados no DB.`);
@@ -273,6 +294,7 @@ window.App = (() => {
                 }
             }
 
+            const salva = await Storage.salvar(_notaAtual);
             toast('✅ Nota salva com sucesso!', 'success');
             _notaAtual = null;
             _renderizarHistoricoRapido();
