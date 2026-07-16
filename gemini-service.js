@@ -5,8 +5,8 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH = 'gemini-3.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelFlash
-  var MODEL_PRO   = 'gemini-3.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelPro
+  var MODEL_FLASH = 'gemini-1.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelFlash
+  var MODEL_VISION = 'gemini-1.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelVision
   var MODEL_BKP   = '';                 // Sobrescrito pelo AppConfig/gemini.modelBkp
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
