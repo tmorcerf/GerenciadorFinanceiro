@@ -542,8 +542,18 @@ function stopAIThinking() {
 
       renderizarTabelaUnificada();
       
-      resumoDiv.style.display = 'block';
-      resumoDiv.innerHTML = `<strong>Resumo:</strong> <span style="color:var(--accent-blue)">+${faltantes.length} novos</span> | <span style="color:#ef4444">-${sobrando.length} a excluir</span> | <span style="color:var(--text-muted)">${corretos.length} corretos mantidos</span>`;
+      resumoDiv.style.display = 'flex';
+      resumoDiv.innerHTML = `
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 8px 16px; border-radius: 20px; color: var(--accent-blue); display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-plus-circle"></i> <strong>${faltantes.length}</strong> Novos
+        </div>
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 16px; border-radius: 20px; color: #ef4444; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-minus-circle"></i> <strong>${sobrando.length}</strong> a Excluir
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 20px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-check-circle"></i> <strong>${corretos.length}</strong> Corretos
+        </div>
+      `;
 
       if (faltantes.length === 0 && sobrando.length > 0) {
          // Não tem faltantes, mas tem sobrando -> Vai direto pro fim
