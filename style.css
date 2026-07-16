@@ -1402,3 +1402,36 @@
     transform: translateX(0);
   }
 }
+/* Unificando Tabelas da Importacao */
+table#unified-table thead th {
+  padding: 12px 10px !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+  color: var(--text-muted) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  border-bottom: 2px solid rgba(255,255,255,0.05) !important;
+}
+
+table#unified-table tbody td {
+  padding: 14px 10px !important;
+  vertical-align: middle;
+}
+
+/* Inputs Premium dentro da tabela */
+table#unified-table select, table#unified-table input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+table#unified-table select:focus, table#unified-table input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}

@@ -272,7 +272,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.9952 - 16/07/2026, 19:40:20</span>
+        <span style="font-size: 0.75rem;">v 0.9.9953 - 16/07/2026, 19:46:59</span>
       </div>
     </div>
   </aside>
@@ -817,47 +817,13 @@
         </style>
         <div id="import-table-content" style="padding: 0 1.5rem 1.5rem 1.5rem;">
           
-          <style>
-            .thought-bubble {
-              position: relative;
-              background: rgba(30, 37, 51, 0.85);
-              padding: 20px;
-              border-radius: 20px;
-              border: 1px solid var(--border-color);
-              margin-bottom: 1.5rem;
-              margin-left: 30px;
-              box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            }
-            .thought-bubble::before {
-              content: '';
-              position: absolute;
-              left: -20px;
-              top: 20px;
-              width: 25px;
-              height: 25px;
-              background: rgba(30, 37, 51, 0.85);
-              border-radius: 50%;
-              border: 1px solid var(--border-color);
-            }
-            .thought-bubble::after {
-              content: '';
-              position: absolute;
-              left: -35px;
-              top: 40px;
-              width: 12px;
-              height: 12px;
-              background: rgba(30, 37, 51, 0.85);
-              border-radius: 50%;
-              border: 1px solid var(--border-color);
-            }
-          </style>
-          <div id="ia-mind-container" style="display:none; position: relative;">
-            <div style="position: absolute; left: -15px; top: -15px; font-size: 2.5rem; color: var(--color-warning); filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); z-index: 2;">
-              <i class="fas fa-robot"></i>
+          <div id="ia-mind-container" class="import-feed-item ai" style="display:none; margin: 15px 0 25px 0; max-width: 100%;">
+            <div class="avatar" style="width: 48px; height: 48px;">
+              <img src="ninja.png" alt="IA">
             </div>
-            <div class="thought-bubble">
-              <h4 style="margin: 0 0 8px 0; color: var(--color-warning); font-size: 1.05rem;">Mente da IA (<span id="ia-mind-title"></span>)</h4>
-              <p id="ia-mind-text" style="margin: 0; font-size: 0.95rem; color: var(--text-secondary); font-style: italic; line-height: 1.5;"></p>
+            <div class="bubble" style="width: 100%; border-bottom-right-radius: 12px; border-top-left-radius: 12px;">
+              <h4 style="margin: 0 0 8px 0; color: var(--color-accent); font-size: 1.05rem;"><i class="fas fa-magic"></i> Mente da IA (<span id="ia-mind-title"></span>)</h4>
+              <p id="ia-mind-text" style="margin: 0; font-size: 0.95rem; color: var(--text-primary); font-style: italic; line-height: 1.5;"></p>
             </div>
           </div>
 

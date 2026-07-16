@@ -1242,9 +1242,9 @@ function renderizarPasso3(txs) {
   unifiedTable.className = 'step-3-active'; // Ocultará Parc. 
 
   let headerHtml = `
-    <div style="background: rgba(139, 92, 246, 0.1); border-left: 4px solid #8b5cf6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-      <h3 style="margin: 0 0 10px 0; color: #8b5cf6;"><i class="fas fa-random"></i> Passo 2: Transferências e Parcelamentos</h3>
-      <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Identificamos transferências ou parcelamentos. Por favor, preencha a conta de destino/origem para as transferências e configure os parcelamentos.</p>
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 18px 20px; margin-bottom: 20px; border-radius: 16px;">
+      <h3 style="margin: 0 0 10px 0; color: #8b5cf6; display: flex; align-items: center; gap: 8px;"><i class="fas fa-random"></i> Passo 2: Transferências e Parcelamentos</h3>
+      <p style="margin:0; font-size: 0.95rem; color: var(--text-secondary);">Identificamos transferências ou parcelamentos. Por favor, preencha a conta de destino/origem para as transferências e configure os parcelamentos.</p>
     </div>
   `;
   container.innerHTML = headerHtml; // Container gets only the header now
