@@ -8,10 +8,10 @@
 
 :root {
     /* Cores */
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #0f172a;
-    --bg-card: #1a2340;
-    --bg-card-hover: #1e2a4a;
+    --bg-primary: #0B0F19;
+    --bg-secondary: #131A2A;
+    --bg-card: rgba(19, 26, 42, 0.65);
+    --bg-card-hover: rgba(30, 41, 59, 0.95);
     --bg-glass: rgba(30, 41, 80, 0.65);
     --bg-glass-border: rgba(100, 140, 255, 0.12);
 
@@ -97,7 +97,7 @@ html, body {
 
 /* ── Header ────────────────────────────────────────────────────── */
 .app-header {
-    display: flex;
+    display: none !important; /* Hiding because it's now embedded in the SPA */
     align-items: center;
     justify-content: space-between;
     padding: calc(var(--safe-top) + var(--spacing-sm)) var(--spacing-md) var(--spacing-sm);
@@ -356,6 +356,7 @@ html, body {
 
 /* ── Bottom Nav ────────────────────────────────────────────────── */
 .bottom-nav {
+    display: none !important; /* Hiding because it's now embedded in the SPA */
     position: fixed;
     bottom: 0;
     left: 0;

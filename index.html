@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -225,7 +225,7 @@
         </a>
       </li>
       <li>
-        <a class="nav-item" href="scanner/index.html">
+        <a class="nav-item btn-scanner" data-target="panel-scanner" style="cursor: pointer;">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h5v2H5v3H3V3zm0 13h2v3h3v2H3v-5zm13 5h3v-3h2v5h-5v-2zM18 5V3h5v5h-2V5h-3zM7 7h10v10H7V7z"/></svg>
           Scanner NF-e
         </a>
@@ -237,7 +237,7 @@
         </a>
       </li>
       <li>
-        <a class="nav-item" href="scanner_ean/index.html">
+        <a class="nav-item btn-scanner-ean" data-target="panel-scanner-ean" style="cursor: pointer;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
           Leitor de Produto
         </a>
@@ -652,7 +652,7 @@
                   <button id="btn-dev-ia" class="btn-primary" onclick="window.ProdutosApp.executarEnriquecimentoIA()" style="background: var(--color-warning); color: #000; margin-right: 10px;">
                       🤖 Dev: Processar IA
                   </button>
-                  <button class="btn-primary" onclick="window.location.href='scanner_ean/index.html'">
+                  <button class="btn-primary" onclick="document.querySelector('[data-target=\'panel-scanner-ean\']').click()">
                       <i class="fas fa-barcode"></i> Escanear Produto
                   </button>
               </div>
@@ -1063,6 +1063,15 @@
       <a class="nav-item" data-target="panel-audit" style="display:none;"></a>
 
   </main>
+
+  <!-- iframe panels for the Scanners -->
+  <section id="panel-scanner" class="dashboard-panel" style="display: none; height: 100vh; padding: 0;">
+      <iframe src="scanner/index.html" allow="camera" style="width: 100%; height: 100%; border: none; border-radius: 10px;"></iframe>
+  </section>
+
+  <section id="panel-scanner-ean" class="dashboard-panel" style="display: none; height: 100vh; padding: 0;">
+      <iframe src="scanner_ean/index.html" allow="camera" style="width: 100%; height: 100%; border: none; border-radius: 10px;"></iframe>
+  </section>
 
   <!-- Modal Popup for Transactions -->
   <div id="transaction-modal" class="modal-overlay">
