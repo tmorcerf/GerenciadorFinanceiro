@@ -49,19 +49,8 @@ class ProdutosUI {
             const price = parseFloat(p.ultimo_preco || 0);
             const priceStr = price > 0 ? `R$ ${price.toFixed(2)}` : '-';
             
-            // Handle descriptions
-            let descFinal = p.descricao_oficial;
-            let badge = '';
-
-            if (!descFinal) {
-                if (p.descricao_ia) {
-                    descFinal = p.descricao_ia;
-                    badge = '<span style="background:var(--color-primary); color:#000; font-size:0.6rem; padding: 2px 6px; border-radius:10px; margin-left: 8px; font-weight:bold;">Gerado por IA</span>';
-                } else {
-                    descFinal = '<span style="color:var(--color-warning);font-size:0.8rem;"><i class="fas fa-exclamation-triangle"></i> Não Encontrado</span>';
-                }
-            }
-            
+            let descFinal = p.descricao_oficial || '<span style="color:var(--text-muted); font-style:italic;">Não preenchida</span>';
+            const descIA = p.descricao_ia || '-';
             const descSefaz = p.descricao_sefaz || p.descricao_padrao || '-';
             
             // Novos campos do Gemini em colunas separadas
@@ -74,20 +63,20 @@ class ProdutosUI {
                 <td style="padding: 1rem; color: #fff; font-weight: 500;">
                     <div style="display:flex; align-items:center;">
                         <span id="desc-oficial-txt-${p.id}">${descFinal}</span>
-                        ${badge}
                     </div>
                 </td>
+                <td style="padding: 1rem; color: var(--color-primary); font-weight: 500;">${descIA}</td>
                 <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${descSefaz}</td>
                 <td style="padding: 1rem;">${marca}</td>
                 <td style="padding: 1rem;">${categoria}</td>
                 <td style="padding: 1rem;">${volume}</td>
                 <td style="padding: 1rem; color: var(--color-success); font-weight: 600;">${priceStr}</td>
                 <td style="padding: 1rem;">
-                    <button class="btn-icon" title="Editar Nome" onclick="window.ProdutosApp.editName('${p.id}')">
+                    <button class="btn-icon" title="Editar Nome Oficial" onclick="window.ProdutosApp.editName('${p.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
                 </td>
-            `;
+            `;;
             tbody.appendChild(tr);
         });
     }
