@@ -16,7 +16,7 @@
 !firebase-config.js
 !db.js
 !deploy.ps1
-!scripts/dashboard-ofertas.js
+!scripts/*.js
 
 # Scanner Module overrides
 !scanner/
