@@ -1488,12 +1488,27 @@ let txDateTypeFilter = 'vencimento';
         }
     }
 
-    window.USE_FIREBASE = true; // Firebase ativado permanentemente
+window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
     let isAppInitialized = false;
 
     function bootstrapApp() {
-      // Elementos de UI de Login
+        // Menu Mobile Toggle Setup
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileOverlay = document.getElementById('mobile-menu-overlay');
+        const sidebar = document.querySelector('aside.sidebar');
+        
+        if (mobileMenuBtn && mobileOverlay && sidebar) {
+            const toggleMenu = () => {
+                sidebar.classList.toggle('open');
+                mobileOverlay.classList.toggle('open');
+            };
+            mobileMenuBtn.addEventListener('click', toggleMenu);
+            mobileOverlay.addEventListener('click', toggleMenu);
+            window.toggleMenu = toggleMenu;
+        }
+
+        // Elementos de UI de Login
       const loginScreen = document.getElementById('login-screen');
       const userProfilePic = document.getElementById('user-profile-pic');
       const userProfileName = document.getElementById('user-profile-name');
@@ -2023,6 +2038,14 @@ let txDateTypeFilter = 'vencimento';
 
     window.switchToPanel = function(targetPanelId) {
       if (!targetPanelId) return;
+      
+      // Auto-close mobile drawer if open
+      const sidebar = document.querySelector('aside.sidebar');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      if (sidebar && sidebar.classList.contains('open')) {
+          sidebar.classList.remove('open');
+          if (overlay) overlay.classList.remove('open');
+      }
       
       // Remove class active de todos os links e adiciona no correto
       const allLinks = document.querySelectorAll('.nav-item[data-target]');
