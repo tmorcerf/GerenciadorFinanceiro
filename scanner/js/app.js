@@ -260,7 +260,6 @@ window.App = (() => {
                     toast(`Buscando nomes reais na internet... aguarde!`, 'warning');
                     
                     let produtosToSave = [];
-                    const itensParaGemini = [];
                     for (const i of itensComEan) {
                         const descricaoSefaz = i.descricao; // Nome original da nota fiscal
                         let descricaoOficial = ""; // Nome puxado da internet
@@ -284,28 +283,9 @@ window.App = (() => {
                             ean: i.codigo,
                             descricao_sefaz: descricaoSefaz,
                             descricao_oficial: descricaoOficial,
-                            descricao_ia: '', // A ser preenchido
+                            descricao_ia: '', // A ser preenchido futuramente por rotina de DEV
                             preco: i.valorUnitario || (i.valorTotal / (i.quantidade || 1)) || 0
                         });
-                        
-                        if (!descricaoOficial) {
-                            itensParaGemini.push({ ean: i.codigo, descricao: descricaoSefaz });
-                        }
-                    }
-
-                    // Enviar para o Gemini se houver nomes faltando e API configurada
-                    if (itensParaGemini.length > 0 && GeminiService && GeminiService.isConfigurado()) {
-                        _atualizarStatus(`IA corrigindo ${itensParaGemini.length} nomes...`, 'loading');
-                        const geminiNomes = await GeminiService.melhorarNomesEmLote(itensParaGemini);
-                        
-                        if (geminiNomes && geminiNomes.length > 0) {
-                            geminiNomes.forEach(gn => {
-                                const prod = produtosToSave.find(p => p.ean === gn.ean);
-                                if (prod && gn.descricao_ia) {
-                                    prod.descricao_ia = gn.descricao_ia;
-                                }
-                            });
-                        }
                     }
 
                     try {
