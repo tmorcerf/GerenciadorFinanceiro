@@ -46,33 +46,22 @@ window.Scanner = (() => {
         onResultCallback = onResult;
 
         try {
-            // Verificar se html5-qrcode está disponível
             if (typeof Html5Qrcode === 'undefined') {
                 throw new Error('Biblioteca html5-qrcode não carregada');
             }
 
-            // Listar câmeras disponíveis
-            cameras = await Html5Qrcode.getCameras();
-            if (!cameras || cameras.length === 0) {
-                throw new Error('CAMERA_NOT_FOUND');
-            }
-
-            // Preferir câmera traseira
-            currentCameraId = _encontrarCameraTraseira(cameras);
-
-            // Criar instância
             html5QrCode = new Html5Qrcode(elementId);
 
-            // Iniciar scan
+            // Iniciar scan com facingMode (geralmente ativa o auto-focus e escolhe a lente principal melhor)
             await html5QrCode.start(
-                currentCameraId,
+                { facingMode: "environment" },
                 SCAN_CONFIG,
                 _onScanSuccess,
                 _onScanError
             );
 
             isScanning = true;
-            console.log('[Scanner] Câmera iniciada:', currentCameraId);
+            console.log('[Scanner] Câmera iniciada com facingMode: environment');
 
         } catch (err) {
             console.error('[Scanner] Erro ao iniciar:', err);

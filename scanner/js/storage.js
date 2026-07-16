@@ -16,7 +16,7 @@
 window.Storage = (() => {
     'use strict';
 
-    const COLECAO = 'notas-scanner';
+    const COLECAO = 'nfe_notas';
     let _notas = [];
     let _loaded = false;
     let _unsubscribe = null;

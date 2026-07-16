@@ -1536,6 +1536,9 @@ let txDateTypeFilter = 'vencimento';
         btnLoginGoogle.addEventListener('click', async () => {
           if (window.Capacitor && Capacitor.isNativePlatform()) {
              try {
+               if (Capacitor.Plugins.GoogleAuth.initialize) {
+                   await Capacitor.Plugins.GoogleAuth.initialize();
+               }
                const googleUser = await Capacitor.Plugins.GoogleAuth.signIn();
                const credential = firebase.auth.GoogleAuthProvider.credential(googleUser.authentication.idToken);
                await window.firebaseAuth.signInWithCredential(credential);
