@@ -156,3 +156,63 @@ header {
   justify-content: flex-start !important;
   flex-wrap: wrap !important;
 }
+
+/* =========================================================================
+   MOBILE SCANNER FOCUS (FABs)
+   ========================================================================= */
+
+/* Make NF-e Scanner a primary Floating Action Button */
+a[href="scanner/index.html"] {
+  position: fixed !important;
+  bottom: 25px !important;
+  right: 25px !important;
+  width: 65px !important;
+  height: 65px !important;
+  background: var(--color-income) !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  box-shadow: 0 10px 30px var(--color-income-glow) !important;
+  z-index: 9999 !important;
+  color: #fff !important;
+  font-size: 0 !important; /* Hide text */
+  padding: 0 !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+a[href="scanner/index.html"] svg {
+  width: 30px !important;
+  height: 30px !important;
+  stroke: #fff !important;
+  fill: #fff !important;
+  margin: 0 !important;
+}
+
+/* Make EAN Scanner a secondary Floating Action Button above the main one */
+a[href="scanner_ean/index.html"] {
+  position: fixed !important;
+  bottom: 105px !important;
+  right: 32px !important;
+  width: 50px !important;
+  height: 50px !important;
+  background: var(--color-accent) !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  box-shadow: 0 10px 25px var(--color-accent-glow) !important;
+  z-index: 9998 !important;
+  color: #fff !important;
+  font-size: 0 !important; /* Hide text */
+  padding: 0 !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+a[href="scanner_ean/index.html"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke: #fff !important;
+  margin: 0 !important;
+}
+
