@@ -649,7 +649,7 @@
           <div class="panel-header">
               <h2>Meus Produtos (EAN)</h2>
               <div class="header-actions">
-                  <button class="btn-primary" onclick="window.ProdutosApp.executarEnriquecimentoIA()" style="background: var(--color-warning); color: #000; margin-right: 10px;">
+                  <button id="btn-dev-ia" class="btn-primary" onclick="window.ProdutosApp.executarEnriquecimentoIA()" style="background: var(--color-warning); color: #000; margin-right: 10px;">
                       🤖 Dev: Processar IA
                   </button>
                   <button class="btn-primary" onclick="window.location.href='scanner_ean/index.html'">
@@ -658,25 +658,24 @@
               </div>
           </div>
           
-          <div class="panel-content">
-              <div class="card p-0" style="background: rgba(20, 20, 25, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
-                  <div style="overflow-x: auto;">
-                      <table class="data-table" style="width: 100%; border-collapse: collapse;">
-                          <thead>
-                              <tr style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
-                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">EAN</th>
-                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Descrição Oficial</th>
-                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Descrição Sefaz</th>
-                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Último Preço</th>
-                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Ações</th>
-                              </tr>
-                          </thead>
-                          <tbody id="lista-produtos-tbody">
-                              <!-- Preenchido via JS -->
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
+          <div class="table-container" style="margin-top: 1rem; overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                  <thead>
+                      <tr style="background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">EAN</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRIÇÃO OFICIAL</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRIÇÃO SEFAZ</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">FABRICANTE</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">CATEGORIA</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">VOLUME/QTD</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">ÚLTIMO PREÇO</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">AÇÕES</th>
+                      </tr>
+                  </thead>
+                  <tbody id="lista-produtos-tbody">
+                      <!-- Populated via JS -->
+                  </tbody>
+              </table>
           </div>
       </div>
 

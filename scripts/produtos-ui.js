@@ -64,16 +64,10 @@ class ProdutosUI {
             
             const descSefaz = p.descricao_sefaz || p.descricao_padrao || '-';
             
-            // Novos campos do Gemini
-            let infoExtras = '';
-            if (p.marca_fabricante || p.categoria || p.volume_quantidade) {
-                infoExtras = `
-                <div style="margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap;">
-                    ${p.marca_fabricante ? `<span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-industry"></i> ${p.marca_fabricante}</span>` : ''}
-                    ${p.categoria ? `<span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-tag"></i> ${p.categoria}</span>` : ''}
-                    ${p.volume_quantidade ? `<span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-balance-scale"></i> ${p.volume_quantidade}${p.unidade_medida || ''}</span>` : ''}
-                </div>`;
-            }
+            // Novos campos do Gemini em colunas separadas
+            const marca = p.marca_fabricante ? `<span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-industry"></i> ${p.marca_fabricante}</span>` : '-';
+            const categoria = p.categoria ? `<span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-tag"></i> ${p.categoria}</span>` : '-';
+            const volume = p.volume_quantidade ? `<span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-balance-scale"></i> ${p.volume_quantidade}${p.unidade_medida || ''}</span>` : '-';
 
             tr.innerHTML = `
                 <td style="padding: 1rem; color: var(--text-secondary); font-family: monospace;">${p.ean}</td>
@@ -82,9 +76,11 @@ class ProdutosUI {
                         <span id="desc-oficial-txt-${p.id}">${descFinal}</span>
                         ${badge}
                     </div>
-                    ${infoExtras}
                 </td>
                 <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${descSefaz}</td>
+                <td style="padding: 1rem;">${marca}</td>
+                <td style="padding: 1rem;">${categoria}</td>
+                <td style="padding: 1rem;">${volume}</td>
                 <td style="padding: 1rem; color: var(--color-success); font-weight: 600;">${priceStr}</td>
                 <td style="padding: 1rem;">
                     <button class="btn-icon" title="Editar Nome" onclick="window.ProdutosApp.editName('${p.id}')">
@@ -100,8 +96,8 @@ class ProdutosUI {
         const prod = this.produtos.find(p => p.id === id);
         if (!prod) return;
         
-        const currentName = prod.descricao_oficial || prod.descricao_sefaz || prod.descricao_padrao || '';
-        const newName = prompt(`Editar nome oficial para o EAN ${prod.ean}:`, currentName);
+        const currentName = prod.descricao_oficial || prod.descricao_ia || prod.descricao_sefaz || '';
+        const newName = prompt(`Digite o novo nome oficial para o produto (${prod.ean}):`, currentName);
         
         if (newName !== null && newName.trim() !== '') {
             try {
@@ -136,6 +132,12 @@ class ProdutosUI {
         const confirmacao = confirm(`Existem ${elegiveis.length} produtos elegíveis para enriquecimento via IA. Deseja iniciar? Isso pode levar alguns segundos.`);
         if (!confirmacao) return;
 
+        const btn = document.getElementById('btn-dev-ia');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            btn.disabled = true;
+        }
+
         // Processar em lotes de 20
         const batchSize = 20;
         let processados = 0;
@@ -147,38 +149,45 @@ class ProdutosUI {
             try {
                 const resultados = await window.GeminiService.melhorarNomesEmLote(itensParaGemini);
                 
-                const batch = window.DB.db.batch();
-                for (const res of resultados) {
-                    if (!res.descricao_ia) continue;
-                    
-                    const prod = this.produtos.find(p => p.ean === res.ean);
-                    if (prod) {
-                        prod.descricao_ia = res.descricao_ia;
-                        prod.marca_fabricante = res.marca_fabricante || '';
-                        prod.categoria = res.categoria || '';
-                        prod.volume_quantidade = res.volume_quantidade || '';
-                        prod.unidade_medida = res.unidade_medida || '';
+                if (resultados && resultados.length > 0) {
+                    const batch = window.DB.db.batch();
+                    for (const res of resultados) {
+                        if (!res.descricao_ia) continue;
+                        
+                        const prod = this.produtos.find(p => p.ean === res.ean);
+                        if (prod) {
+                            prod.descricao_ia = res.descricao_ia;
+                            prod.marca_fabricante = res.marca_fabricante || '';
+                            prod.categoria = res.categoria || '';
+                            prod.volume_quantidade = res.volume_quantidade || '';
+                            prod.unidade_medida = res.unidade_medida || '';
 
-                        batch.update(window.DB.db.collection('Produtos').doc(prod.id), {
-                            descricao_ia: prod.descricao_ia,
-                            marca_fabricante: prod.marca_fabricante,
-                            categoria: prod.categoria,
-                            volume_quantidade: prod.volume_quantidade,
-                            unidade_medida: prod.unidade_medida,
-                            atualizado_em: new Date().toISOString()
-                        });
+                            batch.update(window.DB.db.collection('Produtos').doc(prod.id), {
+                                descricao_ia: prod.descricao_ia,
+                                marca_fabricante: prod.marca_fabricante,
+                                categoria: prod.categoria,
+                                volume_quantidade: prod.volume_quantidade,
+                                unidade_medida: prod.unidade_medida,
+                                atualizado_em: new Date().toISOString()
+                            });
+                        }
                     }
+                    
+                    await batch.commit();
                 }
-                
-                await batch.commit();
                 processados += lote.length;
                 console.log(`[DevTool] Processados ${processados}/${elegiveis.length}`);
                 
             } catch(e) {
                 console.error("Erro no lote da IA:", e);
+                alert("Erro ao processar lote na IA: " + e.message);
             }
         }
         
+        if (btn) {
+            btn.innerHTML = '🤖 Dev: Processar IA';
+            btn.disabled = false;
+        }
         alert("Enriquecimento concluído!");
         this.renderTable();
     }
