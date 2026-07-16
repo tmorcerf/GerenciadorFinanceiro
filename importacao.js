@@ -228,8 +228,8 @@ function stopAIThinking() {
     if (document.getElementById('unified-table-body')) {
       document.getElementById('unified-table-body').innerHTML = '';
     }
-    if (document.getElementById('ia-mind-container')) {
-      document.getElementById('ia-mind-container').style.display = 'none';
+    if (document.getElementById('ninja-categorizador-container')) {
+      document.getElementById('ninja-categorizador-container').style.display = 'none';
     }
     
     resumoDiv.style.display = 'none';
@@ -527,8 +527,6 @@ function stopAIThinking() {
       addFeedback(`Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`, 'system');
 
       resultContainer.style.display = 'block';
-      document.getElementById('ia-mind-container').style.display = 'flex';
-      
       // Se não tem itens, não mostra botões
       if (dadosExtrato.length > 0) {
         if (faltantes.length > 0) {
