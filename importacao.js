@@ -24,6 +24,80 @@ document.addEventListener('DOMContentLoaded', () => {
   const feedbackConsole = document.getElementById('importFeedbackConsole');
   const resumoDiv = document.getElementById('importResumo');
 
+const funnyAIPhrases = [
+  'Olha que lançamento estranho...',
+  'Achei mais um gasto supérfluo...',
+  'Nossa, você bebe muito café, hein?',
+  'Analisando essa compra na madrugada...',
+  'Hmm, iFood de novo?',
+  'Processando mais boletos, que tristeza.',
+  'Quem diria, um investimento!',
+  'Será que esse gasto foi essencial?',
+  'Lendo linhas e mais linhas de extrato...',
+  'Calculando para onde foi o seu dinheiro.',
+  'Essa fatura não está de brincadeira...',
+  'Categorizando aquele lanchinho.',
+  'Encontrei um PIX não identificado. Suspeito...',
+  'Checando as moedinhas esquecidas.',
+  'Uau, você economizou nessa!',
+  'Separando os gastos fixos dos impulsos.',
+  'Mais uma comprinha na internet, certo?',
+  'O gerente do banco deve te adorar.',
+  'Pensando em como melhorar essas finanças.',
+  'Cruzando dados com a base local...',
+  'Quase terminando de ler essa fatura gigante.',
+  'Anotando essa comprinha escondida.',
+  'Seu eu do futuro agradece a organização.',
+  'Isso aqui foi lazer ou necessidade?',
+  'Decifrando nomes bizarros de maquininhas de cartão.',
+  'Organizando tudo para você não ter trabalho.',
+  'Essa categoria de \'Diversos\' tá muito cheia, hein?',
+  'Processando, processando... e julgando um pouquinho.',
+  'Não se preocupe, o segredo do seu extrato está seguro comigo.',
+  'Finalizando a mágica dos dados financeiros...'
+];
+
+let aiThinkingInterval = null;
+
+function addFeedback(message, type = 'system') {
+  if (!feedbackConsole) return;
+  if (feedbackConsole.innerHTML.includes('Aguardando arquivo...')) {
+    feedbackConsole.innerHTML = '';
+  }
+  
+  const div = document.createElement('div');
+  div.className = 'import-feed-item ' + type;
+  
+  // Clean up message newlines just in case
+  let cleanMsg = message.replace(/^\\n|^\n/, '').replace(/\\n$|\n$/, '');
+  
+  if (type === 'ai' || type === 'ai thinking') {
+    div.className = 'import-feed-item ai' + (type.includes('thinking') ? ' thinking' : '');
+    div.innerHTML = `<div class="avatar"><img src="ninja.png" alt="AI"></div><div class="bubble">${cleanMsg}</div>`;
+  } else {
+    div.innerHTML = `<div class="msg">${cleanMsg}</div>`;
+  }
+  
+  feedbackConsole.appendChild(div);
+  feedbackConsole.scrollTop = feedbackConsole.scrollHeight;
+}
+
+function startAIThinking() {
+  if (aiThinkingInterval) clearInterval(aiThinkingInterval);
+  aiThinkingInterval = setInterval(() => {
+    const phrase = funnyAIPhrases[Math.floor(Math.random() * funnyAIPhrases.length)];
+    addFeedback(phrase, 'ai thinking');
+  }, 4000);
+}
+
+function stopAIThinking() {
+  if (aiThinkingInterval) {
+    clearInterval(aiThinkingInterval);
+    aiThinkingInterval = null;
+  }
+}
+
+
   // Variáveis e refs pro Modal do Documento
   let currentFileUrl = null;
   let currentFileType = null;
@@ -185,13 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSalvar.innerHTML = 'Confirmar Importação <i class="fas fa-check"></i>';
     
     try {
-      feedbackConsole.innerHTML = `Arquivo carregado: ${file.name}\n`;
+      addFeedback(`Arquivo carregado: ${file.name}`, 'system');
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Lendo arquivo localmente...';
       
       const fileData = await window.extractFileContent(file);
 
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-magic fa-bounce"></i> Extraindo dados (aguarde até 30s)...';
-      feedbackConsole.innerHTML += "Enviando para a IA extrair transações...\n";
+      addFeedback('Enviando para a IA extrair transações...', 'ai');
 
       // Extração via Gemini (com fallback para Apps Script/Claude)
       const _contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas)
@@ -211,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } catch (geminiErr) {
           console.warn('[Gemini] Extração falhou:', geminiErr.message);
-          feedbackConsole.innerHTML += `⚠️ Gemini indisponível (${geminiErr.message.substring(0,80)}), usando IA de backup...\n`;
+          addFeedback(`⚠️ Gemini indisponível, usando IA de backup...`, 'ai');
           const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -270,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cabecalhoAtual = cabecalho;
       analiseExtracao = json.analise_ia || "";
 
-      feedbackConsole.innerHTML += `\n<span style="color: var(--accent-blue);">Sucesso! Extraídas ${dadosExtrato.length} transações.</span>\n`;
+      addFeedback(`Sucesso! Extraídas ${dadosExtrato.length} transações.`, 'success');
 
       if (dadosExtrato.length === 0) {
         throw new Error("Nenhuma transação encontrada no arquivo.");
@@ -319,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let dataInicio = new Date(minTime).toLocaleDateString('pt-BR');
       let dataFim = new Date(maxTime).toLocaleDateString('pt-BR');
-      feedbackConsole.innerHTML += `Período identificado: ${dataInicio} até ${dataFim}.\n`;
+      addFeedback(`Período identificado: ${dataInicio} até ${dataFim}.\n`, 'system');
 
       let baseLocal = [];
       if (_df && _df.lancamentos) {
@@ -343,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           let ignored = origLen - dadosExtrato.length;
           if (ignored > 0) {
-              feedbackConsole.innerHTML += `<span style="color:var(--color-warning);">Trava de Conciliação: ${ignored} itens do extrato ignorados (no período bloqueado).</span>\n`;
+              addFeedback(`Trava de Conciliação: ${ignored} itens do extrato ignorados (no período bloqueado).`, 'error');
           }
       } else if (cTimeAte > 0 && isCartaoCredito) {
           // Para cartão de crédito, usamos a data de vencimento da fatura para checar a trava
@@ -353,12 +427,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
       }
 
-      feedbackConsole.innerHTML += `DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\n`;
+      addFeedback(`DEBUG: minTime=${new Date(minTime).toLocaleDateString()}, maxTime=${new Date(maxTime).toLocaleDateString()}\n`, 'system');
       let debugLocal = baseLocal.filter(l => String(l.conta).trim().toLowerCase() === contaDoExtrato);
-      feedbackConsole.innerHTML += `DEBUG: Temos ${debugLocal.length} itens na base local para a conta '${contaDoExtrato}'.\n`;
+      addFeedback(`DEBUG: Temos ${debugLocal.length} itens na base local para a conta '${contaDoExtrato}'.\n`, 'system');
       if (debugLocal.length > 0) {
           let l = debugLocal[0];
-          feedbackConsole.innerHTML += `Exemplo: data=${l.data}, valor=${l.valor}, tTime=${parseDataBR(l.data)}.\n`;
+          addFeedback(`Exemplo: data=${l.data}, valor=${l.valor}, tTime=${parseDataBR(l.data)}.\n`, 'system');
       }
 
       let poolLocal = baseLocal.filter(L => {
@@ -378,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
          return matchConta && matchTempo && matchConciliado;
       });
 
-      feedbackConsole.innerHTML += `Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período do extrato (pós-trava).\n`;
+      addFeedback(`Encontrados ${poolLocal.length} lançamentos locais na conta '${contaDoExtrato}' no período do extrato (pós-trava).\n`, 'system');
 
       let faltantes = [];
       let corretos = [];
@@ -420,15 +494,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (faltantes.length > 0 && poolLocal.length > 0) {
-          feedbackConsole.innerHTML += `\\n🔍 **DEBUG DE CRUZAMENTO:**\\n`;
-          feedbackConsole.innerHTML += `O primeiro item não encontrado foi: ${faltantes[0].data} | ${faltantes[0].descricao} | ${faltantes[0].valor}.\\n`;
-          feedbackConsole.innerHTML += `Tentamos cruzar com os seguintes itens na sua planilha:\\n`;
+          addFeedback(`\\n🔍 **DEBUG DE CRUZAMENTO:**\\n`, 'system');
+          addFeedback(`O primeiro item não encontrado foi: ${faltantes[0].data} | ${faltantes[0].descricao} | ${faltantes[0].valor}.\\n`, 'system');
+          addFeedback(`Tentamos cruzar com os seguintes itens na sua planilha:\\n`, 'system');
           poolLocal.slice(0, 3).forEach(loc => {
               let valExt = parseFloat(String(faltantes[0].valor).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
               let valLoc = parseFloat(String(loc.valor).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
               let t1 = parseDataBR(faltantes[0].data);
               let t2 = parseDataBR(loc.data);
-              feedbackConsole.innerHTML += `  -> Planilha: ${loc.data} | ${loc.obs} | ${loc.valor} (Dif. Dias: ${(Math.abs(t1-t2)/86400000).toFixed(0)}, Dif. Valor: ${Math.abs(Math.abs(valExt) - Math.abs(valLoc)).toFixed(2)})\\n`;
+              addFeedback(`  -> Planilha: ${loc.data} | ${loc.obs} | ${loc.valor} (Dif. Dias: ${(Math.abs(t1-t2)/86400000).toFixed(0)}, Dif. Valor: ${Math.abs(Math.abs(valExt) - Math.abs(valLoc)).toFixed(2)})\\n`, 'system');
           });
       }
 
@@ -453,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       dadosSincronizacao = { corretos, faltantes, sobrando };
       
-      feedbackConsole.innerHTML += `Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`;
+      addFeedback(`Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`, 'system');
 
       resultContainer.style.display = 'block';
       document.getElementById('ia-mind-container').style.display = 'flex';
@@ -482,12 +556,12 @@ document.addEventListener('DOMContentLoaded', () => {
          btnSalvar.style.display = 'inline-flex';
          btnSalvar.innerHTML = 'Sincronizar Exclusões <i class="fas fa-save"></i>';
       } else if (faltantes.length === 0 && sobrando.length === 0) {
-         feedbackConsole.innerHTML += `\n<span style="color:var(--color-income);">A planilha já está 100% idêntica ao extrato!</span>`;
+         addFeedback(`A planilha já está 100% idêntica ao extrato!`, 'success');
       }
 
     } catch (err) {
       console.error(err);
-      feedbackConsole.innerHTML += `\n<span style="color: #ef4444;">ERRO: ${err.message}</span>`;
+      addFeedback(`ERRO: ${err.message}`, 'error');
       if (btnImport) {
         btnImport.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro`;
         setTimeout(() => {
@@ -589,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let decoStr = t.ignorar ? 'line-through' : 'none';
 
       return `
-        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s; opacity:${opacityStr}; text-decoration:${decoStr};" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+        <tr class="progressive-item" style="border-bottom: 1px solid var(--border-color); transition: background 0.2s; opacity:${opacityStr}; text-decoration:${decoStr}; animation-delay: ${Math.min(index * 0.05, 2)}s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
           <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">
              <div>${icon} ${tipo}</div>
              ${checkIgnorarHtml}
@@ -768,7 +842,7 @@ document.addEventListener('DOMContentLoaded', () => {
          try {
            btnCategorizar.disabled = true;
            btnCategorizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
-           feedbackConsole.innerHTML += `\nEnviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`;
+           addFeedback(`Enviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`, 'ai'); startAIThinking();
            
            const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};
            const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
@@ -799,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
                });
              } catch (geminiCatErr) {
                console.warn('[Gemini] Categorização falhou:', geminiCatErr.message);
-               feedbackConsole.innerHTML += `⚠️ Gemini indisponível (${geminiCatErr.message.substring(0,80)}), usando IA de backup...\n`;
+               addFeedback(`⚠️ Gemini indisponível, usando IA de backup...`, 'ai');
                const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
                  method: 'POST',
                  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -862,16 +936,16 @@ document.addEventListener('DOMContentLoaded', () => {
            }
 
            analiseCategorizacao = resultCat.analise_ia || "Categorização concluída.";
-           feedbackConsole.innerHTML += ` Concluído!\n`;
+           stopAIThinking(); addFeedback('Concluído!', 'ai');
 
            // CortaCoins: debita 3 moedas por lancamento original categorizado com IA
            // Usa _qtdOriginalCateg (antes da projecao de parcelas de cartao)
            if (window.CortaCoins) {
              const _resCoin = await window.CortaCoins.debitar(_qtdOriginalCateg * 3, 'Categorizacao IA: ' + _qtdOriginalCateg + ' lancamentos');
              if (_resCoin && !_resCoin.ok) {
-               feedbackConsole.innerHTML += `\n⚠️ CortaCoins: ${_resCoin.msg}`;
+               addFeedback(`\n⚠️ CortaCoins: ${_resCoin.msg}`, 'system');
              } else if (_resCoin && !_resCoin.gratuito) {
-               feedbackConsole.innerHTML += `\n🪙 -${_qtdOriginalCateg * 3} moedas (categorizacao IA)`;
+               addFeedback(`\n🪙 -${_qtdOriginalCateg * 3} moedas (categorizacao IA)`, 'system');
              }
            }
 
@@ -887,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
          } catch (err) {
            alert("Erro na IA: " + err.message);
-           feedbackConsole.innerHTML += `\n<span style="color:#ef4444">Erro: ${err.message}</span>`;
+           addFeedback(`Erro: ${err.message}`, 'error');
            btnCategorizar.disabled = false;
            btnCategorizar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
            return;
@@ -1063,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
     } catch (err) {
       alert("Erro ao salvar: " + err.message);
-      feedbackConsole.innerHTML += `\\n<span style="color:#ef4444">Erro ao salvar: ${err.message}</span>`;
+      addFeedback(`Erro ao salvar: ${err.message}`, 'error');
       btnSalvar.disabled = false;
       btnSalvar.innerHTML = '<i class="fas fa-save"></i> Tentar Novamente';
     }
