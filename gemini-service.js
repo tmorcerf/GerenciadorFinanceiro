@@ -201,7 +201,38 @@ window.GeminiService = (function() {
     return await _chamarGemini(MODEL_FLASH, systemPrompt, userContent);
   }
 
-  return { extrairExtrato, categorizar, categorizarProduto };
+  async function melhorarNomesEmLote(itens) {
+    if (!itens || itens.length === 0) return [];
+    
+    var systemInstruction = "Você é um especialista em produtos de supermercado brasileiro. Sua tarefa é transformar abreviações de nota fiscal em dados de produtos reais, completos e comerciais. Responda APENAS em formato JSON válido (um array de objetos).";
+
+    var userPrompt = "Abaixo está uma lista de produtos de uma nota fiscal (EAN e Nome Abreviado).\n" +
+      "Para cada um, descubra as informações reais e retorne a resposta como um array JSON exatamente no formato abaixo.\n\n" +
+      "Formato de Saída esperado (exemplo):\n" +
+      "[\n" +
+      "  {\n" +
+      "    \"ean\": \"123456\",\n" +
+      "    \"descricao_ia\": \"Ração Úmida Whiskas Sachê Adulto Sabor Salmão 85g\",\n" +
+      "    \"marca_fabricante\": \"Whiskas / Mars\",\n" +
+      "    \"categoria\": \"Pet Shop\",\n" +
+      "    \"volume_quantidade\": \"85\",\n" +
+      "    \"unidade_medida\": \"g\"\n" +
+      "  }\n" +
+      "]\n\n" +
+      "Lista para processar:\n" +
+      JSON.stringify(itens.map(i => ({ ean: i.ean, descricao_abreviada: i.descricao })), null, 2);
+
+    try {
+      var response = await _chamarGemini(MODEL_FLASH, systemInstruction, userPrompt);
+      if (Array.isArray(response)) return response;
+      return [];
+    } catch(err) {
+      console.error("[GeminiService] Erro melhorarNomesEmLote:", err);
+      return [];
+    }
+  }
+
+  return { extrairExtrato, categorizar, categorizarProduto, melhorarNomesEmLote };
 
 })();
 

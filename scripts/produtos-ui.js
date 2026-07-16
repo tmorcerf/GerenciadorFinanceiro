@@ -121,8 +121,8 @@ class ProdutosUI {
     }
 
     async executarEnriquecimentoIA() {
-        if (!window.GeminiService || !window.GeminiService.isConfigurado()) {
-            alert("A chave da API do Gemini não está configurada.");
+        if (!window.GeminiService) {
+            alert("O serviço do Gemini não está carregado.");
             return;
         }
 
