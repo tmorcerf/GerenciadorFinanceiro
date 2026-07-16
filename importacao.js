@@ -266,6 +266,7 @@ function stopAIThinking() {
 
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-magic fa-bounce"></i> Extraindo dados (aguarde até 30s)...';
       addFeedback('Enviando para a IA extrair transações...', 'ai');
+      startAIThinking();
 
       // Extração via Gemini (com fallback para Apps Script/Claude)
       const _contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas)
@@ -344,6 +345,7 @@ function stopAIThinking() {
       cabecalhoAtual = cabecalho;
       analiseExtracao = json.analise_ia || "";
 
+      stopAIThinking();
       addFeedback(`Sucesso! Extraídas ${dadosExtrato.length} transações.`, 'success');
 
       if (dadosExtrato.length === 0) {
@@ -561,6 +563,7 @@ function stopAIThinking() {
 
     } catch (err) {
       console.error(err);
+      stopAIThinking();
       addFeedback(`ERRO: ${err.message}`, 'error');
       if (btnImport) {
         btnImport.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro`;
@@ -1422,3 +1425,4 @@ function addMonthsStr(dateStr, months) {
   d.setMonth(d.getMonth() + months);
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
+
