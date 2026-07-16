@@ -65,22 +65,28 @@ Se não souber o nome exato, dê seu melhor palpite baseado no CNPJ e localizaç
     // ── Melhorar Nomes de Produtos em Lote ────────────────────────────────
     
     /**
-     * Usa Gemini para transformar os nomes abreviados da SEFAZ em nomes completos.
+     * Usa Gemini para transformar os nomes abreviados da SEFAZ em dados estruturados (nome completo, fabricante, etc).
      * @param {Array<{ean: string, descricao: string}>} itens 
-     * @returns {Promise<Array<{ean: string, descricao_ia: string}>>}
+     * @returns {Promise<Array<{ean: string, descricao_ia: string, marca_fabricante: string, categoria: string, volume_quantidade: string, unidade_medida: string}>>}
      */
     async function melhorarNomesEmLote(itens) {
         if (!itens || itens.length === 0) return [];
         
-        const systemInstruction = `Você é um especialista em catálogo de produtos de supermercado brasileiro. Sua tarefa é transformar abreviações de nota fiscal em nomes de produtos reais, completos e comerciais. Responda APENAS em formato JSON válido (um array de objetos).`;
+        const systemInstruction = `Você é um especialista em produtos de supermercado brasileiro. Sua tarefa é transformar abreviações de nota fiscal em dados de produtos reais, completos e comerciais. Responda APENAS em formato JSON válido (um array de objetos).`;
 
-        const userPrompt = `Abaixo está uma lista de produtos de uma nota fiscal, representados por seus EANs e nomes abreviados. 
-Para cada um, descubra qual é o produto real. Retorne a resposta como um array JSON exatamente no formato abaixo:
+        const userPrompt = `Abaixo está uma lista de produtos de uma nota fiscal (EAN e Nome Abreviado). 
+Para cada um, descubra as informações reais e retorne a resposta como um array JSON exatamente no formato abaixo.
 
 Formato de Saída esperado (exemplo):
 [
-  { "ean": "123", "descricao_ia": "Leite Integral Parmalat 1 Litro" },
-  { "ean": "456", "descricao_ia": "Ração Úmida Whiskas Sachê Adulto Sabor Salmão 85g" }
+  {
+    "ean": "123456",
+    "descricao_ia": "Ração Úmida Whiskas Sachê Adulto Sabor Salmão 85g",
+    "marca_fabricante": "Whiskas / Mars",
+    "categoria": "Pet Shop",
+    "volume_quantidade": "85",
+    "unidade_medida": "g"
+  }
 ]
 
 Lista para processar:
