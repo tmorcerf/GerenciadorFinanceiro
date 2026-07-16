@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Corta Gastos | Plataforma Financeira</title>
   <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="mobile.css?v=2">
   
   <!-- Font and CDN Scripts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,14 +134,22 @@
     </div>
   </div>
 
-  <div id="mobile-menu-overlay"></div>
+  <div id="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
 
   <!-- Mobile Top Header -->
   <div class="mobile-top-header">
     <div style="display: flex; align-items: center; gap: 10px;">
-      <button id="mobile-menu-btn" style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center;">
+      <button id="mobile-menu-btn" onclick="toggleMobileMenu()" style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center;">
         <i class="fas fa-bars"></i>
       </button>
+      <script>
+        function toggleMobileMenu() {
+            var sidebar = document.querySelector('aside');
+            var overlay = document.getElementById('mobile-menu-overlay');
+            if(sidebar) sidebar.classList.toggle('open');
+            if(overlay) overlay.classList.toggle('open');
+        }
+      </script>
       <div class="logo-icon" style="width: 32px; height: 32px; min-width: 32px; border: 2px solid var(--color-accent); background: var(--bg-sidebar);">
         <img src="ninja.png" alt="Corta Gastos Ninja" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;" />
       </div>
@@ -219,6 +228,12 @@
         <a class="nav-item" href="scanner/index.html">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h5v2H5v3H3V3zm0 13h2v3h3v2H3v-5zm13 5h3v-3h2v5h-5v-2zM18 5V3h5v5h-2V5h-3zM7 7h10v10H7V7z"/></svg>
           Scanner NF-e
+        </a>
+      </li>
+      <li>
+        <a class="nav-item" href="scanner_ean/index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
+          Leitor de Produto
         </a>
       </li>
       <li>

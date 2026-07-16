@@ -252,6 +252,27 @@ window.App = (() => {
 
         try {
             const salva = await Storage.salvar(_notaAtual);
+            
+            // Injetar produtos no Banco de Dados
+            if (window.DB && _notaAtual.itens) {
+                const produtosToSave = _notaAtual.itens
+                    .filter(i => i.codigo && /^\d{8,14}$/.test(i.codigo)) // Apenas códigos numéricos longos (prováveis EAN/GTIN)
+                    .map(i => ({
+                        ean: i.codigo,
+                        descricao: i.descricao,
+                        preco: i.valorUnitario || (i.valorTotal / (i.quantidade || 1)) || 0
+                    }));
+                
+                if (produtosToSave.length > 0) {
+                    try {
+                        await window.DB.saveProdutosBatch(produtosToSave);
+                        console.log(`[App] ${produtosToSave.length} produtos injetados no DB.`);
+                    } catch (e) {
+                        console.error('[App] Erro ao injetar produtos no DB:', e);
+                    }
+                }
+            }
+
             toast('✅ Nota salva com sucesso!', 'success');
             _notaAtual = null;
             _renderizarHistoricoRapido();

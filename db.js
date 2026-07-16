@@ -40,13 +40,14 @@ class Database {
 
       // Em vez de usar .get() (que custa milhares de leituras toda vez), 
       // delegamos para o getCollectionData que usa .onSnapshot() (custa quase zero com cache ativado).
-      const [lancamentos, contas, categorias, orcamentos, auditoria, importsInfo] = await Promise.all([
+      const [lancamentos, contas, categorias, orcamentos, auditoria, importsInfo, produtos] = await Promise.all([
         this.getCollectionData(this.db.collection('Lancamentos').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Contas').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Categorias').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Orcamentos').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Auditoria').where('groupId', '==', gid)),
-        this.getCollectionData(this.db.collection('Imports').where('groupId', '==', gid))
+        this.getCollectionData(this.db.collection('Imports').where('groupId', '==', gid)),
+        this.getCollectionData(this.db.collection('Produtos').where('groupId', '==', gid))
       ]);
 
       const categoriasDict = {};
@@ -67,7 +68,8 @@ class Database {
         categoriasDict,
         orcamentos,
         auditoria,
-        importsInfo
+        importsInfo,
+        produtos
       };
     } catch (err) {
       console.error("Erro ao carregar dados do Firebase:", err);
@@ -178,7 +180,7 @@ class Database {
 
   async saveOrcamentoConfig(payload) {
      const gid = window.userGroupId;
-     if (!gid) throw new Error("Grupo não definido.");
+     if (!gid) throw new Error("Grupo nǜo definido.");
 
      const snapshot = await this.db.collection('Orcamentos').where('groupId', '==', gid).where('categoria', '==', payload.categoria).get();
      if (!snapshot.empty) {
@@ -197,6 +199,50 @@ class Database {
            config_periodo: payload.config_periodo || 'mensal'
         });
      }
+  }
+
+  async saveProdutosBatch(produtos) {
+    const gid = window.userGroupId;
+    if (!gid) throw new Error("Grupo nǜo definido.");
+    if (!produtos || produtos.length === 0) return;
+
+    // Firebase batch limit is 500 operations
+    const batch = this.db.batch();
+    
+    for (const p of produtos) {
+        if (!p.ean) continue;
+        const snapshot = await this.db.collection('Produtos').where('groupId', '==', gid).where('ean', '==', p.ean).get();
+        
+        if (!snapshot.empty) {
+            const docId = snapshot.docs[0].id;
+            const currentData = snapshot.docs[0].data();
+            
+            // Update last price and description (if new desc is better/longer, or just keep it)
+            // It's better to keep the longest description if they differ
+            let newDesc = currentData.descricao_padrao;
+            if (p.descricao && p.descricao.length > (newDesc || '').length) {
+                newDesc = p.descricao;
+            }
+
+            batch.update(this.db.collection('Produtos').doc(docId), {
+                ultimo_preco: parseFloat(p.preco || 0),
+                descricao_padrao: newDesc,
+                atualizado_em: new Date().toISOString()
+            });
+        } else {
+            const docRef = this.db.collection('Produtos').doc();
+            batch.set(docRef, {
+                groupId: gid,
+                ean: p.ean,
+                descricao_padrao: p.descricao || '',
+                ultimo_preco: parseFloat(p.preco || 0),
+                criado_em: new Date().toISOString(),
+                atualizado_em: new Date().toISOString()
+            });
+        }
+    }
+    
+    await batch.commit();
   }
 }
 
