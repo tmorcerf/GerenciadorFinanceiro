@@ -20,9 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultContainer = document.getElementById('import-result-container');
   const btnCategorizar = document.getElementById('btn-categorizar-ia');
   const btnSalvar = document.getElementById('btnSalvarImportacaoNova');
-  const uploadZone = document.getElementById('upload-zone-container');
+  const uploadZone = document.body;
   const feedbackConsole = document.getElementById('importFeedbackConsole');
   const resumoDiv = document.getElementById('importResumo');
+  const ninjaExtratorContainer = document.getElementById('ninja-extrator-container');
+  const ninjaExtratorText = document.getElementById('ninja-extrator-text');
+  const ninjaCategorizadorContainer = document.getElementById('ninja-categorizador-container');
+  const ninjaCategorizadorText = document.getElementById('ninja-categorizador-text');
 
 const funnyAIPhrases = [
   'Olha que lançamento estranho...',
@@ -51,35 +55,24 @@ const funnyAIPhrases = [
   'Isso aqui foi lazer ou necessidade?',
   'Decifrando nomes bizarros de maquininhas de cartão.',
   'Organizando tudo para você não ter trabalho.',
-  'Essa categoria de \'Diversos\' tá muito cheia, hein?',
-  'Processando, processando... e julgando um pouquinho.',
-  'Não se preocupe, o segredo do seu extrato está seguro comigo.',
-  'Finalizando a mágica dos dados financeiros...'
 ];
 
 let aiThinkingInterval = null;
+window.currentNinja = 'extrator';
 
 function addFeedback(message, type = 'system') {
-  if (!feedbackConsole) return;
-  if (feedbackConsole.innerHTML.includes('Aguardando arquivo...')) {
-    feedbackConsole.innerHTML = '';
-  }
-  
-  const div = document.createElement('div');
-  div.className = 'import-feed-item ' + type;
-  
-  // Clean up message newlines just in case
   let cleanMsg = message.replace(/^\\n|^\n/, '').replace(/\\n$|\n$/, '');
-  
-  if (type === 'ai' || type === 'ai thinking') {
-    div.className = 'import-feed-item ai' + (type.includes('thinking') ? ' thinking' : '');
-    div.innerHTML = `<div class="avatar"><img src="ninja.png" alt="AI"></div><div class="bubble">${cleanMsg}</div>`;
-  } else {
-    div.innerHTML = `<div class="msg">${cleanMsg}</div>`;
+  if (window.currentNinja === 'extrator') {
+    if (ninjaExtratorContainer) {
+      ninjaExtratorContainer.style.display = 'flex';
+      if (ninjaExtratorText) ninjaExtratorText.innerHTML = cleanMsg;
+    }
+  } else if (window.currentNinja === 'categorizador') {
+    if (ninjaCategorizadorContainer) {
+      ninjaCategorizadorContainer.style.display = 'flex';
+      if (ninjaCategorizadorText) ninjaCategorizadorText.innerHTML = cleanMsg;
+    }
   }
-  
-  feedbackConsole.appendChild(div);
-  feedbackConsole.scrollTop = feedbackConsole.scrollHeight;
 }
 
 function startAIThinking() {
@@ -211,6 +204,8 @@ function stopAIThinking() {
 
 
   uploadInput.addEventListener('change', async (e) => {
+    window.currentNinja = 'extrator';
+    if (ninjaCategorizadorContainer) ninjaCategorizadorContainer.style.display = 'none';
     const file = e.target.files[0];
     if (!file) return;
     window.currentImportFile = file;
@@ -586,16 +581,14 @@ function stopAIThinking() {
     const catKeys = Object.keys(dic).sort();
     
     // Atualiza o quadro da IA
-    const iaContainer = document.getElementById('ia-mind-container');
-    const iaTitle = document.getElementById('ia-mind-title');
-    const iaText = document.getElementById('ia-mind-text');
+    const ninjaCatContainer = document.getElementById('ninja-categorizador-container');
+    const ninjaCatText = document.getElementById('ninja-categorizador-text');
     
-    if (analiseExtracao || analiseCategorizacao) {
-      iaContainer.style.display = 'block';
-      iaTitle.innerText = isCategorizado ? 'Categorização' : 'Extração';
-      iaText.innerText = `"${isCategorizado ? analiseCategorizacao : analiseExtracao}"`;
+    if (analiseCategorizacao) {
+      if (ninjaCatContainer) ninjaCatContainer.style.display = 'flex';
+      if (ninjaCatText) ninjaCatText.innerText = `"${analiseCategorizacao}"`;
     } else {
-      iaContainer.style.display = 'none';
+      if (ninjaCatContainer) ninjaCatContainer.style.display = 'none';
     }
     
     // Define qual passo estamos para a classe do unified-table
@@ -845,6 +838,7 @@ function stopAIThinking() {
          try {
            btnCategorizar.disabled = true;
            btnCategorizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
+           window.currentNinja = 'categorizador';
            addFeedback(`Enviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`, 'ai'); startAIThinking();
            
            const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};

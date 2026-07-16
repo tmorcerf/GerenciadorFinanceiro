@@ -272,7 +272,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.9953 - 16/07/2026, 19:46:59</span>
+        <span style="font-size: 0.75rem;">v 0.9.9954 - 16/07/2026, 20:18:12</span>
       </div>
     </div>
   </aside>
@@ -733,57 +733,46 @@
     
     <!-- PANEL: IMPORTAÇÃO SIMPLIFICADA (Unificado) -->
     <div id="panel-import" class="dashboard-panel">
-      <div style="margin-bottom: 2rem;">
-        <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">Importação com Inteligência Artificial</h2>
-        <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Faça upload do seu extrato e deixe a IA categorizar magicamente.</p>
+      <!-- HEADER AND BUTTON -->
+      <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">Importação com Inteligência Artificial</h2>
+          <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Deixe os Ninjas trabalharem nos seus extratos magicamente.</p>
+        </div>
+        <button id="btn-top-import" title="Selecionar Arquivo" style="background: linear-gradient(135deg, var(--color-accent), #2563eb); color: white; border: none; border-radius: 50px; font-weight: 600; font-size: 0.95rem; padding: 10px 24px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 25px var(--color-accent-glow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';" onclick="document.getElementById('uploadFileImportacao').click()">
+          <i class="fas fa-upload"></i> Importar Extrato
+        </button>
+        <input type="file" id="uploadFileImportacao" accept=".csv, .txt, .ofx, .pdf, .xls, .xlsx" style="display: none;" />
       </div>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; margin-bottom: 2rem;">
-        
-        <!-- Left Side: Upload Zone -->
-        <div style="flex: 1 1 300px; max-width: 450px;">
-          <div class="metric-card" style="height: 100%; padding: 2.5rem; text-align: center; border: 1px dashed rgba(59, 130, 246, 0.5); background: linear-gradient(145deg, rgba(22, 27, 38, 0.4) 0%, rgba(30, 37, 51, 0.8) 100%); transition: all 0.3s ease; position: relative; overflow: hidden;" id="upload-zone-container" onmouseover="this.style.borderColor='var(--color-accent)'; this.style.boxShadow='0 0 20px var(--color-accent-glow)';" onmouseout="this.style.borderColor='rgba(59, 130, 246, 0.5)'; this.style.boxShadow='none';">
-            <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: var(--color-accent); filter: blur(60px); opacity: 0.3;"></div>
-            
-            <i class="fas fa-cloud-upload-alt" style="font-size: 3.5rem; color: var(--color-accent); margin-bottom: 1rem; filter: drop-shadow(0 0 10px var(--color-accent-glow));"></i>
-            <h3 style="margin: 0 0 10px 0; font-weight: 600; color: var(--text-primary);">Arraste seu extrato aqui</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">A IA lerá o documento para sincronizar sua planilha.</p>
-            
-            <input type="file" id="uploadFileImportacao" accept=".csv, .txt, .ofx, .pdf, .xls, .xlsx" style="display: none;" />
-            <button id="btn-import-novo" title="Selecionar Arquivo" style="background: linear-gradient(135deg, var(--color-accent), #2563eb); color: white; border: none; border-radius: 50px; font-weight: 600; font-size: 1.05rem; padding: 14px 32px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px var(--color-accent-glow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; z-index: 1;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 30px rgba(59,130,246,0.6)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 25px var(--color-accent-glow)';" onclick="document.getElementById('uploadFileImportacao').click()">
-              <i class="fas fa-magic"></i> Extrair Dados
-            </button>
-          </div>
-        </div>
-        
-        <!-- Right Side: Feedback Console & Reconciliation info -->
-        <div class="glass-card" style="flex: 2; min-width: 300px; display: flex; flex-direction: column; position: relative;">
-          
-          <!-- Reconciliation Dates Row -->
-          <div id="reconciliation-dates-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
-            <!-- Preenchido via JS -->
-          </div>
+      <!-- RECONCILIATION DATES -->
+      <div id="reconciliation-dates-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+      </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="margin: 0; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 1.1rem;">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 16 12 12 12 8"></polyline><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              Status da Sincronização
-            </h3>
-            
-            <button id="btn-view-doc" title="Ver Documento Analisado" style="display: none; position: fixed; bottom: 30px; right: 30px; z-index: 1000; width: 60px; height: 60px; border-radius: 50%; background: var(--color-accent); color: white; border: none; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); font-size: 1.5rem; cursor: pointer; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-              <i class="fas fa-file-invoice"></i>
-            </button>
-          </div>
-          
-          <div id="importFeedbackConsole" style="flex: 1; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 0.8rem; overflow-y: auto; max-height: 400px;">
-            <div class="import-feed-item system">
-              <div class="msg">Aguardando arquivo...</div>
-            </div>
-          </div>
-          
-          <div id="importResumo" style="display: none; margin-top: 15px; padding: 15px; background: rgba(78, 205, 196, 0.1); border-left: 4px solid var(--accent-blue); border-radius: 4px;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button id="btn-view-doc" title="Ver Documento Analisado" style="display: none; position: fixed; bottom: 30px; right: 30px; z-index: 1000; width: 60px; height: 60px; border-radius: 50%; background: var(--color-accent); color: white; border: none; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); font-size: 1.5rem; cursor: pointer; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            <i class="fas fa-file-invoice"></i>
+          </button>
+      </div>
+
+      <!-- NINJA EXTRATOR (BRANCO) CONTAINER -->
+      <div id="ninja-extrator-container" style="display: none; align-items: center; gap: 20px; margin-bottom: 2rem;">
+        <div class="ninja-avatar" style="flex-shrink: 0; width: 140px; height: 140px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1); animation: bounce-ninja 3s infinite ease-in-out;">
+          <img src="img/ninjas/branco_base.png" alt="Ninja Extrator" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="ninja-bubble" style="flex-grow: 1; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 25px; position: relative; border-bottom-left-radius: 4px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
+          <h3 style="margin: 0 0 12px 0; color: var(--color-accent); font-size: 1.2rem;"><i class="fas fa-search"></i> Ninja Extrator</h3>
+          <p id="ninja-extrator-text" style="margin: 0; color: var(--text-primary); font-size: 1.05rem; font-style: italic; line-height: 1.5;">Aguardando seu documento...</p>
         </div>
       </div>
+      
+      <div id="importFeedbackConsole" style="background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 0.8rem; overflow-y: auto; max-height: 400px; display: none;">
+        <div class="import-feed-item system">
+          <div class="msg">Aguardando arquivo...</div>
+        </div>
+      </div>
+      
+      <div id="importResumo" style="display: none; margin-top: 15px; padding: 15px; background: rgba(78, 205, 196, 0.1); border-left: 4px solid var(--accent-blue); border-radius: 4px;"></div>
 
       <!-- Modal Ver Documento -->
       <div id="docModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.85); align-items:center; justify-content:center; backdrop-filter: blur(5px);">
@@ -817,13 +806,14 @@
         </style>
         <div id="import-table-content" style="padding: 0 1.5rem 1.5rem 1.5rem;">
           
-          <div id="ia-mind-container" class="import-feed-item ai" style="display:none; margin: 15px 0 25px 0; max-width: 100%;">
-            <div class="avatar" style="width: 48px; height: 48px;">
-              <img src="ninja.png" alt="IA">
+          <!-- NINJA CATEGORIZADOR (PRETO) CONTAINER -->
+          <div id="ninja-categorizador-container" style="display: none; align-items: center; gap: 20px; margin-bottom: 2rem; flex-direction: row-reverse;">
+            <div class="ninja-avatar" style="flex-shrink: 0; width: 140px; height: 140px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1); animation: bounce-ninja 3s infinite ease-in-out; animation-delay: 0.5s;">
+              <img src="img/ninjas/preto_base.png" alt="Ninja Categorizador" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
-            <div class="bubble" style="width: 100%; border-bottom-right-radius: 12px; border-top-left-radius: 12px;">
-              <h4 style="margin: 0 0 8px 0; color: var(--color-accent); font-size: 1.05rem;"><i class="fas fa-magic"></i> Mente da IA (<span id="ia-mind-title"></span>)</h4>
-              <p id="ia-mind-text" style="margin: 0; font-size: 0.95rem; color: var(--text-primary); font-style: italic; line-height: 1.5;"></p>
+            <div class="ninja-bubble" style="flex-grow: 1; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 20px; padding: 25px; position: relative; border-bottom-right-radius: 4px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
+              <h3 style="margin: 0 0 12px 0; color: #8b5cf6; font-size: 1.2rem; text-align: right;"><i class="fas fa-brain"></i> Ninja Categorizador</h3>
+              <p id="ninja-categorizador-text" style="margin: 0; color: var(--text-primary); font-size: 1.05rem; font-style: italic; line-height: 1.5; text-align: right;">Analisando...</p>
             </div>
           </div>
 
