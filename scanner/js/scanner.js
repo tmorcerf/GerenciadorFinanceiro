@@ -27,6 +27,7 @@ window.Scanner = (() => {
         aspectRatio: 1.0,
         disableFlip: false,
         rememberLastUsedCamera: true,
+        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
     };
 
