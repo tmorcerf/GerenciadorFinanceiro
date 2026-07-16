@@ -261,7 +261,8 @@ window.App = (() => {
                     
                     const produtosToSave = [];
                     for (const i of itensComEan) {
-                        let descricao = i.descricao; // Fallback para o nome abreviado da SEFAZ
+                        const descricaoSefaz = i.descricao; // Nome original da nota fiscal
+                        let descricaoOficial = ""; // Nome puxado da internet
                         
                         try {
                             const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${i.codigo}.json`);
@@ -271,7 +272,7 @@ window.App = (() => {
                                 if (nome) {
                                     if (data.product.brands) nome += ` - ${data.product.brands}`;
                                     if (data.product.quantity) nome += ` (${data.product.quantity})`;
-                                    descricao = nome;
+                                    descricaoOficial = nome;
                                 }
                             }
                         } catch (e) {
@@ -280,7 +281,8 @@ window.App = (() => {
 
                         produtosToSave.push({
                             ean: i.codigo,
-                            descricao: descricao,
+                            descricao_sefaz: descricaoSefaz,
+                            descricao_oficial: descricaoOficial,
                             preco: i.valorUnitario || (i.valorTotal / (i.quantidade || 1)) || 0
                         });
                     }

@@ -231,6 +231,12 @@
         </a>
       </li>
       <li>
+        <a class="nav-item" data-target="panel-produtos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"></path></svg>
+          Meus Produtos
+        </a>
+      </li>
+      <li>
         <a class="nav-item" href="scanner_ean/index.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
           Leitor de Produto
@@ -629,17 +635,50 @@
     </div>
 
     <!-- 4. PANEL: AUDIT -->
-    <div id="panel-audit" class="dashboard-panel">
+<div id="panel-audit" class="dashboard-panel">
       <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de Consistência</h2>
       <div id="audit-container" class="audit-container">
         <!-- Content loaded via JavaScript -->
       </div>
-    </div>
-    
-    <!-- PAINEL SCANNER ANTIGO REMOVIDO PARA USAR O NOVO EM scanner/index.html -->
-    
-    <!-- PANEL: OFERTAS & CORTACOINS -->
-    <div id="panel-ofertas" class="dashboard-panel">
+      </div>
+      
+      <!-- PAINEL SCANNER ANTIGO REMOVIDO PARA USAR O NOVO EM scanner/index.html -->
+      
+      <!-- PANEL: MEUS PRODUTOS -->
+      <div id="panel-produtos" class="dashboard-panel">
+          <div class="panel-header">
+              <h2>Meus Produtos (EAN)</h2>
+              <div class="header-actions">
+                  <button class="btn-primary" onclick="window.location.href='scanner_ean/index.html'">
+                      <i class="fas fa-barcode"></i> Escanear Produto
+                  </button>
+              </div>
+          </div>
+          
+          <div class="panel-content">
+              <div class="card p-0" style="background: rgba(20, 20, 25, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
+                  <div style="overflow-x: auto;">
+                      <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                          <thead>
+                              <tr style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">EAN</th>
+                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Descrição Oficial</th>
+                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Descrição Sefaz</th>
+                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Último Preço</th>
+                                  <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Ações</th>
+                              </tr>
+                          </thead>
+                          <tbody id="lista-produtos-tbody">
+                              <!-- Preenchido via JS -->
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- PANEL: OFERTAS & CORTACOINS -->
+      <div id="panel-ofertas" class="dashboard-panel">
         <div style="margin-bottom: 2rem;">
             <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">CortaCoins & Ofertas</h2>
             <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Suas recompensas e os melhores achados da região.</p>
@@ -1198,6 +1237,7 @@
   <script src="scripts/sefaz-extractor.js"></script>
   <script src="scripts/catalog-service.js"></script>
   <script src="scripts/dashboard-ofertas.js"></script>
+  <script src="scripts/produtos-ui.js"></script>
 
   <!-- New Transaction Modal -->
   <div id="newTransactionModal" class="modal-overlay" style="z-index:10000;">

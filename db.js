@@ -217,16 +217,21 @@ class Database {
             const docId = snapshot.docs[0].id;
             const currentData = snapshot.docs[0].data();
             
-            // Update last price and description (if new desc is better/longer, or just keep it)
-            // It's better to keep the longest description if they differ
-            let newDesc = currentData.descricao_padrao;
-            if (p.descricao && p.descricao.length > (newDesc || '').length) {
-                newDesc = p.descricao;
+            // Update last price and descriptions
+            let newDescOficial = currentData.descricao_oficial || '';
+            if (p.descricao_oficial) {
+                newDescOficial = p.descricao_oficial; // Keep updating if found again
+            }
+            
+            let newDescSefaz = currentData.descricao_sefaz || currentData.descricao_padrao || '';
+            if (p.descricao_sefaz && p.descricao_sefaz.length > newDescSefaz.length) {
+                newDescSefaz = p.descricao_sefaz;
             }
 
             batch.update(this.db.collection('Produtos').doc(docId), {
                 ultimo_preco: parseFloat(p.preco || 0),
-                descricao_padrao: newDesc,
+                descricao_sefaz: newDescSefaz,
+                descricao_oficial: newDescOficial,
                 atualizado_em: new Date().toISOString()
             });
         } else {
@@ -234,7 +239,8 @@ class Database {
             batch.set(docRef, {
                 groupId: gid,
                 ean: p.ean,
-                descricao_padrao: p.descricao || '',
+                descricao_sefaz: p.descricao_sefaz || '',
+                descricao_oficial: p.descricao_oficial || '',
                 ultimo_preco: parseFloat(p.preco || 0),
                 criado_em: new Date().toISOString(),
                 atualizado_em: new Date().toISOString()
