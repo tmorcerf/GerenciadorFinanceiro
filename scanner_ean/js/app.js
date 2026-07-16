@@ -41,7 +41,7 @@ const App = (function() {
                 const data = snapshot.docs[0].data();
                 return {
                     ean: data.ean,
-                    descricao: data.descricao_oficial || data.descricao_sefaz || data.descricao_padrao,
+                    descricao: data.descricao_oficial || data.descricao_ia || data.descricao_sefaz || data.descricao_padrao,
                     preco: data.ultimo_preco,
                     fonte: 'Meus Produtos (Firebase)'
                 };

@@ -227,11 +227,17 @@ class Database {
             if (p.descricao_sefaz && p.descricao_sefaz.length > newDescSefaz.length) {
                 newDescSefaz = p.descricao_sefaz;
             }
+            
+            let newDescIa = currentData.descricao_ia || '';
+            if (p.descricao_ia) {
+                newDescIa = p.descricao_ia;
+            }
 
             batch.update(this.db.collection('Produtos').doc(docId), {
                 ultimo_preco: parseFloat(p.preco || 0),
                 descricao_sefaz: newDescSefaz,
                 descricao_oficial: newDescOficial,
+                descricao_ia: newDescIa,
                 atualizado_em: new Date().toISOString()
             });
         } else {
@@ -241,6 +247,7 @@ class Database {
                 ean: p.ean,
                 descricao_sefaz: p.descricao_sefaz || '',
                 descricao_oficial: p.descricao_oficial || '',
+                descricao_ia: p.descricao_ia || '',
                 ultimo_preco: parseFloat(p.preco || 0),
                 criado_em: new Date().toISOString(),
                 atualizado_em: new Date().toISOString()

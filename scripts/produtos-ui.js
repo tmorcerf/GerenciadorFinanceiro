@@ -49,15 +49,27 @@ class ProdutosUI {
             const price = parseFloat(p.ultimo_preco || 0);
             const priceStr = price > 0 ? `R$ ${price.toFixed(2)}` : '-';
             
-            // Handle missing oficial description
-            const descOficial = p.descricao_oficial ? p.descricao_oficial : '<span style="color:var(--color-warning);font-size:0.8rem;"><i class="fas fa-exclamation-triangle"></i> Não Encontrado</span>';
+            // Handle descriptions
+            let descFinal = p.descricao_oficial;
+            let badge = '';
+
+            if (!descFinal) {
+                if (p.descricao_ia) {
+                    descFinal = p.descricao_ia;
+                    badge = '<span style="background:var(--color-primary); color:#000; font-size:0.6rem; padding: 2px 6px; border-radius:10px; margin-left: 8px; font-weight:bold;">Gerado por IA</span>';
+                } else {
+                    descFinal = '<span style="color:var(--color-warning);font-size:0.8rem;"><i class="fas fa-exclamation-triangle"></i> Não Encontrado</span>';
+                }
+            }
+            
             const descSefaz = p.descricao_sefaz || p.descricao_padrao || '-';
 
             tr.innerHTML = `
                 <td style="padding: 1rem; color: var(--text-secondary); font-family: monospace;">${p.ean}</td>
                 <td style="padding: 1rem; color: #fff; font-weight: 500;">
-                    <div style="display:flex; align-items:center; gap: 8px;">
-                        <span id="desc-oficial-txt-${p.id}">${descOficial}</span>
+                    <div style="display:flex; align-items:center;">
+                        <span id="desc-oficial-txt-${p.id}">${descFinal}</span>
+                        ${badge}
                     </div>
                 </td>
                 <td style="padding: 1rem; color: var(--text-muted); font-size: 0.9rem;">${descSefaz}</td>

@@ -62,6 +62,40 @@ Se não souber o nome exato, dê seu melhor palpite baseado no CNPJ e localizaç
         }
     }
 
+    // ── Melhorar Nomes de Produtos em Lote ────────────────────────────────
+    
+    /**
+     * Usa Gemini para transformar os nomes abreviados da SEFAZ em nomes completos.
+     * @param {Array<{ean: string, descricao: string}>} itens 
+     * @returns {Promise<Array<{ean: string, descricao_ia: string}>>}
+     */
+    async function melhorarNomesEmLote(itens) {
+        if (!itens || itens.length === 0) return [];
+        
+        const systemInstruction = `Você é um especialista em catálogo de produtos de supermercado brasileiro. Sua tarefa é transformar abreviações de nota fiscal em nomes de produtos reais, completos e comerciais. Responda APENAS em formato JSON válido (um array de objetos).`;
+
+        const userPrompt = `Abaixo está uma lista de produtos de uma nota fiscal, representados por seus EANs e nomes abreviados. 
+Para cada um, descubra qual é o produto real. Retorne a resposta como um array JSON exatamente no formato abaixo:
+
+Formato de Saída esperado (exemplo):
+[
+  { "ean": "123", "descricao_ia": "Leite Integral Parmalat 1 Litro" },
+  { "ean": "456", "descricao_ia": "Ração Úmida Whiskas Sachê Adulto Sabor Salmão 85g" }
+]
+
+Lista para processar:
+${JSON.stringify(itens.map(i => ({ ean: i.ean, descricao_abreviada: i.descricao })), null, 2)}`;
+
+        try {
+            const response = await _chamarGemini(systemInstruction, userPrompt);
+            const parsed = _parseJSON(response);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+            console.error('[GeminiService] Erro ao melhorar nomes em lote:', err);
+            return [];
+        }
+    }
+
     // ── Extrair Nota de Imagem (Vision) ────────────────────────────
 
     /**
@@ -233,6 +267,7 @@ Se não conseguir ler algum campo, use null. Extraia TODOS os itens visíveis.`;
     // ── API Pública ────────────────────────────────────────────────
     return {
         identificarEstabelecimento,
+        melhorarNomesEmLote,
         extrairNotaDeImagem,
         isConfigurado
     };
