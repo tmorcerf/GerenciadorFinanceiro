@@ -63,84 +63,97 @@ window.Storage = (() => {
         const uid = window.currentUser ? window.currentUser.uid : 'anonimo';
         const groupId = window.userGroupId || uid;
 
+        let totalValor = nota.valorTotal || 0;
+        if (totalValor === 0 && nota.itens) {
+            nota.itens.forEach(i => totalValor += (i.valorTotal || (i.quantidade * i.valorUnitario) || 0));
+        }
+
         const novaNota = {
-            chaveAcesso: nota.chaveAcesso, cnpj: nota.cnpj, cnpjFormatado: nota.cnpjFormatado,
-            uf: nota.uf, modelo: nota.modelo, modeloDesc: nota.modeloDesc,
-            serie: nota.serie, numeroNota: nota.numeroNota, dataEmissao: nota.dataEmissao,
-            valorTotal: nota.valorTotal || 0, estabelecimento: nota.estabelecimento || 'Não identificado',
-            razaoSocial: nota.razaoSocial || '', categoria: nota.categoria || 'Outros',
-            geminiConfianca: nota.geminiConfianca || 'baixa', urlOriginal: nota.urlOriginal || '',
-            metodoExtracao: nota.metodoExtracao || 'manual', itens: nota.itens || [],
-            exportado: false, origem: 'scanner-nfe', criadoEm: new Date().toISOString(),
+            chave: nota.chaveAcesso || nota.chave, 
+            uf: nota.uf || '',
+            emitente: { nome: nota.estabelecimento || nota.razaoSocial || 'Estabelecimento', cnpj: nota.cnpj || '' },
+            dataEmissao: nota.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/'),
+            valorTotal: totalValor,
+            status: 'concluida',
+            urlOriginal: nota.urlOriginal || '',
+            criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
             uid: uid
         };
 
         if (db) {
             const batch = db.batch();
             
-            // 1. Salvar no histórico do scanner (Opcional, mas mantém a UI do Opus funcionando)
-            const notaRef = db.collection(COLECAO).doc();
+            // 1. Salvar no histórico (nfe_notas)
+            const notaId = nota.chaveAcesso || nota.chave || Date.now().toString();
+            const notaRef = db.collection('nfe_notas').doc(notaId);
             batch.set(notaRef, novaNota);
-            novaNota.id = notaRef.id;
+            novaNota.id = notaId;
 
-            // 2. Salvar o Estabelecimento no Mapa Global
-            if (nota.cnpj) {
-                const estabRef = db.collection('estabelecimentos').doc(nota.cnpj);
-                batch.set(estabRef, {
-                    razaoSocial: nota.razaoSocial,
-                    nomeFantasia: nota.estabelecimento,
-                    uf: nota.uf,
-                    atualizadoEm: new Date().toISOString()
-                }, { merge: true });
-            }
-
-            // 3. Processar Itens
+            // 2. Processar Itens e Agrupar
             if (nota.itens && nota.itens.length > 0) {
+                const categoriasAgrupadas = {};
+
                 for (const item of nota.itens) {
-                    // A. Lançamento Privado (Corta Gastos Dashboard)
-                    const lancRef = db.collection('lancamentos').doc();
-                    batch.set(lancRef, {
-                        descricao: `${item.descricao} (${nota.estabelecimento})`,
-                        valor: item.valorTotal,
-                        tipo: 'despesa',
-                        data: nota.dataEmissao ? nota.dataEmissao.split('T')[0] : new Date().toISOString().split('T')[0],
-                        categoria: nota.categoria || 'Outros',
-                        subcategoria: '',
-                        conta: 'Cofre/Carteira',
-                        groupId: groupId,
-                        origem: 'scanner-nfe',
-                        uid: uid,
-                        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                    const cat = item.categoria || nota.categoria || 'Outros';
+                    const valorFinal = item.valorTotal || (item.quantidade * item.valorUnitario) || 0;
+
+                    // Rede Colaborativa (nfe_itens)
+                    const itemRef = db.collection('nfe_itens').doc();
+                    batch.set(itemRef, {
+                        notaId: notaId,
+                        chave: novaNota.chave,
+                        nomeProduto: item.descricao || item.nomeProduto || '',
+                        ean: item.codigo || item.ean || '',
+                        quantidade: item.quantidade || 1,
+                        valorUnitario: item.valorUnitario || valorFinal,
+                        valorTotal: valorFinal,
+                        categoria: cat,
+                        cnpjEmitente: novaNota.emitente.cnpj,
+                        uf: novaNota.uf,
+                        criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                        uid: uid
                     });
 
-                    // B. Rede Colaborativa (Preços Globais)
-                    const precoRef = db.collection('precos_colaborativos').doc();
-                    batch.set(precoRef, {
-                        codigo_barras: item.codigo || '',
-                        produto_nome: item.descricao,
-                        categoria: nota.categoria || 'Outros',
-                        valor_unitario: item.valorUnitario,
-                        data_captura: firebase.firestore.FieldValue.serverTimestamp(),
-                        estabelecimento_cnpj: nota.cnpj || '',
-                        estabelecimento_nome: nota.estabelecimento || '',
-                        usuario_colaborador: uid
-                    });
+                    // Soma para Agrupamento Financeiro
+                    if (!categoriasAgrupadas[cat]) {
+                        categoriasAgrupadas[cat] = 0;
+                    }
+                    categoriasAgrupadas[cat] += valorFinal;
+                }
+
+                // Lançamento Privado Agrupado
+                for (const [cat, somaValor] of Object.entries(categoriasAgrupadas)) {
+                    if (somaValor > 0) {
+                        const lancRef = db.collection('lancamentos').doc();
+                        batch.set(lancRef, {
+                            data: novaNota.dataEmissao,
+                            vencimento: novaNota.dataEmissao,
+                            conta: 'Cofre/Carteira',
+                            obs: `${novaNota.emitente.nome} (Agrupado: ${cat})`,
+                            valor: -Math.abs(somaValor),
+                            categoria: cat,
+                            subcategoria: 'Scanner',
+                            criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                            origem: 'scanner_nfe',
+                            chave_nfe: novaNota.chave,
+                            groupId: groupId,
+                            uid: uid
+                        });
+                    }
                 }
             }
 
             await batch.commit();
 
-            // 4. Recompensar Colaborador (CortaCoins)
+            // 3. Recompensar Colaborador (CortaCoins) - 1 a cada R$ 10
             if (window.CortaCoins && typeof window.CortaCoins.creditar === 'function') {
-                // Ganha 10 XP base + 2 XP por item
-                const xpGanho = 10 + ((nota.itens || []).length * 2);
-                await window.CortaCoins.creditar(xpGanho, `Contribuição Colaborativa (Scanner)`);
+                const xpGanho = Math.max(1, Math.floor(totalValor / 10));
+                await window.CortaCoins.creditar(xpGanho, `Leitura NF-e ${novaNota.chave.substring(0,6)}...`);
                 console.log(`[Storage] Creditado ${xpGanho} CortaCoins pela contribuição.`);
                 if (window.App && window.App.toast) {
                     window.App.toast(`🪙 +${xpGanho} CortaCoins pelo envio!`, 'success');
                 }
             }
-
         } else {
             // Fallback offline / sem firebase
             novaNota.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
