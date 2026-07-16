@@ -1458,6 +1458,8 @@ let txDateTypeFilter = 'vencimento';
             dadosFinanceiros.orcamento = dbDados.orcamentos || [];
             dadosFinanceiros.auditoria = dbDados.auditoria || [];
             dadosFinanceiros.importacoes = dbDados.importsInfo || [];
+            dadosFinanceiros.produtos = dbDados.produtos || [];
+            window.appData = dadosFinanceiros; // Ensure appData is globally accessible early
             
             window.dicionarioGeral = dbDados.categoriasDict || {};
 
