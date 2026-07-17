@@ -143,9 +143,10 @@ window.GeminiService = (function() {
       '2. Para conta corrente: vencimento = data. Para cartao: vencimento = data da fatura\n' +
       '3. IGNORE transferencias proprias, pagamentos de fatura\n' +
       '4. PARCELAS formato (1/6): projete todas com vencimentos mensais\n' +
-      '5. Identifique o nome da conta e vencimento se for cartao\n\n' +
+      '5. Identifique o nome da conta e vencimento se for cartao\n' +
+      '6. Se o documento contiver saldo inicial e/ou saldo final (ou anterior para cartao), extraia-os como numeros. Se nao, retorne null.\n\n' +
       'RETORNE EXATAMENTE:\n' +
-      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","Vencimento da fatura":null},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
+      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","Vencimento da fatura":null,"saldo_inicial":null,"saldo_final":null},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
     return await _chamarGemini(MODEL_FLASH, systemPrompt, userContent);
   }

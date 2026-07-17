@@ -3,9 +3,6 @@
 
 let dadosSincronizacao = { corretos: [], faltantes: [], sobrando: [] };
 let isCategorizado = false;
-let isPasso3Ativo = false;
-let transacoesPasso3 = [];
-let transacoesNormais = [];
 let analiseExtracao = "";
 let analiseCategorizacao = "";
 let cabecalhoAtual = null;
@@ -235,14 +232,13 @@ function stopAIThinking() {
     resumoDiv.style.display = 'none';
     resumoDiv.innerHTML = '';
     isCategorizado = false;
-    isPasso3Ativo = false;
     analiseExtracao = "";
     analiseCategorizacao = "";
     cabecalhoAtual = null;
     
     if (document.getElementById('passo3-container')) {
       document.getElementById('passo3-container').style.display = 'none';
-      document.getElementById('passo3-container').innerHTML = ''; // Passo 3 container ainda é populado via js (apenas o header dele)
+      document.getElementById('passo3-container').innerHTML = '';
     }
 
     if (btnImport) {
@@ -270,46 +266,13 @@ function stopAIThinking() {
           ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate}))
           : []);
 
-      let json;
-      if (window.GeminiService) {
-        try {
-          json = await window.GeminiService.extrairExtrato({
-            fileContent: fileData.content,
-            fileType: fileData.type,
-            fileName: file.name,
-            contasInfo: _contasInfo
-          });
-        } catch (geminiErr) {
-          console.warn('[Gemini] Extração falhou:', geminiErr.message);
-          addFeedback(`⚠️ Gemini indisponível, usando IA de backup...`, 'ai');
-          const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'importar_simples_v2',
-              fileContent: fileData.content,
-              fileType: fileData.type,
-              fileName: file.name,
-              contasInfo: _contasInfo
-            })
-          });
-          json = await _res.json();
-        }
-      } else {
-        // Fallback: Apps Script com Claude
-        const _res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'importar_simples_v2',
-            fileContent: fileData.content,
-            fileType: fileData.type,
-            fileName: file.name,
-            contasInfo: _contasInfo
-          })
-        });
-        json = await _res.json();
-      }
+      if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
+      let json = await window.GeminiService.extrairExtrato({
+        fileContent: fileData.content,
+        fileType: fileData.type,
+        fileName: file.name,
+        contasInfo: _contasInfo
+      });
 
       if (json.status !== 'success') {
         throw new Error(json.message || "Erro desconhecido na IA.");
@@ -351,6 +314,39 @@ function stopAIThinking() {
       const contaDoExtrato = String(cabecalho['Nome da conta'] || cabecalho['conta'] || '').trim().toLowerCase();
       const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
       let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
+      
+      if (!contaMatch && contaDoExtrato !== '') {
+          const criar = confirm(`A conta "${cabecalho['Nome da conta'] || cabecalho['conta']}" não foi encontrada no seu cadastro.\nDeseja criá-la agora para continuar a importação?`);
+          if (criar) {
+              const tipoConta = prompt(`Qual o tipo da conta?\nDigite 1 para Conta Corrente\nDigite 2 para Cartão de Crédito`, "1");
+              if (tipoConta === "1" || tipoConta === "2") {
+                  const novaConta = {
+                      id: 'conta_' + Date.now(),
+                      nome: cabecalho['Nome da conta'] || cabecalho['conta'],
+                      tipo: tipoConta === "1" ? 'Conta Corrente' : 'Cartão de Crédito',
+                      saldo_inicial: 0,
+                      cor: '#3b82f6',
+                      ignorar_soma: false,
+                      conciliado_ate: '',
+                      conciliado_desde: ''
+                  };
+                  if (window.DB && window.DB.salvarConta) {
+                      await window.DB.salvarConta(novaConta);
+                      if (!_df.contas) _df.contas = [];
+                      _df.contas.push(novaConta);
+                      contaMatch = novaConta;
+                      addFeedback(`Conta "${novaConta.nome}" criada com sucesso!`, 'success');
+                  } else {
+                      throw new Error("Erro ao acessar DB.salvarConta.");
+                  }
+              } else {
+                  throw new Error("Criação de conta cancelada ou tipo inválido.");
+              }
+          } else {
+              throw new Error("Importação cancelada, pois a conta não existe.");
+          }
+      }
+
       let isCartaoCredito = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
       let vencimentoFatura = cabecalho['Vencimento da fatura'] || cabecalho['vencimento'] || cabecalho['Vencimento'] || cabecalho['Data de Vencimento'] || null;
       if (vencimentoFatura && vencimentoFatura.toLowerCase().includes('obrigatório')) vencimentoFatura = null;
@@ -527,20 +523,128 @@ function stopAIThinking() {
       addFeedback(`Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`, 'system');
 
       resultContainer.style.display = 'block';
-      // Se não tem itens, não mostra botões
-      if (dadosExtrato.length > 0) {
-        if (faltantes.length > 0) {
-            if (btnCategorizar) {
-                btnCategorizar.style.display = 'inline-flex';
-                btnCategorizar.disabled = false;
-            }
-        } else {
-            isCategorizado = true;
-        }
-        btnSalvar.style.display = 'inline-flex';
+      // Conferência de Saldos (Nova Lógica)
+      const confContainer = document.getElementById('conferencia-saldo-container');
+      const inputSaldoIni = document.getElementById('input-saldo-inicial');
+      const inputSaldoFim = document.getElementById('input-saldo-final');
+      const inputSoma = document.getElementById('input-soma-lancamentos');
+      const inputDiff = document.getElementById('input-diferenca-saldo');
+      const btnConfirmarSaldo = document.getElementById('btn-confirmar-saldo');
+      const msgDiff = document.getElementById('msg-diferenca-saldo');
+      const tableContent = document.getElementById('import-table-content');
+
+      if (confContainer && dadosExtrato.length > 0) {
+          confContainer.style.display = 'block';
+          tableContent.style.display = 'none';
+          
+          if (btnCategorizar) btnCategorizar.style.display = 'none';
+          if (btnSalvar) btnSalvar.style.display = 'none';
+
+          // Set initial values from extraction
+          inputSaldoIni.value = (cabecalhoAtual && cabecalhoAtual.saldo_inicial !== undefined && cabecalhoAtual.saldo_inicial !== null) ? cabecalhoAtual.saldo_inicial : '';
+          inputSaldoFim.value = (cabecalhoAtual && cabecalhoAtual.saldo_final !== undefined && cabecalhoAtual.saldo_final !== null) ? cabecalhoAtual.saldo_final : '';
+
+          // Validação da Cadeia de Saldos (Extrato Anterior)
+          let alertaCadeia = document.getElementById('alerta-cadeia-saldo');
+          if (!alertaCadeia) {
+              alertaCadeia = document.createElement('div');
+              alertaCadeia.id = 'alerta-cadeia-saldo';
+              alertaCadeia.style = "font-size: 0.85rem; padding: 12px; margin-bottom: 15px; border-radius: 8px; display: none;";
+              confContainer.insertBefore(alertaCadeia, confContainer.children[1]); // insere antes do grid
+          }
+          alertaCadeia.style.display = 'none';
+
+          if (_df && _df.extratos) {
+              let extratosConta = _df.extratos.filter(e => String(e.conta).toLowerCase() === contaDoExtrato && e.data_fim).sort((a,b) => parseDataBR(a.data_fim) - parseDataBR(b.data_fim));
+              let extratoAnterior = null;
+              for (let i = extratosConta.length - 1; i >= 0; i--) {
+                  if (parseDataBR(extratosConta[i].data_fim) < minTime) {
+                      extratoAnterior = extratosConta[i];
+                      break;
+                  }
+              }
+              if (extratoAnterior && extratoAnterior.saldo_final !== undefined && extratoAnterior.saldo_final !== null) {
+                  let sfAnt = parseFloat(extratoAnterior.saldo_final);
+                  let siAtual = parseFloat(inputSaldoIni.value || 0);
+                  
+                  if (Math.abs(sfAnt - siAtual) > 0.05) {
+                      alertaCadeia.style.display = 'block';
+                      alertaCadeia.style.background = 'rgba(239, 68, 68, 0.1)';
+                      alertaCadeia.style.color = '#ef4444';
+                      alertaCadeia.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+                      alertaCadeia.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>Atenção à Cadeia de Saldos:</strong> O saldo final do extrato anterior (${extratoAnterior.data_inicio} a ${extratoAnterior.data_fim}) foi de <strong>${sfAnt.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</strong>, mas o saldo inicial identificado agora é <strong>${siAtual.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}</strong>. Corrija o saldo inicial para manter a consistência.`;
+                  } else {
+                      alertaCadeia.style.display = 'block';
+                      alertaCadeia.style.background = 'rgba(16, 185, 129, 0.1)';
+                      alertaCadeia.style.color = '#10b981';
+                      alertaCadeia.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+                      alertaCadeia.innerHTML = `<i class="fas fa-check-circle"></i> <strong>Cadeia de Saldos OK:</strong> O saldo inicial bate perfeitamente com o final do extrato anterior (${extratoAnterior.data_inicio} a ${extratoAnterior.data_fim}).`;
+                  }
+              }
+          }
+
+          const atualizarSaldos = () => {
+             let sIni = parseFloat(inputSaldoIni.value || 0);
+             let sFim = parseFloat(inputSaldoFim.value || 0);
+             let soma = 0;
+             [...dadosSincronizacao.faltantes, ...dadosSincronizacao.corretos.map(c => c.extrato)].forEach(t => {
+                soma += parseFloat(t.valor || 0);
+             });
+             
+             let diff = sFim - sIni - soma;
+             
+             inputSoma.value = soma.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+             inputDiff.value = diff.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+             
+             if (Math.abs(diff) > 0.05) {
+                msgDiff.style.display = 'block';
+                inputDiff.style.color = 'var(--color-warning)';
+             } else {
+                msgDiff.style.display = 'none';
+                inputDiff.style.color = 'var(--text-primary)';
+             }
+          };
+
+          atualizarSaldos();
+          inputSaldoIni.addEventListener('input', atualizarSaldos);
+          inputSaldoFim.addEventListener('input', atualizarSaldos);
+
+          // Remove event listener antigo e adiciona novo (para evitar multiplos bind)
+          const newBtnConf = btnConfirmarSaldo.cloneNode(true);
+          btnConfirmarSaldo.parentNode.replaceChild(newBtnConf, btnConfirmarSaldo);
+          
+          newBtnConf.addEventListener('click', () => {
+              if (inputSaldoIni.value === '' || inputSaldoFim.value === '') {
+                 alert("Por favor, informe os saldos inicial e final (mesmo que sejam 0).");
+                 return;
+              }
+              
+              // Ocultar conferência e mostrar tabela e botões
+              confContainer.style.display = 'none';
+              tableContent.style.display = 'block';
+              
+              if (faltantes.length > 0) {
+                  if (btnCategorizar) {
+                      btnCategorizar.style.display = 'inline-flex';
+                      btnCategorizar.disabled = false;
+                  }
+              } else {
+                  isCategorizado = true;
+              }
+              if (btnSalvar) btnSalvar.style.display = 'inline-flex';
+              
+              if (faltantes.length === 0 && sobrando.length > 0) {
+                 isCategorizado = true;
+                 btnSalvar.innerHTML = 'Sincronizar Exclusões <i class="fas fa-save"></i>';
+              } else if (faltantes.length === 0 && sobrando.length === 0) {
+                 addFeedback(`A planilha já está 100% idêntica ao extrato!`, 'success');
+              }
+              
+              renderizarTabelaUnificada();
+          });
       }
 
-      renderizarTabelaUnificada();
+      resultContainer.style.display = 'block';
       
       resumoDiv.style.display = 'flex';
       resumoDiv.innerHTML = `
@@ -555,14 +659,7 @@ function stopAIThinking() {
         </div>
       `;
 
-      if (faltantes.length === 0 && sobrando.length > 0) {
-         // Não tem faltantes, mas tem sobrando -> Vai direto pro fim
-         isCategorizado = true;
-         btnSalvar.style.display = 'inline-flex';
-         btnSalvar.innerHTML = 'Sincronizar Exclusões <i class="fas fa-save"></i>';
-      } else if (faltantes.length === 0 && sobrando.length === 0) {
-         addFeedback(`A planilha já está 100% idêntica ao extrato!`, 'success');
-      }
+      // Mensagens antigas movidas para dentro do newBtnConf
 
     } catch (err) {
       console.error(err);
@@ -601,7 +698,7 @@ function stopAIThinking() {
     
     // Define qual passo estamos para a classe do unified-table
     const unifiedTable = document.getElementById('unified-table');
-    unifiedTable.className = isPasso3Ativo ? 'step-3-active' : 'step-1-active';
+    unifiedTable.className = 'step-1-active';
 
     const criarLinha = (tipo, item, index, isFaltante) => {
       let icon = tipo === "Adicionar" ? "➕" : (tipo === "Excluir" ? "🗑️" : "✔️");
@@ -867,44 +964,13 @@ function stopAIThinking() {
            // Captura o total original ANTES de projetar parcelas (para cobrar moedas correto)
            const _qtdOriginalCateg = dadosSincronizacao.faltantes.length;
 
-           let resultCat;
-           if (window.GeminiService) {
-             try {
-               resultCat = await window.GeminiService.categorizar({
-                 transacoes: dadosSincronizacao.faltantes,
-                 categoriasTree: categoriasTree,
-                 isCartaoCredito: isCartao,
-                 historico180dias: historico180dias
-               });
-             } catch (geminiCatErr) {
-               console.warn('[Gemini] Categorização falhou:', geminiCatErr.message);
-               addFeedback(`⚠️ Gemini indisponível, usando IA de backup...`, 'ai');
-               const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                 body: JSON.stringify({
-                   action: 'categorizar_v2',
-                   transacoes: dadosSincronizacao.faltantes,
-                   categoriasTree: categoriasTree,
-                   isCartaoCredito: isCartao
-                 })
-               });
-               resultCat = await _resCat.json();
-             }
-           } else {
-             // Fallback: Apps Script com Claude
-             const _resCat = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-               method: 'POST',
-               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-               body: JSON.stringify({
-                 action: 'categorizar_v2',
-                 transacoes: dadosSincronizacao.faltantes,
-                 categoriasTree: categoriasTree,
-                 isCartaoCredito: isCartao
-               })
-             });
-             resultCat = await _resCat.json();
-           }
+           if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
+           let resultCat = await window.GeminiService.categorizar({
+             transacoes: dadosSincronizacao.faltantes,
+             categoriasTree: categoriasTree,
+             isCartaoCredito: isCartao,
+             historico180dias: historico180dias
+           });
            
            if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
            
@@ -977,103 +1043,11 @@ function stopAIThinking() {
     
   // FLUXO DO BOTÃO PRINCIPAL (IMPORTAR)
   btnSalvar.addEventListener('click', async () => {
-    // ESTADO 2: Já categorizou (ou não tinha faltantes), vai processar as transferências (Passo 3)
-    if (isCategorizado && !isPasso3Ativo && dadosSincronizacao.faltantes.length > 0) {
-       const txNormais = [];
-       const txPasso3 = [];
-       
-       dadosSincronizacao.faltantes.forEach(t => {
-         if (t.ignorar) return;
-         const cat = (t.categoria || '').toLowerCase();
-         const isTransfer = cat.includes('transfer') || cat.includes('pagamento de cart') || cat.includes('investimento') || cat.includes('aplica');
-         const isParcel = t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim';
-         
-         if (isTransfer || isParcel) {
-            txPasso3.push(t);
-         } else {
-            txNormais.push(t);
-         }
-       });
-
-       if (txPasso3.length > 0) {
-         isPasso3Ativo = true;
-         transacoesNormais = txNormais;
-         transacoesPasso3 = processarPasso3(txPasso3);
-         
-         document.getElementById('import-table-content').style.display = 'none'; // oculta a triagem/categorias
-         renderizarPasso3(transacoesPasso3);
-         
-         btnSalvar.innerHTML = 'Sincronizar (Salvar) <i class="fas fa-save"></i>';
-         return; 
-       }
-    }
-    
-    // ESTADO 3: Já tratou tudo, salva no Google Sheets
     try {
-      if (isPasso3Ativo) {
-         let unselected = transacoesPasso3.filter(t => t.isPasso3Mirror && !t.conta && !t.sugestaoExistente);
-         if (unselected.length > 0) {
-            let desejaProsseguir = confirm(`Você deixou ${unselected.length} transferência(s) sem conta de contrapartida. A contrapartida não será gerada no sistema para ela(s). Deseja prosseguir assim mesmo?`);
-            if (!desejaProsseguir) return;
-         }
-
-         // VALIDAÇÃO DA TRAVA DE CONCILIAÇÃO
-         let contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
-         let lockError = null;
-         for (let t of transacoesPasso3) {
-             if (t.isPasso3Mirror && !t.sugestaoExistente) {
-                 let destAccount = contasInfo.find(c => c.nome.toLowerCase() === String(t.conta).trim().toLowerCase());
-                 if (destAccount && destAccount.conciliado_ate) {
-                     let cTimeAte = parseDataBR(destAccount.conciliado_ate);
-                     let cTimeDesde = destAccount.conciliado_desde ? parseDataBR(destAccount.conciliado_desde) : 0;
-                     let tTime = parseDataBR(t.data);
-                     
-                     let isBlocked = false;
-                     if (cTimeAte > 0) {
-                         if (cTimeDesde > 0) {
-                             isBlocked = (tTime >= cTimeDesde && tTime <= cTimeAte);
-                         } else {
-                             isBlocked = (tTime <= cTimeAte);
-                         }
-                     }
-                     
-                     if (isBlocked) {
-                         lockError = `Ação Bloqueada: Você não pode transferir para a conta '${destAccount.nome}' na data ${t.data}, pois ela já está conciliada.`;
-                         break;
-                     }
-                 }
-             }
-         }
-         
-         if (lockError) {
-             alert(lockError);
-             return;
-         }
-      }
-
       btnSalvar.disabled = true;
       btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando (Salvando)...';
       
-      let finalPasso3 = [];
-      if (isPasso3Ativo) {
-         transacoesPasso3.forEach(t => {
-            if (t.isPasso3Original) {
-               let mirror = transacoesPasso3.find(m => m.isPasso3Mirror && m.originalCod === t.cod);
-               if (mirror) {
-                  t.contaDestino = mirror.conta;
-               }
-               finalPasso3.push(t);
-            } else if (t.isPasso3Mirror) {
-               if (!t.sugestaoExistente && t.conta && t.conta.trim() !== '') {
-                  finalPasso3.push(t);
-               }
-            } else {
-               finalPasso3.push(t);
-            }
-});
-      }
-      
-      let transacoesFinaisFaltantes = isPasso3Ativo ? [...transacoesNormais, ...finalPasso3] : dadosSincronizacao.faltantes.filter(t => !t.ignorar);
+      let transacoesFinaisFaltantes = dadosSincronizacao.faltantes.filter(t => !t.ignorar);
       transacoesFinaisFaltantes.forEach(t => t.vencimento = t.vencimento || t.data);
 
       const contaDoExtrato = dadosSincronizacao.faltantes.length > 0 ? dadosSincronizacao.faltantes[0].conta : 
@@ -1103,13 +1077,48 @@ function stopAIThinking() {
              }
           }
        }
+       
+      let saldoInicialInformado = parseFloat(document.getElementById('input-saldo-inicial')?.value || cabecalhoAtual?.saldo_inicial || 0);
+      let saldoFinalInformado = parseFloat(document.getElementById('input-saldo-final')?.value || cabecalhoAtual?.saldo_final || 0);
+
+      // Calcular soma dos lançamentos do extrato
+      let somaLancs = 0;
+      [...transacoesFinaisFaltantes, ...dadosSincronizacao.corretos.map(c => c.extrato)].forEach(t => {
+          if (!t.ignorar) somaLancs += parseFloat(t.valor || 0);
+      });
+      let diff = saldoFinalInformado - saldoInicialInformado - somaLancs;
+      
+      let _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+      let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === String(contaDoExtrato).toLowerCase()) : null;
+      let tipoConta = contaMatch ? contaMatch.tipo : 'Conta Corrente';
+
+      // Identificar o menor periodo e maior periodo para o extrato
+      let allDatas = [...transacoesFinaisFaltantes, ...dadosSincronizacao.corretos.map(c => c.extrato)].map(t => parseDataBR(t.data)).filter(t => t > 0);
+      let minDataTs = Math.min(...allDatas);
+      let pInicio = minDataTs !== Infinity ? new Date(minDataTs).toLocaleDateString('pt-BR') : '';
+
+      const extratoPayload = {
+          conta: String(contaDoExtrato).trim().toLowerCase(),
+          tipo_conta: tipoConta,
+          periodo_inicio: pInicio,
+          periodo_fim: rawMaxStr,
+          saldo_inicial: saldoInicialInformado,
+          saldo_final: saldoFinalInformado,
+          soma_lancamentos: somaLancs,
+          diferenca: diff,
+          status: Math.abs(diff) < 0.05 ? 'conciliado' : 'divergente',
+          arquivo_nome: window.currentImportFile ? window.currentImportFile.name : '',
+          qtd_lancamentos: transacoesFinaisFaltantes.length + dadosSincronizacao.corretos.length,
+          vencimento_fatura: cabecalhoAtual?.['Vencimento da fatura'] || null
+      };
 
       const payload = {
         action: 'sincronizar_periodo', 
         lancamentosNovos: transacoesFinaisFaltantes,
         idsParaExcluir: dadosSincronizacao.sobrando.filter(s => !s.ignorar).map(s => s.id || s.cod), 
         contaDoExtrato: String(contaDoExtrato).trim().toLowerCase(),
-        dataMaxStr: rawMaxStr
+        dataMaxStr: rawMaxStr,
+        extratoPayload: extratoPayload
       };
 
       let jsonRes = { status: "success" };
@@ -1118,8 +1127,12 @@ function stopAIThinking() {
              payload.lancamentosNovos,
              payload.idsParaExcluir,
              payload.contaDoExtrato,
-             payload.dataMaxStr
+             payload.dataMaxStr,
+             payload.extratoPayload
          );
+         
+         // Limpar extratos antigos (manter ultimos 5)
+         await window.DB.limparExtratosAntigos(payload.contaDoExtrato, 5);
       } else {
           const res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
             method: 'POST',
@@ -1159,266 +1172,7 @@ function parseDataBR(str) {
   return 0;
 }
 
-function buscarPossiveisContraPartidas(txMirror) {
-    if (!window.dadosFinanceiros || !window.dadosFinanceiros.lancamentos) return [];
-    
-    let baseLocal = window.dadosFinanceiros.lancamentos;
-    
-    let parts = txMirror.data.split('/');
-    let tsMirror = new Date(parts[2], parseInt(parts[1])-1, parts[0]).getTime();
-    
-    let valStr = String(txMirror.valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-    let valorMirror = parseFloat(valStr) || 0;
-    
-    let sugestoes = [];
-    baseLocal.forEach(l => {
-       if (!l.data || !l.valor) return;
-       let p = String(l.data).split('/');
-       if (p.length !== 3) return;
-       let tsHist = new Date(p[2], parseInt(p[1])-1, p[0]).getTime();
-       
-       let diffDias = Math.abs((tsMirror - tsHist) / (1000 * 60 * 60 * 24));
-       
-       let vHistStr = String(l.valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-       let valHist = parseFloat(vHistStr) || 0;
-       
-       if (diffDias <= 3 && Math.abs(valorMirror - valHist) < 0.05) {
-          sugestoes.push(l);
-       }
-    });
-    
-    // Filtra duplicatas nas próprias sugestões
-    let seen = new Set();
-    return sugestoes.filter(s => {
-       let key = `${s.conta}-${s.data}-${s.valor}`;
-       if (seen.has(key)) return false;
-       seen.add(key);
-       return true;
-    });
-}
-
-function processarPasso3(txs) {
-  let result = [];
-  txs.forEach(t => {
-     const cat = (t.categoria || '').toLowerCase();
-     const isTransfer = cat.includes('transfer') || cat.includes('pagamento de cart') || cat.includes('investimento') || cat.includes('aplica');
-     const isParcel = t.parcelamento === true || String(t.parcelamento).toLowerCase() === 'sim';
-
-     if (isTransfer) {
-        result.push({ ...t, isPasso3Original: true });
-        
-        let valStr = String(t.valor).replace(',', '.');
-        let numVal = parseFloat(valStr) || 0;
-        let mirroredVal = (numVal * -1).toFixed(2).replace('.', ',');
-        if (mirroredVal.indexOf('-') === -1 && parseFloat(valStr) < 0) {
-           mirroredVal = '+' + mirroredVal;
-        }
-        
-        result.push({
-           ...t,
-           valor: mirroredVal,
-           conta: '', 
-           isPasso3Mirror: true,
-           originalCod: t.cod 
-        });
-     }
-     if (isParcel && !isTransfer) {
-        result.push({ ...t, isPasso3ParcelaOriginal: true, parcelaAtual: 1, parcelasTotal: 1 });
-     }
-  });
-  return result;
-}
-
-function renderizarPasso3(txs) {
-  const container = document.getElementById('passo3-container');
-  container.style.display = 'block';
-  
-  // Oculta a Tabela de Triagem e Mostra apenas o quadro de Transferências
-  document.getElementById('import-table-content').style.display = 'none';
-
-  // Na verdade, a regra diz para mantermos a mesma tabela estrutural. 
-  // Mas como esse Passo 2 tem um header "Passo 2: Transferências", vamos exibi-lo acima da tabela.
-  // Vamos reexibir a div da tabela, mas atualizar o CSS para step-3-active.
-  document.getElementById('import-table-content').style.display = 'block';
-  const unifiedTable = document.getElementById('unified-table');
-  unifiedTable.className = 'step-3-active'; // Ocultará Parc. 
-
-  let headerHtml = `
-    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 18px 20px; margin-bottom: 20px; border-radius: 16px;">
-      <h3 style="margin: 0 0 10px 0; color: #8b5cf6; display: flex; align-items: center; gap: 8px;"><i class="fas fa-random"></i> Passo 2: Transferências e Parcelamentos</h3>
-      <p style="margin:0; font-size: 0.95rem; color: var(--text-secondary);">Identificamos transferências ou parcelamentos. Por favor, preencha a conta de destino/origem para as transferências e configure os parcelamentos.</p>
-    </div>
-  `;
-  container.innerHTML = headerHtml; // Container gets only the header now
-  
-  let tbodyHtml = '';
-  
-  txs.forEach((t, i) => {
-    const isIncome = String(t.valor).indexOf('-') === -1;
-    const color = isIncome ? 'var(--color-income)' : 'var(--color-expense)';
-    
-    let acaoHtml = '';
-    let extraDesc = t.descricao;
-    let descColor = 'var(--text-primary)';
-    let contaHtml = t.conta || 'N/A';
-    
-    if (t.isPasso3Original) {
-       acaoHtml = `<span style="color:var(--text-muted); font-size:0.8rem;">Principal</span>`;
-    } else if (t.isPasso3Mirror) {
-       descColor = '#8b5cf6';
-       let contasOptions = '<option value="">-- Selecione a Conta --</option>';
-       const contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas) ? dadosFinanceiros.contas : ((window.dadosFinanceiros && window.dadosFinanceiros.contas) ? window.dadosFinanceiros.contas : []);
-       let tTime = parseDataBR(t.data);
-       contasInfo.forEach(c => {
-         let cTimeAte = c.conciliado_ate ? parseDataBR(c.conciliado_ate) : 0;
-         let cTimeDesde = c.conciliado_desde ? parseDataBR(c.conciliado_desde) : 0;
-         
-         let isBlocked = false;
-         if (cTimeAte > 0) {
-             if (cTimeDesde > 0) {
-                 isBlocked = (tTime >= cTimeDesde && tTime <= cTimeAte);
-             } else {
-                 isBlocked = (tTime <= cTimeAte);
-             }
-         }
-         
-         if (isBlocked) {
-             contasOptions += `<option value="${c.nome}" disabled>${c.nome} [BLOQUEADA - Conciliada]</option>`;
-         } else {
-             contasOptions += `<option value="${c.nome}">${c.nome}</option>`;
-         }
-       });
-       
-       extraDesc = `<strong>Contrapartida: ${t.descricao}</strong>`;
-       contaHtml = `
-         <select class="p3-conta-select" data-index="${i}" style="width:100%; padding:5px; background:var(--bg-card); color:var(--text-primary); border:1px solid #8b5cf6; border-radius:4px;">
-           ${contasOptions}
-         </select>
-       `;
-       
-       let sugestoes = buscarPossiveisContraPartidas(t);
-       if (sugestoes.length > 0) {
-          contaHtml += `<div style="margin-top: 8px; font-size: 0.85rem; padding: 8px; background: rgba(139, 92, 246, 0.1); border-radius: 4px; border: 1px solid rgba(139, 92, 246, 0.3);">
-            <div style="color: #8b5cf6; margin-bottom: 5px; font-weight: bold;"><i class="fas fa-lightbulb"></i> Sugestões de contrapartida já existentes:</div>`;
-          sugestoes.forEach((s, sIdx) => {
-             contaHtml += `
-               <label style="display: block; margin-bottom: 3px; cursor: pointer; color: var(--text-primary);">
-                 <input type="radio" name="sugestao-${i}" class="p3-sugestao-radio" data-index="${i}" value='${JSON.stringify(s)}'>
-                 <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 5px;">${s.conta}</span>
-                 ${s.data} | ${s.categoria} | R$ ${s.valor}
-               </label>
-             `;
-          });
-          contaHtml += `
-               <label style="display: block; margin-top: 5px; cursor: pointer; color: var(--text-secondary);">
-                 <input type="radio" name="sugestao-${i}" class="p3-sugestao-radio" data-index="${i}" value="" checked>
-                 Nenhuma dessas (Criar novo lançamento na conta selecionada acima)
-               </label>
-          </div>`;
-       }
-       
-       acaoHtml = `<span style="color:#8b5cf6; font-size:0.8rem;">Contrapartida</span>`;
-    } else if (t.isPasso3ParcelaOriginal) {
-       acaoHtml = `
-         <div style="display:flex; gap:5px; align-items:center;">
-            <span>Parc. 1 de</span>
-            <input type="number" class="p3-parcel-total" data-index="${i}" value="${t.parcelasTotal}" min="1" max="120" style="width:50px; padding:3px; background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:3px;">
-         </div>
-       `;
-    }
-
-    tbodyHtml += `
-      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <td class="col-acao" style="padding:10px;">${acaoHtml}</td>
-        <td class="col-data" style="padding:10px; color:var(--text-secondary);">${t.data}</td>
-        <td class="col-desc" style="padding:10px; color:${descColor};">${extraDesc}</td>
-        <td class="col-conta" style="padding:10px;">${contaHtml}</td>
-        <td class="col-valor" style="padding:10px; text-align:right; color:${color}; font-weight:bold;">${t.valor}</td>
-        <td class="col-cat" style="padding:10px;"><span style="background:rgba(255,255,255,0.1); padding:3px 8px; border-radius:12px; font-size:0.75rem;">${t.categoria || 'Sem Categoria'}</span></td>
-        <td class="col-subcat" style="padding:10px;">${t.subcategoria || '-'}</td>
-        <td class="col-parc" style="padding:10px;">-</td>
-      </tr>
-    `;
-  });
-  
-  if (txs.length === 0) {
-     tbodyHtml += '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhuma transferência pendente.</td></tr>';
-  }
-
-  document.getElementById('unified-table-body').innerHTML = tbodyHtml;
-  
-  document.querySelectorAll('.p3-conta-select').forEach(sel => {
-    sel.addEventListener('change', (e) => {
-      const idx = e.target.getAttribute('data-index');
-      transacoesPasso3[idx].conta = e.target.value;
-    });
-  });
-  
-  document.querySelectorAll('.p3-sugestao-radio').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      const idx = e.target.getAttribute('data-index');
-      const val = e.target.value;
-      const selectElem = document.querySelector(`.p3-conta-select[data-index="${idx}"]`);
-      const tr = e.target.closest('tr');
-      
-      if (val) {
-         let sugestao = JSON.parse(val);
-         transacoesPasso3[idx].conta = sugestao.conta; 
-         transacoesPasso3[idx].sugestaoExistente = sugestao;
-         
-         if (selectElem) {
-            selectElem.value = sugestao.conta;
-            selectElem.disabled = true;
-         }
-         if (tr) {
-            tr.style.opacity = '0.5';
-            tr.style.textDecoration = 'line-through';
-         }
-      } else {
-         transacoesPasso3[idx].sugestaoExistente = null;
-         if (selectElem) {
-            selectElem.disabled = false;
-            transacoesPasso3[idx].conta = selectElem.value;
-         }
-         if (tr) {
-            tr.style.opacity = '1';
-            tr.style.textDecoration = 'none';
-         }
-      }
-    });
-  });
-
-  document.querySelectorAll('.p3-parcel-total').forEach(inp => {
-    inp.addEventListener('change', (e) => {
-      const idx = e.target.getAttribute('data-index');
-      let val = parseInt(e.target.value, 10);
-      if (isNaN(val) || val < 1) val = 1;
-      transacoesPasso3[idx].parcelasTotal = val;
-      
-      const t = transacoesPasso3[idx];
-      let newTxs = transacoesPasso3.filter(tx => !(tx.originalParcelCod === t.cod));
-      transacoesPasso3 = newTxs;
-      
-      if (val > 1) {
-         let baseDate = t.vencimento || t.data;
-         for (let p = 2; p <= val; p++) {
-            let nextD = addMonthsStr(baseDate, p - 1);
-            transacoesPasso3.push({
-               ...t,
-               data: nextD,
-               vencimento: nextD,
-               isPasso3ParcelaFutura: true,
-               isPasso3ParcelaOriginal: false,
-               parcelaAtual: p,
-               parcelasTotal: val,
-               originalParcelCod: t.cod,
-               descricao: `${t.descricao} (${p}/${val})`
-            });
-         }
-      }
-    });
-  });
-}
+// Passo 3 removido
 
 function addMonthsStr(dateStr, months) {
   let parts = dateStr.split('/');

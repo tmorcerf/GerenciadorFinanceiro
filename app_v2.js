@@ -2788,8 +2788,10 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           saldoDiaHtml = `<span style="color: ${saldoColor}; font-weight: 600;">${formatBRL(l._saldo_do_dia)}</span>`;
         }
 
+        let lockHtml = l.conciliado ? `<i class="fas fa-lock" style="color: var(--text-muted); font-size: 0.75rem; margin-right: 5px;" title="Lançamento Conciliado (Protegido)"></i>` : '';
+
         row.innerHTML = `
-          <td>${l.data || '-'}</td>
+          <td style="white-space: nowrap;">${lockHtml}${l.data || '-'}</td>
           <td>${l.vencimento || l.data || '-'}</td>
           <td>${l.conta || '-'}</td>
           <td style="color:var(--text-primary); font-size:0.88rem;">${l.categoria || 'Outros'}</td>
@@ -5652,11 +5654,38 @@ window.openEditTransactionModal = function(cod) {
   });
 
   const isConciliado = t.conciliado === true;
-  document.getElementById('edit-tx-data').disabled = isConciliado;
-  document.getElementById('edit-tx-conta').disabled = isConciliado;
-  document.getElementById('edit-tx-valor').disabled = isConciliado;
-  document.getElementById('edit-tx-obs').disabled = isConciliado;
-  document.getElementById('edit-tx-create-contrapartida').disabled = isConciliado;
+  window.isCurrentTxUnlocked = false;
+  window.currentTxExtratoId = t.extrato_id || null;
+  const lockBanner = document.getElementById('edit-tx-lock-banner');
+  const btnUnlock = document.getElementById('btn-unlock-tx');
+
+  if (isConciliado) {
+      lockBanner.style.display = 'block';
+      document.getElementById('edit-tx-data').disabled = true;
+      document.getElementById('edit-tx-conta').disabled = true;
+      document.getElementById('edit-tx-valor').disabled = true;
+      document.getElementById('edit-tx-obs').disabled = true;
+      document.getElementById('edit-tx-create-contrapartida').disabled = true;
+      
+      btnUnlock.onclick = () => {
+          if (confirm('Atenção: Alterar Data, Conta, Valor ou Descrição removerá o status de "Conciliado" deste lançamento e de TODOS os lançamentos posteriores desta conta (efeito cascata). Você precisará re-validar o(s) extrato(s). Deseja continuar?')) {
+              window.isCurrentTxUnlocked = true;
+              lockBanner.style.display = 'none';
+              document.getElementById('edit-tx-data').disabled = false;
+              document.getElementById('edit-tx-conta').disabled = false;
+              document.getElementById('edit-tx-valor').disabled = false;
+              document.getElementById('edit-tx-obs').disabled = false;
+              document.getElementById('edit-tx-create-contrapartida').disabled = false;
+          }
+      };
+  } else {
+      lockBanner.style.display = 'none';
+      document.getElementById('edit-tx-data').disabled = false;
+      document.getElementById('edit-tx-conta').disabled = false;
+      document.getElementById('edit-tx-valor').disabled = false;
+      document.getElementById('edit-tx-obs').disabled = false;
+      document.getElementById('edit-tx-create-contrapartida').disabled = false;
+  }
 
   document.getElementById('editTransactionModal').classList.add('active');
 };
@@ -5766,13 +5795,23 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
 
   let savePromise;
   if (window.USE_FIREBASE) {
-     savePromise = window.DB.editarLancamento(payload.cod, {
+     let updateData = {
          data: payload.novaData,
          conta: payload.novaConta,
          valor: payload.novoValor,
          categoria: payload.novaCategoria,
          subcategoria: payload.novaSubcategoria,
          obs: payload.novaObs
+     };
+     if (window.isCurrentTxUnlocked) {
+         updateData.conciliado = false;
+         updateData.extrato_id = null;
+     }
+
+     savePromise = window.DB.editarLancamento(payload.cod, updateData).then(() => {
+         if (window.isCurrentTxUnlocked && window.DB.recalcularExtratoEAtualizarCascata) {
+             return window.DB.recalcularExtratoEAtualizarCascata(window.currentTxExtratoId, payload.novaConta, payload.novaData);
+         }
      }).then(() => {
          if (payload.contraPartida) {
              return window.DB.sincronizarPeriodo([payload.contraPartida], [], null, null);
@@ -5933,6 +5972,20 @@ window.saveNewTransaction = function() {
   if (!conta) { alert('Selecione uma conta!'); return; }
   if (!cat)   { alert('Selecione uma categoria!'); return; }
 
+  let requiresCascade = false;
+  const contaObj = dadosFinanceiros.contas.find(c => c.nome === conta);
+  if (contaObj && contaObj.conciliado_ate && tipo !== 'ajuste') {
+      const partsAte = contaObj.conciliado_ate.split('/');
+      const tAte = new Date(partsAte[2], parseInt(partsAte[1])-1, partsAte[0], 0,0,0).getTime();
+      const tLanc = new Date(parts[2], parseInt(parts[1])-1, parts[0], 0,0,0).getTime();
+      if (tLanc <= tAte) {
+          if (!confirm(`Atenção: Você está inserindo um lançamento em uma data (${dataStr}) que já foi conciliada (até ${contaObj.conciliado_ate}). Salvar este lançamento removerá o status de "Conciliado" de todos os extratos a partir desta data para que você possa revalidá-los. Deseja continuar?`)) {
+              return;
+          }
+          requiresCascade = true;
+      }
+  }
+
   const btn = document.getElementById('new-tx-save');
   const origText = btn.innerHTML;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
@@ -5942,7 +5995,11 @@ window.saveNewTransaction = function() {
 
   let savePromise;
   if (window.USE_FIREBASE) {
-    savePromise = window.DB.sincronizarPeriodo([novoLanc], [], null, null);
+    savePromise = window.DB.sincronizarPeriodo([novoLanc], [], null, null).then(() => {
+        if (requiresCascade && window.DB.recalcularExtratoEAtualizarCascata) {
+            return window.DB.recalcularExtratoEAtualizarCascata(null, conta, dataStr);
+        }
+    });
   } else {
     savePromise = fetch(window.APPS_SCRIPT_WEBAPP_URL, {
       method: 'POST',
