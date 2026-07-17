@@ -102,7 +102,17 @@ window.App = (() => {
 
     // ── Scanner ────────────────────────────────────────────────────
 
+    let iniciouComoManual = false;
+
     function _iniciarScanner() {
+        const isNative = window.parent && window.parent.Capacitor && window.parent.Capacitor.isNativePlatform && window.parent.Capacitor.isNativePlatform();
+        
+        if (!isNative && !iniciouComoManual) {
+            iniciouComoManual = true;
+            mostrarInputManual();
+            return;
+        }
+
         if (!Scanner.estaEscaneando()) {
             Scanner.iniciar('scanner-viewfinder', _onQRCodeLido);
         }

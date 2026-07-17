@@ -5,16 +5,50 @@ const App = (function() {
 
     let _produtoAtual = null;
 
+    let iniciouComoManual = false;
+
     // Inicialização
     document.addEventListener('DOMContentLoaded', async () => {
         Scanner.init('scanner-viewfinder', _onEANLido);
         
+        const isNative = window.parent && window.parent.Capacitor && window.parent.Capacitor.isNativePlatform && window.parent.Capacitor.isNativePlatform();
+        
+        if (!isNative && !iniciouComoManual) {
+            iniciouComoManual = true;
+            mostrarInputManual();
+            return;
+        }
+
         // Se Iniciar imediatamente:
         setTimeout(() => {
             Scanner.start();
             _atualizarStatus('Aguardando código de barras...', 'loading');
         }, 500);
     });
+
+    function mostrarInputManual() {
+        Scanner.stop();
+        document.getElementById('modal-manual').classList.add('active');
+        document.getElementById('input-chave-manual').focus();
+    }
+
+    function fecharModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('modal-manual').classList.remove('active');
+        document.getElementById('input-chave-manual').value = '';
+        setTimeout(() => {
+            Scanner.start();
+            _atualizarStatus('Aguardando código de barras...', 'loading');
+        }, 500);
+    }
+
+    function processarChaveManual() {
+        const ean = document.getElementById('input-chave-manual').value.trim();
+        if (!ean) return;
+        document.getElementById('modal-manual').classList.remove('active');
+        document.getElementById('input-chave-manual').value = '';
+        _onEANLido(ean);
+    }
 
     async function _onEANLido(ean) {
         _atualizarStatus(`Código lido: ${ean}. Buscando...`, 'loading');
@@ -133,6 +167,9 @@ const App = (function() {
 
     return {
         irPara,
-        resetStatus
+        resetStatus,
+        mostrarInputManual,
+        fecharModal,
+        processarChaveManual
     };
 })();
