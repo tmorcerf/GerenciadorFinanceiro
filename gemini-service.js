@@ -5,9 +5,10 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH = 'gemini-1.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelFlash
-  var MODEL_VISION = 'gemini-1.5-flash'; // Sobrescrito pelo AppConfig/gemini.modelVision
-  var MODEL_BKP   = '';                 // Sobrescrito pelo AppConfig/gemini.modelBkp
+  var MODEL_FLASH  = 'gemini-3.1-pro-preview'; 
+  var MODEL_VISION = 'gemini-3.1-pro-preview'; 
+  var MODEL_PRO    = 'gemini-3.1-pro-preview'; 
+  var MODEL_BKP    = 'gemini-3.5-flash';
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
@@ -25,10 +26,10 @@ window.GeminiService = (function() {
           if (cfg.apiKey && cfg.apiKey.length > 10) {
             _apiKey = cfg.apiKey;
           }
-          // Permite trocar os modelos direto no Firestore sem mexer no codigo
-          if (cfg.modelFlash && cfg.modelFlash.length > 3) MODEL_FLASH = cfg.modelFlash;
-          if (cfg.modelPro   && cfg.modelPro.length   > 3) MODEL_PRO   = cfg.modelPro;
-          if (cfg.modelBkp   && cfg.modelBkp.length   > 3) MODEL_BKP   = cfg.modelBkp;
+          // Modelos forçados no código conforme solicitação
+          MODEL_FLASH = 'gemini-3.1-pro-preview';
+          MODEL_PRO   = 'gemini-3.1-pro-preview';
+          MODEL_BKP   = 'gemini-3.5-flash';
           console.log('[GeminiService] Config: key=' + (_apiKey ? 'OK' : 'ausente') +
                       ' | flash=' + MODEL_FLASH + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
           if (_apiKey) return _apiKey;

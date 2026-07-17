@@ -5659,6 +5659,9 @@ window.openEditTransactionModal = function(cod) {
   const lockBanner = document.getElementById('edit-tx-lock-banner');
   const btnUnlock = document.getElementById('btn-unlock-tx');
 
+  console.log('[DEBUG] Abrindo modal de edição para Lançamento:', cod);
+  console.log('[DEBUG] Status do lançamento -> conciliado:', isConciliado, '| extrato_id:', window.currentTxExtratoId);
+
   if (isConciliado) {
       lockBanner.style.display = 'block';
       document.getElementById('edit-tx-data').disabled = true;
@@ -5668,7 +5671,9 @@ window.openEditTransactionModal = function(cod) {
       document.getElementById('edit-tx-create-contrapartida').disabled = true;
       
       btnUnlock.onclick = () => {
+          console.log('[DEBUG] Usuário clicou em Desbloquear o lançamento', cod);
           if (confirm('Atenção: Alterar Data, Conta, Valor ou Descrição removerá o status de "Conciliado" deste lançamento e de TODOS os lançamentos posteriores desta conta (efeito cascata). Você precisará re-validar o(s) extrato(s). Deseja continuar?')) {
+              console.log('[DEBUG] Usuário confirmou o desbloqueio. Habilitando edição...');
               window.isCurrentTxUnlocked = true;
               lockBanner.style.display = 'none';
               document.getElementById('edit-tx-data').disabled = false;
@@ -5676,6 +5681,8 @@ window.openEditTransactionModal = function(cod) {
               document.getElementById('edit-tx-valor').disabled = false;
               document.getElementById('edit-tx-obs').disabled = false;
               document.getElementById('edit-tx-create-contrapartida').disabled = false;
+          } else {
+              console.log('[DEBUG] Usuário cancelou o desbloqueio.');
           }
       };
   } else {
@@ -5803,13 +5810,19 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
          subcategoria: payload.novaSubcategoria,
          obs: payload.novaObs
      };
+     
+     console.log('[DEBUG] isCurrentTxUnlocked?', window.isCurrentTxUnlocked);
      if (window.isCurrentTxUnlocked) {
+         console.log('[DEBUG] Preparando para remover status conciliado do BD.');
          updateData.conciliado = false;
          updateData.extrato_id = null;
      }
 
+     console.log('[DEBUG] Enviando edição para o Firebase...', updateData);
      savePromise = window.DB.editarLancamento(payload.cod, updateData).then(() => {
+         console.log('[DEBUG] Edição concluída.');
          if (window.isCurrentTxUnlocked && window.DB.recalcularExtratoEAtualizarCascata) {
+             console.log('[DEBUG] Acionando efeito cascata (desconciliar) a partir de:', payload.novaData);
              return window.DB.recalcularExtratoEAtualizarCascata(window.currentTxExtratoId, payload.novaConta, payload.novaData);
          }
      }).then(() => {
@@ -5835,6 +5848,10 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
       tx.categoria = payload.novaCategoria;
       tx.subcategoria = payload.novaSubcategoria;
       tx.obs = payload.novaObs;
+      if (window.isCurrentTxUnlocked) {
+          tx.conciliado = false;
+          tx.extrato_id = null;
+      }
     }
     if(payload.contraPartida) {
       const maxId = Math.max(...dadosFinanceiros.lancamentos.map(l => parseInt(l.cod) || 0));

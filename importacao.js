@@ -554,8 +554,10 @@ function stopAIThinking() {
           }
           alertaCadeia.style.display = 'none';
 
+          console.log('[DEBUG-IMPORT] Iniciando validação da Cadeia de Saldos...');
           if (_df && _df.extratos) {
               let extratosConta = _df.extratos.filter(e => String(e.conta).toLowerCase() === contaDoExtrato && e.data_fim).sort((a,b) => parseDataBR(a.data_fim) - parseDataBR(b.data_fim));
+              console.log(`[DEBUG-IMPORT] Encontrados ${extratosConta.length} extratos passados para a conta ${contaDoExtrato}`);
               let extratoAnterior = null;
               for (let i = extratosConta.length - 1; i >= 0; i--) {
                   if (parseDataBR(extratosConta[i].data_fim) < minTime) {
@@ -564,10 +566,13 @@ function stopAIThinking() {
                   }
               }
               if (extratoAnterior && extratoAnterior.saldo_final !== undefined && extratoAnterior.saldo_final !== null) {
+                  console.log('[DEBUG-IMPORT] Extrato imediatamente anterior encontrado:', extratoAnterior.data_inicio, 'a', extratoAnterior.data_fim, 'Saldo Final:', extratoAnterior.saldo_final);
                   let sfAnt = parseFloat(extratoAnterior.saldo_final);
                   let siAtual = parseFloat(inputSaldoIni.value || 0);
                   
+                  console.log(`[DEBUG-IMPORT] Comparando Saldo Final Anterior (${sfAnt}) com Saldo Inicial Atual (${siAtual})`);
                   if (Math.abs(sfAnt - siAtual) > 0.05) {
+                      console.log('[DEBUG-IMPORT] DIVERGÊNCIA na Cadeia de Saldos detectada!');
                       alertaCadeia.style.display = 'block';
                       alertaCadeia.style.background = 'rgba(239, 68, 68, 0.1)';
                       alertaCadeia.style.color = '#ef4444';
