@@ -102,20 +102,81 @@ window.App = (() => {
 
     // ── Scanner ────────────────────────────────────────────────────
 
-    let iniciouComoManual = false;
+    let modoManualIniciado = false;
+    let modoAtual = 'camera'; // 'camera' ou 'manual'
 
     function _iniciarScanner() {
         const isNative = window.parent && window.parent.Capacitor && window.parent.Capacitor.isNativePlatform && window.parent.Capacitor.isNativePlatform();
         
-        if (!isNative && !iniciouComoManual) {
-            iniciouComoManual = true;
-            mostrarInputManual();
+        if (!isNative && !modoManualIniciado) {
+            modoManualIniciado = true;
+            abrirModoManual();
             return;
         }
 
-        if (!Scanner.estaEscaneando()) {
+        if (modoAtual === 'camera' && !Scanner.estaEscaneando()) {
             Scanner.iniciar('scanner-viewfinder', _onQRCodeLido);
         }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // Input Manual Inline
+    // ──────────────────────────────────────────────────────────────
+
+    function toggleScannerMode() {
+        if (modoAtual === 'camera') {
+            abrirModoManual();
+        } else {
+            abrirModoCâmera();
+        }
+    }
+
+    function abrirModoManual() {
+        modoAtual = 'manual';
+        Scanner.parar();
+        document.getElementById('camera-section').style.display = 'none';
+        document.getElementById('manual-section').style.display = 'flex';
+        
+        const btnToggle = document.getElementById('btn-toggle-mode');
+        if(btnToggle) {
+            btnToggle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                </svg>
+                Usar Câmera
+            `;
+        }
+        document.getElementById('btn-flip-camera').style.display = 'none';
+        document.getElementById('input-chave-manual').focus();
+    }
+
+    function abrirModoCâmera() {
+        modoAtual = 'camera';
+        document.getElementById('manual-section').style.display = 'none';
+        document.getElementById('camera-section').style.display = 'block';
+        
+        const btnToggle = document.getElementById('btn-toggle-mode');
+        if(btnToggle) {
+            btnToggle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Colar Chave
+            `;
+        }
+        document.getElementById('btn-flip-camera').style.display = 'inline-flex';
+        _iniciarScanner();
+    }
+
+    function processarChaveManual() {
+        const input = document.getElementById('input-chave-manual').value.trim();
+        if (!input) {
+            toast('Cole a chave de acesso ou URL', 'warning');
+            return;
+        }
+        // Retorna para câmera ao processar
+        abrirModoCâmera();
+        _onQRCodeLido(input);
     }
 
     /**
@@ -603,8 +664,7 @@ window.App = (() => {
         init,
         irPara,
         toast,
-        mostrarInputManual,
-        fecharModal,
+        toggleScannerMode,
         processarChaveManual,
         salvarNota,
         verNota,

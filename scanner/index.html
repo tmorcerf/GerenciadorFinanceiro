@@ -43,26 +43,40 @@
         </header>
 
         <!-- Viewfinder da câmera -->
+        <!-- Viewfinder da câmera ou Input Manual -->
         <div class="scanner-container">
-            <div id="scanner-viewfinder" class="viewfinder"></div>
-            <div id="scanner-overlay" class="scanner-overlay">
-                <p class="scan-hint">Mire o QR code da nota fiscal</p>
+            <!-- Câmera -->
+            <div id="camera-section">
+                <div id="scanner-viewfinder" class="viewfinder"></div>
+                <div id="scanner-overlay" class="scanner-overlay">
+                    <p class="scan-hint">Mire o QR code da nota fiscal</p>
+                </div>
+            </div>
+            
+            <!-- Input Manual Inline -->
+            <div id="manual-section" class="manual-section" style="display: none;">
+                <div class="manual-card glass">
+                    <h3>📋 Colar Chave de Acesso</h3>
+                    <p class="text-muted">Cole a chave de 44 dígitos ou a URL completa do QR code.</p>
+                    <textarea id="input-chave-manual" rows="4" placeholder="Cole aqui a chave de acesso ou URL..."></textarea>
+                    <button class="btn-primary btn-lg" onclick="App.processarChaveManual()">Processar</button>
+                </div>
             </div>
         </div>
 
         <!-- Botões de ação do scanner -->
         <div class="scanner-actions">
+            <button id="btn-toggle-mode" class="btn-action btn-accent" onclick="App.toggleScannerMode()">
+                <svg id="icon-toggle-mode" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span id="text-toggle-mode">Colar Chave</span>
+            </button>
             <button id="btn-flip-camera" class="btn-action" onclick="Scanner.alternarCamera()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                 </svg>
                 Trocar Câmera
-            </button>
-            <button id="btn-paste-key" class="btn-action btn-accent" onclick="App.mostrarInputManual()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                Colar Chave
             </button>
         </div>
 
@@ -301,21 +315,6 @@
             </div>
         </div>
     </section>
-
-    <!-- ══════════════════════════════════════════════════════════════
-         MODAL — Input Manual de Chave
-         ══════════════════════════════════════════════════════════════ -->
-    <div id="modal-manual" class="modal-overlay" onclick="App.fecharModal(event)">
-        <div class="modal glass" onclick="event.stopPropagation()">
-            <h3>📋 Colar Chave de Acesso</h3>
-            <p class="text-muted">Cole a chave de 44 dígitos ou a URL completa do QR code.</p>
-            <textarea id="input-chave-manual" rows="4" placeholder="Cole aqui a chave de acesso ou URL..."></textarea>
-            <div class="modal-actions">
-                <button class="btn-secondary" onclick="App.fecharModal()">Cancelar</button>
-                <button class="btn-primary" onclick="App.processarChaveManual()">Processar</button>
-            </div>
-        </div>
-    </div>
 
     <!-- ══════════════════════════════════════════════════════════════
          TOAST

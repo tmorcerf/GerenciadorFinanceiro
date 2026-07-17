@@ -814,3 +814,84 @@ html, body {
     .scanner-container { max-height: 50vh; }
     .scan-frame { width: 300px; height: 300px; }
 }
+/* ---- NEW DESKTOP REDESIGN STYLES ---- */
+.manual-section {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    z-index: 10;
+    padding: var(--spacing-lg);
+}
+
+.manual-card {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--bg-glass-border);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+}
+
+.manual-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.manual-card textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--bg-glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    resize: none;
+    outline: none;
+    margin: var(--spacing-lg) 0;
+    transition: border-color 0.3s;
+}
+
+.manual-card textarea:focus {
+    border-color: var(--accent-light);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+@media (min-width: 768px) {
+    body {
+        background: transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .tela {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        max-width: 500px;
+        height: 100vh;
+        max-height: 800px;
+        border-radius: 24px;
+        background: var(--bg-secondary);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        padding-bottom: 0;
+        margin: 0 auto;
+    }
+
+    .scanner-container {
+        border-radius: 0 0 24px 24px;
+        max-height: 500px;
+    }
+
+    .bottom-nav {
+        display: none !important;
+    }
+}

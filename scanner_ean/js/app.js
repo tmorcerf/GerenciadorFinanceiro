@@ -5,7 +5,8 @@ const App = (function() {
 
     let _produtoAtual = null;
 
-    let iniciouComoManual = false;
+    let modoManualIniciado = false;
+    let modoAtual = 'camera'; // 'camera' ou 'manual'
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', async () => {
@@ -13,29 +14,63 @@ const App = (function() {
         
         const isNative = window.parent && window.parent.Capacitor && window.parent.Capacitor.isNativePlatform && window.parent.Capacitor.isNativePlatform();
         
-        if (!isNative && !iniciouComoManual) {
-            iniciouComoManual = true;
-            mostrarInputManual();
+        if (!isNative && !modoManualIniciado) {
+            modoManualIniciado = true;
+            abrirModoManual();
             return;
         }
 
         // Se Iniciar imediatamente:
-        setTimeout(() => {
-            Scanner.start();
-            _atualizarStatus('Aguardando código de barras...', 'loading');
-        }, 500);
+        if (modoAtual === 'camera') {
+            setTimeout(() => {
+                Scanner.start();
+                _atualizarStatus('Aguardando código de barras...', 'loading');
+            }, 500);
+        }
     });
 
-    function mostrarInputManual() {
+    function toggleScannerMode() {
+        if (modoAtual === 'camera') {
+            abrirModoManual();
+        } else {
+            abrirModoCâmera();
+        }
+    }
+
+    function abrirModoManual() {
+        modoAtual = 'manual';
         Scanner.stop();
-        document.getElementById('modal-manual').classList.add('active');
+        document.getElementById('camera-section').style.display = 'none';
+        document.getElementById('manual-section').style.display = 'flex';
+        
+        const btnToggle = document.getElementById('btn-toggle-mode');
+        if(btnToggle) {
+            btnToggle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                </svg>
+                Usar Câmera
+            `;
+        }
+        document.getElementById('btn-flip-camera').style.display = 'none';
         document.getElementById('input-chave-manual').focus();
     }
 
-    function fecharModal(event) {
-        if (event && event.target !== event.currentTarget) return;
-        document.getElementById('modal-manual').classList.remove('active');
-        document.getElementById('input-chave-manual').value = '';
+    function abrirModoCâmera() {
+        modoAtual = 'camera';
+        document.getElementById('manual-section').style.display = 'none';
+        document.getElementById('camera-section').style.display = 'block';
+        
+        const btnToggle = document.getElementById('btn-toggle-mode');
+        if(btnToggle) {
+            btnToggle.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Digitar EAN
+            `;
+        }
+        document.getElementById('btn-flip-camera').style.display = 'inline-flex';
         setTimeout(() => {
             Scanner.start();
             _atualizarStatus('Aguardando código de barras...', 'loading');
@@ -45,8 +80,7 @@ const App = (function() {
     function processarChaveManual() {
         const ean = document.getElementById('input-chave-manual').value.trim();
         if (!ean) return;
-        document.getElementById('modal-manual').classList.remove('active');
-        document.getElementById('input-chave-manual').value = '';
+        abrirModoCâmera();
         _onEANLido(ean);
     }
 
@@ -168,8 +202,7 @@ const App = (function() {
     return {
         irPara,
         resetStatus,
-        mostrarInputManual,
-        fecharModal,
+        toggleScannerMode,
         processarChaveManual
     };
 })();
