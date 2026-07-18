@@ -5,7 +5,8 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH  = 'gemini-3.1-pro-preview'; 
+  var MODEL_FLASH  = 'gemini-3.5-flash'; 
+  var MODEL_LITE   = 'gemini-3.1-flash-lite';
   var MODEL_VISION = 'gemini-3.1-pro-preview'; 
   var MODEL_PRO    = 'gemini-3.1-pro-preview'; 
   var MODEL_BKP    = 'gemini-3.5-flash';
@@ -27,11 +28,13 @@ window.GeminiService = (function() {
             _apiKey = cfg.apiKey;
           }
           // Modelos forçados no código conforme solicitação
-          MODEL_FLASH = 'gemini-3.1-pro-preview';
+          // Modelos forçados no código conforme solicitação
+          MODEL_FLASH = 'gemini-3.5-flash';
+          MODEL_LITE  = 'gemini-3.1-flash-lite';
           MODEL_PRO   = 'gemini-3.1-pro-preview';
           MODEL_BKP   = 'gemini-3.5-flash';
           console.log('[GeminiService] Config: key=' + (_apiKey ? 'OK' : 'ausente') +
-                      ' | flash=' + MODEL_FLASH + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
+                      ' | flash=' + MODEL_FLASH + ' | lite=' + MODEL_LITE + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
           if (_apiKey) return _apiKey;
         }
       }
@@ -134,6 +137,10 @@ window.GeminiService = (function() {
     var systemPrompt = 'Voce e um especialista em financas pessoais brasileiras. ' +
       'Extraia transacoes de extratos bancarios. Retorne APENAS JSON valido.';
 
+    if (fileType === 'pdf') {
+      systemPrompt += ' ATENÇÃO: Analise todas as páginas meticulosamente linha por linha. Não omita nenhuma transação nem pule páginas sob nenhuma circunstância.';
+    }
+
     var userContent =
       'Extraia as transacoes do extrato abaixo.\n\n' +
       'CONTAS CONHECIDAS: ' + JSON.stringify(contasInfo) + '\n\n' +
@@ -149,7 +156,8 @@ window.GeminiService = (function() {
       'RETORNE EXATAMENTE:\n' +
       '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","Vencimento da fatura":null,"saldo_inicial":null,"saldo_final":null},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
-    return await _chamarGemini(MODEL_FLASH, systemPrompt, userContent);
+    var modelToUse = (fileType === 'pdf') ? MODEL_FLASH : MODEL_LITE;
+    return await _chamarGemini(modelToUse, systemPrompt, userContent);
   }
 
   // CATEGORIZACAO COM HISTORICO - substitui action: 'categorizar_v2'

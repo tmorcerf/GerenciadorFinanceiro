@@ -6181,10 +6181,14 @@ window.processarLeituraScanner = async function(textoLido) {
         const cnpjEmitente = (nfeData.emitente && nfeData.emitente.cnpj) ? nfeData.emitente.cnpj.replace(/\D/g, '') : '00000000000000';
         const nomeEmitente = nfeData.emitente ? nfeData.emitente.nome : 'NF-e Scanner';
 
-        const itensCategorizados = [];
+        const itensProcessados = [];
         for (const item of nfeData.itens) {
-            const result = await geminiService.categorizarProduto(item, cnpjEmitente);
-            itensCategorizados.push(result);
+            itensProcessados.push({
+                ...item,
+                nomeProduto: item.nomeProduto,
+                categoria: '',
+                subcategoria: ''
+            });
         }
 
         const userId = firebase.auth().currentUser ? firebase.auth().currentUser.uid : 'anon';
@@ -6192,7 +6196,7 @@ window.processarLeituraScanner = async function(textoLido) {
         const dataNfeStr = nfeData.dataEmissao || new Date().toISOString().substring(0, 10).split('-').reverse().join('/');
         
         let totalValor = 0;
-        itensCategorizados.forEach(i => { totalValor += (i.valorCalculado || (i.quantidade * i.valorUnitario)); });
+        itensProcessados.forEach(i => { totalValor += (i.valorCalculado || (i.quantidade * i.valorUnitario)); });
         
         await window.db.collection('nfe_notas').doc(docNotaId).set({
             chave: chave,
@@ -6211,7 +6215,7 @@ window.processarLeituraScanner = async function(textoLido) {
         }
 
         const categoriasAgrupadas = {};
-        for (const item of itensCategorizados) {
+        for (const item of itensProcessados) {
             const valorFinal = item.valorCalculado || (item.quantidade * item.valorUnitario);
             const cat = item.categoria || 'Outros';
             
@@ -6219,6 +6223,10 @@ window.processarLeituraScanner = async function(textoLido) {
                 notaId: docNotaId,
                 chave: chave,
                 nomeProduto: item.nomeProduto,
+                descricao_sefaz: item.nomeProduto,
+                descricao_oficial: '',
+                descricao_ia: '',
+                descricao_padrao: '',
                 ean: item.ean || '',
                 ncm: item.ncm || '',
                 quantidade: item.quantidade,
