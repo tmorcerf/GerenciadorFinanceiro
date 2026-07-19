@@ -1475,8 +1475,28 @@ let txDateTypeFilter = 'vencimento';
             dadosFinanceiros.produtos = dbDados.produtos || [];
             window.appData = dadosFinanceiros; // Ensure appData is globally accessible early
             
-            window.dicionarioGeral = dbDados.categoriasDict || {};
+            const defaultCategoriasDict = {
+              "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
+              "Transporte": ["Combustível", "Aplicativo", "Transporte Público", "Manutenção", "Estacionamento"],
+              "Moradia": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção"],
+              "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
+              "Lazer": ["Cinema", "Assinaturas", "Eventos", "Viagens"],
+              "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
+              "Vestuário": ["Roupas", "Calçados", "Acessórios"],
+              "Pessoal": ["Cuidados Pessoais", "Academia", "Cosméticos"],
+              "Pets": ["Veterinário", "Ração", "Banho e Tosa"],
+              "Impostos e Taxas": ["Imposto de Renda", "IPVA", "IPTU", "Taxas Bancárias"],
+              "Financeiro": ["Rendimento", "Juros", "Multa", "Empréstimo", "Cartão de Crédito"],
+              "Receitas": ["Salário", "Freelance", "Rendimentos", "Vendas"],
+              "DIVERSOS": ["Diversos"]
+            };
 
+            if (!dbDados.categoriasDict || Object.keys(dbDados.categoriasDict).length === 0) {
+              window.dicionarioGeral = defaultCategoriasDict;
+              dadosFinanceiros.categoriasDict = defaultCategoriasDict;
+            } else {
+              window.dicionarioGeral = dbDados.categoriasDict;
+            }
             // Hide loading screen
             const loading = document.getElementById('loading-screen');
             if (loading) {
