@@ -5776,6 +5776,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           if (el.dataset.target === 'panel-categories') window.renderEditCategories();
           if (el.dataset.target === 'panel-accounts-edit') window.renderEditAccounts();
         });
+      });
       // --- LISTENERS DOS GRUPOS FAMILIARES ---
       const groupSelect = document.getElementById('group-switcher-select');
       if (groupSelect) {
