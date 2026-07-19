@@ -51,13 +51,44 @@ class Database {
         this.getCollectionData(this.db.collection('Extratos').where('groupId', '==', gid))
       ]);
 
-      const categoriasDict = {};
-      categorias.forEach(cat => {
-         if (!categoriasDict[cat.nome]) categoriasDict[cat.nome] = [];
-         if (cat.subcategorias && Array.isArray(cat.subcategorias)) {
-            categoriasDict[cat.nome] = cat.subcategorias;
-         }
-      });
+      let categoriasDict = {};
+      if (categorias.length === 0) {
+        const defaultCategoriasDict = {
+          "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
+          "Transporte": ["Combustível", "Aplicativo", "Transporte Público", "Manutenção", "Estacionamento"],
+          "Serviços": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção", "Nuvem", "Streaming", "Produtividade / IA"],
+          "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
+          "Lazer": ["Cinema", "Eventos", "Hobbies"],
+          "Viagem": ["Transporte App", "Combustível", "Hotel / Estadia", "Passagens", "Alimentação", "Passeios"],
+          "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
+          "Vestuário": ["Roupas", "Calçados", "Acessórios"],
+          "Pessoal": ["Cuidados Pessoais", "Academia", "Cosméticos"],
+          "Pets": ["Veterinário", "Ração", "Banho e Tosa"],
+          "Impostos e Taxas": ["Imposto de Renda", "IPVA", "IPTU", "Taxas Bancárias"],
+          "Financeiro": ["Rendimento", "Juros", "Multa", "Empréstimo", "Cartão de Crédito"],
+          "Receitas": ["Salário", "Freelance", "Rendimentos", "Vendas"],
+          "DIVERSOS": ["Diversos"]
+        };
+        const batch = this.db.batch();
+        Object.keys(defaultCategoriasDict).forEach(catNome => {
+           const docRef = this.db.collection('Categorias').doc();
+           batch.set(docRef, {
+             groupId: gid,
+             nome: catNome,
+             subcategorias: defaultCategoriasDict[catNome]
+           });
+        });
+        batch.commit().catch(e => console.error("Erro salvando categorias default", e));
+        
+        categoriasDict = JSON.parse(JSON.stringify(defaultCategoriasDict));
+      } else {
+        categorias.forEach(cat => {
+           if (!categoriasDict[cat.nome]) categoriasDict[cat.nome] = [];
+           if (cat.subcategorias && Array.isArray(cat.subcategorias)) {
+              categoriasDict[cat.nome] = cat.subcategorias;
+           }
+        });
+      }
 
       const nomesContas = contas.map(c => c.nome);
       categoriasDict["Transferência"] = nomesContas;
