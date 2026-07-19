@@ -289,8 +289,8 @@ window.GeminiService = (function() {
             setTimeout(() => {
                 const mockedData = (opts.transacoes || []).map(t => ({
                     ...t,
-                    categoria: 'Diversos',
-                    subcategoria: 'Outros'
+                    categoria: 'DIVERSOS',
+                    subcategoria: 'DIVERSOS'
                 }));
                 resolve({
                     status: 'success',
