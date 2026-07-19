@@ -36,7 +36,7 @@ class Database {
   async loadAllData() {
     try {
       const gid = window.userGroupId;
-      if (!gid) throw new Error("Grupo de usuário não definido.");
+      if (!gid) throw new Error("Grupo de usuário nao definido.");
 
       // Em vez de usar .get() (que custa milhares de leituras toda vez), 
       // delegamos para o getCollectionData que usa .onSnapshot() (custa quase zero com cache ativado).
@@ -62,7 +62,7 @@ class Database {
             "Lazer & Viagem": ["Assinaturas", "Cinema/Teatro", "Bares/Baladas", "Hobbies", "Passagens", "Hospedagem", "Passeios"],
             "Cuidados Pessoais": ["Salão/Barbearia", "Cosméticos", "Academia"],
             "Serviços": ["Pets", "Educação", "Bancos/Taxas", "Doações", "Seguros", "Impostos"],
-            "Investimentos": ["Renda Fixa", "Ações", "FIIs", "Criptomoedas", "Previdência Privatda", "Reserva de Emergência"],
+            "Investimentos": ["Renda Fixa", "Ações", "FIIs", "Criptomoedas", "Previdencia Privatda", "Reserva de Emergência"],
             "Outros": ["Presentes", "Vestuário", "Eletrônicos", "Móveis", "Diversos"]
         };
 
@@ -103,7 +103,7 @@ class Database {
       }
 
       const nomesContas = contas.map(c => c.nome);
-      categoriasDict["Transferência"] = nomesContas;
+      categoriasDict["Transferencia"] = nomesContas;
       categoriasDict["Transferencias"] = nomesContas;
 
       return {
@@ -126,7 +126,7 @@ class Database {
 
   async sincronizarPeriodo(lancamentosNovos, idsParaExcluir, contaDoExtrato, dataMaxStr, extratoPayload, conciliacaoContinua) {
     const gid = window.userGroupId;
-    if (!gid) throw new Error("Grupo não definido.");
+    if (!gid) throw new Error("Grupo nao definido.");
 
     const batch = this.db.batch();
     
@@ -197,7 +197,7 @@ class Database {
                       batch.update(doc.ref, upd);
                   }
               }
-              // Se conciliacaoContinua for null, trata-se de um 'Buraco Temporal' (Cenário D) ou uma Sobreposição sem expansão, 
+              // Se conciliacaoContinua for null, trata-se de um 'Buraco Temporal' (Cenário D) ou uma Sobreposição sem expansao, 
               // logo NÃO atualizamos as âncoras da conta!
           }
        });
@@ -208,10 +208,10 @@ class Database {
 
   async editarLancamento(cod, newData) {
      const gid = window.userGroupId;
-     if (!gid) throw new Error("Grupo não definido.");
+     if (!gid) throw new Error("Grupo nao definido.");
 
      const snapshot = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod)).get();
-     if (snapshot.empty) throw new Error("Lançamento não encontrado");
+     if (snapshot.empty) throw new Error("Lançamento nao encontrado");
      
      const docId = snapshot.docs[0].id;
      await this.db.collection('Lancamentos').doc(docId).update(newData);
@@ -219,10 +219,10 @@ class Database {
 
   async excluirLancamento(cod) {
      const gid = window.userGroupId;
-     if (!gid) throw new Error("Grupo não definido.");
+     if (!gid) throw new Error("Grupo nao definido.");
 
      const snapshot = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod)).get();
-     if (snapshot.empty) throw new Error("Lançamento não encontrado");
+     if (snapshot.empty) throw new Error("Lançamento nao encontrado");
      
      const docId = snapshot.docs[0].id;
      await this.db.collection('Lancamentos').doc(docId).delete();
@@ -232,7 +232,7 @@ class Database {
   
   async reabrirExtrato(extratoId) {
     const gid = window.userGroupId;
-    if (!gid) throw new Error("Grupo não definido.");
+    if (!gid) throw new Error("Grupo nao definido.");
     
     // Marca o extrato como aberto
     await this.db.collection('Extratos').doc(extratoId).update({ status: 'aberto' });
@@ -354,7 +354,7 @@ class Database {
 
   async salvarConta(conta) {
      const gid = window.userGroupId;
-     if (!gid) throw new Error("Grupo não definido.");
+     if (!gid) throw new Error("Grupo nao definido.");
      
      const docRef = await this.db.collection('Contas').add({
         groupId: gid,
@@ -372,7 +372,7 @@ class Database {
 
   async saveContaConfig(payload) {
      const gid = window.userGroupId;
-     if (!gid) throw new Error("Grupo não definido.");
+     if (!gid) throw new Error("Grupo nao definido.");
 
      const snapshot = await this.db.collection('Contas').where('groupId', '==', gid).where('nome', '==', payload.originalNome).get();
      if (!snapshot.empty) {

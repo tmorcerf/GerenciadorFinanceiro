@@ -1528,7 +1528,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           const newId = newGroupIdInput.value.trim();
           if (!newId) return;
           if (newId === window.userGroupId) {
-             alert('Você já está neste grupo!');
+             alert('Voce já está neste grupo!');
              return;
           }
           if (confirm(`Tem certeza que deseja mudar seu grupo para ${newId}? Seus lançamentos atuais ficarão invisíveis (mas seguros no banco).`)) {
@@ -1623,7 +1623,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           // Se quiser liberar geral, basta comentar o if abaixo
           if (!BETA_EMAILS.includes(user.email)) {
              window.firebaseAuth.signOut();
-             alert(`Acesso Negado!\n\nO Corta Gastos está em fase Beta Fechado.\nO e-mail ${user.email} não tem permissão de acesso no momento.`);
+             alert(`Acesso Negado!\n\nO Corta Gastos está em fase Beta Fechado.\nO e-mail ${user.email} nao tem permissao de acesso no momento.`);
              return;
           }
           // =====================================
@@ -1673,7 +1673,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           } else {
             let data = userDoc.data();
             window.userGroupId = data.groupId || user.uid;
-            // Migração se não tiver savedGroups
+            // Migração se nao tiver savedGroups
             if (!data.savedGroups || !Array.isArray(data.savedGroups)) {
                let defaultGroups = [{ id: user.uid, name: "Laboratório de Testes" }];
                if (window.userGroupId !== user.uid) {
@@ -1702,7 +1702,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
               if (inviteSnap.exists) {
                 const inviteData = inviteSnap.data();
                 if (inviteData.groupId === window.userGroupId) {
-                  alert('Você já está no grupo deste convite!');
+                  alert('Voce já está no grupo deste convite!');
                 } else if (confirm(`Deseja entrar no grupo familiar associado a este convite? Seus lançamentos atuais ficarão isolados (mas seguros).`)) {
                   // Verifica se já existe em savedGroups
                   let sg = window.userSavedGroups || [];
@@ -1719,7 +1719,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                   window.populateGroupSwitcher();
                   // Queimar o convite
                   await inviteRef.delete();
-                  alert('Bem-vindo(a)! Você entrou no grupo com sucesso.');
+                  alert('Bem-vindo(a)! Voce entrou no grupo com sucesso.');
                 }
                 // Limpar URL independente da escolha
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -1729,7 +1729,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
               }
             } catch (err) {
               console.error("Erro ao processar convite:", err);
-              alert("Erro ao processar o convite. Você tem permissão?");
+              alert("Erro ao processar o convite. Voce tem permissao?");
             }
           }
           // =====================================
@@ -1748,7 +1748,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
              userProfilePic.style.display = 'none';
           }
           if (userProfileName) userProfileName.textContent = 'Visitante';
-          if (userProfileEmail) userProfileEmail.textContent = 'Faça login para usar';
+          if (userProfileEmail) userProfileEmail.textContent = 'Faca login para usar';
           if (btnLogout) btnLogout.style.display = 'none';
         }
       });
@@ -1871,7 +1871,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         });
       }
 
-      // New Lançamentos Toolbar Events
+      // New Lancamentos Toolbar Events
       const accFilterSelect = document.getElementById('transactions-account-filter');
       if (accFilterSelect) {
         accFilterSelect.addEventListener('change', (e) => {
@@ -2007,7 +2007,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                   ${avatar}
                 </div>
                 <div style="display: flex; flex-direction: column;">
-                  <span style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">${name} ${isMe ? '<span style="font-size: 0.75rem; color: var(--color-income); background: rgba(34,197,94,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Você</span>' : ''}</span>
+                  <span style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">${name} ${isMe ? '<span style="font-size: 0.75rem; color: var(--color-income); background: rgba(34,197,94,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Voce</span>' : ''}</span>
                   <span style="color: var(--text-muted); font-size: 0.8rem;">${email}</span>
                 </div>
               </div>
@@ -2049,7 +2049,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         }
       } catch (err) {
         console.error("Erro ao gerar convite:", err);
-        alert("Erro ao gerar convite. Você tem permissão?");
+        alert("Erro ao gerar convite. Voce tem permissao?");
       } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -2057,7 +2057,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
     };
 
     window.removeMember = async function(memberUid, memberName) {
-      if (!confirm(`ATENÇÃO: Você tem certeza que deseja expulsar ${memberName} do seu Grupo Familiar?`)) {
+      if (!confirm(`ATENÇÃO: Voce tem certeza que deseja expulsar ${memberName} do seu Grupo Familiar?`)) {
         return;
       }
 
@@ -2459,8 +2459,8 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             const cardPer = getBudgetCardPeriod(o.categoria);
             const data = getCardData(o, cardPer);
             
-            let periodLabel = 'Mês Atual';
-            if (cardPer === 'previous') periodLabel = 'Mês Passado';
+            let periodLabel = 'Mes Atual';
+            if (cardPer === 'previous') periodLabel = 'Mes Passado';
             else if (cardPer === '3months') periodLabel = '3 Meses';
             else if (cardPer === '6months') periodLabel = '6 Meses';
             else if (cardPer === 'year') periodLabel = 'Ano';
@@ -2486,13 +2486,13 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         });
 
         if (favHtml === '') {
-          favListEl.innerHTML = '<div style="text-align:center; color: var(--text-muted); font-size:0.85rem; padding-top: 1rem;">Nenhum favorito selecionado. Vá em Orçamentos e clique na estrela!</div>';
+          favListEl.innerHTML = '<div style="text-align:center; color: var(--text-muted); font-size:0.85rem; padding-top: 1rem;">Nenhum favorito selecionado. Vá em Orcamentos e clique na estrela!</div>';
         } else {
           favListEl.innerHTML = favHtml;
         }
       }
 
-      // Render Próximas Faturas (Substitui Top 5)
+      // Render Proximas Faturas (Substitui Top 5)
       const upcomingBillsList = document.getElementById('upcoming-bills-list');
       if (upcomingBillsList && dadosFinanceiros && dadosFinanceiros.contas) {
         const now = new Date();
@@ -2538,7 +2538,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           if (faturaProxima !== 0) {
              // Só exibe a próxima se a atual estiver vazia/zerada ou para dar contexto futuro
              // Vamos empurrar as próximas também para a lista
-             faturas.push({ nome: c.nome + ' (Mês seg.)', dia: vencimentoProxima || 1, mes: nextMonth, ano: nextYear, valor: faturaProxima, tipo: 'Próxima' });
+             faturas.push({ nome: c.nome + ' (Mes seg.)', dia: vencimentoProxima || 1, mes: nextMonth, ano: nextYear, valor: faturaProxima, tipo: 'Próxima' });
           }
         });
         
@@ -2559,7 +2559,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             const li = document.createElement('li');
             li.className = "clickable-card";
             li.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.8rem; font-size: 0.85rem; padding: 0.6rem; border-radius: 8px; transition: background 0.2s; cursor: pointer;";
-            li.setAttribute("onclick", `window.showFaturaModal('${f.nome.replace(' (Mês seg.)', '')}', '${isProx ? 'next' : 'current'}')`);
+            li.setAttribute("onclick", `window.showFaturaModal('${f.nome.replace(' (Mes seg.)', '')}', '${isProx ? 'next' : 'current'}')`);
             li.setAttribute("onmouseover", "this.style.background='rgba(255,255,255,0.05)'");
             li.setAttribute("onmouseout", "this.style.background='transparent'");
             
@@ -2611,7 +2611,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           <div class="exec-card-icon">??</div>
         </div>
         <div class="exec-card cartões" data-action="cartões">
-          <div class="exec-card-label">Cartões de Credito</div>
+          <div class="exec-card-label">Cartoes de Credito</div>
           <div class="exec-card-value" style="color:var(--color-expense);">${formatBRL(Math.abs(saldoCartãoes))}</div>
           <div class="exec-card-icon">??</div>
         </div>
@@ -3139,8 +3139,8 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                 </div>
                 <div style="display:flex; align-itemes:center; gap: 10px;">
                   <select class="budget-period-select" data-budget-cat="${o.categoria}" onclick="event.stopPropagation()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:2px 5px; font-size:0.8rem; outline:none; cursor:pointer;">
-                    <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Mês Atual</option>
-                    <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mês Anterior</option>
+                    <option value="current" ${cardPer === 'current' ? 'selected' : ''}>Mes Atual</option>
+                    <option value="previous" ${cardPer === 'previous' ? 'selected' : ''}>Mes Anterior</option>
                     <option value="3months" ${cardPer === '3months' ? 'selected' : ''}>Últimos 3 Meses</option>
                     <option value="6months" ${cardPer === '6months' ? 'selected' : ''}>Últimos 6 Meses</option>
                     <option value="year" ${cardPer === 'year' ? 'selected' : ''}>Ano Atual</option>
@@ -3605,7 +3605,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem;">
           <div class="card bg-card" id="card-composicao-saldos" style="cursor:pointer; border-left: 4px solid var(--color-accent);">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">Composição de Saldos</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.8rem; font-weight:600;">Composicao de Saldos</div>
             <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.9rem;">
               <span>Correntes</span><span style="color:var(--text-primary);">${formatBRL(totalCC)}</span>
             </div>
@@ -3661,7 +3661,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         const now = new Date();
         const today = now.getDate();
 
-        if (groupName === 'Cartões de Credito') {
+        if (groupName === 'Cartoes de Credito') {
            contas.sort((a, b) => {
               const diaA = parseInt(a.dia_vencimento) || 31;
               const diaB = parseInt(b.dia_vencimento) || 31;
@@ -3673,7 +3673,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
         contas.forEach(c => {
           const cName = c.nome || c.conta || 'Conta';
-          const isCC = groupName === 'Cartões de Credito';
+          const isCC = groupName === 'Cartoes de Credito';
           
           let faturaAtual = c.fatura_atual || 0;
           let faturaProxima = c.fatura_proxima || 0;
@@ -4624,7 +4624,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       html += `</tbody></table>`;
 
       if (isFav && itemes.length > 10) {
-         html += `<div style="text-align:center; margin-top:10px; font-size:0.8rem; color:var(--text-muted);">Mostrando os últimos 10. Vá na aba Lançamentos para ver todos.</div>`;
+         html += `<div style="text-align:center; margin-top:10px; font-size:0.8rem; color:var(--text-muted);">Mostrando os últimos 10. Vá na aba Lancamentos para ver todos.</div>`;
       }
 
       showGlassModal(`Categoria: ${categoria}`, html);
@@ -4892,7 +4892,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       }).sort((a,b) => a.saldo - b.saldo);
 
       if (cartões.length === 0) {
-        showGlassModal('Cartões de Credito', '<p style="color:var(--text-muted); text-align:center;">Nenhum cartão cadastrado.</p>');
+        showGlassModal('Cartoes de Credito', '<p style="color:var(--text-muted); text-align:center;">Nenhum cartão cadastrado.</p>');
         return;
       }
 
@@ -4914,7 +4914,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         `;
       });
 
-      showGlassModal('Cartões de Credito', html);
+      showGlassModal('Cartoes de Credito', html);
       setTimeout(() => {
         document.querySelectorAll('[data-conta-extrato]').forEach(el => {
           el.addEventListener('click', () => window.showExtratoContaModal(el.dataset.contaExtrato));
@@ -5046,7 +5046,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       const components = [
         { label: 'Contas Correntes', value: saldoCC, color: 'var(--color-income)' },
         { label: 'Investimentos', value: saldoInv, color: '#8b5cf6' },
-        { label: 'Cartões de Credito', value: saldoCartãoes, color: 'var(--color-expense)' }
+        { label: 'Cartoes de Credito', value: saldoCartãoes, color: 'var(--color-expense)' }
       ];
       const maxComp = Math.max(...components.map(c => Math.abs(c.value)), 1);
 
@@ -5065,7 +5065,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         `;
       });
 
-      showGlassModal('Composição do Patrimônio', html);
+      showGlassModal('Composicao do Patrimônio', html);
     };
 
     window.showContasModal = function(type) {
@@ -5109,7 +5109,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
     window.showAuditoriaModal = function() {
       const itemes = dadosFinanceiros.auditoria ? [...dadosFinanceiros.auditoria] : [];
 
-      // Regra Dinâmica: Soma de Transferências
+      // Regra Dinâmica: Soma de Transferencias
       if (dadosFinanceiros.lancamentos) {
          let somaTransferencias = 0;
          dadosFinanceiros.lancamentos.forEach(l => {
@@ -5117,11 +5117,11 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                somaTransferencias += (Number(l.valor) || 0);
             }
          });
-         // Tolera até 5 centavos por questões de precisão de JavaScript float
+         // Tolera até 5 centavos por questões de precisao de JavaScript float
          if (Math.abs(somaTransferencias) > 0.05) {
              itemes.push({
-                 item: "Diferença nas Transferências",
-                 descricao: `A soma de todas as transferências não está zerando! Saldo residual: <b>${formatBRL(somaTransferencias)}</b>. Existem pernas de transferência sem contra-partida exata (ou valores desiguais).`,
+                 item: "Diferença nas Transferencias",
+                 descricao: `A soma de todas as transferencias nao está zerando! Saldo residual: <b>${formatBRL(somaTransferencias)}</b>. Existem pernas de transferencia sem contra-partida exata (ou valores desiguais).`,
                  responsavel: "Sistema",
                  status: "Inconsistente"
              });
@@ -5396,12 +5396,12 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       let html = `
         <div class="metrics-grid" style="margin-bottom: 2rem; align-itemes: stretch;">
           <div class="card bg-card" style="display:flex; flex-direction:column;">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Mês Atual</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Fatura do Mes Atual</div>
             <div style="font-size:1.8rem; font-weight:700; color:${-totalAtual < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(-totalAtual)}</div>
             <div style="margin-top:auto;">${renderFaturasList(faturasAtual)}</div>
           </div>
           <div class="card bg-card" style="display:flex; flex-direction:column;">
-            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Próximo Mês</div>
+            <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">Próximo Mes</div>
             <div style="font-size:1.8rem; font-weight:700; color:${-totalProxima < 0 ? 'var(--color-expense)' : 'var(--text-primary)'};">${formatBRL(-totalProxima)}</div>
             <div style="margin-top:auto;">${renderFaturasList(faturasProxima)}</div>
           </div>
@@ -5421,7 +5421,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         </div>
       `;
 
-      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus Cartões</h3>`;
+      html += `<h3 style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Meus Cartoes</h3>`;
       html += `<div class="accounts-grid" id="credit-cards-list-container">`;
       
       const iconCC = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>';
@@ -5915,7 +5915,7 @@ window.openEditTransactionModal = function(cod) {
     const vparts = t.vencimento.split('/');
     if(vparts.length === 3) vencVal = vparts[2] + '-' + vparts[1] + '-' + vparts[0];
   } else if (t.data) {
-    // fallback se não tiver vencimento
+    // fallback se nao tiver vencimento
     vencVal = dateVal;
   }
   document.getElementById('edit-tx-vencimento').value = vencVal;
@@ -6002,16 +6002,16 @@ window.openEditTransactionModal = function(cod) {
 
   if (isConciliado) {
       lockBanner.style.display = 'block';
-      // Apenas data, conta e valor são bloqueados — obs, categoria e subcategoria ficam livres
+      // Apenas data, conta e valor sao bloqueados — obs, categoria e subcategoria ficam livres
       document.getElementById('edit-tx-data').disabled   = true;
       document.getElementById('edit-tx-conta').disabled  = true;
       document.getElementById('edit-tx-valor').disabled  = true;
-      document.getElementById('edit-tx-obs').disabled    = false; // LIVRE: não dispara cascata
+      document.getElementById('edit-tx-obs').disabled    = false; // LIVRE: nao dispara cascata
       document.getElementById('edit-tx-create-contrapartida').disabled = true;
       
       btnUnlock.onclick = () => {
           console.log('[DEBUG] Usuário clicou em Desbloquear o lançamento', cod);
-          if (confirm('Atenção: Alterar Data, Conta ou Valor removerá o status de "Conciliado" deste lançamento e de TODOS os posteriores desta conta (efeito cascata). Você precisará re-validar o(s) extrato(s). Deseja continuar?')) {
+          if (confirm('Atenção: Alterar Data, Conta ou Valor removerá o status de "Conciliado" deste lançamento e de TODOS os posteriores desta conta (efeito cascata). Voce precisará re-validar o(s) extrato(s). Deseja continuar?')) {
               console.log('[DEBUG] Usuário confirmou o desbloqueio. Habilitando edição...');
               window.isCurrentTxUnlocked = true;
               lockBanner.style.display = 'none';
@@ -6039,7 +6039,7 @@ window.openEditTransactionModal = function(cod) {
 document.getElementById('edit-tx-delete')?.addEventListener('click', async () => {
   const id = document.getElementById('edit-tx-id').value;
   if (!id) return;
-  if (!confirm('Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita.')) return;
+  if (!confirm('Tem certeza que deseja apagar este lançamento? Esta ação nao pode ser desfeita.')) return;
   
   // Remove do array local
   dadosFinanceiros.lancamentos = dadosFinanceiros.lancamentos.filter(l => l.cod != id);
@@ -6104,7 +6104,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
   }
 
   if (newDataStr !== origData || Math.abs(newVal) !== Math.abs(origValor)) {
-    if(!confirm('Você está alterando a Data ou o Valor desta transação. Isso pode afetar a conciliação do seu extrato. Tem certeza?')) {
+    if(!confirm('Voce está alterando a Data ou o Valor desta transação. Isso pode afetar a conciliação do seu extrato. Tem certeza?')) {
       return;
     }
   }
@@ -6129,7 +6129,7 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
       valor: Math.abs(newVal),
       categoria: selectedCat,
       subcategoria: payload.novaSubcategoria,
-      obs: payload.novaObs + ' (Entrada de Transferência)'
+      obs: payload.novaObs + ' (Entrada de Transferencia)'
     };
   }
 
@@ -6346,7 +6346,7 @@ window.saveNewTransaction = function() {
       const tAte = new Date(partsAte[2], parseInt(partsAte[1])-1, partsAte[0], 0,0,0).getTime();
       const tLanc = new Date(parts[2], parseInt(parts[1])-1, parts[0], 0,0,0).getTime();
       if (tLanc <= tAte) {
-          if (!confirm(`Atenção: Você está inserindo um lançamento em uma data (${dataStr}) que já foi conciliada (até ${contaObj.conciliado_ate}). Salvar este lançamento removerá o status de "Conciliado" de todos os extratos a partir desta data para que você possa revalidá-los. Deseja continuar?`)) {
+          if (!confirm(`Atenção: Voce está inserindo um lançamento em uma data (${dataStr}) que já foi conciliada (até ${contaObj.conciliado_ate}). Salvar este lançamento removerá o status de "Conciliado" de todos os extratos a partir desta data para que voce possa revalidá-los. Deseja continuar?`)) {
               return;
           }
           requiresCascade = true;
@@ -6518,7 +6518,7 @@ window.processarLeituraScanner = async function(textoLido) {
                     criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
                     uid: userId
                 });
-                alert("A SEFAZ demorou ou retornou erro. A nota foi salva como PENDENTE. Tente consultar novamente pelo Histórico mais tarde.");
+                alert("A SEFAZ demorou ou retornou erro. A nota foi salva como PENDENTE. Tente consultar novamente pelo Historico mais tarde.");
             }
             throw extError;
         }
@@ -6652,7 +6652,7 @@ window.processarLeituraScanner = async function(textoLido) {
                     statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Ganhou ${xpGanho} XP.`;
                     statusEl.style.color = '#10b981';
                 }
-                alert(`✅ Nota importada com sucesso!\n\nUm lançamento único foi gerado na conta ${selectedConta}.\nVocê ganhou ${xpGanho} CortaCoins! 🪙`);
+                alert(`✅ Nota importada com sucesso!\n\nUm lançamento único foi gerado na conta ${selectedConta}.\nVoce ganhou ${xpGanho} CortaCoins! 🪙`);
             } else {
                 if (statusEl) {
                     statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Lançamento único criado.`;
