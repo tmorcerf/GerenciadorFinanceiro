@@ -161,7 +161,7 @@ Se não conseguir ler algum campo, use null. Extraia TODOS os itens visíveis.`;
      */
     async function _chamarGemini(systemInstruction, userContent) {
         if (localStorage.getItem('gemini_mock') === 'true') {
-            console.warn('[GeminiService Scanner] ⚠️ MODO MOCK ATIVADO! Nenhuma chamada real à IA foi feita.');
+            console.warn('[GeminiService Scanner] 🥔 MODO BATATA ATIVADO! Nenhuma chamada real à IA foi feita.');
             await new Promise(r => setTimeout(r, 800)); // Simula latência de rede
 
             // Mock para Identificação de Estabelecimento

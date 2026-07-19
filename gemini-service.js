@@ -163,23 +163,82 @@ window.GeminiService = (function() {
   // EXTRACAO DE EXTRATO - substitui action: 'importar_simples_v2'
   async function extrairExtrato(opts) {
     if (localStorage.getItem('gemini_mock') === 'true') {
-        console.warn('[GeminiService] MODO MOCK ATIVADO: Retornando dados locais falsos para teste de interface.');
+        console.warn('[GeminiService] 🥔 MODO BATATA ATIVADO!');
         await new Promise(r => setTimeout(r, 800)); // Simula tempo de rede
         
+        var extensao = (opts.fileName || "").split('.').pop().toLowerCase();
+        if (opts.fileType === 'pdf' || extensao === 'pdf' || extensao === 'png' || extensao === 'jpg') {
+            throw new Error("Modo Batata não aceita PDF ou Imagens. Envie um extrato em CSV ou Excel.");
+        }
+
+        let lancamentos_batata = [];
+        try {
+            let csvText = opts.fileContent || "";
+            if (!csvText.includes('\n')) {
+               try { csvText = decodeURIComponent(escape(atob(csvText))); } catch(e){}
+            }
+
+            let linhas = csvText.split('\n');
+            for(let l of linhas) {
+                if(!l.trim()) continue;
+                let parts = l.split(/[,;]/).map(p => p.trim());
+                if(parts.length >= 2) {
+                   let dataMatch = l.match(/\d{2}\/\d{2}\/\d{2,4}/);
+                   if (!dataMatch) continue; // Pula linha se não achar data (ex: cabeçalhos)
+                   
+                   let data = dataMatch[0];
+                   if (data.length === 8) { // converte dd/mm/yy p dd/mm/yyyy
+                       let pData = data.split('/');
+                       data = pData[0] + '/' + pData[1] + '/20' + pData[2];
+                   }
+                   
+                   let valorStr = parts.find(p => p.match(/^-?\d+([.,]\d{1,2})?$/));
+                   if (!valorStr) {
+                       // tentar achar algo que parece valor com aspas
+                       let semAspas = l.replace(/"/g,'').split(/[,;]/);
+                       valorStr = semAspas.find(p => p.trim().match(/^-?\d+([.,]\d{1,2})?$/));
+                   }
+                   
+                   let valor = 0;
+                   if (valorStr) {
+                       valor = parseFloat(valorStr.replace(',', '.'));
+                   }
+                   if (isNaN(valor) || valor === 0) continue;
+                   
+                   let descParts = parts.filter(p => !p.match(/\d{2}\/\d{2}/) && !p.match(/^-?\d+([.,]\d{1,2})?$/) && p.length > 2);
+                   let desc = descParts.sort((a,b)=>b.length - a.length)[0] || "Transação";
+                   desc = desc.replace(/["']/g, '');
+                   
+                   lancamentos_batata.push({
+                       data: data,
+                       vencimento: data,
+                       descricao: "🥔 " + desc,
+                       valor: valor,
+                       conta: "Conta Batata"
+                   });
+                }
+            }
+        } catch(e) {
+            console.error("Erro no parser batata:", e);
+        }
+
+        if (lancamentos_batata.length === 0) {
+            lancamentos_batata = [
+                { data: "10/07/2026", vencimento: "10/07/2026", descricao: "🥔 MOCK FALLBACK - COMPRA", valor: -150.00, conta: "Conta Batata" }
+            ];
+        }
+
         return {
             status: 'success',
-            analise_ia: "Importação simulada via Mock 100% offline",
+            analise_ia: "Importação simulada via Modo Batata 100% offline",
             data: {
                 cabecalho: {
-                    "Nome da conta": "Conta Mock Teste",
+                    "Nome da conta": "Conta Batata (" + (opts.fileName || "Arquivo") + ")",
                     "Vencimento da fatura": null,
-                    "saldo_inicial": 1000.00,
-                    "saldo_final": 1150.00
+                    "saldo_inicial": 0,
+                    "saldo_final": 0
                 },
-                lancamentos: [
-                    { data: "10/07/2026", vencimento: "10/07/2026", descricao: "MOCK - COMPRA NO MERCADO", valor: -150.00, conta: "Conta Mock Teste" },
-                    { data: "12/07/2026", vencimento: "12/07/2026", descricao: "MOCK - PIX DE CLIENTE", valor: 300.00, conta: "Conta Mock Teste" }
-                ]
+                lancamentos: lancamentos_batata
             }
         };
     }
