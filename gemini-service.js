@@ -181,10 +181,11 @@ window.GeminiService = (function() {
             let linhas = csvText.split('\n');
             for(let l of linhas) {
                 if(!l.trim()) continue;
-                let parts = l.split(/[,;]/).map(p => p.trim());
+                let delimiter = l.includes(';') ? ';' : (l.includes('\t') ? '\t' : ',');
+                let parts = l.split(delimiter).map(p => p.trim().replace(/^["']|["']$/g, ''));
                 if(parts.length >= 2) {
                    let dataMatch = l.match(/\d{2}\/\d{2}\/\d{2,4}/);
-                   if (!dataMatch) continue; // Pula linha se não achar data (ex: cabeçalhos)
+                   if (!dataMatch) continue; // Pula linha se não achar data
                    
                    let data = dataMatch[0];
                    if (data.length === 8) { // converte dd/mm/yy p dd/mm/yyyy
@@ -192,22 +193,29 @@ window.GeminiService = (function() {
                        data = pData[0] + '/' + pData[1] + '/20' + pData[2];
                    }
                    
-                   let valorStr = parts.find(p => p.match(/^-?\d+([.,]\d{1,2})?$/));
-                   if (!valorStr) {
-                       // tentar achar algo que parece valor com aspas
-                       let semAspas = l.replace(/"/g,'').split(/[,;]/);
-                       valorStr = semAspas.find(p => p.trim().match(/^-?\d+([.,]\d{1,2})?$/));
-                   }
+                   let strValor = parts.find(p => p.match(/^-?\s*(R\$)?\s*-?\s*\d[\d.,]*\s*$/) && !p.match(/\d{2}\/\d{2}/));
                    
                    let valor = 0;
-                   if (valorStr) {
-                       valor = parseFloat(valorStr.replace(',', '.'));
+                   if (strValor) {
+                       strValor = strValor.replace(/R\$/g, '').replace(/\s/g, '');
+                       // Tratamento inteligente de ponto e vírgula
+                       if (strValor.includes(',') && strValor.includes('.')) {
+                           let lastComma = strValor.lastIndexOf(',');
+                           let lastDot = strValor.lastIndexOf('.');
+                           if (lastComma > lastDot) {
+                               strValor = strValor.replace(/\./g, '').replace(',', '.');
+                           } else {
+                               strValor = strValor.replace(/,/g, '');
+                           }
+                       } else if (strValor.includes(',')) {
+                           strValor = strValor.replace(',', '.');
+                       }
+                       valor = parseFloat(strValor);
                    }
                    if (isNaN(valor) || valor === 0) continue;
                    
-                   let descParts = parts.filter(p => !p.match(/\d{2}\/\d{2}/) && !p.match(/^-?\d+([.,]\d{1,2})?$/) && p.length > 2);
+                   let descParts = parts.filter(p => !p.match(/\d{2}\/\d{2}/) && !p.match(/^-?\s*(R\$)?\s*-?\s*\d[\d.,]*\s*$/) && p.length > 2);
                    let desc = descParts.sort((a,b)=>b.length - a.length)[0] || "Transação";
-                   desc = desc.replace(/["']/g, '');
                    
                    lancamentos_batata.push({
                        data: data,
