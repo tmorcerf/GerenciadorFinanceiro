@@ -53,22 +53,35 @@ class Database {
 
       let categoriasDict = {};
       if (categorias.length === 0) {
-        const defaultCategoriasDict = {
-          "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
-          "Transporte": ["Combustível", "Aplicativo", "Transporte Público", "Manutenção", "Estacionamento"],
-          "Serviços": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção", "Nuvem", "Streaming", "Produtividade / IA"],
-          "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
-          "Lazer": ["Cinema", "Eventos", "Hobbies"],
-          "Viagem": ["Transporte App", "Combustível", "Hotel / Estadia", "Passagens", "Alimentação", "Passeios"],
-          "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
-          "Vestuário": ["Roupas", "Calçados", "Acessórios"],
-          "Pessoal": ["Cuidados Pessoais", "Academia", "Cosméticos"],
-          "Pets": ["Veterinário", "Ração", "Banho e Tosa"],
-          "Impostos e Taxas": ["Imposto de Renda", "IPVA", "IPTU", "Taxas Bancárias"],
-          "Financeiro": ["Rendimento", "Juros", "Multa", "Empréstimo", "Cartão de Crédito"],
-          "Receitas": ["Salário", "Freelance", "Rendimentos", "Vendas"],
-          "DIVERSOS": ["Diversos"]
-        };
+        let defaultCategoriasDict = {};
+        try {
+          const systemRef = this.db.collection('System').doc('default_categories');
+          const systemDoc = await systemRef.get();
+          if (systemDoc.exists) {
+            defaultCategoriasDict = systemDoc.data().dict || {};
+          } else {
+            defaultCategoriasDict = {
+              "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
+              "Transporte": ["Combustível", "Aplicativo", "Transporte Público", "Manutenção", "Estacionamento"],
+              "Serviços": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção", "Nuvem", "Streaming", "Produtividade / IA"],
+              "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
+              "Lazer": ["Cinema", "Eventos", "Hobbies"],
+              "Viagem": ["Transporte App", "Combustível", "Hotel / Estadia", "Passagens", "Alimentação", "Passeios"],
+              "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
+              "Vestuário": ["Roupas", "Calçados", "Acessórios"],
+              "Pessoal": ["Cuidados Pessoais", "Academia", "Cosméticos"],
+              "Pets": ["Veterinário", "Ração", "Banho e Tosa"],
+              "Impostos e Taxas": ["Imposto de Renda", "IPVA", "IPTU", "Taxas Bancárias"],
+              "Financeiro": ["Rendimento", "Juros", "Multa", "Empréstimo", "Cartão de Crédito"],
+              "Receitas": ["Salário", "Freelance", "Rendimentos", "Vendas"],
+              "DIVERSOS": ["Diversos"]
+            };
+            await systemRef.set({ dict: defaultCategoriasDict, description: "Template padrão para novos usuários" });
+          }
+        } catch(e) {
+          console.error("Erro ao ler System/default_categories:", e);
+        }
+
         const batch = this.db.batch();
         Object.keys(defaultCategoriasDict).forEach(catNome => {
            const docRef = this.db.collection('Categorias').doc();
