@@ -277,9 +277,10 @@ window.GeminiService = (function() {
       '3. IGNORE transacoes entre estas contas proprias do usuario: ' + JSON.stringify(contaNomes) + ' e pagamentos de fatura de cartao\n' +
       '4. PARCELAS formato (1/6): projete todas com vencimentos mensais\n' +
       '5. Identifique o nome da conta usando a lista CONTAS CADASTRADAS (prefira o nome exato cadastrado)\n' +
-      '6. Se o documento contiver saldo inicial e/ou saldo final (ou anterior para cartao), extraia-os como numeros. Se nao, retorne null.\n\n' +
+      '6. Extraia OBRIGATORIAMENTE o saldo inicial e saldo final do periodo como numeros (ex: saldo anterior, saldo atual). Se nao encontrar, retorne 0.\n' +
+      '7. Identifique a INSTITUICAO FINANCEIRA (banco emissor) separada do nome da conta.\n\n' +
       'RETORNE EXATAMENTE:\n' +
-      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","Vencimento da fatura":null,"saldo_inicial":null,"saldo_final":null},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
+      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":0.00,"saldo_final":0.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
     var modelToUse = (fileType === 'pdf') ? MODEL_FLASH : MODEL_LITE;
     return await _chamarGemini(modelToUse, systemPrompt, userContent);

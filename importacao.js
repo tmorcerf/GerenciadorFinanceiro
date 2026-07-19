@@ -243,7 +243,7 @@ function stopAIThinking() {
   // =====================================================================
   // Helper: abre modal de conta e retorna Promise com { existente, conta }
   // =====================================================================
-  function abrirModalConta(nomeDetectado, saldoSugerido) {
+  function abrirModalConta(nomeDetectado, saldoSugerido, saldoFinal, bancoSugerido) {
     return new Promise((resolve, reject) => {
       const modal      = document.getElementById('modal-nova-conta-importacao');
       const desc       = document.getElementById('modal-nova-conta-desc');
@@ -279,10 +279,48 @@ function stopAIThinking() {
 
       // Pré-preencher campos de criação
       if (inputNome)  inputNome.value  = nomeDetectado;
-      if (inputBanco) inputBanco.value = '';
-      if (inputSaldo) inputSaldo.value = saldoSugerido !== null && saldoSugerido !== undefined ? saldoSugerido : '';
+      // M1+: pré-preenche banco com o que a IA detectou no PDF
+      if (inputBanco) inputBanco.value = bancoSugerido || '';
+      if (inputSaldo) inputSaldo.value = (saldoSugerido !== null && saldoSugerido !== undefined) ? saldoSugerido : '';
       if (inputTipo)  inputTipo.value  = 'Conta Corrente';
       if (inputCor)   inputCor.value   = '#3b82f6';
+
+      // Badge de saldos detectados pela IA
+      const saldoBadge = document.getElementById('modal-nova-conta-saldos-badge');
+      if (saldoBadge) {
+        if (saldoSugerido !== null || saldoFinal !== null) {
+          saldoBadge.style.display = 'block';
+          saldoBadge.innerHTML = `<i class="fas fa-chart-line" style="margin-right:6px;"></i>` +
+            `<strong>IA detectou no PDF:</strong> ` +
+            (saldoSugerido !== null ? `Saldo inicial: <strong>R$ ${Number(saldoSugerido).toFixed(2)}</strong>` : '') +
+            (saldoSugerido !== null && saldoFinal !== null ? ` &nbsp;|&nbsp; ` : '') +
+            (saldoFinal !== null ? `Saldo final: <strong>R$ ${Number(saldoFinal).toFixed(2)}</strong>` : '');
+        } else {
+          saldoBadge.style.display = 'none';
+        }
+      }
+
+      // Botão Ver Documento: abre visualizador já existente no app
+      const btnVerDoc = document.getElementById('nova-conta-btn-ver-doc');
+      if (btnVerDoc) {
+        const btnViewDocGlobal = document.getElementById('btn-ver-documento') || document.querySelector('[onclick*="verDocumento"]');
+        if (window.currentFileUrl || window.currentExtractedContent) {
+          btnVerDoc.style.display = 'inline-flex';
+          btnVerDoc.onclick = () => {
+            if (btnViewDocGlobal) { btnViewDocGlobal.click(); return; }
+            // fallback: abre em nova aba
+            if (window.currentFileUrl) window.open(window.currentFileUrl, '_blank');
+          };
+        } else {
+          btnVerDoc.style.display = 'none';
+        }
+      }
+
+      // Badges inline: mostra "🤖 detectado pela IA" quando campos são preenchidos automaticamente
+      const tagBanco = document.getElementById('nova-conta-banco-tag');
+      const tagSaldo = document.getElementById('nova-conta-saldo-tag');
+      if (tagBanco) tagBanco.style.display = bancoSugerido ? 'inline' : 'none';
+      if (tagSaldo) tagSaldo.style.display = (saldoSugerido !== null && saldoSugerido !== undefined) ? 'inline' : 'none';
 
       // Inicia no modo Vincular se há contas, senão Criar
       const haContas = _dfModal && _dfModal.contas && _dfModal.contas.length > 0;
@@ -445,9 +483,11 @@ function stopAIThinking() {
       
       if (!contaMatch && contaDoExtrato !== '') {
           try {
-            const saldoSugerido = (cabecalho && cabecalho.saldo_inicial !== undefined) ? cabecalho.saldo_inicial : null;
-            const nomeDetectado = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Conta Desconhecida').trim();
-            const resultado = await abrirModalConta(nomeDetectado, saldoSugerido);
+            const saldoSugerido  = (cabecalho && cabecalho.saldo_inicial != null) ? cabecalho.saldo_inicial : null;
+            const saldoFinalInfo = (cabecalho && cabecalho.saldo_final != null)   ? cabecalho.saldo_final   : null;
+            const bancoSugerido  = (cabecalho && cabecalho.banco) ? String(cabecalho.banco).trim() : '';
+            const nomeDetectado  = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Conta Desconhecida').trim();
+            const resultado = await abrirModalConta(nomeDetectado, saldoSugerido, saldoFinalInfo, bancoSugerido);
 
             if (resultado.existente) {
               // Usuário vinculou a uma conta já cadastrada
