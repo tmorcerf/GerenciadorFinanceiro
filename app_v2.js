@@ -3646,7 +3646,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         'Investimentos': 'var(--color-accent)'
       };
 
-      for (const groupName of ['Contas Correntes']) {
+      for (const groupName of ['Contas Correntes', 'Investimentos']) {
         const contas = groups[groupName];
         if (contas.length === 0) continue;
 
