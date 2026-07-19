@@ -1551,10 +1551,25 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       if (btnLoginGoogle) {
         btnLoginGoogle.addEventListener('click', async () => {
           const provider = new firebase.auth.GoogleAuthProvider();
-          window.firebaseAuth.signInWithRedirect(provider).catch(err => {
-            console.error("Erro no login web:", err);
-            alert("Erro ao fazer login: " + err.message);
-          });
+          
+          if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+             try {
+                // Chama o popup nativo de login do Google
+                const result = await window.Capacitor.Plugins.FirebaseAuthentication.signInWithGoogle();
+                // Associa o login nativo com a biblioteca web do Firebase
+                const credential = firebase.auth.GoogleAuthProvider.credential(result.credential.idToken);
+                await window.firebaseAuth.signInWithCredential(credential);
+             } catch (err) {
+                console.error("Erro no login nativo:", err);
+                alert("Erro ao fazer login nativo: " + err.message);
+             }
+          } else {
+             // Para Web / PWA
+             window.firebaseAuth.signInWithPopup(provider).catch(err => {
+               console.error("Erro no login web:", err);
+               alert("Erro ao fazer login web: " + err.message);
+             });
+          }
         });
       }
 
