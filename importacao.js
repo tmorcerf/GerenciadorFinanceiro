@@ -483,8 +483,11 @@ function stopAIThinking() {
       
       if (!contaMatch && contaDoExtrato !== '') {
           try {
-            const saldoSugerido  = (cabecalho && cabecalho.saldo_inicial != null) ? cabecalho.saldo_inicial : null;
-            const saldoFinalInfo = (cabecalho && cabecalho.saldo_final != null)   ? cabecalho.saldo_final   : null;
+            // saldo_inicial null = IA não encontrou; 0 pode ser válido mas improvável como saldo de abertura
+            const saldoInicialBruto = cabecalho ? cabecalho.saldo_inicial : null;
+            const saldoFinalBruto   = cabecalho ? cabecalho.saldo_final   : null;
+            const saldoSugerido  = (saldoInicialBruto !== null && saldoInicialBruto !== undefined) ? saldoInicialBruto : null;
+            const saldoFinalInfo = (saldoFinalBruto   !== null && saldoFinalBruto   !== undefined) ? saldoFinalBruto   : null;
             const bancoSugerido  = (cabecalho && cabecalho.banco) ? String(cabecalho.banco).trim() : '';
             const nomeDetectado  = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Conta Desconhecida').trim();
             const resultado = await abrirModalConta(nomeDetectado, saldoSugerido, saldoFinalInfo, bancoSugerido);

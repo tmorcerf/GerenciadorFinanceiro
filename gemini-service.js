@@ -276,11 +276,11 @@ window.GeminiService = (function() {
       '2. Para conta corrente: vencimento = data. Para cartao: vencimento = data da fatura\n' +
       '3. IGNORE transacoes entre estas contas proprias do usuario: ' + JSON.stringify(contaNomes) + ' e pagamentos de fatura de cartao\n' +
       '4. PARCELAS formato (1/6): projete todas com vencimentos mensais\n' +
-      '5. Identifique o nome da conta usando a lista CONTAS CADASTRADAS (prefira o nome exato cadastrado)\n' +
-      '6. Extraia OBRIGATORIAMENTE o saldo inicial e saldo final do periodo como numeros (ex: saldo anterior, saldo atual). Se nao encontrar, retorne 0.\n' +
-      '7. Identifique a INSTITUICAO FINANCEIRA (banco emissor) separada do nome da conta.\n\n' +
+      '5. NOME DA CONTA: use a lista CONTAS CADASTRADAS se houver match. Se nao, use o nome REAL da conta (ex: numero da agencia/conta, apelido do produto bancario como "Conta Corrente Bradesco", "Conta Corrente Banco do Brasil"). NUNCA use apenas o tipo generico "Conta Corrente" como nome - combine com o banco (ex: "BB Conta Corrente").\n' +
+      '6. SALDO: procure por labels como "Saldo Anterior", "Saldo Inicial", "Saldo em", "Saldo Disponivel", "Saldo do Periodo Anterior" (para saldo_inicial) e "Saldo Atual", "Saldo Final", "Saldo Disponivel Atual", "Saldo do Periodo" (para saldo_final). Extraia como numero. Se realmente nao encontrar nenhum saldo no documento, retorne null.\n' +
+      '7. BANCO: identifique a instituicao financeira emissora do extrato (nome do banco/fintech). Ex: "Banco do Brasil", "Nubank", "Itau", "Bradesco", "Inter".\n\n' +
       'RETORNE EXATAMENTE:\n' +
-      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":0.00,"saldo_final":0.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
+      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
     var modelToUse = (fileType === 'pdf') ? MODEL_FLASH : MODEL_LITE;
     return await _chamarGemini(modelToUse, systemPrompt, userContent);
