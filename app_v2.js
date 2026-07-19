@@ -1478,9 +1478,10 @@ let txDateTypeFilter = 'vencimento';
             const defaultCategoriasDict = {
               "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
               "Transporte": ["Combustível", "Aplicativo", "Transporte Público", "Manutenção", "Estacionamento"],
-              "Moradia": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção"],
+              "Serviços": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção", "Nuvem", "Streaming", "Produtividade / IA"],
               "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
-              "Lazer": ["Cinema", "Assinaturas", "Eventos", "Viagens"],
+              "Lazer": ["Cinema", "Eventos", "Hobbies"],
+              "Viagem": ["Transporte App", "Combustível", "Hotel / Estadia", "Passagens", "Alimentação", "Passeios"],
               "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
               "Vestuário": ["Roupas", "Calçados", "Acessórios"],
               "Pessoal": ["Cuidados Pessoais", "Academia", "Cosméticos"],
