@@ -1617,8 +1617,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             // Adicione os e-mails dos seus amigos aqui
             "tmoralescosta@gmail.com", // O dono deve sempre ter acesso
             "t.morcerf@gmail.com",     // Conta secundária do dono
-            "seu.amigo1@gmail.com",
-            "seu.amigo2@gmail.com"
+            "esther.f.araujo@gmail.com" // Esposa
           ];
           
           // Se quiser liberar geral, basta comentar o if abaixo
