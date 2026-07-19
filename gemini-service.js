@@ -263,17 +263,20 @@ window.GeminiService = (function() {
       systemPrompt += ' ATENÇÃO: Analise todas as páginas meticulosamente linha por linha. Não omita nenhuma transação nem pule páginas sob nenhuma circunstância.';
     }
 
+    var contaNomes = contasInfo.map(function(c) { return c.nome; });
+    var contaCartoes = contasInfo.filter(function(c) { return c.tipo === 'Cartão de Crédito'; }).map(function(c) { return c.nome; });
+
     var userContent =
       'Extraia as transacoes do extrato abaixo.\n\n' +
-      'CONTAS CONHECIDAS: ' + JSON.stringify(contasInfo) + '\n\n' +
+      'CONTAS CADASTRADAS DO USUARIO: ' + JSON.stringify(contasInfo) + '\n\n' +
       'ARQUIVO (' + fileName + ', tipo: ' + fileType + '):\n' +
       fileContent + '\n\n' +
       'REGRAS:\n' +
       '1. Colunas: data (DD/MM/AAAA), vencimento (DD/MM/AAAA), descricao, valor (negativo=debito), conta\n' +
       '2. Para conta corrente: vencimento = data. Para cartao: vencimento = data da fatura\n' +
-      '3. IGNORE transferencias proprias, pagamentos de fatura\n' +
+      '3. IGNORE transacoes entre estas contas proprias do usuario: ' + JSON.stringify(contaNomes) + ' e pagamentos de fatura de cartao\n' +
       '4. PARCELAS formato (1/6): projete todas com vencimentos mensais\n' +
-      '5. Identifique o nome da conta e vencimento se for cartao\n' +
+      '5. Identifique o nome da conta usando a lista CONTAS CADASTRADAS (prefira o nome exato cadastrado)\n' +
       '6. Se o documento contiver saldo inicial e/ou saldo final (ou anterior para cartao), extraia-os como numeros. Se nao, retorne null.\n\n' +
       'RETORNE EXATAMENTE:\n' +
       '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"...","Vencimento da fatura":null,"saldo_inicial":null,"saldo_final":null},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
@@ -313,7 +316,9 @@ window.GeminiService = (function() {
     var historicoCompacto = historico180dias
       .slice(-150)
       .map(function(l) {
-        return l.data + '|' + l.descricao + '|' + l.valor + '|' + (l.categoria || '') + '|' + (l.subcategoria || '');
+        // M3: Inclui obs do usuário quando existe (melhora aprendizado de padrões)
+        var descComObs = l.descricao + (l.obs ? ' [' + l.obs + ']' : '');
+        return l.data + '|' + descComObs + '|' + l.valor + '|' + (l.categoria || '') + '|' + (l.subcategoria || '');
       })
       .join('\n');
 

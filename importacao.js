@@ -385,11 +385,11 @@ function stopAIThinking() {
       addFeedback('Enviando para a IA extrair transações...', 'ai');
       startAIThinking();
 
-      // Extração via Gemini (com fallback para Apps Script/Claude)
+      // M1: Envia contas com tipo para a IA ignorar transferencias proprias corretamente
       const _contasInfo = (typeof dadosFinanceiros !== 'undefined' && dadosFinanceiros.contas)
-        ? dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate}))
+        ? dadosFinanceiros.contas.map(c => ({nome: c.nome, tipo: c.tipo || 'Conta Corrente', conciliado_ate: c.conciliado_ate}))
         : ((window.dadosFinanceiros && window.dadosFinanceiros.contas)
-          ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, conciliado_ate: c.conciliado_ate}))
+          ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, tipo: c.tipo || 'Conta Corrente', conciliado_ate: c.conciliado_ate}))
           : []);
 
       if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
@@ -431,6 +431,8 @@ function stopAIThinking() {
 
       stopAIThinking();
       addFeedback(`Sucesso! Extraídas ${dadosExtrato.length} transações.`, 'success');
+      // M5: Exibe resumo da IA para o usuário
+      if (analiseExtracao) addFeedback(`🤖 IA: "${analiseExtracao}"`, 'ai');
 
       if (dadosExtrato.length === 0) {
         throw new Error("Nenhuma transação encontrada no arquivo.");
@@ -471,7 +473,30 @@ function stopAIThinking() {
 
       if (isCartaoCredito) {
          if (!vencimentoFatura) {
-            vencimentoFatura = prompt(`Conta "${contaMatch.nome}" identificada como Cartão de Crédito.\nQual é a data de VENCIMENTO DESTA FATURA? (Ex: 15/06/2026)`);
+            // M6: Modal visual no lugar do prompt() nativo para vencimento de cartão
+            vencimentoFatura = await new Promise((resolve) => {
+              const cartaoNome = contaMatch ? contaMatch.nome : 'Cartão';
+              const dlg = document.createElement('div');
+              dlg.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:20px;';
+              dlg.innerHTML = `
+                <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                  <h3 style="margin:0 0 8px;color:var(--text-primary);font-size:1rem;"><i class="fas fa-credit-card" style="color:var(--color-accent);margin-right:8px;"></i>Vencimento da Fatura</h3>
+                  <p style="color:var(--text-secondary);font-size:0.85rem;margin:0 0 18px;">A conta <strong>"${cartaoNome}"</strong> é um Cartão de Crédito.<br>Informe a data de vencimento <strong>desta</strong> fatura:</p>
+                  <input type="text" id="dlg-vencimento-input" class="modern-input" style="width:100%;margin-bottom:14px;" placeholder="Ex: 15/07/2026" maxlength="10">
+                  <p style="font-size:0.75rem;color:var(--text-muted);margin:0 0 18px;"><i class="fas fa-info-circle"></i> Se a IA já detectou o vencimento, ele aparece pré-preenchido acima.</p>
+                  <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button id="dlg-vencimento-cancelar" style="background:transparent;border:1px solid var(--border-color);color:var(--text-secondary);padding:9px 16px;border-radius:8px;cursor:pointer;">Cancelar</button>
+                    <button id="dlg-vencimento-ok" style="background:var(--color-accent);color:#fff;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;font-weight:600;"><i class="fas fa-check"></i> Confirmar</button>
+                  </div>
+                </div>`;
+              document.body.appendChild(dlg);
+              dlg.querySelector('#dlg-vencimento-cancelar').onclick = () => { document.body.removeChild(dlg); resolve(null); };
+              dlg.querySelector('#dlg-vencimento-ok').onclick = () => {
+                const val = dlg.querySelector('#dlg-vencimento-input').value.trim();
+                document.body.removeChild(dlg);
+                resolve(val || null);
+              };
+            });
             if (!vencimentoFatura) {
                throw new Error("A data de vencimento é obrigatória para importar faturas de Cartão de Crédito.");
             }
@@ -1079,21 +1104,63 @@ function stopAIThinking() {
            const contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaExtrato) : null;
            const isCartao = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
 
-           // Historico de 180 dias para contexto da IA (melhora drasticamente a precisao)
+           // M2: Histórico filtrado por conta (100 da mesma + 50 gerais) e M3: inclui obs do usuário
            const _dfHist = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
-           const historico180dias = (_dfHist && _dfHist.lancamentos)
-             ? _dfHist.lancamentos.filter(l => {
-                 const t = parseDataBR(l.data);
-                 return t > 0 && t > (Date.now() - 180 * 86400000);
-               }).slice(-150)
-             : [];
+           const contaAtualNome = contaMatch ? contaMatch.nome.toLowerCase() : '';
+           const filtrar180 = l => { const t = parseDataBR(l.data); return t > 0 && t > (Date.now() - 180 * 86400000); };
+           const toRow = l => l.data + '|' + l.descricao + (l.obs ? ' [' + l.obs + ']' : '') + '|' + l.valor + '|' + (l.categoria || '') + '|' + (l.subcategoria || '');
+
+           let histConta  = [];
+           let histGeral  = [];
+           if (_dfHist && _dfHist.lancamentos) {
+             const todos = _dfHist.lancamentos.filter(filtrar180);
+             histConta = todos.filter(l => (l.conta || '').toLowerCase() === contaAtualNome).slice(-100);
+             histGeral = todos.filter(l => (l.conta || '').toLowerCase() !== contaAtualNome).slice(-50);
+           }
+           const historico180dias = [...histConta, ...histGeral];
+
+           // M9: Cache local — pré-categoriza com base no histórico exato (reduz tokens e custo)
+           const descParaCat = {}; // mapa descricao -> {categoria, subcategoria}
+           historico180dias.forEach(l => {
+             if (l.descricao && l.categoria && l.categoria !== 'DIVERSOS') {
+               descParaCat[l.descricao.toLowerCase()] = { categoria: l.categoria, subcategoria: l.subcategoria || '' };
+             }
+           });
+
+           let faltantesParaIA = [];
+           let preCategorizados = 0;
+           dadosSincronizacao.faltantes.forEach(t => {
+             const hit = descParaCat[(t.descricao || '').toLowerCase()];
+             if (hit) {
+               t.categoria    = hit.categoria;
+               t.subcategoria = hit.subcategoria;
+               preCategorizados++;
+             } else {
+               faltantesParaIA.push(t);
+             }
+           });
+
+           if (preCategorizados > 0) {
+             addFeedback(`💾 Cache local: ${preCategorizados} já conhecidos pré-categorizados. Enviando ${faltantesParaIA.length} novos para a IA...`, 'system');
+           }
 
            // Captura o total original ANTES de projetar parcelas (para cobrar moedas correto)
-           const _qtdOriginalCateg = dadosSincronizacao.faltantes.length;
+           const _qtdOriginalCateg = faltantesParaIA.length;
+
+           if (faltantesParaIA.length === 0) {
+             // Todos já categorizados pelo cache — pula chamada à IA
+             analiseCategorizacao = `${preCategorizados} transações categorizadas via cache local (sem custo de IA).`;
+             stopAIThinking();
+             addFeedback(`✅ ${analiseCategorizacao}`, 'success');
+             renderizarTabelaUnificada();
+             btnCategorizar.innerHTML = 'Categorizar Faltantes (IA) <i class="fas fa-magic"></i>';
+             btnCategorizar.disabled = false;
+             return;
+           }
 
            if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
            let resultCat = await window.GeminiService.categorizar({
-             transacoes: dadosSincronizacao.faltantes,
+             transacoes: faltantesParaIA,
              categoriasTree: categoriasTree,
              isCartaoCredito: isCartao,
              historico180dias: historico180dias
@@ -1101,7 +1168,28 @@ function stopAIThinking() {
            
            if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
            
-           let transacoesProcessadas = resultCat.data || dadosSincronizacao.faltantes;
+           // M4: Validação pós-IA — garante que categorias e subcategorias existem no dicionário
+           const catValidas = Object.keys(categoriasTree);
+           const iaData = (Array.isArray(resultCat.data) ? resultCat.data : []).map(t => {
+             if (!catValidas.includes(t.categoria)) {
+               console.warn('[Categorizador] Categoria inválida recebida da IA:', t.categoria, '→ forçando DIVERSOS');
+               t.categoria    = 'DIVERSOS';
+               t.subcategoria = 'Diversos';
+             } else {
+               const subValidas = categoriasTree[t.categoria] || [];
+               if (subValidas.length > 0 && !subValidas.includes(t.subcategoria)) {
+                 t.subcategoria = subValidas[0];
+               }
+             }
+             return t;
+           });
+
+           // Mescla resultados da IA com os pré-categorizados localmente
+           let transacoesProcessadas = dadosSincronizacao.faltantes.map(t => {
+             if (t.categoria && t.categoria !== 'DIVERSOS') return t; // já cacheado
+             const iaT = iaData.find(r => r.cod === t.cod || r.data === t.data && r.valor === t.valor && r.descricao === t.descricao);
+             return iaT ? { ...t, ...iaT } : t;
+           });
            
            if (isCartao) {
                let projetadas = [];
@@ -1134,7 +1222,9 @@ function stopAIThinking() {
            }
 
            analiseCategorizacao = resultCat.analise_ia || "Categorização concluída.";
-           stopAIThinking(); addFeedback('Concluído!', 'ai');
+           stopAIThinking();
+           // M5: Exibe o resumo da IA na interface
+           addFeedback(`🤖 IA: "${analiseCategorizacao}"`, 'ai');
 
            // CortaCoins: debita 3 moedas por lancamento original categorizado com IA
            // Usa _qtdOriginalCateg (antes da projecao de parcelas de cartao)
