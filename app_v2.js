@@ -1602,18 +1602,49 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           // Lógica de Grupos (Família)
           const userDocRef = window.firebaseDB.collection('Users').doc(user.uid);
           const userDoc = await userDocRef.get();
+          
+          // Função auxiliar para garantir atualização do seletor
+          window.populateGroupSwitcher = function() {
+             const select = document.getElementById('group-switcher-select');
+             if (!select || !window.userSavedGroups) return;
+             select.innerHTML = '';
+             window.userSavedGroups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.name;
+                if (g.id === window.userGroupId) opt.selected = true;
+                select.appendChild(opt);
+             });
+          };
+
           if (!userDoc.exists) {
             // Cria usuário com groupId = seu próprio uid
+            let newGroups = [{ id: user.uid, name: "Meu Grupo Pessoal" }];
             await userDocRef.set({
               email: user.email,
               name: user.displayName,
               groupId: user.uid, // O grupo padrão é o próprio UID
+              savedGroups: newGroups,
               createdAt: new Date().toISOString()
             });
             window.userGroupId = user.uid;
+            window.userSavedGroups = newGroups;
           } else {
-            window.userGroupId = userDoc.data().groupId || user.uid;
+            let data = userDoc.data();
+            window.userGroupId = data.groupId || user.uid;
+            // Migração se não tiver savedGroups
+            if (!data.savedGroups || !Array.isArray(data.savedGroups)) {
+               let defaultGroups = [{ id: user.uid, name: "Laboratório de Testes" }];
+               if (window.userGroupId !== user.uid) {
+                  defaultGroups.push({ id: window.userGroupId, name: "Grupo Atual" });
+               }
+               await userDocRef.update({ savedGroups: defaultGroups });
+               window.userSavedGroups = defaultGroups;
+            } else {
+               window.userSavedGroups = data.savedGroups;
+            }
           }
+          window.populateGroupSwitcher();
 
           if (groupIdDisplay) {
             groupIdDisplay.value = window.userGroupId;
@@ -1632,11 +1663,19 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                 if (inviteData.groupId === window.userGroupId) {
                   alert('Você já está no grupo deste convite!');
                 } else if (confirm(`Deseja entrar no grupo familiar associado a este convite? Seus lançamentos atuais ficarão isolados (mas seguros).`)) {
+                  // Verifica se já existe em savedGroups
+                  let sg = window.userSavedGroups || [];
+                  if (!sg.find(g => g.id === inviteData.groupId)) {
+                     sg.push({ id: inviteData.groupId, name: "Novo Grupo Familiar" });
+                  }
                   // Entrar no grupo
                   await window.firebaseDB.collection('Users').doc(user.uid).update({
-                    groupId: inviteData.groupId
+                    groupId: inviteData.groupId,
+                    savedGroups: sg
                   });
                   window.userGroupId = inviteData.groupId;
+                  window.userSavedGroups = sg;
+                  window.populateGroupSwitcher();
                   // Queimar o convite
                   await inviteRef.delete();
                   alert('Bem-vindo(a)! Você entrou no grupo com sucesso.');
@@ -5737,7 +5776,82 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           if (el.dataset.target === 'panel-categories') window.renderEditCategories();
           if (el.dataset.target === 'panel-accounts-edit') window.renderEditAccounts();
         });
-      });
+      // --- LISTENERS DOS GRUPOS FAMILIARES ---
+      const groupSelect = document.getElementById('group-switcher-select');
+      if (groupSelect) {
+         groupSelect.addEventListener('change', async (e) => {
+            const newGroupId = e.target.value;
+            if (newGroupId && newGroupId !== window.userGroupId) {
+               try {
+                  await window.firebaseDB.collection('Users').doc(window.firebaseAuth.currentUser.uid).update({
+                     groupId: newGroupId
+                  });
+                  window.location.reload();
+               } catch(err) {
+                  console.error("Erro ao trocar de grupo", err);
+                  alert("Erro ao trocar de grupo: " + err.message);
+               }
+            }
+         });
+      }
+
+      const btnCreateGroup = document.getElementById('btn-create-group');
+      if (btnCreateGroup) {
+         btnCreateGroup.addEventListener('click', async () => {
+            const groupName = prompt("Digite um nome para o seu novo Grupo (ex: 'Família Silva' ou 'Casa'):");
+            if (!groupName || groupName.trim() === '') return;
+            
+            // Gera um ID simulando UUID
+            const newGroupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            try {
+               let sg = window.userSavedGroups || [];
+               sg.push({ id: newGroupId, name: groupName.trim() });
+               
+               await window.firebaseDB.collection('Users').doc(window.firebaseAuth.currentUser.uid).update({
+                  groupId: newGroupId,
+                  savedGroups: sg
+               });
+               alert(`Grupo "${groupName.trim()}" criado com sucesso! O aplicativo será recarregado.`);
+               window.location.reload();
+            } catch(err) {
+               console.error("Erro ao criar grupo", err);
+               alert("Erro ao criar grupo: " + err.message);
+            }
+         });
+      }
+
+      const btnRenameGroup = document.getElementById('btn-rename-group');
+      if (btnRenameGroup) {
+         btnRenameGroup.addEventListener('click', async () => {
+            if (!window.userSavedGroups || window.userSavedGroups.length === 0) return;
+            const currentGroup = window.userSavedGroups.find(g => g.id === window.userGroupId);
+            const currentName = currentGroup ? currentGroup.name : "Meu Grupo";
+            const newName = prompt("Renomear Grupo Atual:", currentName);
+            
+            if (newName && newName.trim() !== '' && newName !== currentName) {
+               try {
+                  let sg = [...window.userSavedGroups];
+                  let grp = sg.find(g => g.id === window.userGroupId);
+                  if (grp) {
+                     grp.name = newName.trim();
+                  } else {
+                     sg.push({ id: window.userGroupId, name: newName.trim() });
+                  }
+                  
+                  await window.firebaseDB.collection('Users').doc(window.firebaseAuth.currentUser.uid).update({
+                     savedGroups: sg
+                  });
+                  window.userSavedGroups = sg;
+                  window.populateGroupSwitcher();
+                  alert("Grupo renomeado com sucesso!");
+               } catch(err) {
+                  console.error("Erro ao renomear grupo", err);
+                  alert("Erro ao renomear grupo: " + err.message);
+               }
+            }
+         });
+      }
       
     });
 

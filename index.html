@@ -283,7 +283,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.99667 - 19/07/2026, 12:32:07</span>
+        <span style="font-size: 0.75rem;">v 0.9.99668 - 19/07/2026, 12:49:34</span>
       </div>
     </div>
   </aside>
@@ -976,6 +976,24 @@
         <p style="color: var(--text-secondary); margin-bottom: 2rem;">No Corta Gastos, o seu Grupo dita quais lançamentos você enxerga. Pessoas no mesmo grupo acessam exatamente a mesma base de dados, perfeito para o controle doméstico do casal.</p>
         
         <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Card: Meus Grupos (Seletor e Criar) -->
+          <div class="metric-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <h3 style="margin: 0 0 10px 0; color: var(--color-primary);"><i class="fas fa-layer-group"></i> Meus Grupos</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Mude de grupo para ver lançamentos de contas diferentes, ou crie novos grupos para separar o pessoal da família.</p>
+            </div>
+            <div>
+              <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px; display: flex; align-items: stretch; gap: 5px;">
+                   <select id="group-switcher-select" style="flex: 1; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-size: 0.95rem; outline: none; cursor: pointer; font-family: inherit;">
+                     <option value="">Carregando...</option>
+                   </select>
+                   <button id="btn-rename-group" class="btn btn-secondary" title="Renomear Grupo Atual"><i class="fas fa-pencil-alt"></i></button>
+                </div>
+                <button id="btn-create-group" class="btn btn-primary" style="white-space: nowrap;"><i class="fas fa-plus"></i> Novo Grupo</button>
+              </div>
+            </div>
+          </div>
           <!-- Card: Convite Seguro -->
           <div class="metric-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
@@ -1236,7 +1254,7 @@
   <script src="firebase-config.js"></script>
   <script src="db.js?v=2"></script>
   <script src="scripts/migracao.js"></script>
-  <script src="app_v2.js?v=950"></script>
+  <script src="app_v2.js?v=951"></script>
   <script src="importacao.js?v=12"></script>
   <!-- Modulos CortaGastos -->
   <script src="shared-file-bridge.js?v=2"></script>
