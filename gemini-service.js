@@ -70,7 +70,7 @@ window.GeminiService = (function() {
   }
 
   // Chamada base para a API Gemini REST
-  async function _chamarGemini(model, systemPrompt, userContent) {
+  async function _chamarGemini(model, systemPrompt, userContent, inlineData) {
     if (localStorage.getItem('gemini_mock') === 'true') {
       console.warn('[GeminiService] ⚠️ MODO MOCK ATIVADO! Nenhuma chamada real à IA foi feita.');
       await new Promise(r => setTimeout(r, 1000));
@@ -106,8 +106,18 @@ window.GeminiService = (function() {
 
     var apiKey = await _getApiKey();
 
+    var parts = [{ text: userContent }];
+    if (inlineData) {
+      parts.push({
+        inlineData: {
+          mimeType: inlineData.mimeType,
+          data: inlineData.data
+        }
+      });
+    }
+
     var body = {
-      contents: [{ role: 'user', parts: [{ text: userContent }] }],
+      contents: [{ role: 'user', parts: parts }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: {
         temperature: 0.1,
@@ -269,8 +279,17 @@ window.GeminiService = (function() {
     var userContent =
       'Extraia as transacoes do extrato abaixo.\n\n' +
       'CONTAS CADASTRADAS DO USUARIO: ' + JSON.stringify(contasInfo) + '\n\n' +
-      'ARQUIVO (' + fileName + ', tipo: ' + fileType + '):\n' +
-      fileContent + '\n\n' +
+      'ARQUIVO (' + fileName + ', tipo: ' + fileType + '):\n';
+    
+    var inlineData = null;
+    if (fileType === 'pdf') {
+        userContent += '[O documento PDF foi anexado nativamente na requisicao]\n\n';
+        inlineData = { mimeType: 'application/pdf', data: fileContent };
+    } else {
+        userContent += fileContent + '\n\n';
+    }
+
+    userContent +=
       'REGRAS:\n' +
       '1. Colunas: data (DD/MM/AAAA), vencimento (DD/MM/AAAA), descricao, valor (negativo=debito), conta\n' +
       '2. Para conta corrente: vencimento = data. Para cartao: vencimento = data da fatura\n' +
@@ -283,7 +302,7 @@ window.GeminiService = (function() {
       '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
     var modelToUse = (fileType === 'pdf') ? MODEL_FLASH : MODEL_LITE;
-    return await _chamarGemini(modelToUse, systemPrompt, userContent);
+    return await _chamarGemini(modelToUse, systemPrompt, userContent, inlineData);
   }
 
   // CATEGORIZACAO COM HISTORICO - substitui action: 'categorizar_v2'

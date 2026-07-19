@@ -285,7 +285,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.99676 - 19/07/2026, 17:42:22</span>
+        <span style="font-size: 0.75rem;">v 0.9.99677 - 19/07/2026, 17:52:07</span>
       </div>
     </div>
   </aside>
@@ -1125,7 +1125,7 @@
   <!-- Feedback Modal -->
   <div id="feedbackModal" style="display: none; position: fixed; bottom: 85px; right: 20px; width: 320px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; overflow: hidden; animation: slideUp 0.3s ease-out;">
     <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; padding: 12px 15px; font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-      <span>Caixinha de Ideias 💡</span>
+      <span>Caixinha de Ideias ??</span>
       <i class="fas fa-times" id="btnCloseFeedback" style="cursor: pointer; color: #e2e8f0; transition: color 0.2s;" onmouseover="this.style.color='#ffffff';" onmouseout="this.style.color='#e2e8f0';"></i>
     </div>
     <div style="padding: 15px; background: #1e293b;">
@@ -1260,7 +1260,7 @@
   <script src="importacao.js?v=14"></script>
   <!-- Modulos CortaGastos -->
   <script src="shared-file-bridge.js?v=2"></script>
-  <script src="gemini-service.js?v=4?v=17"></script>
+  <script src="gemini-service.js?v=5?v=17"></script>
   <script src="cortacoins.js?v=1"></script>
 
   <!-- Scanner NF-e Modules -->
@@ -1404,15 +1404,15 @@
 
 
 <!-- ============================================================ -->
-<!-- Modal: Conta n�o encontrada durante Importa��o              -->
+<!-- Modal: Conta n?o encontrada durante Importa??o              -->
 <!-- ============================================================ -->
 <div id="modal-nova-conta-importacao" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; padding:20px;">
   <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:28px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,0.5); max-height:90vh; overflow-y:auto;">
 
-    <!-- Cabe�alho do modal -->
+    <!-- Cabe?alho do modal -->
     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
       <h3 style="margin:0; color:var(--text-primary); font-size:1.1rem;">
-        <i class="fas fa-question-circle" style="color:var(--color-warning); margin-right:8px;"></i>Conta n�o reconhecida
+        <i class="fas fa-question-circle" style="color:var(--color-warning); margin-right:8px;"></i>Conta n?o reconhecida
       </h3>
       <button id="nova-conta-btn-ver-doc" title="Visualizar Documento" style="display:none; align-items:center; gap:6px; background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-secondary); padding:6px 12px; border-radius:8px; cursor:pointer; font-size:0.8rem; white-space:nowrap;">
         <i class="fas fa-file-alt"></i> Ver Documento
@@ -1438,7 +1438,7 @@
       <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Selecione a conta correspondente:</label>
       <select id="nova-conta-existente-select" class="modern-input" style="width:100%; margin-bottom:10px;"></select>
       <p style="font-size:0.75rem; color:var(--text-muted); margin:0; padding:8px; background:rgba(255,255,255,0.04); border-radius:6px;">
-        <i class="fas fa-info-circle"></i> O extrato ser� importado como se fosse desta conta. O nome detectado pela IA ser� ignorado.
+        <i class="fas fa-info-circle"></i> O extrato ser? importado como se fosse desta conta. O nome detectado pela IA ser? ignorado.
       </p>
     </div>
 
@@ -1446,25 +1446,25 @@
     <div id="nova-conta-bloco-criar" style="display:none;">
       <div style="display:grid; gap:12px;">
         <div>
-          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Nome da Conta <span style="opacity:0.6;">(como aparecer� no app)</span></label>
+          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Nome da Conta <span style="opacity:0.6;">(como aparecer? no app)</span></label>
           <input type="text" id="nova-conta-nome" class="modern-input" style="width:100%;" placeholder="Ex: BB Conta Corrente, Nubank...">
         </div>
         <div>
           <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">
-            Institui��o Financeira
+            Institui??o Financeira
             <span id="nova-conta-banco-tag" style="margin-left:6px; background:rgba(16,185,129,0.15); color:#10b981; font-size:0.7rem; padding:2px 7px; border-radius:99px; display:none;">?? detectado pela IA</span>
           </label>
-          <input type="text" id="nova-conta-banco" class="modern-input" style="width:100%;" placeholder="Ex: Banco do Brasil, Nubank, Ita�...">
+          <input type="text" id="nova-conta-banco" class="modern-input" style="width:100%;" placeholder="Ex: Banco do Brasil, Nubank, Ita?...">
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
           <div>
             <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tipo de Conta</label>
             <select id="nova-conta-tipo" class="modern-input" style="width:100%;">
-              <option value="Conta Corrente">Conta Corrente / D�bito</option>
-              <option value="Cart�o de Cr�dito">Cart�o de Cr�dito</option>
-              <option value="Conta Poupan�a">Conta Poupan�a</option>
+              <option value="Conta Corrente">Conta Corrente / D?bito</option>
+              <option value="Cart?o de Cr?dito">Cart?o de Cr?dito</option>
+              <option value="Conta Poupan?a">Conta Poupan?a</option>
               <option value="Conta de Investimento">Conta de Investimento</option>
-              <option value="Carteira">Carteira (Dinheiro F�sico)</option>
+              <option value="Carteira">Carteira (Dinheiro F?sico)</option>
             </select>
           </div>
           <div>
@@ -1481,17 +1481,17 @@
             <input type="color" id="nova-conta-cor" value="#3b82f6" style="width:50px; height:40px; border:none; background:none; cursor:pointer; border-radius:8px;">
           </div>
           <p style="font-size:0.75rem; color:var(--text-muted); margin:16px 0 0; flex:1;">
-            O saldo inicial � o saldo da conta <strong>imediatamente antes</strong> do 1� lan�amento deste extrato.
+            O saldo inicial ? o saldo da conta <strong>imediatamente antes</strong> do 1? lan?amento deste extrato.
           </p>
         </div>
       </div>
       <p style="font-size:0.75rem; color:var(--color-warning); margin:14px 0 0; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px; border:1px solid rgba(245,158,11,0.2);">
-        <i class="fas fa-seedling"></i> Esta ser� a <strong>conta semente</strong>. A concilia��o seguir� os novos extratos importados a partir daqui.
+        <i class="fas fa-seedling"></i> Esta ser? a <strong>conta semente</strong>. A concilia??o seguir? os novos extratos importados a partir daqui.
       </p>
     </div>
 
     <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-      <button id="nova-conta-cancelar" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding:10px 18px; border-radius:8px; cursor:pointer;">Cancelar Importa��o</button>
+      <button id="nova-conta-cancelar" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding:10px 18px; border-radius:8px; cursor:pointer;">Cancelar Importa??o</button>
       <button id="nova-conta-confirmar" style="background:var(--color-accent); color:#fff; border:none; padding:10px 22px; border-radius:8px; cursor:pointer; font-weight:600;">
         <i class="fas fa-check"></i> Confirmar e Continuar
       </button>
