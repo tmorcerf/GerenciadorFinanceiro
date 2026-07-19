@@ -160,6 +160,47 @@ Se não conseguir ler algum campo, use null. Extraia TODOS os itens visíveis.`;
      * Chamada Gemini para texto puro.
      */
     async function _chamarGemini(systemInstruction, userContent) {
+        if (localStorage.getItem('gemini_mock') === 'true') {
+            console.warn('[GeminiService Scanner] ⚠️ MODO MOCK ATIVADO! Nenhuma chamada real à IA foi feita.');
+            await new Promise(r => setTimeout(r, 800)); // Simula latência de rede
+
+            // Mock para Identificação de Estabelecimento
+            if (systemInstruction.includes('identificar estabelecimentos comerciais pelo CNPJ')) {
+                return JSON.stringify({
+                    nomeFantasia: "Supermercado Mock",
+                    razaoSocial: "Mock S/A",
+                    categoria: "Alimentação",
+                    confianca: "alta"
+                });
+            }
+
+            // Mock para Melhoria de Nomes em Lote
+            if (systemInstruction.includes('transformar abreviações de nota fiscal em dados de produtos reais')) {
+                let mockArr = [];
+                try {
+                    let regex = /\[[\s\S]*\]/; // Encontra o array JSON que o próprio script passou no userPrompt
+                    let match = userContent.match(regex);
+                    if (match) {
+                        let itensInput = JSON.parse(match[0]);
+                        mockArr = itensInput.map(i => ({
+                            ean: i.ean || "000",
+                            descricao_ia: (i.descricao_abreviada || i.descricao || "Item") + " (Mock)",
+                            marca_fabricante: "MockBrand",
+                            categoria: "Supermercado",
+                            volume_quantidade: "1",
+                            unidade_medida: "UN"
+                        }));
+                    }
+                } catch(e) {
+                    console.warn("Erro ao fazer parse do mock", e);
+                }
+                if (mockArr.length === 0) mockArr = [{ ean: "000", descricao_ia: "Produto Mock Genérico", marca_fabricante: "MockBrand", categoria: "Geral", volume_quantidade: "1", unidade_medida: "UN" }];
+                return JSON.stringify(mockArr);
+            }
+
+            return JSON.stringify({ mock: true });
+        }
+
         const url = `${BASE_URL}:generateContent?key=${API_KEY}`;
 
         const body = {
