@@ -379,8 +379,10 @@ function stopAIThinking() {
       let minTime = Infinity;
       let maxTime = 0;
       dadosExtrato.forEach(t => {
-         // Garantir que a transação tenha a conta preenchida (importante para a IA puxar o histórico da conta correta depois)
-         if (!t.conta && cabecalho && (cabecalho['Nome da conta'] || cabecalho['conta'])) {
+         // Garantir que a transação tenha a conta oficial preenchida, evitando divergências entre cabeçalho e transações
+         if (contaMatch) {
+            t.conta = contaMatch.nome;
+         } else if (!t.conta && cabecalho && (cabecalho['Nome da conta'] || cabecalho['conta'])) {
             t.conta = cabecalho['Nome da conta'] || cabecalho['conta'];
          }
          
