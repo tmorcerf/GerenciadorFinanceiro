@@ -52,48 +52,50 @@ class Database {
       ]);
 
       let categoriasDict = {};
+      
       if (categorias.length === 0) {
-        let defaultCategoriasDict = {};
+        console.log("Usuário novo sem categorias. Injetando categorias padrão...");
+        let defaultCategoriasDict = {
+          "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
+          "Serviços": ["Energia", "Água", "Internet", "Nuvem", "Streaming", "Produtividade / IA", "Assinaturas"],
+          "Transporte": ["Manutenção", "Seguro", "IPVA"],
+          "Viagem": ["App / Combustível", "Hotel / Estadia", "Passagens", "Passeios"],
+          "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
+          "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
+          "Pessoal": ["Vestuário", "Cuidados Pessoais", "Academia"],
+          "Pets": ["Ração", "Veterinário", "Banho e Tosa"],
+          "Impostos": ["IR", "Taxas"],
+          "Investimentos": ["CDB", "Ações", "FIIs", "Tesouro Direto", "Criptomoedas"],
+          "Renda": ["Salário", "Bônus", "Rendimentos", "Cashback", "Venda de Itens"]
+        };
+
         try {
-          const systemRef = this.db.collection('System').doc('default_categories');
-          const systemDoc = await systemRef.get();
-          if (systemDoc.exists) {
-            defaultCategoriasDict = systemDoc.data().dict || {};
-          } else {
-            defaultCategoriasDict = {
-              "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
-              "Transporte": ["Combustível", "Aplicativo", "Transporte Público", "Manutenção", "Estacionamento"],
-              "Serviços": ["Aluguel", "Condomínio", "Água", "Luz", "Internet", "Gás", "Manutenção", "Nuvem", "Streaming", "Produtividade / IA"],
-              "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
-              "Lazer": ["Cinema", "Eventos", "Hobbies"],
-              "Viagem": ["Transporte App", "Combustível", "Hotel / Estadia", "Passagens", "Alimentação", "Passeios"],
-              "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
-              "Vestuário": ["Roupas", "Calçados", "Acessórios"],
-              "Pessoal": ["Cuidados Pessoais", "Academia", "Cosméticos"],
-              "Pets": ["Veterinário", "Ração", "Banho e Tosa"],
-              "Impostos e Taxas": ["Imposto de Renda", "IPVA", "IPTU", "Taxas Bancárias"],
-              "Financeiro": ["Rendimento", "Juros", "Multa", "Empréstimo", "Cartão de Crédito"],
-              "Receitas": ["Salário", "Freelance", "Rendimentos", "Vendas"],
-              "DIVERSOS": ["Diversos"]
-            };
-            await systemRef.set({ dict: defaultCategoriasDict, description: "Template padrão para novos usuários" });
+          const sysDoc = await this.db.collection('System').doc('default_categories').get();
+          if (sysDoc.exists) {
+            defaultCategoriasDict = sysDoc.data();
           }
-        } catch(e) {
-          console.error("Erro ao ler System/default_categories:", e);
+        } catch (e) {
+          console.warn("Falha ao carregar categorias padrão do System. Usando fallback.", e);
         }
 
-        const batch = this.db.batch();
-        Object.keys(defaultCategoriasDict).forEach(catNome => {
-           const docRef = this.db.collection('Categorias').doc();
-           batch.set(docRef, {
-             groupId: gid,
-             nome: catNome,
-             subcategorias: defaultCategoriasDict[catNome]
-           });
-        });
-        batch.commit().catch(e => console.error("Erro salvando categorias default", e));
+        categoriasDict = defaultCategoriasDict;
         
-        categoriasDict = JSON.parse(JSON.stringify(defaultCategoriasDict));
+        try {
+          const batch = this.db.batch();
+          Object.keys(defaultCategoriasDict).forEach(catName => {
+            const newCatRef = this.db.collection('Categorias').doc();
+            batch.set(newCatRef, {
+              groupId: gid,
+              nome: catName,
+              subcategorias: defaultCategoriasDict[catName],
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+          await batch.commit();
+          console.log("Categorias padrão salvas no Firebase para o novo usuário.");
+        } catch (e) {
+          console.error("Erro ao salvar categorias no Firebase:", e);
+        }
       } else {
         categorias.forEach(cat => {
            if (!categoriasDict[cat.nome]) categoriasDict[cat.nome] = [];
@@ -102,7 +104,6 @@ class Database {
            }
         });
       }
-
       const nomesContas = contas.map(c => c.nome);
       categoriasDict["Transferência"] = nomesContas;
       categoriasDict["Transferencias"] = nomesContas;

@@ -1476,6 +1476,7 @@ let txDateTypeFilter = 'vencimento';
             window.appData = dadosFinanceiros; // Ensure appData is globally accessible early
             
             window.dicionarioGeral = dbDados.categoriasDict || {};
+
             // Hide loading screen
             const loading = document.getElementById('loading-screen');
             if (loading) {
