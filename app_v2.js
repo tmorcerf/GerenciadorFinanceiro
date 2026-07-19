@@ -215,17 +215,21 @@ let txDateTypeFilter = 'vencimento';
           }
         });
 
-        // Map arrays to our standardized structure
-        dadosFinanceiros.lancamentos = parsedLanc.map(l => ({
-          cod: l['COD'] || '',
-          data: l['DATA'] || '',
-          vencimento: l['VENCIMENTO'] || '',
-          conta: l['CONTA'] || '',
-          obs: l['OBS'] || '',
-          valor: parseBrlFloat(l['VALOR']),
-          categoria: l['CATEGORIA'] || 'Outros',
-          subcategoria: l['SUB CATEGORIA'] || ''
-        })).filter(l => l.valor !== 0);
+        dadosFinanceiros.lancamentos = parsedLanc.map(l => {
+          const obsTxt = l['OBS'] || '';
+          const matchNfe = obsTxt.match(/\[NFE:\s*([^\]]+)\]/);
+          return {
+            cod: l['COD'] || '',
+            data: l['DATA'] || '',
+            vencimento: l['VENCIMENTO'] || '',
+            conta: l['CONTA'] || '',
+            obs: obsTxt,
+            valor: parseBrlFloat(l['VALOR']),
+            categoria: l['CATEGORIA'] || 'Outros',
+            subcategoria: l['SUB CATEGORIA'] || '',
+            chave_nfe: matchNfe ? matchNfe[1] : null
+          };
+        }).filter(l => l.valor !== 0);
 
         dadosFinanceiros.contas = parsedContas.map(c => {
           // Coluna E (sem cabecalho) contem o dia do vencimento da fatura para cartoes de credito
@@ -283,6 +287,16 @@ let txDateTypeFilter = 'vencimento';
             categoria: l['CATEGORIA'] || 'Outros',
             subcategoria: l['SUB CATEGORIA'] || ''
           })).filter(l => l.data !== '' && l.valor !== 0);
+        }
+
+        // Carregar nfe_itens para granularidade nos gráficos
+        window.dadosFinanceiros.nfe_itens = [];
+        if (window.firebaseAuth && window.firebaseAuth.currentUser && window.db) {
+          try {
+            const userId = window.firebaseAuth.currentUser.uid;
+            const qs = await window.db.collection('nfe_itens').where('uid', '==', userId).get();
+            window.dadosFinanceiros.nfe_itens = qs.docs.map(d => d.data());
+          } catch(e) { console.error("Erro ao carregar nfe_itens", e); }
         }
 
         // Hide loading screen
@@ -2009,7 +2023,42 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       });
     }
 
+    window.updateMockModeUI = function() {
+        const isMock = localStorage.getItem('gemini_mock') === 'true';
+        const icon = document.getElementById('mock-mode-icon');
+        const status = document.getElementById('mock-mode-status');
+        const card = document.getElementById('mock-mode-card');
+        if (icon && status && card) {
+            if (isMock) {
+                icon.style.background = 'rgba(16, 185, 129, 0.1)';
+                icon.style.color = 'var(--color-income)';
+                status.style.color = 'var(--color-income)';
+                status.innerText = 'Ligado';
+                card.style.borderColor = 'var(--color-income)';
+            } else {
+                icon.style.background = 'rgba(239, 68, 68, 0.1)';
+                icon.style.color = 'var(--color-expense)';
+                status.style.color = 'var(--color-expense)';
+                status.innerText = 'Desligado';
+                card.style.borderColor = 'transparent';
+            }
+        }
+    };
+
+    window.toggleMockMode = function() {
+        const isMock = localStorage.getItem('gemini_mock') === 'true';
+        if (isMock) {
+            localStorage.removeItem('gemini_mock');
+        } else {
+            localStorage.setItem('gemini_mock', 'true');
+        }
+        window.updateMockModeUI();
+    };
+
     window.switchToPanel = function(targetPanelId) {
+      if (targetPanelId === 'panel-settings') {
+          setTimeout(() => window.updateMockModeUI(), 50);
+      }
       if (!targetPanelId) return;
       
       // Auto-close mobile drawer if open
@@ -4024,10 +4073,38 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
     }
 
     function getChartsFilteredData() {
+      // Helper to expand grouped NF-e transactions into item-level granularity
+      function expandForCharts(transactions) {
+          let expanded = [];
+          const nfeMap = {};
+          if (window.dadosFinanceiros && window.dadosFinanceiros.nfe_itens) {
+             window.dadosFinanceiros.nfe_itens.forEach(i => {
+                if (!nfeMap[i.chave]) nfeMap[i.chave] = [];
+                nfeMap[i.chave].push(i);
+             });
+          }
+          
+          transactions.forEach(l => {
+              if (l.chave_nfe && nfeMap[l.chave_nfe] && nfeMap[l.chave_nfe].length > 0) {
+                  nfeMap[l.chave_nfe].forEach(i => {
+                      expanded.push({
+                          ...l,
+                          valor: -Math.abs(i.valorTotal || 0),
+                          categoria: i.categoria || 'Outros',
+                          subcategoria: i.subcategoria || ''
+                      });
+                  });
+              } else {
+                  expanded.push(l);
+              }
+          });
+          return expanded;
+      }
+
       // Bar Chart: Period filter
       const monthlySelect = document.getElementById('monthly-evolution-period');
       const monthlyPeriod = monthlySelect ? monthlySelect.value : '6months';
-      const filteredMonthly = getFilteredTransactions(monthlyPeriod);
+      const filteredMonthly = expandForCharts(getFilteredTransactions(monthlyPeriod));
       const monthlyData = {};
       
       filteredMonthly.forEach(l => {
@@ -4060,7 +4137,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       // Pie Chart: Category breakdown (uses its own period selector)
       const categorySelect = document.getElementById('category-distribution-period');
       const categoryPeriod = categorySelect ? categorySelect.value : 'current';
-      const filteredCategory = getFilteredTransactions(categoryPeriod);
+      const filteredCategory = expandForCharts(getFilteredTransactions(categoryPeriod));
       const categoryData = {};
       filteredCategory.forEach(l => {
         if (l.valor >= 0) return;
@@ -4130,7 +4207,8 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       });
       
       if (dadosFinanceiros && dadosFinanceiros.lancamentos) {
-        dadosFinanceiros.lancamentos.forEach(l => {
+        const expandedFavs = expandForCharts(dadosFinanceiros.lancamentos);
+        expandedFavs.forEach(l => {
           if (!(l.vencimento || l.data) || l.valor >= 0) return;
           const d = parseDateString(l.vencimento || l.data);
           if (!d) return;
@@ -4213,6 +4291,123 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       document.getElementById('glassModalTitle').textContent = title;
       document.getElementById('glassModalBody').innerHTML = htmlContent;
       modal.classList.add('active');
+    };
+
+    window.formatObsWithNfe = function(item) {
+      let text = item.obs || item.descricao || '-';
+      if (item.chave_nfe) {
+        return `${text} <button onclick="window.openNfeDetails('${item.chave_nfe}', event)" title="Ver Itens da Nota" style="background:none; border:none; cursor:pointer; color:var(--color-accent); margin-left:8px; padding:0;"><i class="fas fa-receipt"></i></button>`;
+      }
+      return text;
+    };
+
+    window.openNfeDetails = async function(chave, e) {
+      if (e) e.stopPropagation();
+      const modal = document.getElementById('nfeDetailsModal');
+      const tbody = document.getElementById('nfe-details-tbody');
+      const info = document.getElementById('nfe-details-info');
+      
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Carregando itens da nota...</td></tr>';
+      info.innerText = `Chave: ${chave}`;
+      modal.style.display = 'flex';
+      
+      try {
+        const userId = window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.uid : 'anon';
+        const qs = await window.db.collection('nfe_itens')
+          .where('chave', '==', chave)
+          .where('uid', '==', userId)
+          .get();
+          
+        if (qs.empty) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Nenhum item encontrado para esta nota.</td></tr>';
+          return;
+        }
+        
+        let html = '';
+        let hasUncategorized = false;
+        window.currentNfeItens = [];
+        
+        qs.forEach(doc => {
+          const item = { id: doc.id, ...doc.data() };
+          window.currentNfeItens.push(item);
+          const valColor = item.valorTotal >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
+          
+          if (!item.categoria || item.categoria === 'Outros' || item.categoria === '') {
+            hasUncategorized = true;
+          }
+          
+          html += `<tr>
+            <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);">${item.descricao_sefaz}</td>
+            <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); color:var(--text-secondary);">${item.descricao_ia || '-'}</td>
+            <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05);"><span class="badge" style="background:var(--bg-sidebar);">${item.categoria || 'Outros'}</span></td>
+            <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); text-align:right; font-weight:600; color:${valColor};">${formatBRL(item.valorTotal)}</td>
+          </tr>`;
+        });
+        
+        tbody.innerHTML = html;
+        
+        const btnCategorizar = document.getElementById('btn-nfe-categorizar-ia');
+        if (hasUncategorized) {
+            btnCategorizar.style.display = 'inline-block';
+            btnCategorizar.onclick = () => window.categorizarNfeBatch(chave);
+        } else {
+            btnCategorizar.style.display = 'none';
+        }
+        
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--color-expense);">Erro ao carregar itens: ${err.message}</td></tr>`;
+      }
+    };
+
+    window.categorizarNfeBatch = async function(chave) {
+      const btn = document.getElementById('btn-nfe-categorizar-ia');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando...';
+      btn.disabled = true;
+      
+      try {
+        const itensParaIA = window.currentNfeItens.filter(i => !i.categoria || i.categoria === 'Outros');
+        if (itensParaIA.length === 0) return;
+        
+        const payload = itensParaIA.map(i => ({
+            id: i.id,
+            nomeSefaz: i.descricao_sefaz,
+            ean: i.ean
+        }));
+        
+        const resultados = await window.geminiService.melhorarNomesEmLote(payload);
+        
+        const batch = window.db.batch();
+        for (const res of resultados) {
+            const docRef = window.db.collection('nfe_itens').doc(res.id);
+            batch.update(docRef, {
+                descricao_ia: res.nomeLimpo,
+                descricao_padrao: res.nomeLimpo,
+                categoria: res.categoria,
+                subcategoria: res.subcategoria || ''
+            });
+        }
+        await batch.commit();
+        
+        alert('Categorização concluída com sucesso!');
+        await window.openNfeDetails(chave);
+        
+        // Disparar um evento para recarregar os dados do dashboard, se necessário
+        if (typeof window.loadDataFromSheets === 'function') {
+            await window.loadDataFromSheets();
+            if (typeof window.updateDashboardCharts === 'function') window.updateDashboardCharts();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao categorizar: ' + err.message);
+      } finally {
+        btn.innerHTML = '<i class="fas fa-magic"></i> Categorizar Itens Faltantes (IA)';
+        btn.disabled = false;
+      }
+    };
+
+    window.openExtratoModal = function() {
+      document.getElementById('glassModal').classList.remove('active');
     };
 
     window.closeGlassModal = function() {
@@ -4342,7 +4537,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         const valColor = item.valor >= 0 ? 'var(--color-income)' : 'var(--color-expense)';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
-          <td>${item.obs || item.descricao || '-'}</td>
+          <td>${window.formatObsWithNfe(item)}</td>
           <td style="color:var(--text-secondary);">${item.conta || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(Math.abs(item.valor))}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
       });
@@ -4534,7 +4729,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         html += `<tr>
           <td style="color:var(--text-muted); font-size:0.85rem; white-space:nowrap;">${item.data}</td>
           <td style="font-size:0.85rem; color:var(--text-secondary);">${item.conta}</td>
-          <td style="color:var(--text-primary); font-size:0.9rem;">${item.obs || item.descricao || '-'}</td>
+          <td style="color:var(--text-primary); font-size:0.9rem;">${window.formatObsWithNfe(item)}</td>
           <td style="font-size:0.85rem;"><span class="badge" style="background:var(--bg-sidebar); border:1px solid var(--border-color); color:var(--text-secondary);">${item.categoria}</span></td>
           <td style="text-align:right; font-weight:600; color:${valColor};">${formatBRL(item.valor)}</td>
           <td style="text-align:center; cursor:pointer;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td>
@@ -4595,7 +4790,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         const saldoClass = item._saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
-          <td>${item.obs || item.descricao || '-'}</td>
+          <td>${window.formatObsWithNfe(item)}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
           <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
@@ -4688,7 +4883,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         const saldoClass = item._saldoAcum >= 0 ? 'extrato-saldo-pos' : 'extrato-saldo-neg';
         html += `<tr>
           <td style="color:var(--text-muted);">${item.data}</td>
-          <td>${item.obs || item.descricao || '-'}</td>
+          <td>${window.formatObsWithNfe(item)}</td>
           <td style="color:var(--text-secondary); font-size:0.78rem;">${item.categoria || '-'}</td>
           <td style="text-align:right; color:${valColor}; font-weight:600;">${formatBRL(item.valor)}</td>
           <td style="text-align:right;" class="${saldoClass}">${formatBRL(item._saldoAcum)}</td><td style="text-align:center; cursor:pointer; width: 40px;" onclick="window.openEditTransactionModal('${item.cod}')"><i class="fas fa-pencil-alt" style="color:var(--text-muted); opacity: 0.75;" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'"></i></td></tr>`;
@@ -6232,41 +6427,70 @@ window.processarLeituraScanner = async function(textoLido) {
             categoriasAgrupadas[cat] += valorFinal;
         }
 
-        let lancamentosGerados = 0;
-        for (const [cat, somaValor] of Object.entries(categoriasAgrupadas)) {
-            if (somaValor > 0) {
-                const l = {
-                    data: dataNfeStr,
-                    vencimento: dataNfeStr,
-                    conta: 'Cofre/Carteira',
-                    obs: `${nomeEmitente} (Agrupado: ${cat})`,
-                    valor: -Math.abs(somaValor),
-                    categoria: cat,
-                    subcategoria: 'Scanner',
-                    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-                    origem: 'scanner_nfe',
-                    chave_nfe: chave
-                };
-                await window.db.collection('lancamentos').add(l);
-                lancamentosGerados++;
-            }
-        }
-
-        if (window.CortaCoins) {
-            const xpGanho = Math.max(1, Math.floor(totalValor / 10));
-            await window.CortaCoins.creditar(xpGanho, `Leitura NF-e ${chave.substring(0,6)}...`);
+        // Exibir Modal para perguntar a conta
+        const contaSelect = document.getElementById('nfe-conta-select');
+        if (contaSelect) {
+            const contasConhecidas = (window.dadosFinanceiros && window.dadosFinanceiros.contas) 
+                ? window.dadosFinanceiros.contas.map(c => c.nome).filter(c => c)
+                : [];
+            contaSelect.innerHTML = contasConhecidas.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            const valorEl = document.getElementById('nfe-modal-valor');
+            if(valorEl) valorEl.innerText = totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            const modalEl = document.getElementById('nfeAccountModal');
+            if(modalEl) modalEl.style.display = 'flex';
             
             if (statusEl) {
-                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Ganhou ${xpGanho} XP.`;
-                statusEl.style.color = '#10b981';
+                statusEl.innerHTML = '<i class="fas fa-question-circle"></i> Aguardando seleção da conta...';
             }
-            alert(`✅ Nota importada com sucesso!\n\n${lancamentosGerados} despesas agrupadas geradas.\nVocê ganhou ${xpGanho} CortaCoins! 🪙`);
-        } else {
+
+            const selectedConta = await new Promise((resolve) => {
+                const btnSalvar = document.getElementById('btn-nfe-salvar-lancamento');
+                if(btnSalvar) {
+                    btnSalvar.onclick = () => {
+                        if(modalEl) modalEl.style.display = 'none';
+                        resolve(contaSelect.value || 'Cofre/Carteira');
+                    };
+                } else {
+                    resolve('Cofre/Carteira');
+                }
+            });
+
             if (statusEl) {
-                statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! ${lancamentosGerados} lançamentos agrupados criados.`;
-                statusEl.style.color = '#10b981';
+                statusEl.innerHTML = '<i class="fas fa-cloud-upload-alt fa-spin"></i> Finalizando lançamento único...';
             }
-            alert(`✅ Nota importada com sucesso! ${lancamentosGerados} despesas agrupadas criadas.`);
+
+            const l = {
+                data: dataNfeStr,
+                vencimento: dataNfeStr,
+                conta: selectedConta,
+                obs: `Nota Fiscal - ${nomeEmitente} [NFE: ${chave}]`,
+                valor: -Math.abs(totalValor),
+                categoria: 'Despesas Agrupadas',
+                subcategoria: 'Scanner',
+                criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                origem: 'scanner_nfe',
+                chave_nfe: chave
+            };
+            await window.db.collection('lancamentos').add(l);
+            
+            if (window.CortaCoins) {
+                const xpGanho = Math.max(1, Math.floor(totalValor / 10));
+                await window.CortaCoins.creditar(xpGanho, `Leitura NF-e ${chave.substring(0,6)}...`);
+                
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Ganhou ${xpGanho} XP.`;
+                    statusEl.style.color = '#10b981';
+                }
+                alert(`✅ Nota importada com sucesso!\n\nUm lançamento único foi gerado na conta ${selectedConta}.\nVocê ganhou ${xpGanho} CortaCoins! 🪙`);
+            } else {
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Sucesso! Lançamento único criado.`;
+                    statusEl.style.color = '#10b981';
+                }
+                alert(`✅ Nota importada com sucesso! Lançamento gerado na conta ${selectedConta}.`);
+            }
         }
         
     } catch (err) {

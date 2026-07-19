@@ -71,6 +71,39 @@ window.GeminiService = (function() {
 
   // Chamada base para a API Gemini REST
   async function _chamarGemini(model, systemPrompt, userContent) {
+    if (localStorage.getItem('gemini_mock') === 'true') {
+      console.warn('[GeminiService] ⚠️ MODO MOCK ATIVADO! Nenhuma chamada real à IA foi feita.');
+      await new Promise(r => setTimeout(r, 1000));
+      if (systemPrompt.includes('Extraia transacoes')) {
+         return [
+           { data: "01/01/2026", descricao: "MOCK SUPERMERCADO", valor: -150.50, tipo_transacao: "debito", identificador_bancario: "MCK1", categoria: "Supermercado" },
+           { data: "02/01/2026", descricao: "MOCK PIX RECEBIDO", valor: 300.00, tipo_transacao: "credito", identificador_bancario: "MCK2", categoria: "Renda" }
+         ];
+      }
+      if (systemPrompt.includes('Categorize as transacoes')) {
+         var mockArr1 = [];
+         try {
+            var items = JSON.parse(userContent);
+            for (var i of items) { mockArr1.push({ id: i.id, categoria: "Mock Categoria", subcategoria: "Mock Sub" }); }
+         } catch(e){}
+         return mockArr1;
+      }
+      if (systemPrompt.includes('abreviações de nota fiscal')) {
+         var mockArr2 = [];
+         try {
+            var linhas = userContent.split('\n');
+            for(var l of linhas) {
+               var parts = l.split('|');
+               if (parts.length >= 2) {
+                   mockArr2.push({ id: parts[0].trim(), nomeLimpo: parts[1].trim() + " (Mock)", categoria: "Mercado", subcategoria: "Alimentação" });
+               }
+            }
+         } catch(e){}
+         return mockArr2;
+      }
+      return { mock: true };
+    }
+
     var apiKey = await _getApiKey();
 
     var body = {
