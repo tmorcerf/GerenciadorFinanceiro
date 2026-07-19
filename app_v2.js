@@ -3702,7 +3702,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
               <div style="display:flex; justify-content:space-between; align-itemes:center; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
                 <div class="card-trend" style="color:var(--text-muted); font-size:0.75rem;">
                   Clique para ver extrato
-                  ${c.conciliado_ate ? `<div style="font-size:0.65rem; opacity:0.6; margin-top:3px;"><i class="fas fa-check-circle"></i> Conciliado até: ${c.conciliado_ate}</div>` : ''}
+                  ${c.conciliado_ate ? `<div style="font-size:0.65rem; opacity:0.6; margin-top:3px;"><i class="fas fa-check-circle"></i> Conciliado ${c.conciliado_desde ? `de ${c.conciliado_desde} ` : ''}ate: ${c.conciliado_ate}</div>` : ''}
                 </div>
                 ${c.uultima_movimentacao ? `<div style="font-size: 0.75rem; font-weight:600; color: ${getDateColor(c.uultima_movimentacao)};"><i class="fas fa-history" style="margin-right: 3px;"></i>${c.uultima_movimentacao}</div>` : ''}
               </div>
@@ -3912,7 +3912,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             <div class="card-value" style="font-size:1.6rem; color:#8b5cf6;">${formatBRL(c.saldo)}</div>
             <div class="card-trend" style="color:var(--text-muted);">
               ${pctOfTotal}% do total  Clique para ver extrato
-              ${c.conciliado_ate ? `<div style="font-size:0.65rem; opacity:0.6; margin-top:3px;"><i class="fas fa-check-circle"></i> Conciliado até: ${c.conciliado_ate}</div>` : ''}
+              ${c.conciliado_ate ? `<div style="font-size:0.65rem; opacity:0.6; margin-top:3px;"><i class="fas fa-check-circle"></i> Conciliado ${c.conciliado_desde ? `de ${c.conciliado_desde} ` : ''}ate: ${c.conciliado_ate}</div>` : ''}
             </div>
           </div>
         `;
@@ -4828,7 +4828,8 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       const contaObj = dadosFinanceiros.contas.find(c => (c.nome || c.conta || '').toLowerCase() === nomeConta.toLowerCase()) || {};
       let titleHtml = nomeConta;
       if (contaObj.conciliado_ate) {
-        titleHtml += ` <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 10px;"><i class="fas fa-check-circle" style="color:var(--color-income);"></i> Conciliado até ${contaObj.conciliado_ate}</span>`;
+        let concilText = contaObj.conciliado_desde ? `Conciliado de ${contaObj.conciliado_desde} até ${contaObj.conciliado_ate}` : `Conciliado até ${contaObj.conciliado_ate}`;
+        titleHtml += ` <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal; margin-left: 10px;"><i class="fas fa-check-circle" style="color:var(--color-income);"></i> ${concilText}</span>`;
       }
 
       if (itemes.length === 0) {
@@ -5703,7 +5704,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
               <i class="fas fa-wallet" style="color:var(--color-income);"></i>
               <div style="display:flex; flex-direction:column; flex:1;">
                 <input type="text" value="${c.nome}" onchange="window.renameAccount(${idx}, this.value)" style="background:transparent; border:none; color:var(--text-primary); font-size:1rem; width:80%;">
-                ${c.conciliado_ate ? `<span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; opacity: 0.7;"><i class="fas fa-check-circle" style="font-size: 0.7rem; color: var(--color-income);"></i> Conciliado até ${c.conciliado_ate}</span>` : ''}
+                ${c.conciliado_ate ? `<span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; opacity: 0.7;"><i class="fas fa-check-circle" style="font-size: 0.7rem; color: var(--color-income);"></i> Conciliado ${c.conciliado_desde ? `de ${c.conciliado_desde} ` : ''}ate ${c.conciliado_ate}</span>` : ''}
               </div>
             </div>
             <button onclick="window.removeAccount(${idx})" style="background:transparent; border:none; color:var(--color-expense); cursor:pointer;"><i class="fas fa-trash"></i></button>
