@@ -4368,7 +4368,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
     // Funes Globais de Modal
     window.showGlassModal = function(title, htmlContent) {
       const modal = document.getElementById('glassModal');
-      document.getElementById('glassModalTitle').textContent = title;
+      document.getElementById('glassModalTitle').innerHTML = title;
       document.getElementById('glassModalBody').innerHTML = htmlContent;
       modal.classList.add('active');
     };
