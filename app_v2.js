@@ -1564,10 +1564,37 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                 alert("Erro ao fazer login nativo: " + err.message);
              }
           } else {
-             // Para Web / PWA
-             window.firebaseAuth.signInWithPopup(provider).catch(err => {
-               console.error("Erro no login web:", err);
-               alert("Erro ao fazer login web: " + err.message);
+             // Para Web / PWA usando Google Identity Services (One Tap)
+             const doFallback = () => {
+                 window.firebaseAuth.signInWithPopup(provider).catch(err => {
+                   console.error("Erro no login web:", err);
+                   alert("Erro ao fazer login web: " + err.message);
+                 });
+             };
+
+             if (typeof google === 'undefined' || !google.accounts) {
+                 doFallback();
+                 return;
+             }
+
+             google.accounts.id.initialize({
+                 client_id: "655748179229-bptokk67392pp6ualac8g4gfo7qh49fp.apps.googleusercontent.com",
+                 callback: async (response) => {
+                     try {
+                         const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
+                         await window.firebaseAuth.signInWithCredential(credential);
+                     } catch(err) {
+                         console.error("Erro Firebase Credential:", err);
+                         alert("Erro ao autenticar no Firebase: " + err.message);
+                     }
+                 }
+             });
+
+             google.accounts.id.prompt((notification) => {
+                 if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                     console.log("One Tap indisponível ou fechado pelo usuário. Fallback ativado.");
+                     doFallback();
+                 }
              });
           }
         });
