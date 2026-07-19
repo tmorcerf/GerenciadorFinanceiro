@@ -100,7 +100,22 @@ function stopAIThinking() {
      btnViewDoc.addEventListener('click', () => {
         if (!currentFileUrl) return;
         let contentHtml = '';
-        if (currentFileType.includes('pdf')) {
+        if (currentFileType.includes('csv') || currentFileType.includes('xls') || currentFileType.includes('sheet')) {
+           let text = window.currentExtractedContent || '';
+           let rows = text.split('\n').filter(l => l.trim() !== '');
+           let tableHtml = '<table style="width:100%; border-collapse: collapse; font-family: monospace; font-size: 12px; background: #fff; color: #333;">';
+           for (let i=0; i<rows.length; i++) {
+               let delimiter = rows[i].includes(';') ? ';' : (rows[i].includes('\t') ? '\t' : ',');
+               let cols = rows[i].split(delimiter);
+               tableHtml += '<tr>';
+               for (let c of cols) {
+                   tableHtml += `<td style="border: 1px solid #ddd; padding: 6px; white-space: nowrap;">${c.replace(/^["']|["']$/g, '')}</td>`;
+               }
+               tableHtml += '</tr>';
+           }
+           tableHtml += '</table>';
+           contentHtml = `<div style="width:100%; height:100%; overflow:auto; background:#eee; padding:20px;">${tableHtml}</div>`;
+        } else if (currentFileType.includes('pdf')) {
            contentHtml = `<iframe src="${currentFileUrl}" width="100%" height="100%" style="border:none;"></iframe>`;
         } else if (currentFileType.includes('image')) {
            contentHtml = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#eee; overflow:auto;"><img src="${currentFileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`;
@@ -254,6 +269,7 @@ function stopAIThinking() {
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Lendo arquivo localmente...';
       
       const fileData = await window.extractFileContent(file);
+      window.currentExtractedContent = fileData.content;
 
       if (btnImport) btnImport.innerHTML = '<i class="fas fa-magic fa-bounce"></i> Extraindo dados (aguarde até 30s)...';
       addFeedback('Enviando para a IA extrair transações...', 'ai');
