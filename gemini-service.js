@@ -241,7 +241,7 @@ window.GeminiService = (function() {
             analise_ia: "Importação simulada via Modo Batata 100% offline",
             data: {
                 cabecalho: {
-                    "Nome da conta": "Conta Batata (" + (opts.fileName || "Arquivo") + ")",
+                    "Nome da conta": "Conta Batata",
                     "Vencimento da fatura": null,
                     "saldo_inicial": 0,
                     "saldo_final": 0
