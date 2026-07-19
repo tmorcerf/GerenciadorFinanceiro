@@ -162,6 +162,33 @@ window.GeminiService = (function() {
 
   // EXTRACAO DE EXTRATO - substitui action: 'importar_simples_v2'
   async function extrairExtrato(opts) {
+    if (localStorage.getItem('gemini_mock') === 'true') {
+        console.warn('[GeminiService] MODO MOCK ATIVADO: Redirecionando importação para o Apps Script original');
+        var extensao = (opts.fileName || "").split('.').pop().toLowerCase();
+        var base64Data = (opts.fileType === 'pdf') ? opts.fileContent : btoa(unescape(encodeURIComponent(opts.fileContent)));
+        
+        var payload = {
+            action: 'importar_simples_v2',
+            arquivoBase64: base64Data,
+            tipo: opts.fileType,
+            nome: opts.fileName,
+            extensao: extensao
+        };
+        
+        var res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        
+        var json = await res.json();
+        if (json.status === 'success') {
+            return json.dados;
+        } else {
+            throw new Error(json.message || "Erro no importador legado");
+        }
+    }
+
     var fileContent = opts.fileContent;
     var fileType = opts.fileType;
     var fileName = opts.fileName;
