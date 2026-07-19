@@ -52,21 +52,18 @@ class Database {
       ]);
 
       let categoriasDict = {};
-      
       if (categorias.length === 0) {
         console.log("Usuário novo sem categorias. Injetando categorias padrão...");
         let defaultCategoriasDict = {
-          "Alimentação": ["Supermercado", "Restaurante", "Lanches", "Padaria"],
-          "Serviços": ["Energia", "Água", "Internet", "Nuvem", "Streaming", "Produtividade / IA", "Assinaturas"],
-          "Transporte": ["Manutenção", "Seguro", "IPVA"],
-          "Viagem": ["App / Combustível", "Hotel / Estadia", "Passagens", "Passeios"],
-          "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames"],
-          "Educação": ["Mensalidade", "Cursos", "Material Escolar"],
-          "Pessoal": ["Vestuário", "Cuidados Pessoais", "Academia"],
-          "Pets": ["Ração", "Veterinário", "Banho e Tosa"],
-          "Impostos": ["IR", "Taxas"],
-          "Investimentos": ["CDB", "Ações", "FIIs", "Tesouro Direto", "Criptomoedas"],
-          "Renda": ["Salário", "Bônus", "Rendimentos", "Cashback", "Venda de Itens"]
+            "Habitação": ["Aluguel", "Condomínio", "Energia", "Água", "Gás", "Internet", "IPTU", "Manutenção"],
+            "Alimentação": ["Supermercado", "Padaria", "Restaurante", "Delivery", "Lanches"],
+            "Transporte": ["Combustível", "Estacionamento", "Pedágio", "IPVA", "Seguro Auto", "Manutenção Veículo", "Aplicativo", "Transporte Público"],
+            "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames", "Dentista", "Terapia"],
+            "Lazer & Viagem": ["Assinaturas", "Cinema/Teatro", "Bares/Baladas", "Hobbies", "Passagens", "Hospedagem", "Passeios"],
+            "Cuidados Pessoais": ["Salão/Barbearia", "Cosméticos", "Academia"],
+            "Serviços": ["Pets", "Educação", "Bancos/Taxas", "Doações", "Seguros", "Impostos"],
+            "Investimentos": ["Renda Fixa", "Ações", "FIIs", "Criptomoedas", "Previdência Privatda", "Reserva de Emergência"],
+            "Outros": ["Presentes", "Vestuário", "Eletrônicos", "Móveis", "Diversos"]
         };
 
         try {
@@ -104,6 +101,7 @@ class Database {
            }
         });
       }
+
       const nomesContas = contas.map(c => c.nome);
       categoriasDict["Transferência"] = nomesContas;
       categoriasDict["Transferencias"] = nomesContas;
