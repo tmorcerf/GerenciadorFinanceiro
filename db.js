@@ -81,7 +81,7 @@ class Database {
 
   // --- GRAVAÇÃO ---
 
-  async sincronizarPeriodo(lancamentosNovos, idsParaExcluir, contaDoExtrato, dataMaxStr, extratoPayload) {
+  async sincronizarPeriodo(lancamentosNovos, idsParaExcluir, contaDoExtrato, dataMaxStr, extratoPayload, conciliacaoContinua) {
     const gid = window.userGroupId;
     if (!gid) throw new Error("Grupo não definido.");
 
@@ -132,12 +132,30 @@ class Database {
     }
 
     // 3. Atualizar Conciliação da Conta (case-insensitive via JS)
-    if (contaDoExtrato && dataMaxStr) {
+    if (contaDoExtrato) {
        const todasContasSnap = await this.db.collection('Contas').where('groupId', '==', gid).get();
        todasContasSnap.forEach(doc => {
           const nomeDoc = (doc.data().nome || '').trim().toLowerCase();
           if (nomeDoc === contaDoExtrato.trim().toLowerCase()) {
-              batch.update(doc.ref, { conciliado_ate: dataMaxStr });
+              if (conciliacaoContinua) {
+                  let upd = {};
+                  if (conciliacaoContinua.acao === 'marco_zero') {
+                      upd.conciliado_desde = conciliacaoContinua.desde;
+                      upd.conciliado_ate = conciliacaoContinua.ate;
+                      upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
+                  } else if (conciliacaoContinua.acao === 'expansao_frente' || conciliacaoContinua.acao === 'ignorar_matematica') {
+                      upd.conciliado_ate = conciliacaoContinua.ate;
+                  } else if (conciliacaoContinua.acao === 'expansao_tras') {
+                      upd.conciliado_desde = conciliacaoContinua.desde;
+                      upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
+                  }
+                  
+                  if (Object.keys(upd).length > 0) {
+                      batch.update(doc.ref, upd);
+                  }
+              }
+              // Se conciliacaoContinua for null, trata-se de um 'Buraco Temporal' (Cenário D) ou uma Sobreposição sem expansão, 
+              // logo NÃO atualizamos as âncoras da conta!
           }
        });
     }
