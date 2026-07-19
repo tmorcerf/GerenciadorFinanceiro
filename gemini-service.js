@@ -284,6 +284,23 @@ window.GeminiService = (function() {
 
   // CATEGORIZACAO COM HISTORICO - substitui action: 'categorizar_v2'
   async function categorizar(opts) {
+    if (localStorage.getItem('gemini_mock') === 'true') {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const mockedData = (opts.transacoes || []).map(t => ({
+                    ...t,
+                    categoria: 'Diversos',
+                    subcategoria: 'Outros'
+                }));
+                resolve({
+                    status: 'success',
+                    analise_ia: 'Categorização simulada (Modo Batata 🥔)',
+                    data: mockedData
+                });
+            }, 800);
+        });
+    }
+
     var transacoes = opts.transacoes;
     var categoriasTree = opts.categoriasTree;
     var isCartaoCredito = opts.isCartaoCredito;
