@@ -281,6 +281,23 @@ class Database {
   }
 
 
+  async salvarConta(conta) {
+     const gid = window.userGroupId;
+     if (!gid) throw new Error("Grupo não definido.");
+     
+     const docRef = await this.db.collection('Contas').add({
+        groupId: gid,
+        nome: conta.nome,
+        tipo: conta.tipo,
+        saldo_inicial: conta.saldo_inicial || 0,
+        cor: conta.cor || '#3b82f6',
+        ignorar_dashboard: conta.ignorar_soma || false,
+        conciliado_ate: conta.conciliado_ate || '',
+        conciliado_desde: conta.conciliado_desde || ''
+     });
+     return docRef.id;
+  }
+
   async saveContaConfig(payload) {
      const gid = window.userGroupId;
      if (!gid) throw new Error("Grupo não definido.");
