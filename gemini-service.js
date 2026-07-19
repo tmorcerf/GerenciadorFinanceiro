@@ -163,34 +163,25 @@ window.GeminiService = (function() {
   // EXTRACAO DE EXTRATO - substitui action: 'importar_simples_v2'
   async function extrairExtrato(opts) {
     if (localStorage.getItem('gemini_mock') === 'true') {
-        console.warn('[GeminiService] MODO MOCK ATIVADO: Redirecionando importação para o Apps Script original');
-        var extensao = (opts.fileName || "").split('.').pop().toLowerCase();
-        var base64Data = (opts.fileType === 'pdf') ? opts.fileContent : btoa(unescape(encodeURIComponent(opts.fileContent)));
+        console.warn('[GeminiService] MODO MOCK ATIVADO: Retornando dados locais falsos para teste de interface.');
+        await new Promise(r => setTimeout(r, 800)); // Simula tempo de rede
         
-        var payload = {
-            action: 'importar_simples_v2',
-            arquivoBase64: base64Data,
-            tipo: opts.fileType,
-            nome: opts.fileName,
-            extensao: extensao
+        return {
+            status: 'success',
+            analise_ia: "Importação simulada via Mock 100% offline",
+            data: {
+                cabecalho: {
+                    "Nome da conta": "Conta Mock Teste",
+                    "Vencimento da fatura": null,
+                    "saldo_inicial": 1000.00,
+                    "saldo_final": 1150.00
+                },
+                lancamentos: [
+                    { data: "10/07/2026", vencimento: "10/07/2026", descricao: "MOCK - COMPRA NO MERCADO", valor: -150.00, conta: "Conta Mock Teste" },
+                    { data: "12/07/2026", vencimento: "12/07/2026", descricao: "MOCK - PIX DE CLIENTE", valor: 300.00, conta: "Conta Mock Teste" }
+                ]
+            }
         };
-        
-        var res = await fetch(window.APPS_SCRIPT_WEBAPP_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-        });
-        
-        var json = await res.json();
-        if (json.status === 'success') {
-            return {
-                status: 'success',
-                analise_ia: "Importação via motor legado",
-                data: json.data || json.dados
-            };
-        } else {
-            throw new Error(json.message || "Erro no importador legado");
-        }
     }
 
     var fileContent = opts.fileContent;
