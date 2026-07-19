@@ -103,18 +103,18 @@ function stopAIThinking() {
         if (currentFileType.includes('csv') || currentFileType.includes('xls') || currentFileType.includes('sheet')) {
            let text = window.currentExtractedContent || '';
            let rows = text.split('\n').filter(l => l.trim() !== '');
-           let tableHtml = '<table style="width:100%; border-collapse: collapse; font-family: monospace; font-size: 12px; background: #fff; color: #333;">';
+           let tableHtml = '<table style="width:100%; border-collapse: collapse; font-family: monospace; font-size: 12px; background: var(--bg-card); color: var(--text-primary);">';
            for (let i=0; i<rows.length; i++) {
                let delimiter = rows[i].includes(';') ? ';' : (rows[i].includes('\t') ? '\t' : ',');
                let cols = rows[i].split(delimiter);
                tableHtml += '<tr>';
                for (let c of cols) {
-                   tableHtml += `<td style="border: 1px solid #ddd; padding: 6px; white-space: nowrap;">${c.replace(/^["']|["']$/g, '')}</td>`;
+                   tableHtml += `<td style="border: 1px solid rgba(255,255,255,0.1); padding: 6px; white-space: nowrap; color: var(--text-secondary);">${c.replace(/^["']|["']$/g, '')}</td>`;
                }
                tableHtml += '</tr>';
            }
            tableHtml += '</table>';
-           contentHtml = `<div style="width:100%; height:100%; overflow:auto; background:#eee; padding:20px;">${tableHtml}</div>`;
+           contentHtml = `<div style="width:100%; height:100%; overflow:auto; background:var(--bg-color); padding:20px;">${tableHtml}</div>`;
         } else if (currentFileType.includes('pdf')) {
            contentHtml = `<iframe src="${currentFileUrl}" width="100%" height="100%" style="border:none;"></iframe>`;
         } else if (currentFileType.includes('image')) {
