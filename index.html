@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Corta Gastos | Plataforma Financeira</title>
-  <link rel="stylesheet" href="style.cssóv=3">
-  <link rel="stylesheet" href="mobile.cssóv=2">
+  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="mobile.css?v=2">
   
   <!-- Font and CDN Scripts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,7 +76,7 @@
               <i class="fas fa-bullseye"></i>
             </div>
             <h3 style="color: #fff; font-size: 1.15rem; font-weight: 600;">Metas e Orçamentos</h3>
-            <p style="color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.6;">Defina limites por categoria, acompanhe o progresso e não estoure seu or?amento mensal.</p>
+            <p style="color: rgba(255,255,255,0.65); font-size: 0.95rem; line-height: 1.6;">Defina limites por categoria, acompanhe o progresso e não estoure seu orçamento mensal.</p>
           </div>
         </div>
 
@@ -208,7 +208,7 @@
       <li>
         <a class="nav-item" data-target="panel-credit-cards">
           <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-          Cartões de Cr?dito
+          Cartões de Crédito
         </a>
       </li>
       <li>
@@ -236,7 +236,7 @@
       <li>
         <a class="nav-item" data-target="panel-produtos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"></path></svg>
-          Hist?rico de Compras
+          Histórico de Compras
         </a>
       </li>
       <li>
@@ -277,7 +277,7 @@
         <img id="user-profile-pic" src="" alt="User" style="width: 32px; height: 32px; border-radius: 50%; display: none; background: #333;">
         <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
           <span id="user-profile-name" style="font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Visitante</span>
-          <span id="user-profile-email" style="font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Fa?a login para usar</span>
+          <span id="user-profile-email" style="font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Faça login para usar</span>
         </div>
         <button id="btn-logout" title="Sair" style="background: transparent; border: none; color: var(--color-expense); cursor: pointer; padding: 5px; display: none;">
           <i class="fas fa-sign-out-alt"></i>
@@ -285,7 +285,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.99677 - 19/07/2026, 17:52:07</span>
+        <span style="font-size: 0.75rem;">v 0.9.99673 - 19/07/2026, 16:47:56</span>
       </div>
     </div>
   </aside>
@@ -309,7 +309,7 @@
           </div>
           <div class="chart-container" style="flex:1; position: relative; min-height: 200px; margin-top: 0.5rem;">
             <canvas id="favorite-categories-chart"></canvas>
-            <div id="favorite-categories-empty" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color: var(--text-muted); font-size:0.85rem; width: 100%;">Nenhum favorito selecionado.<br>V? em Orçamentos e clique na estrela!</div>
+            <div id="favorite-categories-empty" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color: var(--text-muted); font-size:0.85rem; width: 100%;">Nenhum favorito selecionado.<br>Vá em Orçamentos e clique na estrela!</div>
           </div>
         </div>
 
@@ -350,11 +350,11 @@
             <select id="monthly-evolution-period" onchange="if(typeof updateMonthlyChart === 'function') updateMonthlyChart()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.78rem; outline:none; cursor:pointer; font-family:inherit;">
               <option value="current">Mês Atual</option>
               <option value="previous">Mês Anterior</option>
-              <option value="3months">?ltimos 3 Meses</option>
-              <option value="6months" selected>?ltimos 6 Meses</option>
+              <option value="3months">Últimos 3 Meses</option>
+              <option value="6months" selected>Últimos 6 Meses</option>
               <option value="year">Ano Atual</option>
               <option value="last_year">Ano Anterior</option>
-              <option value="all">Todo Per?odo</option>
+              <option value="all">Todo Período</option>
             </select>
           </div>
           <div class="chart-container">
@@ -369,11 +369,11 @@
             <select id="category-distribution-period" onchange="if(typeof updateCategoryChart === 'function') updateCategoryChart()" style="background:var(--bg-sidebar); color:var(--text-primary); border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:4px 8px; font-size:0.78rem; outline:none; cursor:pointer; font-family:inherit;">
               <option value="current" selected>Mês Atual</option>
               <option value="previous">Mês Anterior</option>
-              <option value="3months">?ltimos 3 Meses</option>
-              <option value="6months">?ltimos 6 Meses</option>
+              <option value="3months">Últimos 3 Meses</option>
+              <option value="6months">Últimos 6 Meses</option>
               <option value="year">Ano Atual</option>
               <option value="last_year">Ano Anterior</option>
-              <option value="all">Todo Per?odo</option>
+              <option value="all">Todo Período</option>
             </select>
           </div>
           <div class="chart-container">
@@ -401,13 +401,13 @@
           <button onclick="window.openNewTransactionModal()" id="btn-new-transaction" title="Novo Lançamento" style="width:32px; height:32px; border-radius:50%; background:var(--color-accent); border:none; color:#fff; font-size:1.2rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.2s, box-shadow 0.2s; box-shadow:0 2px 8px rgba(99,102,241,0.4);" onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">+</button>
         </div>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-          <!-- Per?odo -->
+          <!-- Período -->
           <select id="transactions-period-filter" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; font-size:0.9rem; outline:none; cursor:pointer;">
-            <option value="all">Todo o Per?odo</option>
+            <option value="all">Todo o Período</option>
             <option value="current" selected>Mês Atual</option>
             <option value="previous">Mês Passado</option>
-            <option value="3months">?ltimos 3 Meses</option>
-            <option value="6months">?ltimos 6 Meses</option>
+            <option value="3months">Últimos 3 Meses</option>
+            <option value="6months">Últimos 6 Meses</option>
             <option value="year">Este Ano</option>
             <option value="custom">Personalizado</option>
           </select>
@@ -435,7 +435,7 @@
           <!-- Custom Dates (Hidden by default) -->
           <div id="transactions-custom-dates" style="display: none; gap: 8px; align-items: center;">
              <input type="date" id="transactions-date-start" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.4rem; font-size:0.85rem; outline:none;">
-             <span style="color:var(--text-muted); font-size:0.85rem;">at?</span>
+             <span style="color:var(--text-muted); font-size:0.85rem;">até</span>
              <input type="date" id="transactions-date-end" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:8px; padding:0.4rem; font-size:0.85rem; outline:none;">
              <button id="transactions-custom-btn" style="background:var(--color-accent); color:#fff; border:none; border-radius:8px; padding:0.4rem 0.8rem; cursor:pointer; font-size:0.85rem; font-weight:600;">Ir</button>
           </div>
@@ -504,8 +504,8 @@
         <!-- Controles de Paginação -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid var(--border-color); background: var(--bg-dashboard);">
           <button id="prev-page" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem;"><i class="fas fa-chevron-left"></i> Anterior</button>
-          <span id="page-info" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">P?gina 1 de X</span>
-          <button id="next-page" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Pr?xima <i class="fas fa-chevron-right"></i></button>
+          <span id="page-info" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Página 1 de X</span>
+          <button id="next-page" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Próxima <i class="fas fa-chevron-right"></i></button>
         </div>
       </div>
     </div>
@@ -520,7 +520,7 @@
           <select id="orcamento-dashboard-filter" class="date-filter-select">
             <option value="current">Mês Atual</option>
             <option value="previous">Mês Anterior</option>
-            <option value="last3">?ltimos 3 Meses</option>
+            <option value="last3">Últimos 3 Meses</option>
             <option value="year">Ano Atual</option>
             <option value="last_year">Ano Anterior</option>
           </select>
@@ -536,11 +536,11 @@
             <div id="budget-dash-realizado" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="border-top: 3px solid var(--color-income);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Espa?o Livre Global</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Espaço Livre Global</span></div>
             <div id="budget-dash-livre" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="border-top: 3px solid #8b5cf6;">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do Or?amento</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Consumo do Orçamento</span></div>
             <div id="budget-dash-saude" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">0%</div>
           </div>
         </div>
@@ -568,7 +568,7 @@
         <h2 class="chart-title" style="font-size: 1.4rem; margin: 0;">Resumo de Faturas</h2>
       </div>
       <div id="credit-cards-dashboard">
-        <!-- Resumo e Gr?fico injetados aqui -->
+        <!-- Resumo e Gráfico injetados aqui -->
       </div>
     </div>
 
@@ -582,11 +582,11 @@
             <option value="previous">Mês Anterior</option>
             <option value="year">Ano Atual</option>
             <option value="last_year">Ano Anterior</option>
-            <option value="custom">Per?odo...</option>
+            <option value="custom">Período...</option>
           </select>
           <div id="investimentos-custom-date" style="display: none; align-items: center; gap: 5px;">
             <input type="date" id="investimentos-date-start" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
-            <span style="font-size: 0.8rem; color: var(--text-secondary);">at?</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">até</span>
             <input type="date" id="investimentos-date-end" style="padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 0.8rem;">
           </div>
         </div>
@@ -595,19 +595,19 @@
       <div id="investments-dashboard" style="margin-bottom: 2.5rem; display: none;">
         <div class="metrics-grid" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div class="card clickable-card" style="border-top: 3px solid var(--color-income); cursor: pointer;" onclick="showInvestmentsModal('aportes')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do Per?odo</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Aportes do Período</span></div>
             <div id="inv-dash-aportes" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card clickable-card" style="border-top: 3px solid #8b5cf6; cursor: pointer;" onclick="showInvestmentsModal('rendimentos')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento L?quido</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Rendimento Líquido</span></div>
             <div id="inv-dash-rendimento" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card clickable-card" style="border-top: 3px solid var(--color-expense); cursor: pointer;" onclick="showInvestmentsModal('resgates')">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do Per?odo</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem;">Resgates do Período</span></div>
             <div id="inv-dash-resgates" class="card-value" style="font-size:1.6rem; color:var(--text-primary);">R$ 0,00</div>
           </div>
           <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3);">
-            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento L?quido</span></div>
+            <div class="card-header"><span style="color:var(--text-secondary); font-size:0.9rem; font-weight:600;">Crescimento Líquido</span></div>
             <div id="inv-dash-crescimento" class="card-value" style="font-size:1.6rem; color:#8b5cf6;">R$ 0,00</div>
           </div>
         </div>
@@ -618,7 +618,7 @@
             <div style="flex:1; position:relative; min-height:0;"><canvas id="inv-history-chart"></canvas></div>
           </div>
           <div class="card chart-container" style="min-height: 280px; display:flex; flex-direction:column;">
-            <div class="card-header"><span style="font-weight:600;">Composi??o da Carteira</span></div>
+            <div class="card-header"><span style="font-weight:600;">Composição da Carteira</span></div>
             <div style="flex:1; position:relative; min-height:0; display:flex; align-items:center; justify-content:center;">
               <canvas id="inv-composition-chart"></canvas>
             </div>
@@ -632,7 +632,7 @@
 
     <!-- 4. PANEL: AUDIT -->
 <div id="panel-audit" class="dashboard-panel">
-      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de Consist?ncia</h2>
+      <h2 class="chart-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Auditoria & Regras de Consistência</h2>
       <div id="audit-container" class="audit-container">
         <!-- Content loaded via JavaScript -->
       </div>
@@ -646,7 +646,7 @@
               <h2>Meus Produtos (EAN)</h2>
               <div class="header-actions">
                   <button id="btn-dev-ia" class="btn-primary" onclick="window.ProdutosApp.executarEnriquecimentoIA()" style="background: var(--color-warning); color: #000; margin-right: 10px;">
-                      ?? Dev: Processar IA
+                      🤖 Dev: Processar IA
                   </button>
                   <button class="btn-primary" onclick="document.querySelector('[data-target=\'panel-scanner-ean\']').click()">
                       <i class="fas fa-barcode"></i> Escanear Produto
@@ -659,14 +659,14 @@
                   <thead>
                       <tr style="background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);">
                           <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">EAN</th>
-                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRI??O OFICIAL</th>
-                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRI??O IA</th>
-                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRI??O SEFAZ</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRIÇÃO OFICIAL</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRIÇÃO IA</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">DESCRIÇÃO SEFAZ</th>
                           <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">FABRICANTE</th>
                           <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">CATEGORIA</th>
                           <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">VOLUME/QTD</th>
-                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">?LTIMO PRE?O</th>
-                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">A??ES</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">ÚLTIMO PREÇO</th>
+                          <th style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">AÇÕES</th>
                       </tr>
                   </thead>
                   <tbody id="lista-produtos-tbody">
@@ -680,7 +680,7 @@
       <div id="panel-ofertas" class="dashboard-panel">
         <div style="margin-bottom: 2rem;">
             <h2 style="margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; color: transparent;">CortaCoins & Ofertas</h2>
-            <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Suas recompensas e os melhores achados da regi?o.</p>
+            <p style="color: var(--text-muted); margin-top: 5px; font-size: 0.95rem;">Suas recompensas e os melhores achados da região.</p>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
@@ -699,7 +699,7 @@
                 <div style="font-size: 3rem; font-weight: 700; color: #3b82f6; margin: 10px 0;">
                     <i class="fas fa-receipt"></i> <span id="cc-notas-display">0</span>
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">Sua colabora??o com o banco de pre?os</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Sua colaboração com o banco de preços</p>
             </div>
         </div>
 
@@ -714,12 +714,12 @@
                 </div>
             </div>
 
-            <!-- Achados da Regi?o -->
+            <!-- Achados da Região -->
             <div class="glass-card" style="padding: 1.5rem;">
                 <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px;">
-                    <i class="fas fa-fire" style="color: #ef4444;"></i> Achados na Regi?o
+                    <i class="fas fa-fire" style="color: #ef4444;"></i> Achados na Região
                 </h3>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -10px; margin-bottom: 15px;">Pre?os colaborativos perto de você (?ltimos 30 dias)</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -10px; margin-bottom: 15px;">Preços colaborativos perto de você (últimos 30 dias)</p>
                 <div id="ofertas-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
                     <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 20px;">Carregando achados...</p>
                 </div>
@@ -727,7 +727,7 @@
         </div>
     </div>
     
-    <!-- PANEL: IMPORTA??O SIMPLIFICADA (Unificado) -->
+    <!-- PANEL: IMPORTAÇÃO SIMPLIFICADA (Unificado) -->
     <div id="panel-import" class="dashboard-panel">
       <!-- HEADER AND BUTTON -->
       <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -781,6 +781,17 @@
         </div>
       </div>
 
+      <!-- Modal Ver Documento -->
+      <div id="docModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.85); align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+        <div style="background-color: var(--bg-card); margin: auto; padding: 0; border: 1px solid var(--border-color); width: 85%; height: 85%; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
+            <h3 id="docModalTitle" style="margin:0; color:var(--text-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;"><i class="fas fa-search"></i> Visualização de Documento</h3>
+            <span id="closeDocModal" style="color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--color-expense)'" onmouseout="this.style.color='var(--text-muted)'">&times;</span>
+          </div>
+          <div id="docModalContent" style="flex:1; width:100%; background: var(--bg-card); min-height: 0; overflow: auto;"></div>
+        </div>
+      </div>
+
 
 
       <div id="import-result-container" style="display: none; padding: 0; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.4); backdrop-filter: blur(10px);">
@@ -789,10 +800,10 @@
         </div>
         
         <div style="padding: 1.5rem 1.5rem 0 1.5rem; color: var(--text-secondary); margin-bottom: 1rem;">
-          Confira o que será <strong>Adicionado</strong>, <strong>Exclu?do</strong> e <strong>Mantido</strong>. Ajuste os detalhes antes de finalizar.
+          Confira o que será <strong>Adicionado</strong>, <strong>Excluído</strong> e <strong>Mantido</strong>. Ajuste os detalhes antes de finalizar.
         </div>
 
-        <!-- Tabela de Triagem e Categoriza??o (Unificada) -->
+        <!-- Tabela de Triagem e Categorização (Unificada) -->
         <style>
           .step-1-active .col-conta,
           .step-3-active .col-parc,
@@ -801,9 +812,9 @@
           }
         </style>
         
-        <!-- Confer?ncia de Saldo -->
+        <!-- Conferência de Saldo -->
         <div id="conferencia-saldo-container" style="display: none; padding: 1.5rem; margin: 1.5rem; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px;">
-          <h4 style="margin: 0 0 1rem 0; color: var(--accent-blue); display: flex; align-items: center; gap: 8px;"><i class="fas fa-scale-balanced"></i> Confer?ncia de Saldo</h4>
+          <h4 style="margin: 0 0 1rem 0; color: var(--accent-blue); display: flex; align-items: center; gap: 8px;"><i class="fas fa-scale-balanced"></i> Conferência de Saldo</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
             <div>
               <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Saldo Inicial do Extrato</label>
@@ -818,12 +829,12 @@
               <input type="text" id="input-soma-lancamentos" class="modern-input" style="width: 100%; background: rgba(0,0,0,0.2); cursor: not-allowed;" readonly>
             </div>
             <div>
-              <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Diferen?a</label>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Diferença</label>
               <input type="text" id="input-diferenca-saldo" class="modern-input" style="width: 100%; background: rgba(0,0,0,0.2); cursor: not-allowed;" readonly>
             </div>
           </div>
           <div id="msg-diferenca-saldo" style="font-size: 0.85rem; color: var(--color-warning); margin-bottom: 1rem; display: none;">
-            <i class="fas fa-exclamation-triangle"></i> Aten??o: H? uma diferen?a entre os saldos informados e a soma dos lançamentos. Você pode prosseguir, mas a concilia??o ficar? divergente.
+            <i class="fas fa-exclamation-triangle"></i> Atenção: Há uma diferença entre os saldos informados e a soma dos lançamentos. Você pode prosseguir, mas a conciliação ficará divergente.
           </div>
           <button id="btn-confirmar-saldo" class="btn btn-primary"><i class="fas fa-check"></i> Confirmar Saldos</button>
         </div>
@@ -851,15 +862,15 @@
             <table id="unified-table" class="step-1-active" style="width:100%; border-collapse: collapse; font-size: 0.85rem; color:var(--text-primary);">
               <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 1;">
                 <tr style="border-bottom: 1px solid var(--border-color); text-align:left;">
-                  <th class="col-acao" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('acao')">A??O <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-acao" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('acao')">AÇÃO <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-data" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('data')">DATA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
-                  <th class="col-desc" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('descricao')">DESCRI??O <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
+                  <th class="col-desc" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('descricao')">DESCRIÇÃO <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-conta" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('conta')">CONTA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-valor" style="padding:10px; text-align:right; cursor:pointer;" onclick="sortUnifiedTable('valor')">VALOR <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-cat" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('categoria')">CATEGORIA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-subcat" style="padding:10px; cursor:pointer;" onclick="sortUnifiedTable('subcategoria')">SUBCATEGORIA <i class="fas fa-sort" style="font-size:0.8em; color:var(--text-muted)"></i></th>
                   <th class="col-parc" style="padding:10px; text-align:center;" title="Parcelamento?">PARC.</th>
-                  <th class="col-conf" style="padding:10px; text-align:center;" title="Confian?a da IA">??</th>
+                  <th class="col-conf" style="padding:10px; text-align:center;" title="Confiança da IA">🤖</th>
                 </tr>
               </thead>
               <tbody id="unified-table-body">
@@ -901,7 +912,7 @@
           <div class="metric-card" id="mock-mode-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)';" onmouseout="this.style.transform='translateY(0)';" onclick="window.toggleMockMode(this)">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
               <div id="mock-mode-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--color-expense); padding: 1rem; border-radius: 12px; font-size: 1.5rem;">
-                ??
+                🥔
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Modo Batata</h3>
             </div>
@@ -915,7 +926,7 @@
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Auditoria de Dados</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Analise inconsist?ncias financeiras, transa??es não mapeadas e verifique logs avan?ados do sistema de importa??o.</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Analise inconsistências financeiras, transações não mapeadas e verifique logs avançados do sistema de importação.</p>
           </div>
 
           <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-accent)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-accounts-edit'); window.renderEditAccounts();">
@@ -925,7 +936,7 @@
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Gerenciador de Contas</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Adicione, edite ou remova as contas banc?rias e cartões de cr?dito reconhecidos pela Inteligência Artificial.</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Adicione, edite ou remova as contas bancárias e cartões de crédito reconhecidos pela Inteligência Artificial.</p>
           </div>
 
           <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='var(--color-expense)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-group')">
@@ -935,7 +946,7 @@
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Meu Grupo (Família)</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Compartilhe os lançamentos com seu c?njuge. Visualize seu C?digo de Grupo ou entre em um Grupo existente.</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Compartilhe os lançamentos com seu cônjuge. Visualize seu Código de Grupo ou entre em um Grupo existente.</p>
           </div>
           <div class="metric-card" style="cursor: pointer; transition: transform 0.2s, border-color 0.2s; border: 1px solid transparent;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#f59e0b';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='transparent';" onclick="window.switchToPanel('panel-ideias'); window.loadIdeias();">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -944,7 +955,7 @@
               </div>
               <h3 style="margin: 0; font-size: 1.2rem;">Caixinha de Ideias 💡</h3>
             </div>
-            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Veja todas as sugest?es enviadas pelos usuários para melhorar o sistema. Leia, avalie e inspire-se!</p>
+            <p style="color: var(--text-secondary); margin: 0; line-height: 1.4;">Veja todas as sugestões enviadas pelos usuários para melhorar o sistema. Leia, avalie e inspire-se!</p>
           </div>
           
         </div>
@@ -958,9 +969,9 @@
           </h2>
           <button class="btn btn-secondary" onclick="window.switchToPanel('panel-settings');"><i class="fas fa-arrow-left"></i> Voltar</button>
         </div>
-        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Todas as sugest?es enviadas pelos usuários através do botão ?? da plataforma. Use isso para priorizar as próximas melhorias!</p>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Todas as sugestões enviadas pelos usuários através do botão 💡 da plataforma. Use isso para priorizar as próximas melhorias!</p>
         <div id="ideias-list-container">
-          <div style="text-align: center; color: var(--text-muted); padding: 3rem;"><i class="fas fa-spinner fa-spin"></i> Carregando sugest?es...</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 3rem;"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>
         </div>
       </div>
 
@@ -969,20 +980,20 @@
       <div id="panel-group" class="dashboard-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-users" style="color: var(--color-expense);"></i> Gest?o Familiar (Grupo)
+            <i class="fas fa-users" style="color: var(--color-expense);"></i> Gestão Familiar (Grupo)
           </h2>
           <div style="display: flex; gap: 1rem;">
             <button class="btn btn-secondary" onclick="window.switchToPanel('panel-settings');"><i class="fas fa-arrow-left"></i> Voltar</button>
           </div>
         </div>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">No Corta Gastos, o seu Grupo dita quais lançamentos você enxerga. Pessoas no mesmo grupo acessam exatamente a mesma base de dados, perfeito para o controle domêstico do casal.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">No Corta Gastos, o seu Grupo dita quais lançamentos você enxerga. Pessoas no mesmo grupo acessam exatamente a mesma base de dados, perfeito para o controle doméstico do casal.</p>
         
         <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
           <!-- Card: Meus Grupos (Seletor e Criar) -->
           <div class="metric-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <h3 style="margin: 0 0 10px 0; color: var(--color-primary);"><i class="fas fa-layer-group"></i> Meus Grupos</h3>
-              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Mude de grupo para ver lançamentos de contas diferentes, ou crie novos grupos para separar o pessoal da fam?lia.</p>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Mude de grupo para ver lançamentos de contas diferentes, ou crie novos grupos para separar o pessoal da família.</p>
             </div>
             <div>
               <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
@@ -1000,13 +1011,13 @@
           <div class="metric-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <h3 style="margin: 0 0 10px 0; color: var(--color-primary);"><i class="fas fa-link"></i> Link de Convite (Uso Único)</h3>
-              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Gere um link seguro e exclusivo para compartilhar seus lançamentos com seu parceiro(a). <strong>Por seguran?a, cada link só pode ser usado uma única vez e expirar? imediatamente após o uso.</strong></p>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Gere um link seguro e exclusivo para compartilhar seus lançamentos com seu parceiro(a). <strong>Por segurança, cada link só pode ser usado uma única vez e expirará imediatamente após o uso.</strong></p>
             </div>
             <div>
               <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <button class="btn btn-primary" onclick="window.generateInviteLink()" style="white-space: nowrap;"><i class="fas fa-magic"></i> Gerar Link</button>
-                <input type="text" id="invite-link-display" class="form-control" readonly placeholder="Clique em Gerar Link e ele aparecer? aqui..." style="flex: 1; min-width: 250px; font-family: monospace; font-size: 0.95rem; color: var(--color-primary); background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color);">
-                <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('invite-link-display').value); alert('Link copiado para a Área de transferência!')"><i class="fas fa-copy"></i> Copiar</button>
+                <input type="text" id="invite-link-display" class="form-control" readonly placeholder="Clique em Gerar Link e ele aparecerá aqui..." style="flex: 1; min-width: 250px; font-family: monospace; font-size: 0.95rem; color: var(--color-primary); background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color);">
+                <button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('invite-link-display').value); alert('Link copiado para a área de transferência!')"><i class="fas fa-copy"></i> Copiar</button>
               </div>
             </div>
           </div>
@@ -1054,7 +1065,7 @@
             <button class="btn btn-primary" onclick="window.saveConfigsToServer()"><i class="fas fa-cloud-upload-alt"></i> Salvar na Nuvem</button>
           </div>
         </div>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Adicione ou remova contas banc?rias e cartões. Estas contas servem como opções para a IA e para os filtros do dashboard.</p>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Adicione ou remova contas bancárias e cartões. Estas contas servem como opções para a IA e para os filtros do dashboard.</p>
         
         <div style="background: var(--bg-card); border-radius: 12px; padding: 1.5rem; max-width: 600px;">
           <ul id="accounts-editor-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.8rem;">
@@ -1067,8 +1078,8 @@
         </div>
       </div>
       
-      <!-- Os pain?is ocultados continuam no DOM para serem chamados via click interno do botão -->
-      <!-- Ocultos do menu lateral mas acessóveis -->
+      <!-- Os painéis ocultados continuam no DOM para serem chamados via click interno do botão -->
+      <!-- Ocultos do menu lateral mas acessíveis -->
       <a class="nav-item" data-target="panel-categories" style="display:none;"></a>
       <a class="nav-item" data-target="panel-accounts-edit" style="display:none;"></a>
       <a class="nav-item" data-target="panel-audit" style="display:none;"></a>
@@ -1125,7 +1136,7 @@
   <!-- Feedback Modal -->
   <div id="feedbackModal" style="display: none; position: fixed; bottom: 85px; right: 20px; width: 320px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; overflow: hidden; animation: slideUp 0.3s ease-out;">
     <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff; padding: 12px 15px; font-weight: 600; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-      <span>Caixinha de Ideias 💡</span>
+      <span>Caixinha de Ideias Ã°Å¸â€™Â¡</span>
       <i class="fas fa-times" id="btnCloseFeedback" style="cursor: pointer; color: #e2e8f0; transition: color 0.2s;" onmouseover="this.style.color='#ffffff';" onmouseout="this.style.color='#e2e8f0';"></i>
     </div>
     <div style="padding: 15px; background: #1e293b;">
@@ -1254,14 +1265,14 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-remote-config-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="db.jsóv=2"></script>
+  <script src="db.js?v=2"></script>
   <script src="scripts/migracao.js"></script>
-  <script src="app_v2.jsóv=957"></script>
-  <script src="importacao.jsóv=14"></script>
+  <script src="app_v2.js?v=957"></script>
+  <script src="importacao.js?v=12"></script>
   <!-- Modulos CortaGastos -->
-  <script src="shared-file-bridge.jsóv=2"></script>
-  <script src="gemini-service.jsóv=5?v=17"></script>
-  <script src="cortacoins.jsóv=1"></script>
+  <script src="shared-file-bridge.js?v=2"></script>
+  <script src="gemini-service.js?v=17"></script>
+  <script src="cortacoins.js?v=1"></script>
 
   <!-- Scanner NF-e Modules -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -1338,9 +1349,9 @@
         <div>
           <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Tipo *</label>
           <select id="new-tx-tipo" class="modern-input" style="width:100%;" onchange="window._updateNewTxValorSign()">
-            <option value="despesa">?? Despesa</option>
-            <option value="receita">?? Receita</option>
-            <option value="ajuste">?? Saldo Inicial</option>
+            <option value="despesa">💸 Despesa</option>
+            <option value="receita">💰 Receita</option>
+            <option value="ajuste">⚖️ Saldo Inicial</option>
           </select>
         </div>
       </div>
@@ -1368,7 +1379,7 @@
 
       <div style="margin-bottom:20px;">
         <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Descrição / Observação</label>
-        <input type="text" id="new-tx-obs" class="modern-input" placeholder="Ex: Supermercado, Sal?rio..." style="width:100%;">
+        <input type="text" id="new-tx-obs" class="modern-input" placeholder="Ex: Supermercado, Salário..." style="width:100%;">
       </div>
 
       <div style="display:flex; gap:10px; justify-content:flex-end;">
@@ -1446,7 +1457,7 @@
     <div id="nova-conta-bloco-criar" style="display:none;">
       <div style="display:grid; gap:12px;">
         <div>
-          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Nome da Conta <span style="opacity:0.6;">(como aparecer? no app)</span></label>
+          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Nome da Conta <span style="opacity:0.6;">(como aparecerá no app)</span></label>
           <input type="text" id="nova-conta-nome" class="modern-input" style="width:100%;" placeholder="Ex: BB Conta Corrente, Nubank...">
         </div>
         <div>
@@ -1461,7 +1472,7 @@
             <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tipo de Conta</label>
             <select id="nova-conta-tipo" class="modern-input" style="width:100%;">
               <option value="Conta Corrente">Conta Corrente / Débito</option>
-              <option value="Cartão de Cr?dito">Cartão de Cr?dito</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
               <option value="Conta Poupança">Conta Poupança</option>
               <option value="Conta de Investimento">Conta de Investimento</option>
               <option value="Carteira">Carteira (Dinheiro Físico)</option>
@@ -1481,12 +1492,12 @@
             <input type="color" id="nova-conta-cor" value="#3b82f6" style="width:50px; height:40px; border:none; background:none; cursor:pointer; border-radius:8px;">
           </div>
           <p style="font-size:0.75rem; color:var(--text-muted); margin:16px 0 0; flex:1;">
-            O saldo inicial ? o saldo da conta <strong>imediatamente antes</strong> do 1º lançamento deste extrato.
+            O saldo inicial é o saldo da conta <strong>imediatamente antes</strong> do 1º lançamento deste extrato.
           </p>
         </div>
       </div>
       <p style="font-size:0.75rem; color:var(--color-warning); margin:14px 0 0; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px; border:1px solid rgba(245,158,11,0.2);">
-        <i class="fas fa-seedling"></i> Esta será a <strong>conta semente</strong>. A concilia??o seguir? os novos extratos importados a partir daqui.
+        <i class="fas fa-seedling"></i> Esta será a <strong>conta semente</strong>. A conciliação seguirá os novos extratos importados a partir daqui.
       </p>
     </div>
 

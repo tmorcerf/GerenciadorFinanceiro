@@ -2600,7 +2600,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         }
       });
 
-      const patrimonio = saldoCC + saldoInv + saldoCartãoes;
+      const patrimonio = saldoCC + saldoInv + saldoCartões;
       const alertas = dadosFinanceiros.auditoria ? dadosFinanceiros.auditoria.length : 0;
       const pendentes = dadosFinanceiros.importacoes ? dadosFinanceiros.importacoes.length : 0;
 
@@ -2608,27 +2608,27 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         <div class="exec-card inv" data-action="inv">
           <div class="exec-card-label">Investimentos</div>
           <div class="exec-card-value" style="color:#8b5cf6;">${formatBRL(saldoInv)}</div>
-          <div class="exec-card-icon">??</div>
+          <div class="exec-card-icon">📈</div>
         </div>
         <div class="exec-card cartões" data-action="cartões">
-          <div class="exec-card-label">Cartões de Credito</div>
-          <div class="exec-card-value" style="color:var(--color-expense);">${formatBRL(Math.abs(saldoCartãoes))}</div>
-          <div class="exec-card-icon">??</div>
+          <div class="exec-card-label">Cartões de Crédito</div>
+          <div class="exec-card-value" style="color:var(--color-expense);">${formatBRL(Math.abs(saldoCartões))}</div>
+          <div class="exec-card-icon">💳</div>
         </div>
         <div class="exec-card patrimonio" data-action="patrimonio">
           <div class="exec-card-label">Patrimônio Total</div>
           <div class="exec-card-value" style="background:linear-gradient(to right, var(--color-income), #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${formatBRL(patrimonio)}</div>
-          <div class="exec-card-icon">??</div>
+          <div class="exec-card-icon">💎</div>
         </div>
         <div class="exec-card audit" data-action="audit">
           <div class="exec-card-label">Alertas de Auditoria</div>
           <div class="exec-card-value" style="color:${alertas > 0 ? 'var(--color-expense)' : 'var(--color-income)'};">${alertas} ${alertas === 1 ? 'alerta' : 'alertas'}</div>
-          <div class="exec-card-icon">??</div>
+          <div class="exec-card-icon">⚠️</div>
         </div>
         <div class="exec-card imports" data-action="imports">
           <div class="exec-card-label">A Conciliar</div>
           <div class="exec-card-value" style="color:${pendentes > 0 ? '#f97316' : 'var(--color-income)'};">${pendentes} ${pendentes === 1 ? 'item' : 'itens'}</div>
-          <div class="exec-card-icon">??</div>
+          <div class="exec-card-icon">⏳</div>
         </div>
       `;
 
