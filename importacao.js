@@ -1046,7 +1046,7 @@ function stopAIThinking() {
            // Renderizar a tabela com os selects
            renderizarTabelaUnificada();
            
-           btnSalvar.innerHTML = 'Prosseguir para Transferências <i class="fas fa-arrow-right"></i>';
+           btnSalvar.innerHTML = 'Confirmar Sincronização <i class="fas fa-check-double"></i>';
            btnSalvar.disabled = false;
            btnCategorizar.style.display = 'none'; // Ocultar o botão depois de categorizar
            return; 
