@@ -5993,6 +5993,7 @@ window.openEditTransactionModal = function(cod) {
   const isConciliado = t.conciliado === true;
   window.isCurrentTxUnlocked = false;
   window.currentTxExtratoId = t.extrato_id || null;
+  window.currentTxOriginalConta = t.conta; // Salva conta original para cascata dupla
   const lockBanner = document.getElementById('edit-tx-lock-banner');
   const btnUnlock = document.getElementById('btn-unlock-tx');
 
@@ -6001,22 +6002,22 @@ window.openEditTransactionModal = function(cod) {
 
   if (isConciliado) {
       lockBanner.style.display = 'block';
-      document.getElementById('edit-tx-data').disabled = true;
-      document.getElementById('edit-tx-conta').disabled = true;
-      document.getElementById('edit-tx-valor').disabled = true;
-      document.getElementById('edit-tx-obs').disabled = true;
+      // Apenas data, conta e valor são bloqueados — obs, categoria e subcategoria ficam livres
+      document.getElementById('edit-tx-data').disabled   = true;
+      document.getElementById('edit-tx-conta').disabled  = true;
+      document.getElementById('edit-tx-valor').disabled  = true;
+      document.getElementById('edit-tx-obs').disabled    = false; // LIVRE: não dispara cascata
       document.getElementById('edit-tx-create-contrapartida').disabled = true;
       
       btnUnlock.onclick = () => {
           console.log('[DEBUG] Usuário clicou em Desbloquear o lançamento', cod);
-          if (confirm('Atenção: Alterar Data, Conta, Valor ou Descrição removerá o status de "Conciliado" deste lançamento e de TODOS os lançamentos posteriores desta conta (efeito cascata). Você precisará re-validar o(s) extrato(s). Deseja continuar?')) {
+          if (confirm('Atenção: Alterar Data, Conta ou Valor removerá o status de "Conciliado" deste lançamento e de TODOS os posteriores desta conta (efeito cascata). Você precisará re-validar o(s) extrato(s). Deseja continuar?')) {
               console.log('[DEBUG] Usuário confirmou o desbloqueio. Habilitando edição...');
               window.isCurrentTxUnlocked = true;
               lockBanner.style.display = 'none';
-              document.getElementById('edit-tx-data').disabled = false;
-              document.getElementById('edit-tx-conta').disabled = false;
-              document.getElementById('edit-tx-valor').disabled = false;
-              document.getElementById('edit-tx-obs').disabled = false;
+              document.getElementById('edit-tx-data').disabled   = false;
+              document.getElementById('edit-tx-conta').disabled  = false;
+              document.getElementById('edit-tx-valor').disabled  = false;
               document.getElementById('edit-tx-create-contrapartida').disabled = false;
           } else {
               console.log('[DEBUG] Usuário cancelou o desbloqueio.');
@@ -6024,10 +6025,10 @@ window.openEditTransactionModal = function(cod) {
       };
   } else {
       lockBanner.style.display = 'none';
-      document.getElementById('edit-tx-data').disabled = false;
-      document.getElementById('edit-tx-conta').disabled = false;
-      document.getElementById('edit-tx-valor').disabled = false;
-      document.getElementById('edit-tx-obs').disabled = false;
+      document.getElementById('edit-tx-data').disabled   = false;
+      document.getElementById('edit-tx-conta').disabled  = false;
+      document.getElementById('edit-tx-valor').disabled  = false;
+      document.getElementById('edit-tx-obs').disabled    = false;
       document.getElementById('edit-tx-create-contrapartida').disabled = false;
   }
 
@@ -6156,11 +6157,23 @@ document.getElementById('edit-tx-save')?.addEventListener('click', () => {
      }
 
      console.log('[DEBUG] Enviando edição para o Firebase...', updateData);
-     savePromise = window.DB.editarLancamento(payload.cod, updateData).then(() => {
+     savePromise = window.DB.editarLancamento(payload.cod, updateData).then(async () => {
          console.log('[DEBUG] Edição concluída.');
          if (window.isCurrentTxUnlocked && window.DB.recalcularExtratoEAtualizarCascata) {
-             console.log('[DEBUG] Acionando efeito cascata (desconciliar) a partir de:', payload.novaData);
-             return window.DB.recalcularExtratoEAtualizarCascata(window.currentTxExtratoId, payload.novaConta, payload.novaData);
+             // Calcula a dataGatilho = MENOR das duas datas (original e nova)
+             const parseDBR = (s) => { if (!s) return Infinity; const p = s.split('/'); return p.length === 3 ? new Date(p[2], parseInt(p[1])-1, p[0]).getTime() : Infinity; };
+             const tOrig = parseDBR(origData);
+             const tNew  = parseDBR(payload.novaData);
+             const dataGatilho = (tOrig <= tNew) ? origData : payload.novaData;
+             console.log('[DEBUG] Cascata a partir de:', dataGatilho, '| Conta:', payload.novaConta);
+             // Desconcilia na conta nova (ou única)
+             await window.DB.recalcularExtratoEAtualizarCascata(window.currentTxExtratoId, payload.novaConta, dataGatilho);
+             // Se a conta mudou, desconcilia também na conta ORIGINAL
+             const contaOriginal = window.currentTxOriginalConta;
+             if (contaOriginal && contaOriginal !== payload.novaConta) {
+                 console.log('[DEBUG] Conta mudou, cascata também na conta original:', contaOriginal);
+                 await window.DB.recalcularExtratoEAtualizarCascata(null, contaOriginal, dataGatilho);
+             }
          }
      }).then(() => {
          if (payload.contraPartida) {

@@ -131,11 +131,14 @@ class Database {
       }
     }
 
-    // 3. Atualizar Conciliação da Conta
+    // 3. Atualizar Conciliação da Conta (case-insensitive via JS)
     if (contaDoExtrato && dataMaxStr) {
-       const contasSnap = await this.db.collection('Contas').where('groupId', '==', gid).where('nome', '==', contaDoExtrato).get();
-       contasSnap.forEach(doc => {
-          batch.update(doc.ref, { conciliado_ate: dataMaxStr });
+       const todasContasSnap = await this.db.collection('Contas').where('groupId', '==', gid).get();
+       todasContasSnap.forEach(doc => {
+          const nomeDoc = (doc.data().nome || '').trim().toLowerCase();
+          if (nomeDoc === contaDoExtrato.trim().toLowerCase()) {
+              batch.update(doc.ref, { conciliado_ate: dataMaxStr });
+          }
        });
     }
 
@@ -207,14 +210,17 @@ class Database {
           }
       }
       
-      // 2. Cascata total para frente (desconciliar lançamentos)
+      // 2. Cascata total para frente (desconciliar lançamentos, case-insensitive)
       if (conta && dataCascataBR) {
           const parts = dataCascataBR.split('/');
           const dataCascataTs = new Date(parts[2], parseInt(parts[1])-1, parts[0], 0,0,0).getTime();
           
-          const todosLancs = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('conta', '==', conta).where('conciliado', '==', true).get();
+          // Busca todos conciliados e filtra por conta (case-insensitive) no JS
+          const todosLancs = await this.db.collection('Lancamentos').where('groupId', '==', gid).where('conciliado', '==', true).get();
           todosLancs.forEach(doc => {
               const d = doc.data();
+              const contaDoc = (d.conta || '').trim().toLowerCase();
+              if (contaDoc !== conta.trim().toLowerCase()) return; // filtra por conta case-insensitive
               if (d.data) {
                   const p2 = String(d.data).split('/');
                   if (p2.length === 3) {
@@ -226,8 +232,9 @@ class Database {
               }
           });
           
-          // 3. Extratos para frente viram abertos
-          const extratosConta = await this.db.collection('Extratos').where('groupId', '==', gid).where('conta', '==', conta).get();
+          // 3. Extratos para frente viram abertos (case-insensitive)
+          const todosExtratosSnap = await this.db.collection('Extratos').where('groupId', '==', gid).get();
+          const extratosConta = { forEach: (cb) => todosExtratosSnap.forEach(doc => { if ((doc.data().conta||'').trim().toLowerCase() === conta.trim().toLowerCase()) cb(doc); }) };
           let maxDataConciliada = 0;
           let novaDataConciliadoAte = '';
           
@@ -250,10 +257,13 @@ class Database {
               }
           });
           
-          // 4. Atualizar conciliado_ate da conta
-          const contas = await this.db.collection('Contas').where('groupId', '==', gid).where('nome', '==', conta).get();
-          contas.forEach(doc => {
-              batch.update(doc.ref, { conciliado_ate: novaDataConciliadoAte || '' });
+          // 4. Atualizar conciliado_ate da conta (case-insensitive)
+          const contasCascSnap = await this.db.collection('Contas').where('groupId', '==', gid).get();
+          contasCascSnap.forEach(doc => {
+              const nomeDocCasc = (doc.data().nome || '').trim().toLowerCase();
+              if (nomeDocCasc === conta.trim().toLowerCase()) {
+                  batch.update(doc.ref, { conciliado_ate: novaDataConciliadoAte || '' });
+              }
           });
       }
       
@@ -289,9 +299,10 @@ class Database {
         groupId: gid,
         nome: conta.nome,
         tipo: conta.tipo,
+        banco: conta.banco || '',
         saldo_inicial: conta.saldo_inicial || 0,
         cor: conta.cor || '#3b82f6',
-        ignorar_dashboard: conta.ignorar_soma || false,
+        ignorar_dashboard: conta.ignorar_soma || conta.ignorar_dashboard || false,
         conciliado_ate: conta.conciliado_ate || '',
         conciliado_desde: conta.conciliado_desde || ''
      });

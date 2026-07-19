@@ -215,6 +215,116 @@ function stopAIThinking() {
 
 
 
+
+
+  // =====================================================================
+  // Helper: troca entre modo Vincular e Criar no modal de conta
+  // =====================================================================
+  window._setModoContaImport = function(modo) {
+    const blocVincular = document.getElementById('nova-conta-bloco-vincular');
+    const blocCriar    = document.getElementById('nova-conta-bloco-criar');
+    const btnVincular  = document.getElementById('nova-conta-modo-vincular');
+    const btnCriar     = document.getElementById('nova-conta-modo-criar');
+    if (!blocVincular) return;
+    if (modo === 'vincular') {
+      blocVincular.style.display = 'block';
+      blocCriar.style.display    = 'none';
+      if (btnVincular) { btnVincular.style.background = 'var(--color-accent)'; btnVincular.style.color = '#fff'; }
+      if (btnCriar)    { btnCriar.style.background    = 'transparent';          btnCriar.style.color    = 'var(--text-secondary)'; }
+    } else {
+      blocVincular.style.display = 'none';
+      blocCriar.style.display    = 'block';
+      if (btnVincular) { btnVincular.style.background = 'transparent';          btnVincular.style.color = 'var(--text-secondary)'; }
+      if (btnCriar)    { btnCriar.style.background    = 'var(--color-accent)';  btnCriar.style.color    = '#fff'; }
+    }
+    window._modoContaImport = modo;
+  };
+
+  // =====================================================================
+  // Helper: abre modal de conta e retorna Promise com { existente, conta }
+  // =====================================================================
+  function abrirModalConta(nomeDetectado, saldoSugerido) {
+    return new Promise((resolve, reject) => {
+      const modal      = document.getElementById('modal-nova-conta-importacao');
+      const desc       = document.getElementById('modal-nova-conta-desc');
+      const selExist   = document.getElementById('nova-conta-existente-select');
+      const inputNome  = document.getElementById('nova-conta-nome');
+      const inputBanco = document.getElementById('nova-conta-banco');
+      const inputTipo  = document.getElementById('nova-conta-tipo');
+      const inputSaldo = document.getElementById('nova-conta-saldo-inicial');
+      const inputCor   = document.getElementById('nova-conta-cor');
+      const btnCnc     = document.getElementById('nova-conta-cancelar');
+      const btnOk      = document.getElementById('nova-conta-confirmar');
+
+      if (!modal) {
+        // Fallback caso o modal não exista no HTML ainda
+        const tipoConta = confirm('Tipo de conta: OK = Conta Corrente, Cancelar = Cartão de Crédito') ? 'Conta Corrente' : 'Cartão de Crédito';
+        resolve({ existente: false, conta: { nome: nomeDetectado, banco: '', tipo: tipoConta, saldo_inicial: saldoSugerido || 0, cor: '#3b82f6', conciliado_ate: '', conciliado_desde: '' } });
+        return;
+      }
+
+      // Preencher descrição
+      if (desc) desc.innerHTML = `A IA identificou <strong>"${nomeDetectado}"</strong> no extrato, mas não está no seu cadastro.<br>Vincule a uma conta existente ou crie uma nova:`;
+
+      // Popular dropdown de contas existentes
+      const _dfModal = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+      if (selExist) {
+        selExist.innerHTML = '';
+        ((_dfModal && _dfModal.contas) || []).forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.nome; opt.textContent = c.nome;
+          selExist.appendChild(opt);
+        });
+      }
+
+      // Pré-preencher campos de criação
+      if (inputNome)  inputNome.value  = nomeDetectado;
+      if (inputBanco) inputBanco.value = '';
+      if (inputSaldo) inputSaldo.value = saldoSugerido !== null && saldoSugerido !== undefined ? saldoSugerido : '';
+      if (inputTipo)  inputTipo.value  = 'Conta Corrente';
+      if (inputCor)   inputCor.value   = '#3b82f6';
+
+      // Inicia no modo Vincular se há contas, senão Criar
+      const haContas = _dfModal && _dfModal.contas && _dfModal.contas.length > 0;
+      window._setModoContaImport(haContas ? 'vincular' : 'criar');
+
+      modal.style.display = 'flex';
+      const cleanup = () => { modal.style.display = 'none'; };
+
+      btnCnc.onclick = () => { cleanup(); reject(new Error('Importação cancelada pelo usuário.')); };
+
+      btnOk.onclick = () => {
+        const modo = window._modoContaImport || 'vincular';
+        if (modo === 'vincular') {
+          const nomeSel = selExist ? selExist.value : '';
+          if (!nomeSel) { alert('Selecione uma conta existente.'); return; }
+          const contaExistente = ((_dfModal && _dfModal.contas) || []).find(c => c.nome === nomeSel);
+          cleanup();
+          resolve({ existente: true, conta: contaExistente });
+        } else {
+          const nome  = inputNome  ? inputNome.value.trim()  : nomeDetectado;
+          const banco = inputBanco ? inputBanco.value.trim() : '';
+          if (!nome)  { alert('Informe o nome da conta.'); return; }
+          if (!banco) { alert('Informe a Instituição Financeira.'); return; }
+          cleanup();
+          resolve({
+            existente: false,
+            conta: {
+              nome,
+              banco,
+              tipo:              inputTipo  ? inputTipo.value  : 'Conta Corrente',
+              saldo_inicial:     parseFloat(inputSaldo ? inputSaldo.value : 0) || 0,
+              cor:               inputCor   ? inputCor.value   : '#3b82f6',
+              ignorar_dashboard: false,
+              conciliado_ate:    '',
+              conciliado_desde:  ''
+            }
+          });
+        }
+      };
+    });
+  }
+
   uploadInput.addEventListener('change', async (e) => {
     window.currentNinja = 'extrator';
     if (ninjaCategorizadorContainer) ninjaCategorizadorContainer.style.display = 'none';
@@ -332,34 +442,26 @@ function stopAIThinking() {
       let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
       
       if (!contaMatch && contaDoExtrato !== '') {
-          const criar = confirm(`A conta "${cabecalho['Nome da conta'] || cabecalho['conta']}" não foi encontrada no seu cadastro.\nDeseja criá-la agora para continuar a importação?`);
-          if (criar) {
-              const tipoConta = prompt(`Qual o tipo da conta?\nDigite 1 para Conta Corrente\nDigite 2 para Cartão de Crédito`, "1");
-              if (tipoConta === "1" || tipoConta === "2") {
-                  const novaConta = {
-                      id: 'conta_' + Date.now(),
-                      nome: cabecalho['Nome da conta'] || cabecalho['conta'],
-                      tipo: tipoConta === "1" ? 'Conta Corrente' : 'Cartão de Crédito',
-                      saldo_inicial: 0,
-                      cor: '#3b82f6',
-                      ignorar_soma: false,
-                      conciliado_ate: '',
-                      conciliado_desde: ''
-                  };
-                  if (window.DB && window.DB.salvarConta) {
-                      await window.DB.salvarConta(novaConta);
-                      if (!_df.contas) _df.contas = [];
-                      _df.contas.push(novaConta);
-                      contaMatch = novaConta;
-                      addFeedback(`Conta "${novaConta.nome}" criada com sucesso!`, 'success');
-                  } else {
-                      throw new Error("Erro ao acessar DB.salvarConta.");
-                  }
-              } else {
-                  throw new Error("Criação de conta cancelada ou tipo inválido.");
-              }
-          } else {
-              throw new Error("Importação cancelada, pois a conta não existe.");
+          try {
+            const saldoSugerido = (cabecalho && cabecalho.saldo_inicial !== undefined) ? cabecalho.saldo_inicial : null;
+            const nomeDetectado = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Conta Desconhecida').trim();
+            const resultado = await abrirModalConta(nomeDetectado, saldoSugerido);
+
+            if (resultado.existente) {
+              // Usuário vinculou a uma conta já cadastrada
+              contaMatch = resultado.conta;
+              addFeedback(`Extrato vinculado à conta existente: "${contaMatch.nome}"`, 'success');
+            } else {
+              // Usuário criou uma nova conta
+              if (!window.DB || !window.DB.salvarConta) throw new Error('Erro ao acessar DB.salvarConta.');
+              await window.DB.salvarConta(resultado.conta);
+              if (!_df.contas) _df.contas = [];
+              _df.contas.push(resultado.conta);
+              contaMatch = resultado.conta;
+              addFeedback(`Nova conta "${contaMatch.nome}" (${contaMatch.banco}) criada com sucesso!`, 'success');
+            }
+          } catch (modalErr) {
+            throw new Error(modalErr.message || 'Operação de conta cancelada.');
           }
       }
 
@@ -969,7 +1071,9 @@ function stopAIThinking() {
            window.currentNinja = 'categorizador';
            addFeedback(`Enviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`, 'ai'); startAIThinking();
            
-           const categoriasTree = (window.dadosFinanceiros && window.dadosFinanceiros.categorias) ? window.dadosFinanceiros.categorias : window.dicionarioGeral || {};
+           const categoriasTree = Object.assign({}, window.dicionarioGeral || {});
+           // Garante que DIVERSOS sempre existe como fallback para a IA
+           if (!categoriasTree['DIVERSOS']) categoriasTree['DIVERSOS'] = ['Diversos'];
            const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
            const contaExtrato = String(cabecalhoAtual['Nome da conta'] || cabecalhoAtual['conta'] || '').trim().toLowerCase();
            const contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaExtrato) : null;
@@ -1121,7 +1225,7 @@ function stopAIThinking() {
       let pInicio = minDataTs !== Infinity ? new Date(minDataTs).toLocaleDateString('pt-BR') : '';
 
       const extratoPayload = {
-          conta: String(contaDoExtrato).trim().toLowerCase(),
+          conta: contaMatch ? contaMatch.nome : String(contaDoExtrato).trim(),
           tipo_conta: tipoConta,
           periodo_inicio: pInicio,
           periodo_fim: rawMaxStr,
@@ -1139,7 +1243,7 @@ function stopAIThinking() {
         action: 'sincronizar_periodo', 
         lancamentosNovos: transacoesFinaisFaltantes,
         idsParaExcluir: dadosSincronizacao.sobrando.filter(s => !s.ignorar).map(s => s.id || s.cod), 
-        contaDoExtrato: String(contaDoExtrato).trim().toLowerCase(),
+        contaDoExtrato: contaMatch ? contaMatch.nome : String(contaDoExtrato).trim(),
         dataMaxStr: rawMaxStr,
         extratoPayload: extratoPayload
       };

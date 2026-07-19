@@ -325,7 +325,7 @@ window.GeminiService = (function() {
       'TRANSACOES:\n' + JSON.stringify(transacoes) + '\n\n' +
       'REGRAS:\n' +
       '1. Use APENAS categorias da lista\n' +
-      '2. Incerto: categoria=""\n' +
+      '2. Se nao souber categorizar, use EXATAMENTE categoria="DIVERSOS" e subcategoria="Diversos"\n' +
       '3. Aprenda com historico\n\n' +
       'RETORNE:\n' +
       '{"status":"success","analise_ia":"resumo","data":[{...transacao_com_categoria}]}';

@@ -285,7 +285,7 @@
       </div>
       <div style="display: flex; flex-direction: column;">
         <span>Corta Gastos</span>
-        <span style="font-size: 0.75rem;">v 0.9.99672 - 19/07/2026, 15:50:48</span>
+        <span style="font-size: 0.75rem;">v 0.9.99673 - 19/07/2026, 16:47:56</span>
       </div>
     </div>
   </aside>
@@ -1158,7 +1158,7 @@
               <div>
                   <i class="fas fa-lock" style="margin-right:8px;"></i>
                   <strong>Lançamento Protegido</strong><br>
-                  <span style="opacity:0.9;">Faz parte de um extrato conciliado.</span>
+                  <span style="opacity:0.9;">Data, Conta e Valor bloqueados. Categoria, subcategoria e descrição podem ser editadas livremente.</span>
               </div>
               <button id="btn-unlock-tx" style="background:transparent; border:1px solid #ef4444; color:#ef4444; border-radius:6px; padding:6px 12px; font-size:0.8rem; cursor:pointer; font-weight:600;"><i class="fas fa-unlock" style="margin-right:5px;"></i>Desbloquear</button>
           </div>
@@ -1256,7 +1256,7 @@
   <script src="firebase-config.js"></script>
   <script src="db.js?v=2"></script>
   <script src="scripts/migracao.js"></script>
-  <script src="app_v2.js?v=956"></script>
+  <script src="app_v2.js?v=957"></script>
   <script src="importacao.js?v=12"></script>
   <!-- Modulos CortaGastos -->
   <script src="shared-file-bridge.js?v=2"></script>
@@ -1402,5 +1402,80 @@
 
 
 
+
+<!-- ============================================================ -->
+<!-- Modal: Conta não encontrada durante Importação              -->
+<!-- ============================================================ -->
+<div id="modal-nova-conta-importacao" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:28px; width:100%; max-width:500px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <h3 style="margin:0 0 6px; color:var(--text-primary); font-size:1.1rem;">
+      <i class="fas fa-question-circle" style="color:var(--color-warning); margin-right:8px;"></i>Conta não reconhecida
+    </h3>
+    <p id="modal-nova-conta-desc" style="color:var(--text-secondary); font-size:0.85rem; margin:0 0 18px;"></p>
+
+    <!-- Seletor de Modo -->
+    <div style="display:flex; gap:8px; margin-bottom:18px;">
+      <button id="nova-conta-modo-vincular" onclick="window._setModoContaImport('vincular')" style="flex:1; padding:10px; border-radius:8px; border:2px solid var(--color-accent); background:var(--color-accent); color:#fff; cursor:pointer; font-weight:600; font-size:0.85rem; transition:all 0.2s;">
+        <i class="fas fa-link"></i> Vincular existente
+      </button>
+      <button id="nova-conta-modo-criar" onclick="window._setModoContaImport('criar')" style="flex:1; padding:10px; border-radius:8px; border:2px solid var(--border-color); background:transparent; color:var(--text-secondary); cursor:pointer; font-size:0.85rem; transition:all 0.2s;">
+        <i class="fas fa-plus"></i> Criar nova conta
+      </button>
+    </div>
+
+    <!-- Modo: Vincular Existente -->
+    <div id="nova-conta-bloco-vincular" style="display:block;">
+      <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:6px;">Selecione a conta correspondente:</label>
+      <select id="nova-conta-existente-select" class="modern-input" style="width:100%; margin-bottom:10px;"></select>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin:0; padding:8px; background:rgba(255,255,255,0.04); border-radius:6px;">
+        <i class="fas fa-info-circle"></i> O extrato será importado como se fosse desta conta. O nome detectado pela IA será ignorado.
+      </p>
+    </div>
+
+    <!-- Modo: Criar Nova -->
+    <div id="nova-conta-bloco-criar" style="display:none;">
+      <div style="display:grid; gap:12px;">
+        <div>
+          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Nome da Conta <span style="opacity:0.6;">(como aparecerá no app)</span></label>
+          <input type="text" id="nova-conta-nome" class="modern-input" style="width:100%;" placeholder="Ex: Nubank, Cartão Bradesco...">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Instituição Financeira</label>
+          <input type="text" id="nova-conta-banco" class="modern-input" style="width:100%;" placeholder="Ex: Nubank, Itaú, Bradesco...">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Tipo de Conta</label>
+          <select id="nova-conta-tipo" class="modern-input" style="width:100%;">
+            <option value="Conta Corrente">Conta Corrente / Débito</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Conta Poupança">Conta Poupança</option>
+            <option value="Conta de Investimento">Conta de Investimento</option>
+            <option value="Carteira">Carteira (Dinheiro Físico)</option>
+          </select>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end;">
+          <div>
+            <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Saldo Inicial <span style="opacity:0.6;">(na data do 1º extrato)</span></label>
+            <input type="number" id="nova-conta-saldo-inicial" class="modern-input" style="width:100%;" placeholder="0.00" step="0.01">
+          </div>
+          <div>
+            <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">Cor</label>
+            <input type="color" id="nova-conta-cor" value="#3b82f6" style="width:50px; height:40px; border:none; background:none; cursor:pointer; border-radius:8px;">
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.75rem; color:var(--color-warning); margin:14px 0 0; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px; border:1px solid rgba(245,158,11,0.2);">
+        <i class="fas fa-seedling"></i> Esta será a <strong>conta semente</strong>. A conciliação seguirá os novos extratos importados a partir daqui.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+      <button id="nova-conta-cancelar" style="background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); padding:10px 18px; border-radius:8px; cursor:pointer;">Cancelar Importação</button>
+      <button id="nova-conta-confirmar" style="background:var(--color-accent); color:#fff; border:none; padding:10px 22px; border-radius:8px; cursor:pointer; font-weight:600;">
+        <i class="fas fa-check"></i> Confirmar e Continuar
+      </button>
+    </div>
+  </div>
+</div>
 
 </html>
