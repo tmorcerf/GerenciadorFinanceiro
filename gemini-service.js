@@ -183,7 +183,11 @@ window.GeminiService = (function() {
         
         var json = await res.json();
         if (json.status === 'success') {
-            return json.dados;
+            return {
+                status: 'success',
+                analise_ia: "Importação via motor legado",
+                data: json.data || json.dados
+            };
         } else {
             throw new Error(json.message || "Erro no importador legado");
         }
