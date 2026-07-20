@@ -5,7 +5,7 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH  = 'gemini-3.5-flash'; 
+  var MODEL_FLASH  = 'gemini-2.5-flash-lite'; 
   var MODEL_LITE   = 'gemini-3.1-flash-lite';
   var MODEL_VISION = 'gemini-3.1-pro-preview'; 
   var MODEL_PRO    = 'gemini-3.1-pro-preview'; 
@@ -28,8 +28,7 @@ window.GeminiService = (function() {
             _apiKey = cfg.apiKey;
           }
           // Modelos forçados no código conforme solicitação
-          // Modelos forçados no código conforme solicitação
-          MODEL_FLASH = 'gemini-3.5-flash';
+          MODEL_FLASH = 'gemini-2.5-flash-lite';
           MODEL_LITE  = 'gemini-3.1-flash-lite';
           MODEL_PRO   = 'gemini-3.1-pro-preview';
           MODEL_BKP   = 'gemini-3.1-pro-preview';
