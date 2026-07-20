@@ -73,7 +73,7 @@ window.IACategorizador = (function() {
       '7. CRITICO: array "data" contem EXATAMENTE ' + transacoes.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir historico.\n' +
       '8. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
       'RETORNE EXATAMENTE (com ' + transacoes.length + ' itens no array data):\n' +
-      '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"id":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
+      '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
       '</instrucoes_finais>';
 
     return await window.IACore.chamarGemini(window.IACore.MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });

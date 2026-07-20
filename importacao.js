@@ -1391,7 +1391,7 @@ function stopAIThinking() {
            // Mescla resultados da IA com os pré-categorizados localmente
            let transacoesProcessadas = dadosSincronizacao.faltantes.map(t => {
              if (t.categoria && t.categoria !== 'DIVERSOS') return t; // já cacheado
-             const iaT = iaData.find(r => r.cod === t.cod || r.data === t.data && r.valor === t.valor && r.descricao === t.descricao);
+             const iaT = iaData.find(r => (r.cod && r.cod === t.cod) || (r.id && r.id === t.cod) || (r.data === t.data && r.valor === t.valor && r.descricao === t.descricao));
              return iaT ? { ...t, ...iaT } : t;
            });
            
