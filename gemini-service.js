@@ -1,14 +1,13 @@
-// gemini-service.js v3
+// gemini-service.js v4 — Gemini 3 Series
 // Corta Gastos - Servico Gemini
-// Substituicao do Claude por Gemini 2.5.
+// Modelos atualizados para a serie Gemini 3 (gemini-2.5 descontinuado)
 // Chave API: prioridade Firestore > Remote Config > window.GEMINI_API_KEY
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH     = 'gemini-2.5-flash-lite';   // texto puro (CSV/TXT/OFX)
-  var MODEL_VISION_FX = 'gemini-2.5-flash';          // PDF / imagens (OCR completo)
-  var MODEL_LITE      = 'gemini-3.1-flash-lite';
-  var MODEL_PRO       = 'gemini-3.1-pro-preview';
+  var MODEL_LITE      = 'gemini-3.1-flash-lite';  // texto puro: CSV/TXT/OFX e conciliacao
+  var MODEL_VISION_FX = 'gemini-3-flash-preview';  // PDF / imagens: OCR + code execution
+  var MODEL_PRO       = 'gemini-3.1-pro-preview';  // categorizacao: raciocinio complexo
   var MODEL_BKP       = 'gemini-3.1-pro-preview';  // fallback geral
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -27,13 +26,13 @@ window.GeminiService = (function() {
           if (cfg.apiKey && cfg.apiKey.length > 10) {
             _apiKey = cfg.apiKey;
           }
-          // Modelos forçados no código conforme solicitação
-          MODEL_FLASH = 'gemini-2.5-flash-lite';
-          MODEL_LITE  = 'gemini-3.1-flash-lite';
-          MODEL_PRO   = 'gemini-3.1-pro-preview';
-          MODEL_BKP   = 'gemini-3.1-pro-preview';
+          // Modelos fixos — série Gemini 3 (gemini-2.5 descontinuado)
+          MODEL_LITE      = 'gemini-3.1-flash-lite';
+          MODEL_VISION_FX = 'gemini-3-flash-preview';
+          MODEL_PRO       = 'gemini-3.1-pro-preview';
+          MODEL_BKP       = 'gemini-3.1-pro-preview';
           console.log('[GeminiService] Config: key=' + (_apiKey ? 'OK' : 'ausente') +
-                      ' | flash=' + MODEL_FLASH + ' | lite=' + MODEL_LITE + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
+                      ' | lite=' + MODEL_LITE + ' | vision=' + MODEL_VISION_FX + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
           if (_apiKey) return _apiKey;
         }
       }
@@ -115,17 +114,22 @@ window.GeminiService = (function() {
       });
     }
 
-    // maxOutputTokens por agente (injetado via opts ou padrão)
-    var maxTok = opts && opts._maxOutputTokens ? opts._maxOutputTokens : 8192;
+    // Temperatura: Gemini 3 requer 1.0 (padrão). Valores < 1.0 causam looping!
+    // thinking_level: injetado via opts para controle de custo/latência por agente
+    var maxTok      = opts && opts._maxOutputTokens ? opts._maxOutputTokens : 8192;
+    var thinkLevel  = opts && opts._thinkingLevel   ? opts._thinkingLevel   : 'low';
+
+    var genConfig = {
+      maxOutputTokens: maxTok,
+      responseMimeType: 'application/json',
+      thinking_level: thinkLevel
+      // temperature: NÃO definir — usar padrão 1.0 do Gemini 3
+    };
 
     var body = {
       contents: [{ role: 'user', parts: parts }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: maxTok,
-        responseMimeType: 'application/json'
-      }
+      generationConfig: genConfig
     };
 
     var url = API_BASE + '/' + model + ':generateContent?key=' + apiKey;
@@ -306,9 +310,12 @@ window.GeminiService = (function() {
 
     // Fix 1: PDF/Imagem → gemini-2.5-flash (OCR completo); texto puro → flash-lite
     var isBinario = (fileType === 'pdf' || fileType === 'png' || fileType === 'jpg' || fileType === 'jpeg');
-    var modelToUse = isBinario ? MODEL_VISION_FX : MODEL_FLASH;
+    var modelToUse = isBinario ? MODEL_VISION_FX : MODEL_LITE;
     // Fix 4: maxOutputTokens maior para extratos longos (até ~150 lançamentos)
-    return await _chamarGemini(modelToUse, systemPrompt, userContent, inlineData, { _maxOutputTokens: 16384 });
+    // Extrator PDF/Imagem: thinking medium (OCR denso precisa raciocinar)
+    // Extrator texto: thinking minimal (só parseamento simples)
+    var thinkEx = isBinario ? 'medium' : 'minimal';
+    return await _chamarGemini(modelToUse, systemPrompt, userContent, inlineData, { _maxOutputTokens: 16384, _thinkingLevel: thinkEx });
   }
 
   // 2. IA CATEGORIZADORA (O Cérebro Analítico)
@@ -385,8 +392,8 @@ window.GeminiService = (function() {
       '{"status":"success","analise_ia":"[máx 2 frases]","data":[{"id":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
       '</instrucoes_finais>';
 
-    // Fix 4: maxOutputTokens controlado — 8192 suficiente para 150 lançamentos
-    return await _chamarGemini(MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });
+    // Categorizador: thinking medium (semantica complexa, mas não precisa do high pago)
+    return await _chamarGemini(MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192, _thinkingLevel: 'medium' });
   }
 
   // CATEGORIZAR PRODUTO INDIVIDUAL (NF-e Scanner)
@@ -403,7 +410,7 @@ window.GeminiService = (function() {
       '2. Escolha uma categoria de supermercado (ex: "Mercado > Acougue", "Mercado > Limpeza", "Farmacia > Remedios").\n' +
       '3. Retorne EXATAMENTE este formato JSON: {"nomeLimpo": "Nome Formatado", "categoria": "Categoria Sugerida"}\n';
 
-    return await _chamarGemini(MODEL_FLASH, systemPrompt, userContent);
+    return await _chamarGemini(MODEL_LITE, systemPrompt, userContent, null, { _thinkingLevel: 'minimal' });
   }
 
   async function melhorarNomesEmLote(itens) {
@@ -428,7 +435,7 @@ window.GeminiService = (function() {
       JSON.stringify(itens.map(i => ({ ean: i.ean, descricao_abreviada: i.descricao })), null, 2);
 
     try {
-      var response = await _chamarGemini(MODEL_FLASH, systemInstruction, userPrompt);
+      var response = await _chamarGemini(MODEL_LITE, systemInstruction, userPrompt, null, { _maxOutputTokens: 4096, _thinkingLevel: 'minimal' });
       if (Array.isArray(response)) return response;
       return [];
     } catch(err) {
@@ -468,7 +475,8 @@ window.GeminiService = (function() {
       '}\n' +
       '</instrucoes>';
 
-    return await _chamarGemini(MODEL_LITE, systemPrompt, userContent);
+    // Conciliador: thinking minimal (comparação de IDs, não precisa raciocinar)
+    return await _chamarGemini(MODEL_LITE, systemPrompt, userContent, null, { _maxOutputTokens: 2048, _thinkingLevel: 'minimal' });
   }
 
   return { extrairExtrato, categorizar, conciliar, categorizarProduto, melhorarNomesEmLote };
