@@ -847,9 +847,38 @@ function stopAIThinking() {
                           cenColor = '#f59e0b';
                       }
                   } else {
-                      cenTitle = `<i class="fas fa-ban"></i> Extrato Sobreposto`;
-                      cenMsg = `Este extrato cai integralmente dentro do período já conciliado. Apenas transações inéditas (que não foram duplicadas) serão incluídas.`;
-                      cenColor = '#6b7280';
+                      // CENÁRIO E: Sobreposição Parcial — extrato sobrepõe período já conciliado
+                      // Valida se o miolo (parte já conciliada) bate com o extrato atual
+                      const parseVal = (v) => parseFloat(String(v).replace(/[^\d,\.\-]/g, '').replace(',', '.')) || 0;
+                      let mioloOk = true;
+                      let mioloConflitos = [];
+                      dadosExtrato.forEach(extLanc => {
+                          let tExt = parseDataBR(extLanc.data);
+                          // Só verifica lançamentos que caem dentro da zona já conciliada
+                          if (tExt >= cTimeDesde && tExt <= cTimeAte) {
+                              // Busca par nos lançamentos locais conciliados (ignorando a trava)
+                              let parLocal = baseLocal.find(loc => {
+                                  let tLoc = parseDataBR(loc.data);
+                                  let mesmaData = Math.abs(tExt - tLoc) <= 86400000; // 1 dia de margem
+                                  let mesmoValor = Math.abs(Math.abs(parseVal(extLanc.valor)) - Math.abs(parseVal(loc.valor))) < 0.001;
+                                  return String(loc.conta).trim().toLowerCase() === contaDoExtrato && mesmaData && mesmoValor;
+                              });
+                              if (!parLocal) {
+                                  mioloOk = false;
+                                  mioloConflitos.push(`${extLanc.data} | ${extLanc.descricao} | R$ ${parseVal(extLanc.valor).toFixed(2)}`);
+                              }
+                          }
+                      });
+
+                      if (!mioloOk) {
+                          cenTitle = `<i class="fas fa-exclamation-triangle"></i> ⚠️ Inconsistência no Período Conciliado!`;
+                          cenMsg = `O extrato atual diverge do que foi conciliado anteriormente nos seguintes lançamentos:<br><ul style="text-align:left;margin-top:6px">${mioloConflitos.slice(0,5).map(c => `<li>${c}</li>`).join('')}</ul>Os novos lançamentos serão importados, mas a semente NÃO será expandida.`;
+                          cenColor = '#ef4444';
+                      } else {
+                          cenTitle = `<i class="fas fa-check-double"></i> Sobreposição Validada`;
+                          cenMsg = `O miolo do período já conciliado conferiu com o extrato atual. Apenas os lançamentos inéditos serão incluídos.`;
+                          cenColor = '#6b7280';
+                      }
                   }
               }
               
@@ -1324,7 +1353,11 @@ function stopAIThinking() {
 
            if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
            let _dfAll = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
-           let histTransf = (_dfAll && _dfAll.lancamentos) ? _dfAll.lancamentos.filter(l => (l.categoria || '').toLowerCase().includes('transfer')) : [];
+           let histTransf = (_dfAll && _dfAll.lancamentos)
+               ? _dfAll.lancamentos
+                   .filter(l => (l.categoria || '').toLowerCase().includes('transfer'))
+                   .slice(-30)  // Fix 7: limita a 30 mais recentes (evita vazamento de tokens)
+               : [];
 
            let resultCat = await window.GeminiService.categorizar({
              transacoes: faltantesParaIA,
@@ -1510,7 +1543,7 @@ function stopAIThinking() {
           saldo_final: saldoFinalInformado,
           soma_lancamentos: somaLancs,
           diferenca: diff,
-          status: Math.abs(diff) < 0.05 ? 'conciliado' : 'divergente',
+          status: Math.abs(diff) < 0.001 ? 'conciliado' : 'divergente', // Fix 8: tolerância zero (apenas erro de ponto flutuante JS)
           arquivo_nome: window.currentImportFile ? window.currentImportFile.name : '',
           qtd_lancamentos: transacoesFinaisFaltantes.length + dadosSincronizacao.corretos.length,
           vencimento_fatura: cabecalhoAtual?.['Vencimento da fatura'] || null

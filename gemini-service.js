@@ -5,11 +5,11 @@
 
 window.GeminiService = (function() {
 
-  var MODEL_FLASH  = 'gemini-2.5-flash-lite'; 
-  var MODEL_LITE   = 'gemini-3.1-flash-lite';
-  var MODEL_VISION = 'gemini-3.1-pro-preview'; 
-  var MODEL_PRO    = 'gemini-3.1-pro-preview'; 
-  var MODEL_BKP    = 'gemini-3.1-pro-preview';
+  var MODEL_FLASH     = 'gemini-2.5-flash-lite';   // texto puro (CSV/TXT/OFX)
+  var MODEL_VISION_FX = 'gemini-2.5-flash';          // PDF / imagens (OCR completo)
+  var MODEL_LITE      = 'gemini-3.1-flash-lite';
+  var MODEL_PRO       = 'gemini-3.1-pro-preview';
+  var MODEL_BKP       = 'gemini-3.1-pro-preview';  // fallback geral
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
@@ -115,12 +115,15 @@ window.GeminiService = (function() {
       });
     }
 
+    // maxOutputTokens por agente (injetado via opts ou padrão)
+    var maxTok = opts && opts._maxOutputTokens ? opts._maxOutputTokens : 8192;
+
     var body = {
       contents: [{ role: 'user', parts: parts }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: 8192,
+        maxOutputTokens: maxTok,
         responseMimeType: 'application/json'
       }
     };
@@ -153,14 +156,8 @@ window.GeminiService = (function() {
                          jsonBkp.candidates[0].content.parts[0] &&
                          jsonBkp.candidates[0].content.parts[0].text) || '{}';
           
-          var cleanBkp = textBkp.replace(/```json/g, '').replace(/```/g, '').trim();
-          var sBkp = cleanBkp.indexOf('{'), aBkp = cleanBkp.indexOf('[');
-          var eSBkp = cleanBkp.lastIndexOf('}'), eABkp = cleanBkp.lastIndexOf(']');
-          var startBkp = (sBkp !== -1 && (aBkp === -1 || sBkp < aBkp)) ? sBkp : aBkp;
-          var endBkp = (startBkp === sBkp) ? eSBkp : eABkp;
-          if (startBkp !== -1 && endBkp > startBkp) cleanBkp = cleanBkp.substring(startBkp, endBkp + 1);
-          
-          return JSON.parse(cleanBkp);
+          var matchBkp = textBkp.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+          try { return JSON.parse(matchBkp ? matchBkp[0] : '{}'); } catch(e2) { /* cai no erro original */ }
         }
       }
 
@@ -176,14 +173,8 @@ window.GeminiService = (function() {
                 json.candidates[0].content.parts[0] &&
                 json.candidates[0].content.parts[0].text) || '{}';
 
-    var clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    var s = clean.indexOf('{'), a = clean.indexOf('[');
-    var eS = clean.lastIndexOf('}'), eA = clean.lastIndexOf(']');
-    var startIdx = (s !== -1 && (a === -1 || s < a)) ? s : a;
-    var endIdx = (startIdx === s) ? eS : eA;
-    if (startIdx !== -1 && endIdx > startIdx) clean = clean.substring(startIdx, endIdx + 1);
-
-    return JSON.parse(clean);
+    var match = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    return JSON.parse(match ? match[0] : '{}');
   }
 
   // 1. IA EXTRATORA (O Operário de Dados)
@@ -307,14 +298,17 @@ window.GeminiService = (function() {
       'REGRAS ESTRITAS DE EXTRAÇÃO:\n' +
       '1. Identifique a conta exata que corresponde ao documento usando a lista CONTAS CADASTRADAS.\n' +
       '2. Extraia o saldo_inicial e saldo_final exatos contidos no documento. Se não houver, retorne null.\n' +
-      '3. Extraia a lista de transações com data (DD/MM/AAAA), descricao original bruta, e valor numérico (negativo para débitos, positivo para créditos).\n' +
+      '3. Extraia a lista de transações com data (DD/MM/AAAA obrigatoriamente 4 dígitos no ano), descricao original bruta, e valor numérico (negativo para débitos, positivo para créditos).\n' +
       '4. Para conta corrente, vencimento = data. Para cartão de crédito, procure e extraia a data de vencimento da fatura.\n' +
       '5. IGNORE transferências internas de pagamento de fatura do próprio usuário se explicitamente marcadas assim.\n\n' +
-      'RETORNE EXATAMENTE NESTE FORMATO JSON:\n' +
-      '{"status":"success","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
+      'RETORNE EXATAMENTE NESTE FORMATO JSON (coloque analise_ia PRIMEIRO, máx. 2 frases):\n' +
+      '{"status":"success","analise_ia":"Identifiquei banco X, período Y a Z, N transações.","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
-    var modelToUse = (fileType === 'pdf' || fileType === 'png' || fileType === 'jpg') ? MODEL_FLASH : MODEL_LITE;
-    return await _chamarGemini(modelToUse, systemPrompt, userContent, inlineData);
+    // Fix 1: PDF/Imagem → gemini-2.5-flash (OCR completo); texto puro → flash-lite
+    var isBinario = (fileType === 'pdf' || fileType === 'png' || fileType === 'jpg' || fileType === 'jpeg');
+    var modelToUse = isBinario ? MODEL_VISION_FX : MODEL_FLASH;
+    // Fix 4: maxOutputTokens maior para extratos longos (até ~150 lançamentos)
+    return await _chamarGemini(modelToUse, systemPrompt, userContent, inlineData, { _maxOutputTokens: 16384 });
   }
 
   // 2. IA CATEGORIZADORA (O Cérebro Analítico)
@@ -357,38 +351,42 @@ window.GeminiService = (function() {
         }).join('\n');
     }
 
+    // Fix 2: Vocabulário compacto — top 200 termos "desc → categoria" (evita JSON verboso)
+    var vocabEntries = Object.entries(vocabulario || {});
+    var vocabCompacto = vocabEntries
+        .slice(0, 200)
+        .map(function(e) { var v = e[1]; return e[0] + ' → ' + (typeof v === 'object' ? (v.categoria || '') + (v.subcategoria ? '/' + v.subcategoria : '') : String(v)); })
+        .join('\n');
+
     var userContent = 
-      '<vocabulario_usuario>\n' + JSON.stringify(vocabulario) + '\n</vocabulario_usuario>\n\n' +
+      '<vocabulario_usuario>\n' + (vocabCompacto || 'Sem vocabulario.') + '\n</vocabulario_usuario>\n\n' +
       '<historico_conta_atual_360d>\n' + (formatHistory(historicoConta360d) || 'Sem historico.') + '\n</historico_conta_atual_360d>\n\n' +
-      '<historico_transferencias_360d>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_360d>\n\n' +
+      '<historico_transferencias_30>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_30>\n\n' +
       '<historico_global_recentes_120d>\n' + (formatHistory(historicoGlobal120d) || 'Sem historico global.') + '\n</historico_global_recentes_120d>\n\n' +
       '<regras_semanticas_basicas>\n' +
       '- iFood, Rappi, Zé Delivery -> Alimentação > Delivery\n' +
       '- Uber, 99, Cabify -> Transporte > App\n' +
-      '- Posto, Ipiranga, Shell, Petrobras -> Transporte > Combustível\n' +
+      '- Posto, Ipiranga, Shell, BR, Petrobras -> Transporte > Combustível\n' +
       '- Enel, Sabesp, Light, Copel, Sanepar -> Casa > Contas Básicas\n' +
+      '- Netflix, Spotify, Disney -> Lazer > Streaming\n' +
+      '- Farmácia, Drogasil, Panvel -> Saúde > Farmácia\n' +
       '</regras_semanticas_basicas>\n\n' +
       '<novas_transacoes>\n' + JSON.stringify(transacoes) + '\n</novas_transacoes>\n\n' +
       '<instrucoes_finais>\n' +
-      '1. Priorize o <historico_conta_atual_360d> e o <vocabulario_usuario> para decidir a categoria.\n' +
-      '2. Se a descrição for semanticamente muito similar a uma do histórico, herde a categoria.\n' +
-      '3. Use APENAS categorias da lista: ' + JSON.stringify(categoriasTree) + '.\n' +
-      '4. Valores negativos são despesas, positivos são receitas.\n' +
-      '5. REGRAS DE PARCELAMENTO (Installments): Busque ativamente na descrição por indicadores de parcelamento nos formatos: "1/6", "01/06", "2/12", "1-6", "01-06", "01 de 06", "parc 1/6". ' +
-      'Se encontrar, remova o indicador da descrição original e preencha "parcela_atual" e "total_parcelas", marcando "is_parcelado": true.\n' +
-      '6. Coloque o campo "analise_ia" NO INÍCIO do JSON, para "pensar em voz alta" e racionalizar sua análise antes de gerar o array de dados, garantindo alta precisão.\n' +
-      '7. CRÍTICO: O array "data" DEVE conter APENAS as transações enviadas na tag <novas_transacoes>. SOB NENHUMA HIPÓTESE inclua as transações do histórico no resultado.\n' +
-      'RETORNE EXATAMENTE NESTE FORMATO JSON:\n' +
-      '{\n' +
-      '  "status": "success",\n' +
-      '  "analise_ia": "Explique brevemente o seu raciocínio aqui...",\n' +
-      '  "data": [\n' +
-      '    { "id": "...", "categoria": "...", "subcategoria": "...", "descricao_limpa": "...", "is_parcelado": false, "parcela_atual": null, "total_parcelas": null }\n' +
-      '  ]\n' +
-      '}\n' +
+      '1. Priorize <historico_conta_atual_360d> e <vocabulario_usuario> para decidir a categoria.\n' +
+      '2. Se a descrição for semanticamente similar ao histórico, herde a categoria.\n' +
+      '3. Use APENAS categorias desta lista: ' + JSON.stringify(categoriasTree) + '.\n' +
+      '4. Valores negativos = despesas, positivos = receitas.\n' +
+      '5. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
+      'Se encontrar: is_parcelado=true, preencha parcela_atual e total_parcelas, remova o indicador da descricao_limpa.\n' +
+      '6. Campo "analise_ia" NO INÍCIO do JSON — máx. 2 frases resumindo o raciocínio.\n' +
+      '7. CRÍTICO: array "data" contém SOMENTE as transações de <novas_transacoes>. NUNCA inclua o histórico na saída.\n' +
+      'RETORNE EXATAMENTE:\n' +
+      '{"status":"success","analise_ia":"[máx 2 frases]","data":[{"id":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
       '</instrucoes_finais>';
 
-    return await _chamarGemini(MODEL_PRO, systemPrompt, userContent);
+    // Fix 4: maxOutputTokens controlado — 8192 suficiente para 150 lançamentos
+    return await _chamarGemini(MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });
   }
 
   // CATEGORIZAR PRODUTO INDIVIDUAL (NF-e Scanner)
