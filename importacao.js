@@ -96,46 +96,48 @@ function stopAIThinking() {
   const closeDocModal = document.getElementById('closeDocModal');
   const docModalContent = document.getElementById('docModalContent');
 
+  // Inline doc viewer helper (substitui o modal)
+  function _mostrarDocInline(fileUrl, fileType, fileName) {
+    const inlineViewer = document.getElementById('inline-doc-viewer');
+    const filenameLabel = document.getElementById('doc-viewer-filename');
+    if (!inlineViewer) return;
+    if (filenameLabel) filenameLabel.textContent = fileName || 'Documento';
+    let contentHtml = '';
+    const ft = (fileType || '').toLowerCase();
+    if (ft.includes('csv') || ft.includes('xls') || ft.includes('sheet') || ft.includes('txt') || ft.includes('ofx')) {
+       let text = window.currentExtractedContent || '';
+       let rows = text.split('\n').filter(l => l.trim() !== '');
+       let tableHtml = '<table style="width:100%; border-collapse: collapse; font-family: monospace; font-size: 12px; color: var(--text-secondary);">';
+       for (let i=0; i<rows.length; i++) {
+           let delim = rows[i].includes(';') ? ';' : (rows[i].includes('\t') ? '\t' : ',');
+           let cols = rows[i].split(delim);
+           tableHtml += '<tr>';
+           for (let c of cols) tableHtml += `<td style="border: 1px solid rgba(255,255,255,0.08); padding: 5px 8px; white-space: nowrap;">${c.replace(/^"|"$/g,'')}</td>`;
+           tableHtml += '</tr>';
+       }
+       tableHtml += '</table>';
+       contentHtml = `<div style="width:100%; padding:16px; overflow:auto;">${tableHtml}</div>`;
+    } else if (ft.includes('pdf')) {
+       contentHtml = `<iframe src="${fileUrl}" style="width:100%; height:100%; border:none; min-height:440px;"></iframe>`;
+    } else if (ft.includes('image') || ft.includes('png') || ft.includes('jpg') || ft.includes('jpeg')) {
+       contentHtml = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; padding:16px;"><img src="${fileUrl}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;"></div>`;
+    } else {
+       contentHtml = `<iframe src="${fileUrl}" style="width:100%; height:100%; border:none; background:#fff; min-height:440px;"></iframe>`;
+    }
+    inlineViewer.style.display = 'block';
+    inlineViewer.innerHTML = contentHtml;
+  }
+
   if (btnViewDoc && docModal) {
      btnViewDoc.addEventListener('click', () => {
         if (!currentFileUrl) return;
-        let contentHtml = '';
-        if (currentFileType.includes('csv') || currentFileType.includes('xls') || currentFileType.includes('sheet')) {
-           let text = window.currentExtractedContent || '';
-           let rows = text.split('\n').filter(l => l.trim() !== '');
-           let tableHtml = '<table style="width:100%; border-collapse: collapse; font-family: monospace; font-size: 12px; background: var(--bg-card); color: var(--text-primary);">';
-           for (let i=0; i<rows.length; i++) {
-               let delimiter = rows[i].includes(';') ? ';' : (rows[i].includes('\t') ? '\t' : ',');
-               let cols = rows[i].split(delimiter);
-               tableHtml += '<tr>';
-               for (let c of cols) {
-                   tableHtml += `<td style="border: 1px solid rgba(255,255,255,0.1); padding: 6px; white-space: nowrap; color: var(--text-secondary);">${c.replace(/^["']|["']$/g, '')}</td>`;
-               }
-               tableHtml += '</tr>';
-           }
-           tableHtml += '</table>';
-           contentHtml = `<div style="width:100%; height:100%; overflow:auto; background:var(--bg-color); padding:20px;">${tableHtml}</div>`;
-        } else if (currentFileType.includes('pdf')) {
-           contentHtml = `<iframe src="${currentFileUrl}" width="100%" height="100%" style="border:none;"></iframe>`;
-        } else if (currentFileType.includes('image')) {
-           contentHtml = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#eee; overflow:auto;"><img src="${currentFileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;"></div>`;
-        } else {
-           contentHtml = `<iframe src="${currentFileUrl}" width="100%" height="100%" style="border:none; background:#fff;"></iframe>`;
-        }
-        docModalContent.innerHTML = contentHtml;
-        docModal.style.display = 'flex';
+        _mostrarDocInline(currentFileUrl, currentFileType, window.currentImportFile?.name || 'Documento');
      });
-     
-     closeDocModal.addEventListener('click', () => {
+     if (closeDocModal) closeDocModal.addEventListener('click', () => {
         docModal.style.display = 'none';
-        docModalContent.innerHTML = '';
      });
-     
      window.addEventListener('click', (e) => {
-        if (e.target === docModal) {
-           docModal.style.display = 'none';
-           docModalContent.innerHTML = '';
-        }
+        if (e.target === docModal) docModal.style.display = 'none';
      });
   }
 
@@ -387,7 +389,15 @@ function stopAIThinking() {
     currentFileUrl = URL.createObjectURL(file);
     currentFileType = file.type || file.name.split('.').pop().toLowerCase();
     
-    if (btnViewDoc) btnViewDoc.style.display = 'flex';
+    if (btnViewDoc) btnViewDoc.style.display = 'none'; // oculto — usamos viewer inline
+
+    // Mostrar layout split e viewer inline imediatamente
+    const splitLayout = document.getElementById('import-split-layout');
+    if (splitLayout) {
+      splitLayout.style.display = 'grid';
+      splitLayout.style.gridTemplateColumns = '1fr 2fr';
+    }
+    _mostrarDocInline(currentFileUrl, currentFileType, file.name);
     updateReconciliationDatesUI();
 
     // Reset UI e Estados
