@@ -452,8 +452,8 @@ function stopAIThinking() {
           ? window.dadosFinanceiros.contas.map(c => ({nome: c.nome, tipo: c.tipo || 'Conta Corrente', conciliado_ate: c.conciliado_ate}))
           : []);
 
-      if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
-      let json = await window.GeminiService.extrairExtrato({
+      if (!window.IAExtrator) throw new Error("Serviço IAExtrator não está disponível.");
+      let json = await window.IAExtrator.extrairExtrato({
         fileContent: fileData.content,
         fileType: fileData.type,
         fileName: file.name,
@@ -969,7 +969,7 @@ function stopAIThinking() {
 
           // CHAMADA À IA CONCILIADORA (Seção 3)
           dadosSincronizacao.juncoes = [];
-          if (window.GeminiService && window.GeminiService.conciliar) {
+          if (window.IAConciliador && window.IAConciliador.conciliar) {
               addFeedback(`Enviando dados matemáticos para a IA Conciliadora Auditar...`, 'ai');
               startAIThinking();
               try {
@@ -979,7 +979,7 @@ function stopAIThinking() {
                       mensagem_matematica: (typeof cenMsg !== 'undefined' ? cenMsg.replace(/<[^>]+>/g, '').trim() : 'Ignorado (Cartão)')
                   };
                   
-                  let resultConc = await window.GeminiService.conciliar({
+                  let resultConc = await window.IAConciliador.conciliar({
                       mathSummary: mathSummary,
                       extractedTransactions: dadosSincronizacao.faltantes.map(t => ({ cod: t.cod, data: t.data, valor: t.valor, descricao: t.descricao })),
                       manualPendingTransactions: dadosSincronizacao.sobrando.map(t => ({ id: t.id, data: t.data, valor: t.valor, descricao: t.descricao, categoria: t.categoria }))
@@ -1420,7 +1420,7 @@ function stopAIThinking() {
              return;
            }
 
-           if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
+           if (!window.IACategorizador) throw new Error("Serviço IACategorizador não está disponível.");
            let _dfAll = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
            let histTransf = (_dfAll && _dfAll.lancamentos)
                ? _dfAll.lancamentos
@@ -1428,7 +1428,7 @@ function stopAIThinking() {
                    .slice(-30)  // Fix 7: limita a 30 mais recentes (evita vazamento de tokens)
                : [];
 
-           let resultCat = await window.GeminiService.categorizar({
+           let resultCat = await window.IACategorizador.categorizar({
              transacoes: faltantesParaIA,
              categoriasTree: categoriasTree,
              isCartaoCredito: isCartao,

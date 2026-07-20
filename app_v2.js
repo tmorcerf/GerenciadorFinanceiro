@@ -4455,7 +4455,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             ean: i.ean
         }));
         
-        const resultados = await window.geminiService.melhorarNomesEmLote(payload);
+        const resultados = await window.IACategorizador.melhorarNomesEmLote(payload);
         
         const batch = window.db.batch();
         for (const res of resultados) {
