@@ -127,8 +127,15 @@ window.IACore = (function() {
       try { return JSON.parse(str); } catch(e1) {}
       var m = str.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
       if (m) { try { return JSON.parse(m[0]); } catch(e2) {} }
-      var truncFix = str.replace(/,?\s*\{[^}]*$/, ']}}');
-      try { return JSON.parse(truncFix); } catch(e3) {}
+      // Fallbacks de truncamento
+      var tf1 = str.replace(/,?\s*\{[^}]*$/, '}');
+      try { return JSON.parse(tf1); } catch(e) {}
+      var tf2 = str.replace(/,?\s*\{[^}]*$/, ']}');
+      try { return JSON.parse(tf2); } catch(e) {}
+      var tf3 = str.replace(/,?\s*\{[^}]*$/, ']}}');
+      try { return JSON.parse(tf3); } catch(e) {}
+      var tf4 = str.replace(/,?\s*\{[^}]*$/, ']');
+      try { return JSON.parse(tf4); } catch(e) {}
       console.error('[IACore] Nao foi possivel parsear JSON.\nPrimeiros 800 chars:', str.substring(0, 800));
       return { status: 'error', message: 'Resposta da IA nao e JSON valido.' };
     }
