@@ -10,7 +10,10 @@
 !sw.js
 !scanner.js
 !shared-file-bridge.js
-!gemini-service.js
+!ia_core.js
+!ia_extrator.js
+!ia_categorizador.js
+!ia_conciliador.js
 !cortacoins.js
 !app_v2.js
 !firebase-config.js
