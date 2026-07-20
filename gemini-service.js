@@ -9,7 +9,7 @@ window.GeminiService = (function() {
   var MODEL_LITE   = 'gemini-3.1-flash-lite';
   var MODEL_VISION = 'gemini-3.1-pro-preview'; 
   var MODEL_PRO    = 'gemini-3.1-pro-preview'; 
-  var MODEL_BKP    = 'gemini-3.5-flash';
+  var MODEL_BKP    = 'gemini-3.1-pro-preview';
   var API_BASE    = 'https://generativelanguage.googleapis.com/v1beta/models';
 
   var _apiKey = null;
@@ -32,7 +32,7 @@ window.GeminiService = (function() {
           MODEL_FLASH = 'gemini-3.5-flash';
           MODEL_LITE  = 'gemini-3.1-flash-lite';
           MODEL_PRO   = 'gemini-3.1-pro-preview';
-          MODEL_BKP   = 'gemini-3.5-flash';
+          MODEL_BKP   = 'gemini-3.1-pro-preview';
           console.log('[GeminiService] Config: key=' + (_apiKey ? 'OK' : 'ausente') +
                       ' | flash=' + MODEL_FLASH + ' | lite=' + MODEL_LITE + ' | pro=' + MODEL_PRO + ' | bkp=' + (MODEL_BKP || 'nenhum'));
           if (_apiKey) return _apiKey;
@@ -157,6 +157,9 @@ window.GeminiService = (function() {
         }
       }
 
+      if (res.status === 503) {
+          throw new Error('Atenção Ninja 🥷: Os servidores do Google estão muito congestionados agora (Erro 503). Como um bom ninja, aguarde nas sombras e tente enviar novamente em alguns segundos!');
+      }
       throw new Error('Gemini API [' + res.status + ']: ' + errMsg);
     }
 
@@ -170,7 +173,7 @@ window.GeminiService = (function() {
     return JSON.parse(clean);
   }
 
-  // EXTRACAO DE EXTRATO - substitui action: 'importar_simples_v2'
+  // 1. IA EXTRATORA (O Operário de Dados)
   async function extrairExtrato(opts) {
     if (localStorage.getItem('gemini_mock') === 'true') {
         console.warn('[GeminiService] 🥔 MODO BATATA ATIVADO!');
@@ -266,15 +269,13 @@ window.GeminiService = (function() {
     var fileName = opts.fileName;
     var contasInfo = opts.contasInfo || [];
 
-    var systemPrompt = 'Voce e um especialista em financas pessoais brasileiras. ' +
-      'Extraia transacoes de extratos bancarios. Retorne APENAS JSON valido.';
+    var systemPrompt = 'Você é um sistema estrito de extração de dados financeiros. Sua única função é converter o documento bruto (extrato bancário) em um esquema JSON preciso. Não invente dados e não categorize nada.';
 
     if (fileType === 'pdf') {
-      systemPrompt += ' ATENÇÃO: Analise todas as páginas meticulosamente linha por linha. Não omita nenhuma transação nem pule páginas sob nenhuma circunstância.';
+      systemPrompt += ' ATENÇÃO: Analise todas as páginas meticulosamente linha por linha. Não omita nenhuma transação sob nenhuma circunstância.';
     }
 
     var contaNomes = contasInfo.map(function(c) { return c.nome; });
-    var contaCartoes = contasInfo.filter(function(c) { return c.tipo === 'Cartão de Crédito'; }).map(function(c) { return c.nome; });
 
     var userContent =
       'Extraia as transacoes do extrato abaixo.\n\n' +
@@ -282,30 +283,28 @@ window.GeminiService = (function() {
       'ARQUIVO (' + fileName + ', tipo: ' + fileType + '):\n';
     
     var inlineData = null;
-    if (fileType === 'pdf') {
-        userContent += '[O documento PDF foi anexado nativamente na requisicao]\n\n';
-        inlineData = { mimeType: 'application/pdf', data: fileContent };
+    if (fileType === 'pdf' || fileType === 'png' || fileType === 'jpg') {
+        userContent += '[O documento foi anexado nativamente na requisicao]\n\n';
+        inlineData = { mimeType: fileType === 'pdf' ? 'application/pdf' : 'image/' + fileType, data: fileContent };
     } else {
         userContent += fileContent + '\n\n';
     }
 
     userContent +=
-      'REGRAS:\n' +
-      '1. Colunas: data (DD/MM/AAAA), vencimento (DD/MM/AAAA), descricao, valor (negativo=debito), conta\n' +
-      '2. Para conta corrente: vencimento = data. Para cartao: vencimento = data da fatura\n' +
-      '3. IGNORE transacoes entre estas contas proprias do usuario: ' + JSON.stringify(contaNomes) + ' e pagamentos de fatura de cartao\n' +
-      '4. PARCELAS formato (1/6): projete todas com vencimentos mensais\n' +
-      '5. NOME DA CONTA: use a lista CONTAS CADASTRADAS se houver match. Se nao, use o nome REAL da conta (ex: numero da agencia/conta, apelido do produto bancario como "Conta Corrente Bradesco", "Conta Corrente Banco do Brasil"). NUNCA use apenas o tipo generico "Conta Corrente" como nome - combine com o banco (ex: "BB Conta Corrente").\n' +
-      '6. SALDO: procure por labels como "Saldo Anterior", "Saldo Inicial", "Saldo em", "Saldo Disponivel", "Saldo do Periodo Anterior" (para saldo_inicial) e "Saldo Atual", "Saldo Final", "Saldo Disponivel Atual", "Saldo do Periodo" (para saldo_final). Extraia como numero. Se realmente nao encontrar nenhum saldo no documento, retorne null.\n' +
-      '7. BANCO: identifique a instituicao financeira emissora do extrato (nome do banco/fintech). Ex: "Banco do Brasil", "Nubank", "Itau", "Bradesco", "Inter".\n\n' +
-      'RETORNE EXATAMENTE:\n' +
-      '{"status":"success","analise_ia":"resumo em 1 frase","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
+      'REGRAS ESTRITAS DE EXTRAÇÃO:\n' +
+      '1. Identifique a conta exata que corresponde ao documento usando a lista CONTAS CADASTRADAS.\n' +
+      '2. Extraia o saldo_inicial e saldo_final exatos contidos no documento. Se não houver, retorne null.\n' +
+      '3. Extraia a lista de transações com data (DD/MM/AAAA), descricao original bruta, e valor numérico (negativo para débitos, positivo para créditos).\n' +
+      '4. Para conta corrente, vencimento = data. Para cartão de crédito, procure e extraia a data de vencimento da fatura.\n' +
+      '5. IGNORE transferências internas de pagamento de fatura do próprio usuário se explicitamente marcadas assim.\n\n' +
+      'RETORNE EXATAMENTE NESTE FORMATO JSON:\n' +
+      '{"status":"success","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
-    var modelToUse = (fileType === 'pdf') ? MODEL_FLASH : MODEL_LITE;
+    var modelToUse = (fileType === 'pdf' || fileType === 'png' || fileType === 'jpg') ? MODEL_FLASH : MODEL_LITE;
     return await _chamarGemini(modelToUse, systemPrompt, userContent, inlineData);
   }
 
-  // CATEGORIZACAO COM HISTORICO - substitui action: 'categorizar_v2'
+  // 2. IA CATEGORIZADORA (O Cérebro Analítico)
   async function categorizar(opts) {
     if (localStorage.getItem('gemini_mock') === 'true') {
         return new Promise((resolve) => {
@@ -327,33 +326,53 @@ window.GeminiService = (function() {
     var transacoes = opts.transacoes;
     var categoriasTree = opts.categoriasTree;
     var isCartaoCredito = opts.isCartaoCredito;
-    var historico180dias = opts.historico180dias || [];
+    
+    // Novo contexto massivo
+    var historicoConta360d = opts.historicoConta360d || [];
+    var historicoTransferencias360d = opts.historicoTransferencias360d || [];
+    var historicoGlobal120d = opts.historicoGlobal120d || [];
+    var vocabulario = opts.vocabulario || {};
 
-    var systemPrompt = 'Voce e um categorizador financeiro pessoal brasileiro. ' +
-      'Use o historico para aprender o padrao de categorizacao do usuario. ' +
-      'Retorne APENAS JSON valido.';
+    var systemPrompt = 'Você é um motor de categorização financeira semântica de alta precisão. ' +
+      'Analise as transações fornecidas e mapeie cada uma para a categoria mais apropriada, ' +
+      'baseando-se EXCLUSIVAMENTE nos padrões históricos do usuário fornecidos. Retorne APENAS JSON válido.';
 
-    var historicoCompacto = historico180dias
-      .slice(-150)
-      .map(function(l) {
-        // M3: Inclui obs do usuário quando existe (melhora aprendizado de padrões)
-        var descComObs = l.descricao + (l.obs ? ' [' + l.obs + ']' : '');
-        return l.data + '|' + descComObs + '|' + l.valor + '|' + (l.categoria || '') + '|' + (l.subcategoria || '');
-      })
-      .join('\n');
+    function formatHistory(arr) {
+        return arr.map(function(l) {
+            var descComObs = l.descricao + (l.obs ? ' [' + l.obs + ']' : '');
+            return l.data + '|' + descComObs + '|' + l.valor + '|' + (l.categoria || '') + '|' + (l.subcategoria || '');
+        }).join('\n');
+    }
 
-    var userContent =
-      'HISTORICO 180 DIAS (padrao do usuario):\n' +
-      (historicoCompacto || 'Sem historico.') + '\n\n' +
-      'CATEGORIAS: ' + JSON.stringify(categoriasTree) + '\n\n' +
-      'CARTAO: ' + isCartaoCredito + '\n\n' +
-      'TRANSACOES:\n' + JSON.stringify(transacoes) + '\n\n' +
-      'REGRAS:\n' +
-      '1. Use APENAS categorias da lista\n' +
-      '2. Se nao souber categorizar, use EXATAMENTE categoria="DIVERSOS" e subcategoria="Diversos"\n' +
-      '3. Aprenda com historico\n\n' +
-      'RETORNE:\n' +
-      '{"status":"success","analise_ia":"resumo","data":[{...transacao_com_categoria}]}';
+    var userContent = 
+      '<vocabulario_usuario>\n' + JSON.stringify(vocabulario) + '\n</vocabulario_usuario>\n\n' +
+      '<historico_conta_atual_360d>\n' + (formatHistory(historicoConta360d) || 'Sem historico.') + '\n</historico_conta_atual_360d>\n\n' +
+      '<historico_transferencias_360d>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_360d>\n\n' +
+      '<historico_global_recentes_120d>\n' + (formatHistory(historicoGlobal120d) || 'Sem historico global.') + '\n</historico_global_recentes_120d>\n\n' +
+      '<regras_semanticas_basicas>\n' +
+      '- iFood, Rappi, Zé Delivery -> Alimentação > Delivery\n' +
+      '- Uber, 99, Cabify -> Transporte > App\n' +
+      '- Posto, Ipiranga, Shell, Petrobras -> Transporte > Combustível\n' +
+      '- Enel, Sabesp, Light, Copel, Sanepar -> Casa > Contas Básicas\n' +
+      '</regras_semanticas_basicas>\n\n' +
+      '<novas_transacoes>\n' + JSON.stringify(transacoes) + '\n</novas_transacoes>\n\n' +
+      '<instrucoes_finais>\n' +
+      '1. Priorize o <historico_conta_atual_360d> e o <vocabulario_usuario> para decidir a categoria.\n' +
+      '2. Se a descrição for semanticamente muito similar a uma do histórico, herde a categoria.\n' +
+      '3. Use APENAS categorias da lista: ' + JSON.stringify(categoriasTree) + '.\n' +
+      '4. Valores negativos são despesas, positivos são receitas.\n' +
+      '5. REGRAS DE PARCELAMENTO (Installments): Busque ativamente na descrição por indicadores de parcelamento nos formatos: "1/6", "01/06", "2/12", "1-6", "01-06", "01 de 06", "parc 1/6". ' +
+      'Se encontrar, remova o indicador da descrição original e preencha "parcela_atual" e "total_parcelas", marcando "is_parcelado": true.\n' +
+      '6. Coloque o campo "analise_ia" NO INÍCIO do JSON, para "pensar em voz alta" e racionalizar sua análise antes de gerar o array de dados, garantindo alta precisão.\n' +
+      'RETORNE EXATAMENTE NESTE FORMATO JSON:\n' +
+      '{\n' +
+      '  "status": "success",\n' +
+      '  "analise_ia": "Explique brevemente o seu raciocínio aqui...",\n' +
+      '  "data": [\n' +
+      '    { "id": "...", "categoria": "...", "subcategoria": "...", "descricao_limpa": "...", "is_parcelado": false, "parcela_atual": null, "total_parcelas": null }\n' +
+      '  ]\n' +
+      '}\n' +
+      '</instrucoes_finais>';
 
     return await _chamarGemini(MODEL_PRO, systemPrompt, userContent);
   }
@@ -406,7 +425,41 @@ window.GeminiService = (function() {
     }
   }
 
-  return { extrairExtrato, categorizar, categorizarProduto, melhorarNomesEmLote };
+  // 3. IA CONCILIADORA (A Auditora)
+  async function conciliar(opts) {
+    if (localStorage.getItem('gemini_mock') === 'true') {
+        return { status: 'success', analise_ia: 'Conciliação MOCK', sugestoes_juncao: [], alertas: [] };
+    }
+
+    var mathSummary = opts.mathSummary || {}; // { inicial, final_extrato, calculado, divergencia }
+    var extractedTransactions = opts.extractedTransactions || [];
+    var manualPendingTransactions = opts.manualPendingTransactions || [];
+
+    var systemPrompt = 'Você é um auditor financeiro de conciliação. ' +
+      'Sua função é analisar discrepâncias matemáticas já calculadas e identificar o porquê o extrato não bate, ' +
+      'além de cruzar transações manuais com as extraídas pelo banco. Retorne APENAS JSON válido.';
+
+    var userContent = 
+      '<resumo_matematico>\n' + JSON.stringify(mathSummary) + '\n</resumo_matematico>\n\n' +
+      '<transacoes_extraidas_do_banco>\n' + JSON.stringify(extractedTransactions) + '\n</transacoes_extraidas_do_banco>\n\n' +
+      '<transacoes_manuais_pendentes>\n' + JSON.stringify(manualPendingTransactions) + '\n</transacoes_manuais_pendentes>\n\n' +
+      '<instrucoes>\n' +
+      '1. Análise de Discrepância: Se "divergencia" for diferente de 0, analise as <transacoes_extraidas_do_banco> para sugerir causas (ex: lançamentos duplicados, tarifas ocultas, sinais trocados). Retorne isso no campo "alertas". Se não houver divergência, retorne array vazio.\n' +
+      '2. Sugestão de Junção (Merge): Compare <transacoes_manuais_pendentes> com <transacoes_extraidas_do_banco>. Apenas se a Inteligência Artificial, diferente da matemática crua (que tem sliding window de proximidade de data e valor do frontend) enxergar que são a mesma transação por nomeação ou comportamento, informe os pares no campo "sugestoes_juncao" retornando os IDs pareados.\n' +
+      '3. Coloque o campo "analise_ia" NO INÍCIO do JSON para pensar passo a passo de onde vêm as diferenças antes de gerar as listas.\n' +
+      'RETORNE EXATAMENTE NESTE FORMATO JSON:\n' +
+      '{\n' +
+      '  "status": "success",\n' +
+      '  "analise_ia": "Seu raciocínio de auditoria...",\n' +
+      '  "sugestoes_juncao": [ { "id_manual": "...", "id_extraida": "...", "confianca": 0.95 } ],\n' +
+      '  "alertas": [ "Aviso: Há uma diferença de R$ 20. O lançamento X parece estar duplicado." ]\n' +
+      '}\n' +
+      '</instrucoes>';
+
+    return await _chamarGemini(MODEL_LITE, systemPrompt, userContent);
+  }
+
+  return { extrairExtrato, categorizar, conciliar, categorizarProduto, melhorarNomesEmLote };
 
 })();
 

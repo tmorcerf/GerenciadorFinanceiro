@@ -124,7 +124,7 @@ class Database {
 
   // --- GRAVAÇÃO ---
 
-  async sincronizarPeriodo(lancamentosNovos, idsParaExcluir, contaDoExtrato, dataMaxStr, extratoPayload, conciliacaoContinua) {
+  async sincronizarPeriodo(lancamentosNovos, idsParaExcluir, contaDoExtrato, dataMaxStr, extratoPayload, conciliacaoContinua, cortaCoinsAmount = 0) {
     const gid = window.userGroupId;
     if (!gid) throw new Error("Grupo nao definido.");
 
@@ -201,6 +201,24 @@ class Database {
               // logo NÃO atualizamos as âncoras da conta!
           }
        });
+    }
+
+    // 4. Bonificação de CortaCoins Atômica
+    if (cortaCoinsAmount > 0 && window.firebaseUser) {
+        const userRef = this.db.collection('usuarios_nfe').doc(window.firebaseUser.uid);
+        batch.update(userRef, {
+            cortaCoins: firebase.firestore.FieldValue.increment(cortaCoinsAmount),
+            total_importacoes: firebase.firestore.FieldValue.increment(1)
+        });
+        
+        const transRef = this.db.collection('nfe_transacoes').doc();
+        batch.set(transRef, {
+            uid: window.firebaseUser.uid,
+            tipo: 'credito',
+            quantidade: cortaCoinsAmount,
+            descricao: 'Importação / Conciliação de Extrato Bancário',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
     }
 
     await batch.commit();

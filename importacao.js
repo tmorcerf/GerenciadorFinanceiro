@@ -1,7 +1,7 @@
 // importacao.js
 // Lógica para a aba de Sincronização de Período Fechado (agora unificado na Importação Principal)
 
-let dadosSincronizacao = { corretos: [], faltantes: [], sobrando: [] };
+let dadosSincronizacao = { corretos: [], faltantes: [], sobrando: [], juncoes: [] };
 let isCategorizado = false;
 let analiseExtracao = "";
 let analiseCategorizacao = "";
@@ -160,7 +160,19 @@ function stopAIThinking() {
 
     let html = '';
     contasToRender.forEach(c => {
-       html += `<span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05);"><strong style="color:var(--text-primary); margin-right:4px;">${c.nome}</strong> ${c.conciliado_ate}</span>`;
+       let concStr = "";
+       if (c.conciliado_desde && c.conciliado_ate) {
+           concStr = `conc. ${c.conciliado_desde} até ${c.conciliado_ate}`;
+       } else if (c.conciliado_ate) {
+           concStr = `conc. até ${c.conciliado_ate}`;
+       } else {
+           concStr = "Não conciliado";
+       }
+       
+       html += `<div style="background: rgba(255,255,255,0.1); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05); display: inline-flex; flex-direction: column; gap: 4px; line-height: 1.2;">
+         <div><strong style="color:var(--text-primary); margin-right:4px;">${c.nome}</strong> <span style="opacity: 0.6; font-size: 0.7rem;">/ ${c.tipo || 'Conta Corrente'}</span></div>
+         <div style="font-size: 0.75rem; color: var(--accent-blue);"><i class="fas fa-check-circle" style="font-size: 0.7rem; margin-right: 4px;"></i>${concStr}</div>
+       </div>`;
     });
     
     if (html === '') {
@@ -707,7 +719,7 @@ function stopAIThinking() {
          }
       });
 
-      dadosSincronizacao = { corretos, faltantes, sobrando };
+      dadosSincronizacao = { corretos, faltantes, sobrando, juncoes: [] };
       
       addFeedback(`Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`, 'system');
 
@@ -857,6 +869,58 @@ function stopAIThinking() {
               window.payloadConciliacaoGlobal = { acao: 'ignorar_matematica', ate: maxDataStr };
           }
 
+          // CHAMADA À IA CONCILIADORA (Seção 3)
+          dadosSincronizacao.juncoes = [];
+          if (window.GeminiService && window.GeminiService.conciliar) {
+              addFeedback(`Enviando dados matemáticos para a IA Conciliadora Auditar...`, 'ai');
+              startAIThinking();
+              try {
+                  const parseVal = (v) => parseFloat(String(v).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
+                  let mathSummary = {
+                      cenario: (typeof cenTitle !== 'undefined' ? cenTitle.replace(/<[^>]+>/g, '').trim() : 'Ignorado (Cartão)'),
+                      mensagem_matematica: (typeof cenMsg !== 'undefined' ? cenMsg.replace(/<[^>]+>/g, '').trim() : 'Ignorado (Cartão)')
+                  };
+                  
+                  let resultConc = await window.GeminiService.conciliar({
+                      mathSummary: mathSummary,
+                      extractedTransactions: dadosSincronizacao.faltantes.map(t => ({ cod: t.cod, data: t.data, valor: t.valor, descricao: t.descricao })),
+                      manualPendingTransactions: dadosSincronizacao.sobrando.map(t => ({ id: t.id, data: t.data, valor: t.valor, descricao: t.descricao, categoria: t.categoria }))
+                  });
+                  
+                  stopAIThinking();
+                  if (resultConc && resultConc.status === 'success') {
+                      addFeedback(`🤖 Auditoria: "${resultConc.analise_ia}"`, 'ai');
+                      let extraHtml = '';
+                      if (resultConc.alertas && resultConc.alertas.length > 0) {
+                          extraHtml += `<br><div style="margin-top: 10px; padding: 10px; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; color: #ef4444; border-radius: 4px;"><strong><i class="fas fa-robot"></i> Alerta da IA:</strong><br> ${resultConc.alertas.join('<br>')}</div>`;
+                      }
+                      
+                      if (resultConc.sugestoes_juncao && resultConc.sugestoes_juncao.length > 0) {
+                          let numMerge = 0;
+                          resultConc.sugestoes_juncao.forEach(sug => {
+                              let fIdx = dadosSincronizacao.faltantes.findIndex(f => f.cod === sug.id_extraida);
+                              let sIdx = dadosSincronizacao.sobrando.findIndex(s => s.id === sug.id_manual);
+                              if (fIdx >= 0 && sIdx >= 0) {
+                                  let extItem = dadosSincronizacao.faltantes.splice(fIdx, 1)[0];
+                                  let manItem = dadosSincronizacao.sobrando.splice(sIdx, 1)[0];
+                                  extItem.planilha = manItem;
+                                  dadosSincronizacao.juncoes.push(extItem);
+                                  numMerge++;
+                              }
+                          });
+                          if (numMerge > 0) {
+                              addFeedback(`🔗 IA encontrou ${numMerge} sugestões de junção (Merge)!`, 'success');
+                          }
+                      }
+                      if (extraHtml) alertaConciliacao.innerHTML += extraHtml;
+                  }
+              } catch (concErr) {
+                  stopAIThinking();
+                  console.error('Erro na Conciliadora:', concErr);
+                  addFeedback(`Erro na Conciliadora: ${concErr.message}`, 'error');
+              }
+          }
+
           confContainer.appendChild(alertaConciliacao);
 
           const btnProsseguir = document.createElement('button');
@@ -948,8 +1012,8 @@ function stopAIThinking() {
     unifiedTable.className = 'step-1-active';
 
     const criarLinha = (tipo, item, index, isFaltante) => {
-      let icon = tipo === "Adicionar" ? "➕" : (tipo === "Excluir" ? "🗑️" : "✔️");
-      let colorTipo = tipo === "Adicionar" ? "var(--accent-blue)" : (tipo === "Excluir" ? "#ef4444" : "var(--text-muted)");
+      let icon = tipo === "Adicionar" ? "🆕 " : (tipo === "Excluir" ? "🗑️" : (tipo === "Junção" ? "🔗" : "✔️"));
+      let colorTipo = tipo === "Adicionar" ? "var(--accent-blue)" : (tipo === "Excluir" ? "#ef4444" : (tipo === "Junção" ? "var(--color-primary)" : "var(--text-muted)"));
       
       let t = isFaltante ? item : (tipo === "Correto" ? item.planilha : item);
       let disabledAttr = ""; // Sempre editável para categorias no Passo 1 se for Adicionar, ou Correto (conforme plano)!
@@ -1003,7 +1067,7 @@ function stopAIThinking() {
       }
 
       let checkIgnorarHtml = '';
-      if (tipo === "Adicionar" || tipo === "Excluir") {
+      if (tipo === "Adicionar" || tipo === "Excluir" || tipo === "Junção") {
         checkIgnorarHtml = `<div style="margin-top: 5px;"><label style="cursor:pointer; font-size:0.75rem; color:var(--text-primary); font-weight:normal; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="import-chk-ignorar" data-index="${index}" data-tipo="${tipo}" ${t.ignorar ? 'checked' : ''}> Ignorar</label></div>`;
       }
       
@@ -1045,6 +1109,9 @@ function stopAIThinking() {
     });
     dadosSincronizacao.faltantes.forEach((item, i) => {
        tbodyHtml += criarLinha("Adicionar", item, i, true);
+    });
+    dadosSincronizacao.juncoes.forEach((item, i) => {
+       tbodyHtml += criarLinha("Junção", item, i, true);
     });
     dadosSincronizacao.corretos.forEach((item, i) => {
        tbodyHtml += criarLinha("Correto", item, i, false);
@@ -1118,7 +1185,7 @@ function stopAIThinking() {
       chk.addEventListener('change', (e) => {
         const idx = e.target.getAttribute('data-index');
         const tipo = e.target.getAttribute('data-tipo');
-        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : (tipo === 'Junção' ? dadosSincronizacao.juncoes : dadosSincronizacao.corretos));
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
         t.ignorar = e.target.checked;
         
@@ -1256,11 +1323,17 @@ function stopAIThinking() {
            }
 
            if (!window.GeminiService) throw new Error("Serviço Gemini não está disponível.");
+           let _dfAll = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
+           let histTransf = (_dfAll && _dfAll.lancamentos) ? _dfAll.lancamentos.filter(l => (l.categoria || '').toLowerCase().includes('transfer')) : [];
+
            let resultCat = await window.GeminiService.categorizar({
              transacoes: faltantesParaIA,
              categoriasTree: categoriasTree,
              isCartaoCredito: isCartao,
-             historico180dias: historico180dias
+             historicoConta360d: histConta,
+             historicoTransferencias360d: histTransf,
+             historicoGlobal120d: histGeral,
+             vocabulario: window.dicionarioGeral || {}
            });
            
            if (resultCat.status === 'error' || !resultCat.data) {throw new Error(resultCat.message || "Erro na categorização.");}
@@ -1362,6 +1435,23 @@ function stopAIThinking() {
       btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando (Salvando)...';
       
       let transacoesFinaisFaltantes = dadosSincronizacao.faltantes.filter(t => !t.ignorar);
+      
+      // PROCESSAR JUNÇÕES (Merge de Lançamento Bancário com Manual)
+      if (dadosSincronizacao.juncoes) {
+          dadosSincronizacao.juncoes.forEach(j => {
+              if (!j.ignorar) {
+                  j.categoria = j.planilha.categoria || 'DIVERSOS';
+                  j.subcategoria = j.planilha.subcategoria || 'Diversos';
+                  j.descricao = j.descricao + ' (Mesclado: ' + j.planilha.descricao + ')';
+                  transacoesFinaisFaltantes.push(j);
+                  
+                  if (!dadosSincronizacao.sobrando.find(s => s.id === j.planilha.id)) {
+                      dadosSincronizacao.sobrando.push(j.planilha);
+                  }
+              }
+          });
+      }
+
       transacoesFinaisFaltantes.forEach(t => t.vencimento = t.vencimento || t.data);
 
       const contaDoExtrato = dadosSincronizacao.faltantes.length > 0 ? dadosSincronizacao.faltantes[0].conta : 
@@ -1436,15 +1526,18 @@ function stopAIThinking() {
         conciliacaoContinua: window.payloadConciliacaoGlobal || null
       };
 
-      let jsonRes = { status: "success" };
+      // Calcular moedas atômicas
+      let bonusCoins = 0;
       if (window.USE_FIREBASE) {
+         bonusCoins = (transacoesFinaisFaltantes.length * 2) + 50; // 2 moedas por lancamento + 50 por fechar a conta
          await window.DB.sincronizarPeriodo(
              payload.lancamentosNovos,
              payload.idsParaExcluir,
              payload.contaDoExtrato,
              payload.dataMaxStr,
              payload.extratoPayload,
-             payload.conciliacaoContinua
+             payload.conciliacaoContinua,
+             bonusCoins
          );
          
          // Limpar extratos antigos (manter ultimos 5)
@@ -1460,14 +1553,29 @@ function stopAIThinking() {
       
       if (jsonRes.status === "error") throw new Error(jsonRes.message);
 
-      // CortaCoins: credita 1 moeda por lancamento importado
-      if (window.CortaCoins && transacoesFinaisFaltantes.length > 0) {
-        const _novos = transacoesFinaisFaltantes.filter(t => !t.ignorar).length;
-        if (_novos > 0) await window.CortaCoins.creditar(_novos, 'Importacao extrato: ' + _novos + ' lancamentos');
-      }
-
-      alert("Sincronização realizada com sucesso! A página será atualizada.");
-      window.location.reload();
+      // Substituir alert() por Modal Glassmorphism de Sucesso
+      const modalHtml = `
+      <div id="glass-success-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.4s ease;">
+          <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); max-width: 400px; width: 90%;">
+              <div style="font-size: 4rem; color: #f59e0b; margin-bottom: 20px; animation: bounceIn 0.8s cubic-bezier(0.28, 0.84, 0.42, 1);">🪙</div>
+              <h2 style="color: white; font-size: 1.8rem; margin-bottom: 10px; font-weight: 700;">Sucesso!</h2>
+              <p style="color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 25px;">Sincronização concluída perfeitamente.</p>
+              <div style="background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); padding: 10px 20px; border-radius: 50px; display: inline-block; margin-bottom: 30px;">
+                  <strong style="color: #fbbf24; font-size: 1.2rem;">+${bonusCoins > 0 ? bonusCoins : '50'} CortaCoins</strong>
+              </div>
+              <button id="btn-close-glass-modal" style="display: block; width: 100%; background: var(--color-primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s, background 0.2s;">Continuar</button>
+          </div>
+      </div>
+      <style>
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+          #btn-close-glass-modal:hover { transform: translateY(-2px); background: #3371d6; }
+      </style>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      document.getElementById('btn-close-glass-modal').addEventListener('click', () => {
+          window.location.reload();
+      });
       
     } catch (err) {
       alert("Erro ao salvar: " + err.message);
