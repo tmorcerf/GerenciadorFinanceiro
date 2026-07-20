@@ -150,13 +150,17 @@ window.GeminiService = (function() {
         });
         if (resBkp.ok) {
           var jsonBkp = await resBkp.json();
-          var textBkp = (jsonBkp.candidates && jsonBkp.candidates[0] &&
-                         jsonBkp.candidates[0].content && jsonBkp.candidates[0].content.parts &&
-                         jsonBkp.candidates[0].content.parts[0] &&
-                         jsonBkp.candidates[0].content.parts[0].text) || '{}';
-          
-          var matchBkp = textBkp.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-          try { return JSON.parse(matchBkp ? matchBkp[0] : '{}'); } catch(e2) { /* cai no erro original */ }
+          var partsBkp = (jsonBkp.candidates && jsonBkp.candidates[0] &&
+                          jsonBkp.candidates[0].content && jsonBkp.candidates[0].content.parts) || [];
+          var rawBkp = '';
+          for (var bi = 0; bi < partsBkp.length; bi++) {
+            var pt = partsBkp[bi].text || '';
+            if (pt && (pt.trim().startsWith('{') || pt.trim().startsWith('[') || pt.includes('```'))) { rawBkp = pt; break; }
+          }
+          if (!rawBkp && partsBkp.length) rawBkp = partsBkp[partsBkp.length-1].text || '{}';
+          rawBkp = rawBkp.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/i,'').trim();
+          var mBkp = rawBkp.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+          try { return JSON.parse(mBkp ? mBkp[0] : rawBkp); } catch(e2) { /* cai no erro original */ }
         }
       }
 
@@ -167,22 +171,42 @@ window.GeminiService = (function() {
     }
 
     var json = await res.json();
-    var text = (json.candidates && json.candidates[0] &&
-                json.candidates[0].content && json.candidates[0].content.parts &&
-                json.candidates[0].content.parts[0] &&
-                json.candidates[0].content.parts[0].text) || '{}';
+
+    // Gemini 3 pode ter multiplos parts (pensamento interno + resposta).
+    // Iteramos todos e pegamos o que tem texto JSON.
+    var rawText = '';
+    var parts = (json.candidates && json.candidates[0] &&
+                 json.candidates[0].content && json.candidates[0].content.parts) || [];
+    for (var pi = 0; pi < parts.length; pi++) {
+      var partText = parts[pi].text || '';
+      // Preferimos o part que parece JSON (começa com { ou [, ou tem ```json)
+      if (partText && (partText.trim().startsWith('{') || partText.trim().startsWith('[') || partText.includes('```'))) {
+        rawText = partText;
+        break;
+      }
+    }
+    // Fallback: último part com texto qualquer
+    if (!rawText) {
+      for (var pi2 = parts.length - 1; pi2 >= 0; pi2--) {
+        if (parts[pi2].text) { rawText = parts[pi2].text; break; }
+      }
+    }
+    var text = rawText || '{}';
+
+    // Remove markdown code fences: ```json ... ``` ou ``` ... ```
+    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
 
     // Parser robusto: tenta em cascata para lidar com saidas do Gemini 3
     function _tryParse(str) {
       // 1. Parse direto
       try { return JSON.parse(str); } catch(e1) {}
-      // 2. Extrai o maior bloco JSON com regex
+      // 2. Extrai o maior bloco JSON (greedy — do primeiro { ao ultimo })
       var m = str.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
       if (m) { try { return JSON.parse(m[0]); } catch(e2) {} }
-      // 3. Tenta o primeiro objeto encontrado (nao o maior)
-      var m2 = str.match(/\{[^]*?\}/);
-      if (m2) { try { return JSON.parse(m2[0]); } catch(e3) {} }
-      console.error('[GeminiService] Nao foi possivel parsear JSON. Primeiros 500 chars:', str.substring(0, 500));
+      // 3. Tenta extrair JSON sem o ultimo elemento truncado (recuperacao de truncamento)
+      var truncFix = str.replace(/,?\s*\{[^}]*$/, ']}}');
+      try { return JSON.parse(truncFix); } catch(e3) {}
+      console.error('[GeminiService] Nao foi possivel parsear JSON.\nPrimeiros 800 chars:', str.substring(0, 800));
       return { status: 'error', message: 'Resposta da IA nao e JSON valido.' };
     }
     return _tryParse(text);
