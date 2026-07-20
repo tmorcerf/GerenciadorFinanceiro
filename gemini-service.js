@@ -120,6 +120,7 @@ window.GeminiService = (function() {
       systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: {
         temperature: 0.1,
+        maxOutputTokens: 8192,
         responseMimeType: 'application/json'
       }
     };
@@ -376,6 +377,7 @@ window.GeminiService = (function() {
       '5. REGRAS DE PARCELAMENTO (Installments): Busque ativamente na descrição por indicadores de parcelamento nos formatos: "1/6", "01/06", "2/12", "1-6", "01-06", "01 de 06", "parc 1/6". ' +
       'Se encontrar, remova o indicador da descrição original e preencha "parcela_atual" e "total_parcelas", marcando "is_parcelado": true.\n' +
       '6. Coloque o campo "analise_ia" NO INÍCIO do JSON, para "pensar em voz alta" e racionalizar sua análise antes de gerar o array de dados, garantindo alta precisão.\n' +
+      '7. CRÍTICO: O array "data" DEVE conter APENAS as transações enviadas na tag <novas_transacoes>. SOB NENHUMA HIPÓTESE inclua as transações do histórico no resultado.\n' +
       'RETORNE EXATAMENTE NESTE FORMATO JSON:\n' +
       '{\n' +
       '  "status": "success",\n' +
