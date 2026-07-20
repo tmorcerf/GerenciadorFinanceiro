@@ -490,9 +490,68 @@ function stopAIThinking() {
       analiseExtracao = json.analise_ia || "";
 
       stopAIThinking();
-      addFeedback(`Sucesso! Extraídas ${dadosExtrato.length} transações.`, 'success');
-      // M5: Exibe resumo da IA para o usuário
-      if (analiseExtracao) addFeedback(`🤖 IA: "${analiseExtracao}"`, 'ai');
+      addFeedback(`Sucesso! Extra\u00eddas ${dadosExtrato.length} transa\u00e7\u00f5es.`, 'success');
+      // M5: Exibe resumo da IA para o usu\u00e1rio
+      if (analiseExtracao) addFeedback(`\uD83E\uDD16 IA: "${analiseExtracao}"`, 'ai');
+
+      // CARD DE RESUMO DA EXTRAÇÃO no painel do Ninja
+      (function _renderCardResumo() {
+        const feedEl = document.getElementById('importFeedbackConsole');
+        if (!feedEl) return;
+        const nomeConta  = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Desconhecida').trim();
+        const banco      = String(cabecalho['banco'] || '').trim();
+        const saldoIni   = cabecalho.saldo_inicial;
+        const saldoFin   = cabecalho.saldo_final;
+        const vencFatura = cabecalho['Vencimento da fatura'] || null;
+        const datas = dadosExtrato.map(function(l){ return parseDataBR(l.data); }).filter(function(t){ return t>0; }).sort(function(a,b){return a-b;});
+        const dtMin = datas.length ? new Date(datas[0]).toLocaleDateString('pt-BR') : '\u2014';
+        const dtMax = datas.length ? new Date(datas[datas.length-1]).toLocaleDateString('pt-BR') : '\u2014';
+        var somaLancs = dadosExtrato.reduce(function(acc,l){ return acc+(parseFloat(l.valor)||0); }, 0);
+        var saldoCalc = (saldoIni!==null&&saldoIni!==undefined) ? (parseFloat(saldoIni)+somaLancs) : null;
+        var diff = (saldoFin!==null&&saldoFin!==undefined&&saldoCalc!==null) ? Math.abs(saldoCalc-parseFloat(saldoFin)) : null;
+        var bateu = diff!==null && diff<0.01;
+        var clrSaldo = diff===null ? '#f59e0b' : (bateu ? '#10b981' : '#ef4444');
+        var iconSaldo = diff===null ? '\u26a0\ufe0f' : (bateu ? '\u2705' : '\u274c');
+        var msgSaldo  = diff===null ? 'Saldo n\u00e3o informado' : (bateu ? 'Saldo conferido' : 'Diferen\u00e7a: R$ '+diff.toFixed(2));
+        var fmtVal = function(v){ return (v!==null&&v!==undefined) ? 'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '\u2014'; };
+        var old = document.getElementById('extrato-resumo-card');
+        if (old) old.remove();
+        var card = document.createElement('div');
+        card.id = 'extrato-resumo-card';
+        card.innerHTML =
+          '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;margin-top:8px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.07);">' +
+              '<i class="fas fa-university" style="color:var(--color-accent);font-size:1rem;"></i>' +
+              '<div><div style="font-weight:700;color:var(--text-primary);font-size:0.88rem;">'+nomeConta+'</div>' +
+              (banco ? '<div style="color:var(--text-muted);font-size:0.73rem;">'+banco+'</div>' : '') +
+              '</div></div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+              '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:8px;">' +
+                '<div style="color:var(--text-muted);font-size:0.7rem;margin-bottom:2px;">Saldo Inicial</div>' +
+                '<div style="color:var(--text-primary);font-weight:600;font-size:0.82rem;">'+fmtVal(saldoIni)+'</div></div>' +
+              '<div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:8px;">' +
+                '<div style="color:var(--text-muted);font-size:0.7rem;margin-bottom:2px;">Saldo Final</div>' +
+                '<div style="color:var(--text-primary);font-weight:600;font-size:0.82rem;">'+fmtVal(saldoFin)+'</div></div>' +
+            '</div>' +
+            '<div style="border-radius:10px;padding:8px;margin-bottom:8px;display:flex;align-items:center;gap:8px;border:1px solid '+clrSaldo+'44;background:'+clrSaldo+'11;">' +
+              '<span style="font-size:1rem;">'+iconSaldo+'</span>' +
+              '<div><div style="color:'+clrSaldo+';font-weight:600;font-size:0.8rem;">'+msgSaldo+'</div>' +
+              (saldoCalc!==null ? '<div style="color:var(--text-muted);font-size:0.7rem;">Calculado: '+fmtVal(saldoCalc)+'</div>' : '') +
+              '</div></div>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;font-size:0.79rem;">' +
+              '<div style="display:flex;justify-content:space-between;">' +
+                '<span style="color:var(--text-muted);"><i class="fas fa-calendar-alt" style="width:14px;margin-right:4px;"></i>Per\u00edodo</span>' +
+                '<span style="color:var(--text-primary);font-weight:500;">'+dtMin+' \u2192 '+dtMax+'</span></div>' +
+              '<div style="display:flex;justify-content:space-between;">' +
+                '<span style="color:var(--text-muted);"><i class="fas fa-list" style="width:14px;margin-right:4px;"></i>Transa\u00e7\u00f5es</span>' +
+                '<span style="color:var(--color-accent);font-weight:700;">'+dadosExtrato.length+'</span></div>' +
+              (vencFatura ? '<div style="display:flex;justify-content:space-between;">' +
+                '<span style="color:var(--text-muted);"><i class="fas fa-credit-card" style="width:14px;margin-right:4px;"></i>Vencimento</span>' +
+                '<span style="color:#a78bfa;font-weight:500;">'+vencFatura+'</span></div>' : '') +
+            '</div>' +
+          '</div>';
+        feedEl.appendChild(card);
+      })();
 
       if (dadosExtrato.length === 0) {
         throw new Error("Nenhuma transação encontrada no arquivo.");
