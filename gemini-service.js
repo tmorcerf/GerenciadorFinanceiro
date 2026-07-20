@@ -172,8 +172,20 @@ window.GeminiService = (function() {
                 json.candidates[0].content.parts[0] &&
                 json.candidates[0].content.parts[0].text) || '{}';
 
-    var match = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-    return JSON.parse(match ? match[0] : '{}');
+    // Parser robusto: tenta em cascata para lidar com saidas do Gemini 3
+    function _tryParse(str) {
+      // 1. Parse direto
+      try { return JSON.parse(str); } catch(e1) {}
+      // 2. Extrai o maior bloco JSON com regex
+      var m = str.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+      if (m) { try { return JSON.parse(m[0]); } catch(e2) {} }
+      // 3. Tenta o primeiro objeto encontrado (nao o maior)
+      var m2 = str.match(/\{[^]*?\}/);
+      if (m2) { try { return JSON.parse(m2[0]); } catch(e3) {} }
+      console.error('[GeminiService] Nao foi possivel parsear JSON. Primeiros 500 chars:', str.substring(0, 500));
+      return { status: 'error', message: 'Resposta da IA nao e JSON valido.' };
+    }
+    return _tryParse(text);
   }
 
   // 1. IA EXTRATORA (O Operário de Dados)
@@ -381,14 +393,14 @@ window.GeminiService = (function() {
       '4. Valores negativos = despesas, positivos = receitas.\n' +
       '5. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
       'Se encontrar: is_parcelado=true, preencha parcela_atual e total_parcelas, remova o indicador da descricao_limpa.\n' +
-      '6. Campo "analise_ia" NO INÍCIO do JSON — máx. 2 frases resumindo o raciocínio.\n' +
-      '7. CRÍTICO: array "data" contém SOMENTE as transações de <novas_transacoes>. NUNCA inclua o histórico na saída.\n' +
-      'RETORNE EXATAMENTE:\n' +
-      '{"status":"success","analise_ia":"[máx 2 frases]","data":[{"id":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
+      '6. Campo "analise_ia" NO INICIO do JSON — MAX 1 FRASE CURTA, SEM QUEBRAS DE LINHA, sem acento.\n' +
+      '7. CRITICO: array "data" contem EXATAMENTE ' + transacoes.length + ' elementos — um para cada item de <novas_transacoes>. PROIBIDO incluir historico.\n' +
+      '8. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
+      'RETORNE EXATAMENTE (com ' + transacoes.length + ' itens no array data):\n' +
+      '{"status":"success","analise_ia":"frase unica aqui","data":[{"id":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
       '</instrucoes_finais>';
 
-    // Categorizador: thinking medium (semantica complexa, mas não precisa do high pago)
-    return await _chamarGemini(MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192, _thinkingLevel: 'medium' });
+    return await _chamarGemini(MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });
   }
 
   // CATEGORIZAR PRODUTO INDIVIDUAL (NF-e Scanner)
