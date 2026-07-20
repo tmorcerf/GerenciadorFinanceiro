@@ -65,13 +65,14 @@ window.IACategorizador = (function() {
       '<instrucoes_finais>\n' +
       '1. Priorize <historico_conta_atual_360d> e <vocabulario_usuario> para decidir a categoria.\n' +
       '2. Se a descrição for semanticamente similar ao histórico, herde a categoria.\n' +
-      '3. Use APENAS categorias desta lista: ' + JSON.stringify(categoriasTree) + '.\n' +
-      '4. Valores negativos = despesas, positivos = receitas.\n' +
-      '5. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
+      '3. Se NÃO houver histórico, aja como um cientista de dados brilhante: analise a descrição, estabeleça padrões lógicos (ex: "Brasilprev" -> Previdência/Seguro, "Energisa" -> Luz, "Estorno" -> mesma categoria do débito) e deduza a melhor categoria.\n' +
+      '4. Use APENAS categorias desta lista: ' + JSON.stringify(categoriasTree) + '.\n' +
+      '5. Valores negativos = despesas, positivos = receitas.\n' +
+      '6. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
       'Se encontrar: is_parcelado=true, preencha parcela_atual e total_parcelas, remova o indicador da descricao_limpa.\n' +
-      '6. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cmico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
-      '7. CRITICO: array "data" contem EXATAMENTE ' + transacoes.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir historico.\n' +
-      '8. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
+      '7. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cmico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
+      '8. CRITICO: array "data" contem EXATAMENTE ' + transacoes.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir historico.\n' +
+      '9. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
       'RETORNE EXATAMENTE (com ' + transacoes.length + ' itens no array data):\n' +
       '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"...","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
       '</instrucoes_finais>';
