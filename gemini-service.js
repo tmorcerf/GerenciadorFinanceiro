@@ -151,7 +151,14 @@ window.GeminiService = (function() {
                          jsonBkp.candidates[0].content && jsonBkp.candidates[0].content.parts &&
                          jsonBkp.candidates[0].content.parts[0] &&
                          jsonBkp.candidates[0].content.parts[0].text) || '{}';
-          var cleanBkp = textBkp.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+          
+          var cleanBkp = textBkp.replace(/```json/g, '').replace(/```/g, '').trim();
+          var sBkp = cleanBkp.indexOf('{'), aBkp = cleanBkp.indexOf('[');
+          var eSBkp = cleanBkp.lastIndexOf('}'), eABkp = cleanBkp.lastIndexOf(']');
+          var startBkp = (sBkp !== -1 && (aBkp === -1 || sBkp < aBkp)) ? sBkp : aBkp;
+          var endBkp = (startBkp === sBkp) ? eSBkp : eABkp;
+          if (startBkp !== -1 && endBkp > startBkp) cleanBkp = cleanBkp.substring(startBkp, endBkp + 1);
+          
           return JSON.parse(cleanBkp);
         }
       }
@@ -168,7 +175,13 @@ window.GeminiService = (function() {
                 json.candidates[0].content.parts[0] &&
                 json.candidates[0].content.parts[0].text) || '{}';
 
-    var clean = text.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
+    var clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    var s = clean.indexOf('{'), a = clean.indexOf('[');
+    var eS = clean.lastIndexOf('}'), eA = clean.lastIndexOf(']');
+    var startIdx = (s !== -1 && (a === -1 || s < a)) ? s : a;
+    var endIdx = (startIdx === s) ? eS : eA;
+    if (startIdx !== -1 && endIdx > startIdx) clean = clean.substring(startIdx, endIdx + 1);
+
     return JSON.parse(clean);
   }
 
