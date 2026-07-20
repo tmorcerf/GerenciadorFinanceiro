@@ -69,7 +69,7 @@ window.GeminiService = (function() {
   }
 
   // Chamada base para a API Gemini REST
-  async function _chamarGemini(model, systemPrompt, userContent, inlineData) {
+  async function _chamarGemini(model, systemPrompt, userContent, inlineData, opts) {
     if (localStorage.getItem('gemini_mock') === 'true') {
       console.warn('[GeminiService] ⚠️ MODO MOCK ATIVADO! Nenhuma chamada real à IA foi feita.');
       await new Promise(r => setTimeout(r, 1000));
