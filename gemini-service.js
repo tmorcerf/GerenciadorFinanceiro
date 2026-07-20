@@ -114,22 +114,17 @@ window.GeminiService = (function() {
       });
     }
 
-    // Temperatura: Gemini 3 requer 1.0 (padrão). Valores < 1.0 causam looping!
-    // thinking_level: injetado via opts para controle de custo/latência por agente
-    var maxTok      = opts && opts._maxOutputTokens ? opts._maxOutputTokens : 8192;
-    var thinkLevel  = opts && opts._thinkingLevel   ? opts._thinkingLevel   : 'low';
-
-    var genConfig = {
-      maxOutputTokens: maxTok,
-      responseMimeType: 'application/json',
-      thinking_level: thinkLevel
-      // temperature: NÃO definir — usar padrão 1.0 do Gemini 3
-    };
+    // Temperatura: Gemini 3 requer padrão 1.0. Valores < 1.0 causam looping!
+    var maxTok = opts && opts._maxOutputTokens ? opts._maxOutputTokens : 8192;
 
     var body = {
       contents: [{ role: 'user', parts: parts }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: genConfig
+      generationConfig: {
+        maxOutputTokens: maxTok,
+        responseMimeType: 'application/json'
+        // temperature: NÃO definir — padrão 1.0 do Gemini 3
+      }
     };
 
     var url = API_BASE + '/' + model + ':generateContent?key=' + apiKey;
