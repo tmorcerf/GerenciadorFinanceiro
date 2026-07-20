@@ -496,33 +496,31 @@ function stopAIThinking() {
       const _df = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
       let contaMatch = (_df && _df.contas) ? _df.contas.find(c => c.nome.toLowerCase() === contaDoExtrato) : null;
       
-      if (!contaMatch && contaDoExtrato !== '') {
-          try {
-            // saldo_inicial null = IA não encontrou; 0 pode ser válido mas improvável como saldo de abertura
-            const saldoInicialBruto = cabecalho ? cabecalho.saldo_inicial : null;
-            const saldoFinalBruto   = cabecalho ? cabecalho.saldo_final   : null;
-            const saldoSugerido  = (saldoInicialBruto !== null && saldoInicialBruto !== undefined) ? saldoInicialBruto : null;
-            const saldoFinalInfo = (saldoFinalBruto   !== null && saldoFinalBruto   !== undefined) ? saldoFinalBruto   : null;
-            const bancoSugerido  = (cabecalho && cabecalho.banco) ? String(cabecalho.banco).trim() : '';
-            const nomeDetectado  = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Conta Desconhecida').trim();
-            const resultado = await abrirModalConta(nomeDetectado, saldoSugerido, saldoFinalInfo, bancoSugerido);
+      try {
+        // saldo_inicial null = IA não encontrou; 0 pode ser válido mas improvável como saldo de abertura
+        const saldoInicialBruto = cabecalho ? cabecalho.saldo_inicial : null;
+        const saldoFinalBruto   = cabecalho ? cabecalho.saldo_final   : null;
+        const saldoSugerido  = (saldoInicialBruto !== null && saldoInicialBruto !== undefined) ? saldoInicialBruto : null;
+        const saldoFinalInfo = (saldoFinalBruto   !== null && saldoFinalBruto   !== undefined) ? saldoFinalBruto   : null;
+        const bancoSugerido  = (cabecalho && cabecalho.banco) ? String(cabecalho.banco).trim() : '';
+        const nomeDetectado  = String(cabecalho['Nome da conta'] || cabecalho['conta'] || 'Conta Desconhecida').trim();
+        const resultado = await abrirModalConta(nomeDetectado, saldoSugerido, saldoFinalInfo, bancoSugerido);
 
-            if (resultado.existente) {
-              // Usuário vinculou a uma conta já cadastrada
-              contaMatch = resultado.conta;
-              addFeedback(`Extrato vinculado à conta existente: "${contaMatch.nome}"`, 'success');
-            } else {
-              // Usuário criou uma nova conta
-              if (!window.DB || !window.DB.salvarConta) throw new Error('Erro ao acessar DB.salvarConta.');
-              await window.DB.salvarConta(resultado.conta);
-              if (!_df.contas) _df.contas = [];
-              _df.contas.push(resultado.conta);
-              contaMatch = resultado.conta;
-              addFeedback(`Nova conta "${contaMatch.nome}" (${contaMatch.banco}) criada com sucesso!`, 'success');
-            }
-          } catch (modalErr) {
-            throw new Error(modalErr.message || 'Operação de conta cancelada.');
-          }
+        if (resultado.existente) {
+          // Usuário vinculou a uma conta já cadastrada
+          contaMatch = resultado.conta;
+          addFeedback(`Extrato vinculado à conta existente: "${contaMatch.nome}"`, 'success');
+        } else {
+          // Usuário criou uma nova conta
+          if (!window.DB || !window.DB.salvarConta) throw new Error('Erro ao acessar DB.salvarConta.');
+          await window.DB.salvarConta(resultado.conta);
+          if (!_df.contas) _df.contas = [];
+          _df.contas.push(resultado.conta);
+          contaMatch = resultado.conta;
+          addFeedback(`Nova conta "${contaMatch.nome}" (${contaMatch.banco}) criada com sucesso!`, 'success');
+        }
+      } catch (modalErr) {
+        throw new Error(modalErr.message || 'Operação de conta cancelada.');
       }
 
       let isCartaoCredito = contaMatch && contaMatch.tipo === 'Cartão de Crédito';
