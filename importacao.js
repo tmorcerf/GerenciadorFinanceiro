@@ -279,7 +279,7 @@ function stopAIThinking() {
       }
 
       // Preencher descrição
-      if (desc) desc.innerHTML = `A IA identificou <strong>"${nomeDetectado}"</strong> no extrato.<br>Confirme a qual conta ele pertence:`;
+      if (desc) desc.innerHTML = `Identificamos o extrato da conta <strong>${nomeDetectado}</strong>.`;
 
       // Popular dropdown de contas existentes
       const _dfModal = typeof dadosFinanceiros !== 'undefined' ? dadosFinanceiros : window.dadosFinanceiros;
@@ -322,7 +322,42 @@ function stopAIThinking() {
 
       // Inicia no modo Vincular se há contas, senão Criar
       const haContas = _dfModal && _dfModal.contas && _dfModal.contas.length > 0;
-      window._setModoContaImport(haContas ? 'vincular' : 'criar');
+      
+      // Verifica se a IA encontrou um match exato
+      let matchEncontrado = false;
+      if (haContas && nomeDetectado) {
+          matchEncontrado = _dfModal.contas.some(c => c.nome.toLowerCase() === nomeDetectado.toLowerCase());
+      }
+      
+      const badgeNovaConta = document.getElementById('modal-nova-conta-alerta-nova');
+      if (!badgeNovaConta) {
+          const divAlerta = document.createElement('div');
+          divAlerta.id = 'modal-nova-conta-alerta-nova';
+          divAlerta.style.background = 'rgba(245, 158, 11, 0.15)';
+          divAlerta.style.border = '1px solid #f59e0b';
+          divAlerta.style.color = '#f59e0b';
+          divAlerta.style.padding = '8px 12px';
+          divAlerta.style.borderRadius = '8px';
+          divAlerta.style.fontSize = '0.85rem';
+          divAlerta.style.marginBottom = '15px';
+          divAlerta.style.display = 'none';
+          document.getElementById('nova-conta-bloco-criar').prepend(divAlerta);
+      }
+      
+      const badgeAtualizado = document.getElementById('modal-nova-conta-alerta-nova');
+      if (badgeAtualizado) {
+          if (!haContas) {
+              badgeAtualizado.style.display = 'block';
+              badgeAtualizado.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Base zerada.</strong> Criando sua primeira conta no sistema.';
+          } else if (!matchEncontrado) {
+              badgeAtualizado.style.display = 'block';
+              badgeAtualizado.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <strong>Atenção:</strong> A IA não encontrou nenhuma conta com este nome exato na sua base. Verifique se deseja criar uma nova ou se prefere vincular a uma existente.';
+          } else {
+              badgeAtualizado.style.display = 'none';
+          }
+      }
+      
+      window._setModoContaImport((haContas && matchEncontrado) ? 'vincular' : 'criar');
 
       // Troca a exibição: Esconde o "Aguardando arquivo..." e mostra o form
       if (feedEl) feedEl.style.display = 'none';
@@ -745,158 +780,144 @@ function stopAIThinking() {
           
           let payloadConciliacao = null; 
 
-          if (!isCartaoCredito && contaMatch) {
+          if (!isCartaoCredito) {
               const parseVal = (v) => parseFloat(String(v).replace(/[^\d,\.-]/g, '').replace(',', '.')) || 0;
-              const calcularSaldoAte = (dataStr) => {
-                  let timeTarget = parseDataBR(dataStr);
-                  let tsDesde = cTimeDesde; 
-                  if (tsDesde === 0) return 0;
-                  
-                  let s_inicial = contaMatch.saldo_inicial || 0;
-                  let soma = baseLocal.reduce((acc, loc) => {
-                      let locConta = String(loc.conta).trim().toLowerCase();
-                      let locTime = parseDataBR(loc.data);
-                      if (locConta === contaDoExtrato && locTime >= tsDesde && locTime <= timeTarget) {
-                          return acc + parseVal(loc.valor);
-                      }
-                      return acc;
-                  }, 0);
-                  return s_inicial + soma;
-              };
               
               let extSaldoIni = (cabecalhoAtual && cabecalhoAtual.saldo_inicial !== undefined && cabecalhoAtual.saldo_inicial !== null) ? parseVal(cabecalhoAtual.saldo_inicial) : null;
               let extSaldoFim = (cabecalhoAtual && cabecalhoAtual.saldo_final !== undefined && cabecalhoAtual.saldo_final !== null) ? parseVal(cabecalhoAtual.saldo_final) : null;
               
-              let cenTitle = ""; let cenMsg = ""; let cenColor = "";
-              let cAteStr = contaMatch.conciliado_ate;
-              let cDesdeStr = contaMatch.conciliado_desde;
-              let maxDataExtratoStr = new Date(maxTime).toLocaleDateString('pt-BR');
-              let minDataExtratoStr = new Date(minTime).toLocaleDateString('pt-BR');
+              let perInicio = (cabecalhoAtual && cabecalhoAtual.periodo_inicio) ? cabecalhoAtual.periodo_inicio : new Date(minTime).toLocaleDateString('pt-BR');
+              let perFim = (cabecalhoAtual && cabecalhoAtual.periodo_fim) ? cabecalhoAtual.periodo_fim : new Date(maxTime).toLocaleDateString('pt-BR');
               
-              if (cTimeAte === 0) {
-                  // CENÁRIO A: MARCO ZERO
-                  if (extSaldoIni !== null && extSaldoFim !== null) {
-                      let somaExtrato = dadosExtrato.reduce((acc, t) => acc + parseVal(t.valor), 0);
-                      if (Math.abs((extSaldoIni + somaExtrato) - extSaldoFim) <= 0.05) {
-                          cenTitle = `<i class="fas fa-flag"></i> Marco Zero Estabelecido`;
-                          cenMsg = `Conciliação inicial da conta verificada matematicamente com sucesso.<br><br><b>Período:</b> ${minDataExtratoStr} a ${maxDataExtratoStr}<br><b>Saldo Inicial:</b> R$ ${extSaldoIni.toFixed(2)}`;
-                          cenColor = '#10b981';
-                          payloadConciliacao = { acao: 'marco_zero', desde: minDataExtratoStr, ate: maxDataExtratoStr, saldo_inicial: extSaldoIni };
-                      } else {
-                          cenTitle = `<i class="fas fa-exclamation-triangle"></i> Atenção no Marco Zero`;
-                          cenMsg = `O saldo inicial e final lidos do extrato não batem com a soma das transações. A conciliação não será travada para evitar falhas futuras.`;
-                          cenColor = '#ef4444';
-                      }
+              let isFechamentoOficial = false;
+              let diasFaltantesCadeado = 0;
+              let statusFechamentoTxt = "Sincronização Parcial";
+              
+              // Regra do Cadeado Temporal de 5 Dias
+              if (!isCartaoCredito) {
+                  let maxTimeObj = new Date(maxTime);
+                  let dataLiberacao = new Date(maxTimeObj.getFullYear(), maxTimeObj.getMonth() + 1, 5);
+                  dataLiberacao.setHours(0,0,0,0);
+                  let hoje = new Date();
+                  hoje.setHours(0,0,0,0);
+                  
+                  if (hoje >= dataLiberacao) {
+                      isFechamentoOficial = true;
+                      statusFechamentoTxt = "Fechamento Oficial";
                   } else {
-                      cenTitle = `<i class="fas fa-info-circle"></i> Marco Zero Pendente`;
-                      cenMsg = `Extrato sem saldo detectado pela IA. As transações serão importadas, mas a conta ainda não terá uma âncora de conciliação.`;
-                      cenColor = '#f59e0b';
+                      diasFaltantesCadeado = Math.ceil((dataLiberacao - hoje) / (1000 * 60 * 60 * 24));
                   }
               } else {
-                  // TEM CONCILIAÇÃO
-                  if (maxTime > cTimeAte) {
-                      // Expansão pro FUTURO ou Buraco
-                      let isAdjacenteFrente = (minTime <= cTimeAte + 86400000);
-                      if (isAdjacenteFrente) {
-                          if (extSaldoFim !== null) {
-                              let somaFrente = faltantes.filter(f => parseDataBR(f.data) >= cTimeAte).reduce((acc, f) => acc + parseVal(f.valor), 0);
-                              let saldoProjetado = calcularSaldoAte(cAteStr) + somaFrente;
-                              if (Math.abs(saldoProjetado - extSaldoFim) <= 0.05) {
-                                  cenTitle = `<i class="fas fa-link"></i> Conciliação Expandida (Para Frente)`;
-                                  cenMsg = `O extrato é contínuo e o saldo matemático bateu perfeitamente!<br><br><b>Novo Período Conciliado:</b> ${cDesdeStr} até ${maxDataExtratoStr}`;
-                                  cenColor = '#10b981';
-                                  payloadConciliacao = { acao: 'expansao_frente', ate: maxDataExtratoStr };
-                              } else {
-                                  cenTitle = `<i class="fas fa-exclamation-triangle"></i> Divergência Matemática (Para Frente)`;
-                                  cenMsg = `O extrato é contínuo, mas o Saldo Final lido do arquivo (R$ ${extSaldoFim.toFixed(2)}) não bate com a soma matemática do sistema (R$ ${saldoProjetado.toFixed(2)}). As transações serão importadas sem expandir a conciliação.`;
-                                  cenColor = '#ef4444';
-                              }
-                          } else {
-                              cenTitle = `<i class="fas fa-exclamation-circle"></i> Extrato sem Saldo Final`;
-                              cenMsg = `Não foi possível validar a expansão de conciliação pois a IA não encontrou o saldo final no arquivo.`;
-                              cenColor = '#f59e0b';
-                          }
-                      } else {
-                          cenTitle = `<i class="fas fa-unlink"></i> Importação Desconexa (Buraco Temporal)`;
-                          cenMsg = `Existe um salto temporal entre a última conciliação (${cAteStr}) e este extrato (${minDataExtratoStr}). Os lançamentos serão importados como Não Conciliados.`;
-                          cenColor = '#f59e0b';
-                      }
-                  } else if (cTimeDesde > 0 && minTime < cTimeDesde) {
-                      // Expansão pro PASSADO
-                      let isAdjacenteTras = (maxTime >= cTimeDesde - 86400000);
-                      if (isAdjacenteTras) {
-                          if (extSaldoIni !== null) {
-                              let somaTras = faltantes.filter(f => parseDataBR(f.data) <= cTimeDesde).reduce((acc, f) => acc + parseVal(f.valor), 0);
-                              if (Math.abs((extSaldoIni + somaTras) - (contaMatch.saldo_inicial || 0)) <= 0.05) {
-                                  cenTitle = `<i class="fas fa-link"></i> Conciliação Expandida (Para o Passado)`;
-                                  cenMsg = `O extrato é contínuo. O Saldo Inicial Oficial da conta foi reancorado!<br><br><b>Novo Período Conciliado:</b> ${minDataExtratoStr} até ${cAteStr}`;
-                                  cenColor = '#10b981';
-                                  payloadConciliacao = { acao: 'expansao_tras', desde: minDataExtratoStr, saldo_inicial: extSaldoIni };
-                              } else {
-                                  cenTitle = `<i class="fas fa-exclamation-triangle"></i> Divergência Matemática (Para o Passado)`;
-                                  cenMsg = `O extrato é contínuo, mas o Saldo Inicial lido não conecta matematicamente com o saldo base anterior da conta. A reancoragem foi abortada.`;
-                                  cenColor = '#ef4444';
-                              }
-                          } else {
-                              cenTitle = `<i class="fas fa-exclamation-circle"></i> Extrato sem Saldo Inicial`;
-                              cenMsg = `Não foi possível validar matematicamente a expansão pro passado pois a IA não encontrou o saldo inicial no arquivo.`;
-                              cenColor = '#f59e0b';
-                          }
-                      } else {
-                          cenTitle = `<i class="fas fa-unlink"></i> Importação Desconexa (Passado)`;
-                          cenMsg = `Existe um salto temporal entre este extrato (${maxDataExtratoStr}) e o marco inicial da conta (${cDesdeStr}).`;
-                          cenColor = '#f59e0b';
-                      }
-                  } else {
-                      // CENÁRIO E: Sobreposição Parcial — extrato sobrepõe período já conciliado
-                      // Valida se o miolo (parte já conciliada) bate com o extrato atual
-                      const parseVal = (v) => parseFloat(String(v).replace(/[^\d,\.\-]/g, '').replace(',', '.')) || 0;
-                      let mioloOk = true;
-                      let mioloConflitos = [];
-                      dadosExtrato.forEach(extLanc => {
-                          let tExt = parseDataBR(extLanc.data);
-                          // Só verifica lançamentos que caem dentro da zona já conciliada
-                          if (tExt >= cTimeDesde && tExt <= cTimeAte) {
-                              // Busca par nos lançamentos locais conciliados (ignorando a trava)
-                              let parLocal = baseLocal.find(loc => {
-                                  let tLoc = parseDataBR(loc.data);
-                                  let mesmaData = Math.abs(tExt - tLoc) <= 86400000; // 1 dia de margem
-                                  let mesmoValor = Math.abs(Math.abs(parseVal(extLanc.valor)) - Math.abs(parseVal(loc.valor))) < 0.001;
-                                  return String(loc.conta).trim().toLowerCase() === contaDoExtrato && mesmaData && mesmoValor;
-                              });
-                              if (!parLocal) {
-                                  mioloOk = false;
-                                  mioloConflitos.push(`${extLanc.data} | ${extLanc.descricao} | R$ ${parseVal(extLanc.valor).toFixed(2)}`);
-                              }
-                          }
-                      });
-
-                      if (!mioloOk) {
-                          cenTitle = `<i class="fas fa-exclamation-triangle"></i> ⚠️ Inconsistência no Período Conciliado!`;
-                          cenMsg = `O extrato atual diverge do que foi conciliado anteriormente nos seguintes lançamentos:<br><ul style="text-align:left;margin-top:6px">${mioloConflitos.slice(0,5).map(c => `<li>${c}</li>`).join('')}</ul>Os novos lançamentos serão importados, mas a semente NÃO será expandida.`;
-                          cenColor = '#ef4444';
-                      } else {
-                          cenTitle = `<i class="fas fa-check-double"></i> Sobreposição Validada`;
-                          cenMsg = `O miolo do período já conciliado conferiu com o extrato atual. Apenas os lançamentos inéditos serão incluídos.`;
-                          cenColor = '#6b7280';
-                      }
-                  }
+                  isFechamentoOficial = true; // Para cartão, simplificamos assumindo fechamento oficial por fatura
+                  statusFechamentoTxt = "Fechamento de Fatura";
               }
               
-              alertaConciliacao.innerHTML = `<strong>${cenTitle}</strong><br><div style="margin-top:8px; line-height: 1.4;">${cenMsg}</div>`;
-              alertaConciliacao.style.background = cenColor === '#10b981' ? 'rgba(16, 185, 129, 0.1)' : (cenColor === '#ef4444' ? 'rgba(239, 68, 68, 0.1)' : (cenColor === '#f59e0b' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(107, 114, 128, 0.1)'));
-              alertaConciliacao.style.color = cenColor;
-              alertaConciliacao.style.border = `1px solid ${cenColor}`;
+              if (extSaldoIni !== null && extSaldoFim !== null) {
+                  let somaExtrato = dadosExtrato.reduce((acc, t) => acc + parseVal(t.valor), 0);
+                  let diferencaAbsoluta = Math.abs((extSaldoIni + somaExtrato) - extSaldoFim);
+                  
+                  if (diferencaAbsoluta <= 0.05) {
+                      isValidadoMatematicamente = true;
+                      
+                      // Verifica se é o nascimento da conta (Marco Zero)
+                      const isNovaConta = (window.payloadAtual && window.payloadAtual.conta && window.payloadAtual.conta.existente === false);
+                      
+                      if (isFechamentoOficial) {
+                          if (isNovaConta) {
+                              cenTitle = `<i class="fas fa-flag-checkered"></i> Marco Zero Estabelecido`;
+                              cenMsg = `<div style="line-height:1.5;">
+                                  <strong>🎉 Parabéns! Você acaba de dar vida a esta conta.</strong><br>
+                                  A matemática inicial está perfeita. O cadeado temporal será ativado em <b>${perFim}</b>.<br><br>
+                                  <i class="fas fa-lightbulb" style="color:#f59e0b;"></i> <b>Dica Ninja:</b> O ideal é começar o "Marco Zero" importando extratos desde <b>01 de Janeiro</b> para ter o ano completo.<br>
+                                  Mas não se preocupe! Você pode criar o Marco Zero de hoje e, depois, importar extratos de meses retroativos livremente, o sistema encaixará a matemática no passado de forma mágica!
+                              </div>`;
+                          } else {
+                              cenTitle = `<i class="fas fa-lock"></i> Fechamento Oficial Validado`;
+                              cenMsg = `A matemática está perfeita. Este fechamento oficial travará edições anteriores a <b>${perFim}</b>.`;
+                          }
+                          cenColor = '#10b981'; // Verde
+                      } else {
+                          cenTitle = `<i class="fas fa-sync-alt"></i> Sincronização Parcial Validada`;
+                          cenMsg = `A matemática do período está perfeita. O fechamento oficial (que trava edições) só estará disponível a partir de <b>05 do mês seguinte</b> (faltam ${diasFaltantesCadeado} dias). Lançamentos manuais podem ser feitos livremente até lá.`;
+                          cenColor = '#3b82f6'; // Azul
+                      }
+                  } else {
+                      cenTitle = `<i class="fas fa-times-circle"></i> Falha na Validação Matemática`;
+                      cenMsg = `A soma das transações não bate com os saldos inicial e final informados no extrato. A diferença é de R$ ${diferencaAbsoluta.toFixed(2)}. Verifique o arquivo enviado.`;
+                      cenColor = '#ef4444'; // Vermelho
+                  }
+              } else {
+                  isMissingBalances = true;
+                  cenTitle = `<i class="fas fa-exclamation-triangle"></i> Saldos Não Identificados`;
+                  cenMsg = `O Ninja não conseguiu localizar os saldos inicial/final para validar rigorosamente este período. O processo continuará sem o selo de fechamento.`;
+                  cenColor = '#f59e0b'; // Amarelo
+              }
+
+              alertaConciliacao.innerHTML = `
+                  <div style="background: var(--bg-card); padding: 15px; border-radius: 12px; border: 2px solid ${cenColor}; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                          <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+                              <i class="fas fa-university" style="margin-right: 8px;"></i>${contaMatch ? contaMatch.nome : 'Conta Desconhecida'} / ${(cabecalhoAtual && cabecalhoAtual.instituicao) ? cabecalhoAtual.instituicao : 'Instituição'}
+                          </div>
+                          <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                              Período: <strong>${perInicio}</strong> até <strong>${perFim}</strong>
+                          </div>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 5px;">
+                          <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                              Saldo Inicial: <strong>${extSaldoIni !== null ? 'R$ ' + extSaldoIni.toFixed(2) : 'Não localizado'}</strong><br>
+                              Saldo Final: <strong>${extSaldoFim !== null ? 'R$ ' + extSaldoFim.toFixed(2) : 'Não localizado'}</strong>
+                          </div>
+                          <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                              <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: ${cenColor}; margin-bottom: 4px;">${statusFechamentoTxt}</div>
+                              <div style="background: ${cenColor}20; padding: 6px 14px; border-radius: 8px; color: ${cenColor}; font-weight: bold; font-size: 1.05rem;">
+                                  ${(isValidadoMatematicamente) ? '<i class="fas fa-check"></i> Validado [ S ]' : (isMissingBalances ? '<i class="fas fa-question"></i> Validado [ ? ]' : '<i class="fas fa-times"></i> Validado [ N ]')}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  <strong>${cenTitle}</strong><br><div style="margin-top:8px; line-height: 1.4; color: var(--text-secondary);">${cenMsg}</div>
+              `;
               
-              window.payloadConciliacaoGlobal = payloadConciliacao; // Variável global para a rotina de salvar!
+              alertaConciliacao.style.background = 'transparent';
+              alertaConciliacao.style.border = 'none';
+              alertaConciliacao.style.padding = '0';
+              
+              window.payloadConciliacaoGlobal = { 
+                  acao: isFechamentoOficial ? 'fechamento_rigido' : 'sincronizacao_parcial', 
+                  desde: perInicio, 
+                  ate: perFim, 
+                  saldo_inicial: extSaldoIni, 
+                  saldo_final: extSaldoFim, 
+                  validado: isValidadoMatematicamente 
+              };
+              
+              // Bloqueia APENAS se a matemática não bater e não for falta de dados
+              window._blockImport = (!isValidadoMatematicamente && !isMissingBalances);
+
           } else {
-              alertaConciliacao.innerHTML = `<strong><i class="fas fa-credit-card"></i> Cartão de Crédito ou Conta Nova</strong><br><div style="margin-top:5px;">Lançamentos de cartão ou de contas recém-criadas seguem a importação padrão sem expansão contínua.</div>`;
-              alertaConciliacao.style.background = 'rgba(59, 130, 246, 0.1)';
-              alertaConciliacao.style.color = '#3b82f6';
-              alertaConciliacao.style.border = '1px solid rgba(59, 130, 246, 0.2)';
+              alertaConciliacao.innerHTML = `
+                  <div style="background: var(--bg-card); padding: 15px; border-radius: 12px; border: 2px solid #3b82f6; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                          <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+                              <i class="fas fa-credit-card" style="margin-right: 8px;"></i>${contaMatch ? contaMatch.nome : 'Cartão de Crédito'}
+                          </div>
+                          <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                              Vencimento da fatura: <strong>${vencimentoFatura || 'Desconhecido'}</strong>
+                          </div>
+                      </div>
+                      <div style="font-size: 0.95rem; color: var(--text-secondary); padding-top: 5px;">
+                          O fechamento de cartão de crédito é feito fatura a fatura. Validação matemática implícita no valor da fatura.
+                      </div>
+                  </div>
+              `;
+              alertaConciliacao.style.background = 'transparent';
+              alertaConciliacao.style.border = 'none';
+              alertaConciliacao.style.padding = '0';
               
               let maxDataStr = new Date(maxTime).toLocaleDateString('pt-BR');
-              window.payloadConciliacaoGlobal = { acao: 'ignorar_matematica', ate: maxDataStr };
+              window.payloadConciliacaoGlobal = { acao: 'fechamento_cartao', ate: maxDataStr, vencimento: vencimentoFatura };
+              window._blockImport = false;
           }
 
           // CHAMADA À IA CONCILIADORA (Seção 3)
@@ -958,6 +979,14 @@ function stopAIThinking() {
           btnProsseguir.innerHTML = 'Prosseguir com a Importação <i class="fas fa-arrow-right"></i>';
           btnProsseguir.style.width = '100%';
           btnProsseguir.style.marginTop = '10px';
+          
+          if (window._blockImport) {
+              btnProsseguir.disabled = true;
+              btnProsseguir.style.opacity = '0.5';
+              btnProsseguir.style.cursor = 'not-allowed';
+              btnProsseguir.innerHTML = '<i class="fas fa-lock"></i> Importação Bloqueada (Matemática Inválida)';
+          }
+          
           confContainer.appendChild(btnProsseguir);
 
           btnProsseguir.addEventListener('click', () => {
@@ -1019,12 +1048,79 @@ function stopAIThinking() {
   });
 
 
+  window.linhasSelecionadas = window.linhasSelecionadas || [];
+  window.ultimoCliqueTrId = window.ultimoCliqueTrId || null;
+  window.todasLinhasRenderizadas = [];
+
+  window.abrirModalCustomizado = function(titulo, descricao) {
+      return new Promise((resolve) => {
+          const modal = document.getElementById('modal-nova-cat-sub');
+          const txtTitulo = document.getElementById('modal-nova-cat-sub-titulo');
+          const txtDesc = document.getElementById('modal-nova-cat-sub-desc');
+          const input = document.getElementById('modal-nova-cat-sub-input');
+          const btnOk = document.getElementById('modal-nova-cat-sub-confirm');
+          const btnCancel = document.getElementById('modal-nova-cat-sub-cancel');
+          
+          if(!modal) { resolve(prompt(descricao)); return; }
+          
+          txtTitulo.innerText = titulo;
+          txtDesc.innerText = descricao;
+          input.value = '';
+          modal.style.display = 'flex';
+          setTimeout(() => modal.style.opacity = '1', 10);
+          input.focus();
+          
+          const close = (val) => {
+              modal.style.opacity = '0';
+              setTimeout(() => modal.style.display = 'none', 200);
+              
+              btnOk.replaceWith(btnOk.cloneNode(true));
+              btnCancel.replaceWith(btnCancel.cloneNode(true));
+              input.replaceWith(input.cloneNode(true));
+              
+              resolve(val);
+          };
+          
+          btnCancel.onclick = () => close(null);
+          btnOk.onclick = () => close(input.value);
+          input.onkeydown = (e) => { if(e.key === 'Enter') close(input.value); if(e.key === 'Escape') close(null); };
+      });
+  };
+
+  window.selecionarLinha = function(e, trId) {
+      if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+      
+      const renderList = window.todasLinhasRenderizadas;
+      const thisIdx = renderList.indexOf(trId);
+      
+      if (e.shiftKey && window.ultimoCliqueTrId) {
+          const lastIdx = renderList.indexOf(window.ultimoCliqueTrId);
+          const start = Math.min(thisIdx, lastIdx);
+          const end = Math.max(thisIdx, lastIdx);
+          for (let i = start; i <= end; i++) {
+              if (!window.linhasSelecionadas.includes(renderList[i])) {
+                  window.linhasSelecionadas.push(renderList[i]);
+              }
+          }
+      } else if (e.ctrlKey) {
+          const loc = window.linhasSelecionadas.indexOf(trId);
+          if (loc > -1) window.linhasSelecionadas.splice(loc, 1);
+          else window.linhasSelecionadas.push(trId);
+          window.ultimoCliqueTrId = trId;
+      } else {
+          window.linhasSelecionadas = [trId];
+          window.ultimoCliqueTrId = trId;
+      }
+      renderizarTabelaUnificada();
+  };
+
   // FUNÇÃO UNIFICADA DE RENDERIZAÇÃO
   function renderizarTabelaUnificada() {
     let tbodyHtml = '';
+    window.todasLinhasRenderizadas = [];
 
     const dic = window.dicionarioGeral || {};
-    const catKeys = Object.keys(dic).sort();
+    const catKeys = Object.keys(dic).sort((a, b) => a.localeCompare(b));
     
     // Atualiza o quadro da IA
     const ninjaCatContainer = document.getElementById('ninja-categorizador-container');
@@ -1082,7 +1178,7 @@ function stopAIThinking() {
       let subcatOptions = '<option value="">-- Selecione --</option>';
       let subcatFound = false;
       if (t.categoria && dic[t.categoria]) {
-        dic[t.categoria].forEach(sub => {
+        dic[t.categoria].sort((a, b) => a.localeCompare(b)).forEach(sub => {
           const selected = (t.subcategoria === sub) ? 'selected' : '';
           if (selected) subcatFound = true;
           subcatOptions += `<option value="${sub}" ${selected}>${sub}</option>`;
@@ -1092,7 +1188,8 @@ function stopAIThinking() {
         subcatOptions += `<option value="${t.subcategoria}" selected>✨ ${t.subcategoria} (Nova)</option>`;
       }
       catOptions += `<option value="__NEW__" style="font-weight:bold; color:var(--color-accent);">➕ Adicionar Nova...</option>`;
-      if (t.categoria) {
+      const isTransferencia = t.categoria && ['transferência', 'transferencias', 'transferências', 'transferencia'].includes(String(t.categoria).toLowerCase());
+      if (t.categoria && !isTransferencia) {
          subcatOptions += `<option value="__NEW__" style="font-weight:bold; color:var(--color-accent);">➕ Adicionar Nova...</option>`;
       }
 
@@ -1104,8 +1201,14 @@ function stopAIThinking() {
       let opacityStr = t.ignorar ? '0.4' : '1';
       let decoStr = t.ignorar ? 'line-through' : 'none';
 
+      const trId = `${tipo}-${index}`;
+      window.todasLinhasRenderizadas.push(trId);
+      const isSelected = window.linhasSelecionadas.includes(trId);
+      const bgStyle = isSelected ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
+      const borderStyle = isSelected ? '2px solid var(--color-accent)' : '1px solid var(--border-color)';
+
       return `
-        <tr class="progressive-item" style="border-bottom: 1px solid var(--border-color); transition: background 0.2s; opacity:${opacityStr}; text-decoration:${decoStr}; animation-delay: ${Math.min(index * 0.05, 2)}s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+        <tr id="tr-${trId}" data-trid="${trId}" class="progressive-item" style="border-bottom: ${borderStyle}; background: ${bgStyle}; transition: background 0.2s; opacity:${opacityStr}; text-decoration:${decoStr}; animation-delay: ${Math.min(index * 0.05, 2)}s;" onclick="window.selecionarLinha(event, '${trId}')" onmouseover="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='rgba(255,255,255,0.02)'" onmouseout="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='transparent'">
           <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">
              <div>${icon} ${tipo}</div>
              ${checkIgnorarHtml}
@@ -1156,19 +1259,18 @@ function stopAIThinking() {
 
     // Listeners
     document.querySelectorAll('.import-sel-cat').forEach(sel => {
-      sel.addEventListener('change', (e) => {
+      sel.addEventListener('change', async (e) => {
         const idx = e.target.getAttribute('data-index');
         const tipo = e.target.getAttribute('data-tipo');
-        
+        const trId = `${tipo}-${idx}`;
         let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
 
         let val = e.target.value;
         if (val === '__NEW__') {
-           const newCat = prompt("Digite o nome da nova CATEGORIA:");
+           const newCat = await window.abrirModalCustomizado("Nova Categoria", "Digite o nome da nova CATEGORIA:");
            if (newCat && newCat.trim() !== "") {
                val = newCat.trim();
-               // Adiciona ao dicionário local para aparecer nos outros selects
                let dic = window.dicionarioGeral || {};
                if (!dic[val]) dic[val] = [];
            } else {
@@ -1177,23 +1279,34 @@ function stopAIThinking() {
            }
         }
 
-        t.categoria = val;
-        t.subcategoria = ''; // reset
+        let idsParaAlterar = [...window.linhasSelecionadas];
+        if (!idsParaAlterar.includes(trId)) idsParaAlterar = [trId];
+
+        idsParaAlterar.forEach(idSelecionado => {
+            let parts = idSelecionado.split('-');
+            let sTipo = parts[0];
+            let sIdx = parseInt(parts[1]);
+            let sList = sTipo === 'Adicionar' ? dadosSincronizacao.faltantes : (sTipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+            let itemAlvo = (sTipo === 'Correto') ? sList[sIdx].planilha : sList[sIdx];
+            itemAlvo.categoria = val;
+            itemAlvo.subcategoria = ''; // reset
+        });
 
         renderizarTabelaUnificada();
       });
     });
 
     document.querySelectorAll('.import-sel-subcat').forEach(sel => {
-      sel.addEventListener('change', (e) => {
+      sel.addEventListener('change', async (e) => {
         const idx = e.target.getAttribute('data-index');
         const tipo = e.target.getAttribute('data-tipo');
+        const trId = `${tipo}-${idx}`;
         let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
         
         let val = e.target.value;
         if (val === '__NEW__') {
-           const newSub = prompt(`Digite o nome da nova SUBCATEGORIA para '${t.categoria}':`);
+           const newSub = await window.abrirModalCustomizado("Nova Subcategoria", `Digite o nome da nova SUBCATEGORIA para '${t.categoria}':`);
            if (newSub && newSub.trim() !== "") {
                val = newSub.trim();
                let dic = window.dicionarioGeral || {};
@@ -1206,7 +1319,18 @@ function stopAIThinking() {
            }
         }
         
-        t.subcategoria = val;
+        let idsParaAlterar = [...window.linhasSelecionadas];
+        if (!idsParaAlterar.includes(trId)) idsParaAlterar = [trId];
+
+        idsParaAlterar.forEach(idSelecionado => {
+            let parts = idSelecionado.split('-');
+            let sTipo = parts[0];
+            let sIdx = parseInt(parts[1]);
+            let sList = sTipo === 'Adicionar' ? dadosSincronizacao.faltantes : (sTipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+            let itemAlvo = (sTipo === 'Correto') ? sList[sIdx].planilha : sList[sIdx];
+            itemAlvo.subcategoria = val;
+        });
+
         renderizarTabelaUnificada();
       });
     });
@@ -1595,6 +1719,19 @@ function stopAIThinking() {
       }
 
       // Substituir alert() por Modal Glassmorphism de Sucesso
+      if (typeof confetti === 'function') {
+          const coinEmoji = confetti.shapeFromText({ text: '🪙', scalar: 2 });
+          confetti({
+              particleCount: 150,
+              spread: 90,
+              origin: { y: 0.1 },
+              shapes: [coinEmoji],
+              scalar: 1.5,
+              ticks: 300,
+              gravity: 1.2
+          });
+      }
+
       const modalHtml = `
       <div id="glass-success-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.4s ease;">
           <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); max-width: 400px; width: 90%;">

@@ -174,7 +174,7 @@ class Database {
       }
     }
 
-    // 3. Atualizar Conciliação da Conta (case-insensitive via JS)
+    // 3. Atualizar Conciliação da Conta (Fechamento Rígido)
     if (contaDoExtrato) {
        const todasContasSnap = await this.db.collection('Contas').where('groupId', '==', gid).get();
        todasContasSnap.forEach(doc => {
@@ -182,23 +182,49 @@ class Database {
           if (nomeDoc === contaDoExtrato.trim().toLowerCase()) {
               if (conciliacaoContinua) {
                   let upd = {};
-                  if (conciliacaoContinua.acao === 'marco_zero') {
-                      upd.conciliado_desde = conciliacaoContinua.desde;
-                      upd.conciliado_ate = conciliacaoContinua.ate;
-                      upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
-                  } else if (conciliacaoContinua.acao === 'expansao_frente' || conciliacaoContinua.acao === 'ignorar_matematica') {
-                      upd.conciliado_ate = conciliacaoContinua.ate;
-                  } else if (conciliacaoContinua.acao === 'expansao_tras') {
-                      upd.conciliado_desde = conciliacaoContinua.desde;
-                      upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
+                  let dataConta = doc.data();
+                  
+                  if (conciliacaoContinua.acao === 'fechamento_rigido') {
+                      if (conciliacaoContinua.validado === true) {
+                          // Registra o período fechado com sucesso
+                          let mesesValidados = dataConta.meses_validados || [];
+                          mesesValidados.push({
+                              inicio: conciliacaoContinua.desde,
+                              fim: conciliacaoContinua.ate,
+                              saldo_final: conciliacaoContinua.saldo_final
+                          });
+                          
+                          upd.meses_validados = mesesValidados;
+                          // A data mais avançada validada será o último mês fechado
+                          // Nota: Como o extrato cobre até "ate", este é o limite do cadeado contábil
+                          
+                          // Simples comparação de datas BR para pegar a maior
+                          const parseData = (d) => { let p = String(d).split('/'); return new Date(p[2], p[1]-1, p[0]).getTime(); };
+                          let oldLast = dataConta.ultimo_mes_fechado ? parseData(dataConta.ultimo_mes_fechado) : 0;
+                          let newLast = parseData(conciliacaoContinua.ate);
+                          if (newLast > oldLast) {
+                              upd.ultimo_mes_fechado = conciliacaoContinua.ate;
+                          }
+                          
+                          // Mantém a lógica de saldo_inicial (âncora) caso seja o primeiro fechamento ou reconstrução
+                          if (dataConta.saldo_inicial === undefined || dataConta.saldo_inicial === null) {
+                              upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
+                              upd.conciliado_desde = conciliacaoContinua.desde;
+                          }
+                          upd.conciliado_ate = upd.ultimo_mes_fechado;
+                      }
+                  } else if (conciliacaoContinua.acao === 'fechamento_cartao') {
+                      // Cartões fecham por fatura, registramos a última fatura validada
+                      let faturasValidadas = dataConta.faturas_validadas || [];
+                      faturasValidadas.push(conciliacaoContinua.vencimento);
+                      upd.faturas_validadas = faturasValidadas;
+                      upd.ultima_fatura_fechada = conciliacaoContinua.vencimento;
                   }
                   
                   if (Object.keys(upd).length > 0) {
                       batch.update(doc.ref, upd);
                   }
               }
-              // Se conciliacaoContinua for null, trata-se de um 'Buraco Temporal' (Cenário D) ou uma Sobreposição sem expansao, 
-              // logo NÃO atualizamos as âncoras da conta!
           }
        });
     }

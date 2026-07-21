@@ -86,7 +86,9 @@ window.IAExtrator = (function() {
                     "Nome da conta": "Conta Batata",
                     "Vencimento da fatura": null,
                     "saldo_inicial": 0,
-                    "saldo_final": 0
+                    "saldo_final": -150.00,
+                    "periodo_inicio": "10/07/2026",
+                    "periodo_fim": "10/07/2026"
                 },
                 lancamentos: lancamentos_batata
             }
@@ -122,12 +124,13 @@ window.IAExtrator = (function() {
     userContent +=
       'REGRAS ESTRITAS DE EXTRAÇÃO:\n' +
       '1. Identifique a conta exata que corresponde ao documento usando a lista CONTAS CADASTRADAS.\n' +
-      '2. Extraia o saldo_inicial e saldo_final exatos contidos no documento. Se não houver, retorne null.\n' +
-      '3. Extraia a lista de transações com data (DD/MM/AAAA obrigatoriamente 4 dígitos no ano), descricao original bruta, e valor numérico (negativo para débitos, positivo para créditos).\n' +
-      '4. Para conta corrente, vencimento = data. Para cartão de crédito, procure e extraia a data de vencimento da fatura.\n' +
-      '5. IGNORE transferências internas de pagamento de fatura do próprio usuário se explicitamente marcadas assim.\n\n' +
+      '2. Extraia o saldo_inicial e saldo_final exatos contidos no cabeçalho ou rodapé do documento. Se não houver, retorne null.\n' +
+      '3. Encontre as datas exatas de início e fim que o extrato compreende e retorne como periodo_inicio e periodo_fim (formato DD/MM/AAAA obrigatoriamente).\n' +
+      '4. Extraia a lista de transações com data (DD/MM/AAAA obrigatoriamente 4 dígitos no ano), descricao original bruta, e valor numérico (negativo para débitos, positivo para créditos).\n' +
+      '5. Para conta corrente, vencimento = data. Para cartão de crédito, procure e extraia a data de vencimento da fatura.\n' +
+      '6. IGNORE transferências internas de pagamento de fatura do próprio usuário se explicitamente marcadas assim.\n\n' +
       'RETORNE EXATAMENTE NESTE FORMATO JSON (coloque analise_ia PRIMEIRO, no máximo 1 frase curta sendo bem direto, em tom cômico de um mestre Ninja cortador de gastos. Nada de bom dia):\n' +
-      '{"status":"success","analise_ia":"Cortei as gorduras do PDF como uma katana! Extrato de X a Y pronto, mestre.","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
+      '{"status":"success","analise_ia":"Cortei as gorduras do PDF como uma katana! Extrato validado.","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00,"periodo_inicio":"01/06/2026","periodo_fim":"30/06/2026"},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
     var isBinario = (fileType === 'pdf' || fileType === 'png' || fileType === 'jpg' || fileType === 'jpeg');
     var modelToUse = isBinario ? window.IACore.MODEL_VISION_FX : window.IACore.MODEL_LITE;
