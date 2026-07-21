@@ -1590,10 +1590,9 @@ function stopAIThinking() {
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
           });
-          jsonRes = await res.json();
+          let jsonRes = await res.json();
+          if (jsonRes.status === "error") throw new Error(jsonRes.message);
       }
-      
-      if (jsonRes.status === "error") throw new Error(jsonRes.message);
 
       // Substituir alert() por Modal Glassmorphism de Sucesso
       const modalHtml = `
