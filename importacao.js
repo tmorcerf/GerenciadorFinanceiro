@@ -1334,6 +1334,14 @@ function stopAIThinking() {
              }
            });
 
+           faltantesParaIA.sort((a, b) => {
+            const descA = (a.descricao || '').toLowerCase();
+            const descB = (b.descricao || '').toLowerCase();
+            if (descA < descB) return -1;
+            if (descA > descB) return 1;
+            return 0;
+           });
+
            if (preCategorizados > 0) {
              addFeedback(`💾 Cache local: ${preCategorizados} já conhecidos pré-categorizados. Enviando ${faltantesParaIA.length} novos para a IA...`, 'system');
            }

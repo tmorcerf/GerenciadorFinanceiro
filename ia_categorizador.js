@@ -60,26 +60,17 @@ window.IACategorizador = (function() {
           '<historico_conta_atual_360d>\n' + (formatHistory(historicoConta360d) || 'Sem historico.') + '\n</historico_conta_atual_360d>\n\n' +
           '<historico_transferencias_30>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_30>\n\n' +
           '<historico_global_recentes_120d>\n' + (formatHistory(historicoGlobal120d) || 'Sem historico global.') + '\n</historico_global_recentes_120d>\n\n' +
-          '<regras_semanticas_basicas>\n' +
-          '- iFood, Rappi, Zé Delivery -> Alimentação > Delivery\n' +
-          '- Uber, 99, Cabify -> Transporte > App\n' +
-          '- Posto, Ipiranga, Shell, BR, Petrobras -> Transporte > Combustível\n' +
-          '- Enel, Sabesp, Light, Copel, Sanepar -> Casa > Contas Básicas\n' +
-          '- Netflix, Spotify, Disney -> Lazer > Streaming\n' +
-          '- Farmácia, Drogasil, Panvel -> Saúde > Farmácia\n' +
-          '</regras_semanticas_basicas>\n\n' +
           '<novas_transacoes>\n' + JSON.stringify(chunk) + '\n</novas_transacoes>\n\n' +
           '<instrucoes_finais>\n' +
+          'Você é um cientista de dados financeiro Ninja. Siga estas regras estritas:\n' +
           '1. Priorize <historico_conta_atual_360d> e <vocabulario_usuario> para decidir a categoria.\n' +
-          '2. Se a descrição for semanticamente similar ao histórico, herde a categoria.\n' +
-          '3. Se NÃO houver histórico, aja como um cientista de dados brilhante: analise a descrição, estabeleça padrões lógicos (ex: "Brasilprev" -> Previdência/Seguro, "Energisa" -> Luz, "Estorno" -> mesma categoria do débito) e deduza a melhor categoria.\n' +
-          '4. Use APENAS categorias desta lista: ' + JSON.stringify(categoriasTree) + '.\n' +
-          '5. Valores negativos = despesas, positivos = receitas.\n' +
-          '6. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
-          'Se encontrar: is_parcelado=true, preencha parcela_atual e total_parcelas, remova o indicador da descricao_limpa.\n' +
-          '7. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cmico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
-          '8. CRITICO: array "data" contem EXATAMENTE ' + chunk.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir historico. OBRIGATORIO manter o valor "cod" original exato.\n' +
-          '9. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
+          '2. Para transações novas, aja analiticamente: deduza a natureza real do gasto por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Casa, "Brasilprev" -> Seguros/Previdência).\n' +
+          '3. Valores negativos = despesas. Valores positivos = receitas, transferências ou ESTORNOS.\n' +
+          '4. REGRA DE ESTORNO: Se for um estorno ou devolução (ex: "Estorno de Débito SEGURO DE VIDA"), a categoria DEVE SER EXATAMENTE A MESMA da despesa original. Nunca classifique estornos de despesas como Receitas.\n' +
+          '5. Use APENAS categorias da lista: ' + JSON.stringify(categoriasTree) + '.\n' +
+          '6. PARCELAMENTO: Busque "1/6", "01/06", "1-6". Se achar, is_parcelado=true e preencha as parcelas.\n' +
+          '7. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cômico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
+          '8. CRÍTICO: array "data" contem EXATAMENTE ' + chunk.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir histórico. OBRIGATÓRIO manter o valor "cod" original exato (copie igual da entrada).\n' +
           'RETORNE EXATAMENTE (com ' + chunk.length + ' itens no array data):\n' +
           '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"(copie o cod original)","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
           '</instrucoes_finais>';
