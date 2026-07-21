@@ -23,7 +23,7 @@ window.IACategorizador = (function() {
 
     if (!window.IACore) throw new Error('IACore não carregado!');
 
-    var transacoes = opts.transacoes;
+    var transacoesAll = opts.transacoes;
     var categoriasTree = opts.categoriasTree;
     
     var historicoConta360d = opts.historicoConta360d || [];
@@ -48,36 +48,53 @@ window.IACategorizador = (function() {
         .map(function(e) { var v = e[1]; return e[0] + ' → ' + (typeof v === 'object' ? (v.categoria || '') + (v.subcategoria ? '/' + v.subcategoria : '') : String(v)); })
         .join('\n');
 
-    var userContent = 
-      '<vocabulario_usuario>\n' + (vocabCompacto || 'Sem vocabulario.') + '\n</vocabulario_usuario>\n\n' +
-      '<historico_conta_atual_360d>\n' + (formatHistory(historicoConta360d) || 'Sem historico.') + '\n</historico_conta_atual_360d>\n\n' +
-      '<historico_transferencias_30>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_30>\n\n' +
-      '<historico_global_recentes_120d>\n' + (formatHistory(historicoGlobal120d) || 'Sem historico global.') + '\n</historico_global_recentes_120d>\n\n' +
-      '<regras_semanticas_basicas>\n' +
-      '- iFood, Rappi, Zé Delivery -> Alimentação > Delivery\n' +
-      '- Uber, 99, Cabify -> Transporte > App\n' +
-      '- Posto, Ipiranga, Shell, BR, Petrobras -> Transporte > Combustível\n' +
-      '- Enel, Sabesp, Light, Copel, Sanepar -> Casa > Contas Básicas\n' +
-      '- Netflix, Spotify, Disney -> Lazer > Streaming\n' +
-      '- Farmácia, Drogasil, Panvel -> Saúde > Farmácia\n' +
-      '</regras_semanticas_basicas>\n\n' +
-      '<novas_transacoes>\n' + JSON.stringify(transacoes) + '\n</novas_transacoes>\n\n' +
-      '<instrucoes_finais>\n' +
-      '1. Priorize <historico_conta_atual_360d> e <vocabulario_usuario> para decidir a categoria.\n' +
-      '2. Se a descrição for semanticamente similar ao histórico, herde a categoria.\n' +
-      '3. Se NÃO houver histórico, aja como um cientista de dados brilhante: analise a descrição, estabeleça padrões lógicos (ex: "Brasilprev" -> Previdência/Seguro, "Energisa" -> Luz, "Estorno" -> mesma categoria do débito) e deduza a melhor categoria.\n' +
-      '4. Use APENAS categorias desta lista: ' + JSON.stringify(categoriasTree) + '.\n' +
-      '5. Valores negativos = despesas, positivos = receitas.\n' +
-      '6. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
-      'Se encontrar: is_parcelado=true, preencha parcela_atual e total_parcelas, remova o indicador da descricao_limpa.\n' +
-      '7. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cmico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
-      '8. CRITICO: array "data" contem EXATAMENTE ' + transacoes.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir historico. OBRIGATORIO manter o valor "cod" original exato.\n' +
-      '9. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
-      'RETORNE EXATAMENTE (com ' + transacoes.length + ' itens no array data):\n' +
-      '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"(copie o cod original)","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
-      '</instrucoes_finais>';
+    let allData = [];
+    let analiseFinal = "Classifiquei seus gastos mais rápido que um golpe de shuriken!";
+    const CHUNK_SIZE = 15;
 
-    return await window.IACore.chamarGemini(window.IACore.MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });
+    for (let i = 0; i < transacoesAll.length; i += CHUNK_SIZE) {
+        let chunk = transacoesAll.slice(i, i + CHUNK_SIZE);
+
+        var userContent = 
+          '<vocabulario_usuario>\n' + (vocabCompacto || 'Sem vocabulario.') + '\n</vocabulario_usuario>\n\n' +
+          '<historico_conta_atual_360d>\n' + (formatHistory(historicoConta360d) || 'Sem historico.') + '\n</historico_conta_atual_360d>\n\n' +
+          '<historico_transferencias_30>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_30>\n\n' +
+          '<historico_global_recentes_120d>\n' + (formatHistory(historicoGlobal120d) || 'Sem historico global.') + '\n</historico_global_recentes_120d>\n\n' +
+          '<regras_semanticas_basicas>\n' +
+          '- iFood, Rappi, Zé Delivery -> Alimentação > Delivery\n' +
+          '- Uber, 99, Cabify -> Transporte > App\n' +
+          '- Posto, Ipiranga, Shell, BR, Petrobras -> Transporte > Combustível\n' +
+          '- Enel, Sabesp, Light, Copel, Sanepar -> Casa > Contas Básicas\n' +
+          '- Netflix, Spotify, Disney -> Lazer > Streaming\n' +
+          '- Farmácia, Drogasil, Panvel -> Saúde > Farmácia\n' +
+          '</regras_semanticas_basicas>\n\n' +
+          '<novas_transacoes>\n' + JSON.stringify(chunk) + '\n</novas_transacoes>\n\n' +
+          '<instrucoes_finais>\n' +
+          '1. Priorize <historico_conta_atual_360d> e <vocabulario_usuario> para decidir a categoria.\n' +
+          '2. Se a descrição for semanticamente similar ao histórico, herde a categoria.\n' +
+          '3. Se NÃO houver histórico, aja como um cientista de dados brilhante: analise a descrição, estabeleça padrões lógicos (ex: "Brasilprev" -> Previdência/Seguro, "Energisa" -> Luz, "Estorno" -> mesma categoria do débito) e deduza a melhor categoria.\n' +
+          '4. Use APENAS categorias desta lista: ' + JSON.stringify(categoriasTree) + '.\n' +
+          '5. Valores negativos = despesas, positivos = receitas.\n' +
+          '6. PARCELAMENTO: Busque "1/6", "01/06", "2/12", "1-6", "01-06", "parc 1/6". ' +
+          'Se encontrar: is_parcelado=true, preencha parcela_atual e total_parcelas, remova o indicador da descricao_limpa.\n' +
+          '7. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cmico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
+          '8. CRITICO: array "data" contem EXATAMENTE ' + chunk.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir historico. OBRIGATORIO manter o valor "cod" original exato.\n' +
+          '9. analise_ia DEVE ser uma string de linha unica. NUNCA use \\n dentro de strings JSON.\n' +
+          'RETORNE EXATAMENTE (com ' + chunk.length + ' itens no array data):\n' +
+          '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"(copie o cod original)","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
+          '</instrucoes_finais>';
+
+        let resultCat = await window.IACore.chamarGemini(window.IACore.MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });
+        
+        if (resultCat && resultCat.status === 'success' && Array.isArray(resultCat.data)) {
+            allData = allData.concat(resultCat.data);
+            if (resultCat.analise_ia) analiseFinal = resultCat.analise_ia;
+        } else if (resultCat && Array.isArray(resultCat)) {
+            allData = allData.concat(resultCat);
+        }
+    }
+
+    return { status: 'success', analise_ia: analiseFinal, data: allData };
   }
 
   async function categorizarProduto(nomeProduto, codigoProduto) {
