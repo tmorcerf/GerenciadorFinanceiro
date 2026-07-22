@@ -788,8 +788,10 @@ function stopAIThinking() {
               
               let perInicio = (cabecalhoAtual && cabecalhoAtual.periodo_inicio) ? cabecalhoAtual.periodo_inicio : new Date(minTime).toLocaleDateString('pt-BR');
               let perFim = (cabecalhoAtual && cabecalhoAtual.periodo_fim) ? cabecalhoAtual.periodo_fim : new Date(maxTime).toLocaleDateString('pt-BR');
+              let isMissingBalances = (extSaldoIni === null || extSaldoFim === null);
               
               let isFechamentoOficial = false;
+              let isValidadoMatematicamente = false;
               let diasFaltantesCadeado = 0;
               let statusFechamentoTxt = "Sincronização Parcial";
               
