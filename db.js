@@ -206,8 +206,11 @@ class Database {
                               upd.ultimo_mes_fechado = conciliacaoContinua.ate;
                           }
                           
-                          // Mantém a lógica de saldo_inicial (âncora) caso seja o primeiro fechamento ou reconstrução
-                          if (dataConta.saldo_inicial === undefined || dataConta.saldo_inicial === null) {
+                          // Mantém a lógica de saldo_inicial (âncora) e retroage se for uma reconstrução do passado
+                          let oldDesde = dataConta.conciliado_desde ? parseData(dataConta.conciliado_desde) : Infinity;
+                          let newDesde = parseData(conciliacaoContinua.desde);
+                          
+                          if (dataConta.saldo_inicial === undefined || dataConta.saldo_inicial === null || newDesde < oldDesde) {
                               upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
                               upd.conciliado_desde = conciliacaoContinua.desde;
                           }
