@@ -396,6 +396,33 @@ class Database {
   }
 
 
+  async salvarNovaCategoria(categoria, subcategoriasArray) {
+     const gid = window.userGroupId;
+     if (!gid) throw new Error("Grupo nao definido.");
+     if (!this.db) return;
+     
+     try {
+         const snapshot = await this.db.collection('Categorias').where('groupId', '==', gid).where('nome', '==', categoria).get();
+         if (!snapshot.empty) {
+             const docId = snapshot.docs[0].id;
+             await this.db.collection('Categorias').doc(docId).update({
+                 subcategorias: subcategoriasArray
+             });
+         } else {
+             const newCatRef = this.db.collection('Categorias').doc();
+             await newCatRef.set({
+                 groupId: gid,
+                 nome: categoria,
+                 subcategorias: subcategoriasArray,
+                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
+             });
+         }
+         console.log(`Categoria ${categoria} salva com sucesso no DB!`);
+     } catch (e) {
+         console.error("Erro ao salvar categoria no DB:", e);
+     }
+  }
+
   async salvarConta(conta) {
      const gid = window.userGroupId;
      if (!gid) throw new Error("Grupo nao definido.");

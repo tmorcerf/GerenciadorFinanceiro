@@ -1289,6 +1289,11 @@ function stopAIThinking() {
                val = newCat.trim();
                let dic = window.dicionarioGeral || {};
                if (!dic[val]) dic[val] = [];
+               
+               // Salvar no Firebase
+               if (window.DB && window.DB.salvarNovaCategoria) {
+                   await window.DB.salvarNovaCategoria(val, dic[val]);
+               }
            } else {
                e.target.value = t.categoria || "";
                return;
@@ -1328,6 +1333,11 @@ function stopAIThinking() {
                let dic = window.dicionarioGeral || {};
                if (dic[t.categoria] && !dic[t.categoria].includes(val)) {
                    dic[t.categoria].push(val);
+               }
+               
+               // Salvar no Firebase
+               if (window.DB && window.DB.salvarNovaCategoria) {
+                   await window.DB.salvarNovaCategoria(t.categoria, dic[t.categoria] || [val]);
                }
            } else {
                e.target.value = t.subcategoria || "";
