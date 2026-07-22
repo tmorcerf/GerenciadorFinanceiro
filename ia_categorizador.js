@@ -75,7 +75,7 @@ window.IACategorizador = (function() {
           '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"(copie o cod original)","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
           '</instrucoes_finais>';
 
-        let resultCat = await window.IACore.chamarGemini(window.IACore.MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 8192 });
+        let resultCat = await window.IACore.chamarGemini(window.IACore.MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 16384 });
         
         if (resultCat && resultCat.status === 'success' && Array.isArray(resultCat.data)) {
             allData = allData.concat(resultCat.data);
@@ -129,7 +129,7 @@ window.IACategorizador = (function() {
       JSON.stringify(itens.map(i => ({ ean: i.ean, descricao_abreviada: i.descricao })), null, 2);
 
     try {
-      var response = await window.IACore.chamarGemini(window.IACore.MODEL_LITE, systemInstruction, userPrompt, null, { _maxOutputTokens: 4096 });
+      var response = await window.IACore.chamarGemini(window.IACore.MODEL_LITE, systemInstruction, userPrompt, null, { _maxOutputTokens: 8192 });
       if (Array.isArray(response)) return response;
       return [];
     } catch(err) {
