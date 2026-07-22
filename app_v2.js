@@ -2760,11 +2760,13 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
           if (txAccountFilter !== 'all') {
               const c = window.dadosFinanceiros.contas.find(acc => acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
+              console.log("[DEBUG Saldo] Conta Encontrada:", c?.nome, "saldo_inicial no DB:", c?.saldo_inicial, "has_saldo_tx:", c?._has_saldo_tx);
               if (c && !c._has_saldo_tx) runningBalance = parseFloat(c.saldo_inicial) || 0;
           } else {
               runningBalance = window.dadosFinanceiros.contas.reduce((sum, acc) => sum + (acc._has_saldo_tx ? 0 : (parseFloat(acc.saldo_inicial) || 0)), 0);
           }
       }
+      console.log("[DEBUG Saldo] RunningBalance inicial final:", runningBalance);
 
       baseTxs.forEach(tx => {
         runningBalance += tx.valor;
