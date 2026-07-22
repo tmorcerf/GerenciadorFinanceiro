@@ -5952,6 +5952,7 @@ window.toggleInlineEdit = function(cod, iconElement) {
     Object.keys(dic).sort().forEach(c => {
         catOptions += `<option value="${c}" ${c === curCat ? 'selected' : ''}>${c}</option>`;
     });
+    catOptions += `<option value="__NEW__" style="color:var(--color-income); font-weight:bold;">+ Adicionar Nova...</option>`;
     
     // Build subcategory options
     let subOptions = `<option value="">-</option>`;
@@ -5959,6 +5960,7 @@ window.toggleInlineEdit = function(cod, iconElement) {
         dic[curCat].forEach(s => {
             subOptions += `<option value="${s}" ${s === curSub ? 'selected' : ''}>${s}</option>`;
         });
+        subOptions += `<option value="__NEW__" style="color:var(--color-income); font-weight:bold;">+ Adicionar Nova...</option>`;
     }
     
     // Create inputs
@@ -5966,7 +5968,7 @@ window.toggleInlineEdit = function(cod, iconElement) {
     
     tdCat.innerHTML = `<select class="inline-edit-input" data-field="categoria" style="width: 120px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px; border-radius: 4px; font-size: 0.85rem;" onchange="window.updateInlineSubcat(this, '${cod}')">${catOptions}</select>`;
     
-    tdSub.innerHTML = `<select class="inline-edit-input inline-subcat-${cod}" data-field="subcategoria" style="width: 120px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px; border-radius: 4px; font-size: 0.85rem;">${subOptions}</select>`;
+    tdSub.innerHTML = `<select class="inline-edit-input inline-subcat-${cod}" data-field="subcategoria" style="width: 120px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px; border-radius: 4px; font-size: 0.85rem;" onchange="window.handleInlineSubcatChange(this, '${cod}')">${subOptions}</select>`;
     
     tdObs.innerHTML = `<input type="text" value="${curObs}" class="inline-edit-input" data-field="obs" style="width: 100%; min-width: 150px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">`;
     
@@ -5999,8 +6001,29 @@ window.toggleInlineEdit = function(cod, iconElement) {
     }, 50);
 };
 
-window.updateInlineSubcat = function(catSelect, cod) {
-    const cat = catSelect.value;
+window.updateInlineSubcat = async function(catSelect, cod) {
+    let cat = catSelect.value;
+    
+    if (cat === '__NEW__') {
+        const newCat = await window.abrirModalCustomizado("Nova Categoria", "Digite o nome da nova CATEGORIA:");
+        if (newCat && newCat.trim() !== "") {
+            cat = newCat.trim();
+            const dic = window.dicionarioGeral || {};
+            if (!dic[cat]) dic[cat] = [];
+            
+            const opt = document.createElement('option');
+            opt.value = cat; opt.text = cat; opt.selected = true;
+            catSelect.insertBefore(opt, catSelect.querySelector('option[value="__NEW__"]'));
+            
+            if (window.DB && window.DB.salvarNovaCategoria) {
+                await window.DB.salvarNovaCategoria(cat, dic[cat]);
+            }
+        } else {
+            catSelect.value = catSelect.getAttribute('data-val') || '';
+            cat = catSelect.value;
+        }
+    }
+    
     const dic = window.dicionarioGeral || {};
     const subSelect = document.querySelector(`.inline-subcat-${cod}`);
     if (!subSelect) return;
@@ -6010,8 +6033,42 @@ window.updateInlineSubcat = function(catSelect, cod) {
         dic[cat].forEach(s => {
             subOptions += `<option value="${s}">${s}</option>`;
         });
+        subOptions += `<option value="__NEW__" style="color:var(--color-income); font-weight:bold;">+ Adicionar Nova...</option>`;
     }
     subSelect.innerHTML = subOptions;
+};
+
+window.handleInlineSubcatChange = async function(subSelect, cod) {
+    let sub = subSelect.value;
+    if (sub === '__NEW__') {
+        const tr = document.getElementById(`tr-${cod}`);
+        if (!tr) return;
+        const tdCat = tr.querySelector('.td-categoria');
+        const catSelect = tdCat.querySelector('select');
+        const cat = catSelect ? catSelect.value : '';
+        if (!cat || cat === '__NEW__') {
+            alert('Selecione uma categoria primeiro.');
+            subSelect.value = '';
+            return;
+        }
+        const newSub = await window.abrirModalCustomizado("Nova Subcategoria", `Digite o nome da nova SUBCATEGORIA para '${cat}':`);
+        if (newSub && newSub.trim() !== "") {
+            sub = newSub.trim();
+            const dic = window.dicionarioGeral || {};
+            if (!dic[cat]) dic[cat] = [];
+            if (!dic[cat].includes(sub)) dic[cat].push(sub);
+            
+            const opt = document.createElement('option');
+            opt.value = sub; opt.text = sub; opt.selected = true;
+            subSelect.insertBefore(opt, subSelect.querySelector('option[value="__NEW__"]'));
+            
+            if (window.DB && window.DB.salvarNovaCategoria) {
+                await window.DB.salvarNovaCategoria(cat, dic[cat]);
+            }
+        } else {
+            subSelect.value = subSelect.getAttribute('data-val') || '';
+        }
+    }
 };
 
 window.saveInlineEdit = async function(cod) {
@@ -6131,6 +6188,12 @@ window.openEditTransactionModal = function(cod) {
     if(c.toLowerCase() === (t.categoria||'').toLowerCase()) opt.selected = true;
     catSelect.appendChild(opt);
   });
+  
+  const optNewCat = document.createElement('option');
+  optNewCat.value = '__NEW__';
+  optNewCat.textContent = '+ Adicionar Nova...';
+  optNewCat.style = 'color:var(--color-income); font-weight:bold;';
+  catSelect.appendChild(optNewCat);
 
   const subSelect = document.getElementById('edit-tx-subcategoria');
   const updateSubcats = () => {
@@ -6144,13 +6207,14 @@ window.openEditTransactionModal = function(cod) {
         if(sub.toLowerCase() === (t.subcategoria||'').toLowerCase()) opt.selected = true;
         subSelect.appendChild(opt);
       });
+      const optNewSub = document.createElement('option');
+      optNewSub.value = '__NEW__';
+      optNewSub.textContent = '+ Adicionar Nova...';
+      optNewSub.style = 'color:var(--color-income); font-weight:bold;';
+      subSelect.appendChild(optNewSub);
     }
   };
   updateSubcats();
-  catSelect.onchange = () => {
-    updateSubcats();
-    checkTransfer();
-  };
 
   const transferBlock = document.getElementById('edit-tx-transfer-block');
   const checkTransfer = () => {
@@ -6161,6 +6225,58 @@ window.openEditTransactionModal = function(cod) {
       document.getElementById('edit-tx-create-contrapartida').checked = false;
     }
   };
+  
+  catSelect.onchange = async () => {
+      if (catSelect.value === '__NEW__') {
+          const newCat = await window.abrirModalCustomizado("Nova Categoria", "Digite o nome da nova CATEGORIA:");
+          if (newCat && newCat.trim() !== "") {
+              const val = newCat.trim();
+              const dic = window.dicionarioGeral || {};
+              if (!dic[val]) dic[val] = [];
+              
+              const opt = document.createElement('option');
+              opt.value = val; opt.text = val; opt.selected = true;
+              catSelect.insertBefore(opt, catSelect.querySelector('option[value="__NEW__"]'));
+              
+              if (window.DB && window.DB.salvarNovaCategoria) {
+                  await window.DB.salvarNovaCategoria(val, dic[val]);
+              }
+          } else {
+              catSelect.value = t.categoria || '';
+          }
+      }
+      updateSubcats();
+      checkTransfer();
+  };
+  
+  subSelect.onchange = async () => {
+      if (subSelect.value === '__NEW__') {
+          const cat = catSelect.value;
+          if (!cat || cat === '__NEW__') {
+              alert('Selecione uma categoria primeiro.');
+              subSelect.value = '';
+              return;
+          }
+          const newSub = await window.abrirModalCustomizado("Nova Subcategoria", `Digite o nome da nova SUBCATEGORIA para '${cat}':`);
+          if (newSub && newSub.trim() !== "") {
+              const val = newSub.trim();
+              const dic = window.dicionarioGeral || {};
+              if (!dic[cat]) dic[cat] = [];
+              if (!dic[cat].includes(val)) dic[cat].push(val);
+              
+              const opt = document.createElement('option');
+              opt.value = val; opt.text = val; opt.selected = true;
+              subSelect.insertBefore(opt, subSelect.querySelector('option[value="__NEW__"]'));
+              
+              if (window.DB && window.DB.salvarNovaCategoria) {
+                  await window.DB.salvarNovaCategoria(cat, dic[cat]);
+              }
+          } else {
+              subSelect.value = t.subcategoria || '';
+          }
+      }
+  };
+
   checkTransfer();
 
   const contrapartidaDestBlock = document.getElementById('edit-tx-contrapartida-dest-block');
