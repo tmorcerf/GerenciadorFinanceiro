@@ -6138,8 +6138,19 @@ window.saveInlineEdit = async function(cod) {
     
     tr.style.opacity = '0.5';
     
-    if (window.DB && window.DB.salvarLancamentoEditado) {
-        await window.DB.salvarLancamentoEditado(payload, null, true, originalCat, isIncome);
+    if (window.USE_FIREBASE && window.DB) {
+        const updateData = {
+            vencimento: newVenc || t.data,
+            categoria: newCat,
+            subcategoria: newSub,
+            obs: newObs,
+            descricao: newObs
+        };
+        try {
+            await window.DB.editarLancamento(cod, updateData);
+        } catch(e) {
+            console.error("Erro ao salvar edição rápida", e);
+        }
     }
     
     t.vencimento = newVenc || t.data;
