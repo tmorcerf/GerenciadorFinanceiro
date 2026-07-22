@@ -5979,21 +5979,13 @@ window.toggleInlineEdit = function(cod, iconElement) {
     
     tdObs.innerHTML = `<input type="text" value="${curObs}" class="inline-edit-input" data-field="obs" style="width: 100%; min-width: 150px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">`;
     
-    // Attach blur events to auto-save (with a small timeout to allow clicking options without closing immediately)
+    // Attach keydown event to auto-save on Enter
     const inputs = tr.querySelectorAll('.inline-edit-input');
     inputs.forEach(inp => {
-        inp.addEventListener('blur', (e) => {
-            // Need a timeout because clicking the lock or a dropdown option might trigger blur
-            setTimeout(() => {
-                // If focus moved to another inline input within the same TR, do not save yet
-                if (!tr.contains(document.activeElement)) {
-                    window.saveInlineEdit(cod);
-                }
-            }, 150);
-        });
         inp.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                inp.blur();
+                e.preventDefault();
+                window.saveInlineEdit(cod);
             }
         });
     });
@@ -6080,7 +6072,10 @@ window.handleInlineSubcatChange = async function(subSelect, cod) {
 
 window.saveInlineEdit = async function(cod) {
     const tr = document.getElementById(`tr-${cod}`);
-    if (!tr) return;
+    if (!tr) {
+        console.error("TR não encontrado:", `tr-${cod}`);
+        return;
+    }
     
     const tdVenc = tr.querySelector('.td-vencimento');
     const tdCat = tr.querySelector('.td-categoria');
@@ -6119,7 +6114,10 @@ window.saveInlineEdit = async function(cod) {
     
     // Save to DB
     const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
-    if (!t) return;
+    if (!t) {
+        alert("Erro interno: Lançamento não encontrado (" + cod + "). Recarregue a página (F5) para aplicar a correção dos IDs duplicados.");
+        return;
+    }
     
     const originalCat = t.categoria;
     const isIncome = t.valor > 0;
