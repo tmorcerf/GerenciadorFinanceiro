@@ -6126,7 +6126,7 @@ window.saveInlineEdit = async function(cod, event) {
     }
     
         // Save to DB
-        const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
+        const t = dadosFinanceiros.lancamentos.find(l => l.cod == cod);
         if (!t) {
             alert("Erro interno: Lançamento não encontrado (" + cod + "). Recarregue a página (F5) para aplicar a correção dos IDs duplicados.");
             return;
