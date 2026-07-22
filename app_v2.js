@@ -2757,6 +2757,15 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
       // 4. Calculate Running Balance
       let runningBalance = 0;
+      if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+          if (txAccountFilter !== 'all') {
+              const c = window.dadosFinanceiros.contas.find(acc => acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
+              if (c && !c._has_saldo_tx) runningBalance = parseFloat(c.saldo_inicial) || 0;
+          } else {
+              runningBalance = window.dadosFinanceiros.contas.reduce((sum, acc) => sum + (acc._has_saldo_tx ? 0 : (parseFloat(acc.saldo_inicial) || 0)), 0);
+          }
+      }
+
       baseTxs.forEach(tx => {
         runningBalance += tx.valor;
         tx._saldo_do_dia = runningBalance;
