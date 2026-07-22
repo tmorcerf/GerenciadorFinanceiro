@@ -206,8 +206,11 @@ class Database {
                               upd.ultimo_mes_fechado = conciliacaoContinua.ate;
                           }
                           
-                          // Mantém a lógica de saldo_inicial (âncora) caso seja o primeiro fechamento ou reconstrução
-                          if (dataConta.saldo_inicial === undefined || dataConta.saldo_inicial === null) {
+                          let oldFirst = dataConta.conciliado_desde ? parseData(dataConta.conciliado_desde) : Infinity;
+                          let newFirst = parseData(conciliacaoContinua.desde);
+
+                          // Atualiza o saldo_inicial (âncora) se for a primeira vez ou se estiver importando um mês mais antigo
+                          if (dataConta.saldo_inicial === undefined || dataConta.saldo_inicial === null || newFirst < oldFirst) {
                               upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
                               upd.conciliado_desde = conciliacaoContinua.desde;
                           }
