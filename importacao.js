@@ -701,7 +701,7 @@ function stopAIThinking() {
       };
 
       dadosExtrato.forEach((ext, index) => {
-         ext.cod = ext.cod || "TX_NEW_" + index;
+         ext.cod = ext.cod || "TX_NEW_" + new Date().getTime() + "_" + Math.floor(Math.random() * 10000) + "_" + index;
          
          let matchIdx = poolLocal.findIndex(loc => {
             let dataOk = isDataIgual(ext.data, loc.data);
