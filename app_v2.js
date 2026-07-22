@@ -6069,33 +6069,38 @@ window.handleInlineSubcatChange = async function(subSelect, cod) {
     }
 };
 
-window.saveInlineEdit = async function(cod) {
-    console.log("saveInlineEdit chamado para cod:", cod);
-    const tr = document.getElementById(`tr-${cod}`);
-    if (!tr) {
-        console.error("TR não encontrado:", `tr-${cod}`);
-        return;
+window.saveInlineEdit = async function(cod, event) {
+    if (event) {
+        event.stopPropagation();
     }
-    if (tr.dataset.saving) {
-        console.log("Já está salvando o cod:", cod);
-        return;
-    }
-    tr.dataset.saving = "true";
-    
-    const tdVenc = tr.querySelector('.td-vencimento');
-    const tdCat = tr.querySelector('.td-categoria');
-    const tdSub = tr.querySelector('.td-subcategoria');
-    const tdObs = tr.querySelector('.td-obs');
-    
-    const inpVenc = tdVenc.querySelector('input');
-    const inpCat = tdCat.querySelector('select');
-    const inpSub = tdSub.querySelector('select');
-    const inpObs = tdObs.querySelector('input');
-    
-    if (!inpVenc || !inpCat || !inpSub || !inpObs) {
-        console.error("Inputs não encontrados na linha. inpVenc:", !!inpVenc, "inpCat:", !!inpCat, "inpSub:", !!inpSub, "inpObs:", !!inpObs);
-        return; // already saved/closed
-    }
+    try {
+        console.log("saveInlineEdit chamado para cod:", cod);
+        const tr = document.getElementById(`tr-${cod}`);
+        if (!tr) {
+            console.error("TR não encontrado:", `tr-${cod}`);
+            return;
+        }
+        if (tr.dataset.saving) {
+            console.log("Já está salvando o cod:", cod);
+            return;
+        }
+        tr.dataset.saving = "true";
+        
+        const tdVenc = tr.querySelector('.td-vencimento');
+        const tdCat = tr.querySelector('.td-categoria');
+        const tdSub = tr.querySelector('.td-subcategoria');
+        const tdObs = tr.querySelector('.td-obs');
+        
+        const inpVenc = tdVenc.querySelector('input');
+        const inpCat = tdCat.querySelector('select');
+        const inpSub = tdSub.querySelector('select');
+        const inpObs = tdObs.querySelector('input');
+        
+        if (!inpVenc || !inpCat || !inpSub || !inpObs) {
+            console.error("Inputs não encontrados na linha.");
+            return;
+        }
+
     
     const newVencIso = inpVenc.value;
     let newVenc = '';
@@ -6120,53 +6125,55 @@ window.saveInlineEdit = async function(cod) {
         return;
     }
     
-    // Save to DB
-    const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
-    if (!t) {
-        alert("Erro interno: Lançamento não encontrado (" + cod + "). Recarregue a página (F5) para aplicar a correção dos IDs duplicados.");
-        return;
-    }
-    
-    const originalCat = t.categoria;
-    const isIncome = t.valor > 0;
-    
-    const payload = {
-        cod: cod,
-        data: t.data,
-        vencimento: newVenc || t.data,
-        conta: t.conta,
-        valor: t.valor,
-        categoria: newCat,
-        subcategoria: newSub,
-        obs: newObs,
-        conciliado: !!t.conciliado
-    };
-    
-    tr.style.opacity = '0.5';
-    
-    if (window.USE_FIREBASE && window.DB) {
-        const updateData = {
+        // Save to DB
+        const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
+        if (!t) {
+            alert("Erro interno: Lançamento não encontrado (" + cod + "). Recarregue a página (F5) para aplicar a correção dos IDs duplicados.");
+            return;
+        }
+        
+        const originalCat = t.categoria;
+        const isIncome = t.valor > 0;
+        
+        const payload = {
+            cod: cod,
+            data: t.data,
             vencimento: newVenc || t.data,
+            conta: t.conta,
+            valor: t.valor,
             categoria: newCat,
             subcategoria: newSub,
             obs: newObs,
-            descricao: newObs
+            conciliado: !!t.conciliado
         };
-        try {
+        
+        tr.style.opacity = '0.5';
+        
+        if (window.USE_FIREBASE && window.DB) {
+            const updateData = {
+                vencimento: newVenc || t.data,
+                categoria: newCat,
+                subcategoria: newSub,
+                obs: newObs,
+                descricao: newObs
+            };
             await window.DB.editarLancamento(cod, updateData);
-        } catch(e) {
-            console.error("Erro ao salvar edição rápida", e);
         }
+        
+        t.vencimento = newVenc || t.data;
+        t.categoria = newCat;
+        t.subcategoria = newSub;
+        t.obs = newObs;
+        t.descricao = newObs;
+        
+        if (window.atualizarDashboard) window.atualizarDashboard();
+        window.renderTransactionsTable();
+    } catch (e) {
+        alert("ERRO FATAL NO SALVAMENTO INLINE: " + e.message + "\nPor favor informe isso ao desenvolvedor!");
+        console.error(e);
+        const tr = document.getElementById(`tr-${cod}`);
+        if (tr) tr.dataset.saving = "";
     }
-    
-    t.vencimento = newVenc || t.data;
-    t.categoria = newCat;
-    t.subcategoria = newSub;
-    t.obs = newObs;
-    t.descricao = newObs;
-    
-    if (window.atualizarDashboard) window.atualizarDashboard();
-    window.renderTransactionsTable();
 };
 
 window.openEditTransactionModal = function(cod) {
