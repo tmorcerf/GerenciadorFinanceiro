@@ -2780,10 +2780,12 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                   tableDiv.parentElement.insertBefore(debugBanner, tableDiv);
               }
               const foundC = window.dadosFinanceiros?.contas?.find(acc => acc && acc.nome && acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
+              const accountNames = (window.dadosFinanceiros?.contas || []).map(a => `'${a.nome}'`).join(', ');
               
               debugBanner.innerHTML = `Lançamentos Debug:<br>` +
                 `Filtro Selecionado na Memória: "${txAccountFilter}"<br>` +
                 `Contas no DB: ${window.dadosFinanceiros?.contas?.length || 0}<br>` + 
+                `Nomes das Contas no DB: ${accountNames}<br>` +
                 `Conta Encontrada: ${foundC ? foundC.nome : 'FALSO'}<br>` +
                 `Saldo Inicial no DB para ESTA conta: ${foundC ? foundC.saldo_inicial : 'N/A'}<br>` +
                 `Valor convertido para matematica: ${foundC ? (parseFloat(foundC.saldo_inicial || 0) || 0) : 0}`;
