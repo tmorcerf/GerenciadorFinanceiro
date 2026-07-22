@@ -1051,6 +1051,21 @@ function stopAIThinking() {
   window.linhasSelecionadas = window.linhasSelecionadas || [];
   window.ultimoCliqueTrId = window.ultimoCliqueTrId || null;
   window.todasLinhasRenderizadas = [];
+  window.tabelaIsFirstRender = window.tabelaIsFirstRender === undefined ? true : window.tabelaIsFirstRender;
+
+  if (!window.cliqueForaConfigurado) {
+      document.addEventListener('click', (e) => {
+          const table = document.getElementById('unified-table');
+          const modalNovaCat = document.getElementById('modal-nova-cat-sub');
+          if (table && !table.contains(e.target) && (!modalNovaCat || !modalNovaCat.contains(e.target))) {
+              if (window.linhasSelecionadas && window.linhasSelecionadas.length > 0) {
+                  window.linhasSelecionadas = [];
+                  renderizarTabelaUnificada();
+              }
+          }
+      });
+      window.cliqueForaConfigurado = true;
+  }
 
   window.abrirModalCustomizado = function(titulo, descricao) {
       return new Promise((resolve) => {
@@ -1206,9 +1221,10 @@ function stopAIThinking() {
       const isSelected = window.linhasSelecionadas.includes(trId);
       const bgStyle = isSelected ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
       const borderStyle = isSelected ? '2px solid var(--color-accent)' : '1px solid var(--border-color)';
+      const animationStyle = window.tabelaIsFirstRender ? `animation-delay: ${Math.min(index * 0.05, 2)}s;` : 'animation: none; opacity: 1;';
 
       return `
-        <tr id="tr-${trId}" data-trid="${trId}" class="progressive-item" style="border-bottom: ${borderStyle}; background: ${bgStyle}; transition: background 0.2s; opacity:${opacityStr}; text-decoration:${decoStr}; animation-delay: ${Math.min(index * 0.05, 2)}s;" onclick="window.selecionarLinha(event, '${trId}')" onmouseover="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='rgba(255,255,255,0.02)'" onmouseout="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='transparent'">
+        <tr id="tr-${trId}" data-trid="${trId}" class="progressive-item" style="border-bottom: ${borderStyle}; background: ${bgStyle}; transition: background 0.2s; ${animationStyle} opacity:${opacityStr}; text-decoration:${decoStr};" onclick="window.selecionarLinha(event, '${trId}')" onmouseover="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='rgba(255,255,255,0.02)'" onmouseout="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='transparent'">
           <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">
              <div>${icon} ${tipo}</div>
              ${checkIgnorarHtml}
@@ -1286,7 +1302,7 @@ function stopAIThinking() {
             let parts = idSelecionado.split('-');
             let sTipo = parts[0];
             let sIdx = parseInt(parts[1]);
-            let sList = sTipo === 'Adicionar' ? dadosSincronizacao.faltantes : (sTipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+            let sList = sTipo === 'Adicionar' ? dadosSincronizacao.faltantes : (sTipo === 'Excluir' ? dadosSincronizacao.sobrando : (sTipo === 'Junção' ? dadosSincronizacao.juncoes : dadosSincronizacao.corretos));
             let itemAlvo = (sTipo === 'Correto') ? sList[sIdx].planilha : sList[sIdx];
             itemAlvo.categoria = val;
             itemAlvo.subcategoria = ''; // reset
@@ -1326,9 +1342,12 @@ function stopAIThinking() {
             let parts = idSelecionado.split('-');
             let sTipo = parts[0];
             let sIdx = parseInt(parts[1]);
-            let sList = sTipo === 'Adicionar' ? dadosSincronizacao.faltantes : (sTipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+            let sList = sTipo === 'Adicionar' ? dadosSincronizacao.faltantes : (sTipo === 'Excluir' ? dadosSincronizacao.sobrando : (sTipo === 'Junção' ? dadosSincronizacao.juncoes : dadosSincronizacao.corretos));
             let itemAlvo = (sTipo === 'Correto') ? sList[sIdx].planilha : sList[sIdx];
-            itemAlvo.subcategoria = val;
+            
+            if (itemAlvo.categoria === t.categoria) {
+                itemAlvo.subcategoria = val;
+            }
         });
 
         renderizarTabelaUnificada();
@@ -1353,6 +1372,7 @@ function stopAIThinking() {
         }
       });
     });
+    window.tabelaIsFirstRender = false;
   }
 
   // Lógica de ordenação global
@@ -1720,13 +1740,12 @@ function stopAIThinking() {
 
       // Substituir alert() por Modal Glassmorphism de Sucesso
       if (typeof confetti === 'function') {
-          const coinEmoji = confetti.shapeFromText({ text: '🪙', scalar: 2 });
           confetti({
               particleCount: 150,
               spread: 90,
               origin: { y: 0.1 },
-              shapes: [coinEmoji],
-              scalar: 1.5,
+              colors: ['#FFD700', '#F59E0B', '#FBBF24'],
+              scalar: 1.2,
               ticks: 300,
               gravity: 1.2
           });
