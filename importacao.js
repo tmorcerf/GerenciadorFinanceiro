@@ -822,7 +822,53 @@ function stopAIThinking() {
                       // Verifica se é o nascimento da conta (Marco Zero)
                       const isNovaConta = (window.payloadAtual && window.payloadAtual.conta && window.payloadAtual.conta.existente === false);
                       
-                      if (isFechamentoOficial) {
+                      let isImportacaoRetroativa = false;
+                      let isEncaixePerfeito = false;
+                      let diferencaEncaixe = 0;
+                      let saldoInicialAncora = null;
+                      let dataAncora = null;
+                      
+                      if (!isNovaConta && contaMatch && contaMatch.conciliado_desde && contaMatch.saldo_inicial !== undefined && contaMatch.saldo_inicial !== null) {
+                          const parseDataBr = (d) => { let p = String(d).split('/'); return new Date(p[2], p[1]-1, p[0]).getTime(); };
+                          let oldFirst = parseDataBr(contaMatch.conciliado_desde);
+                          let newFirst = parseDataBr(perInicio);
+                          
+                          if (newFirst < oldFirst) {
+                              isImportacaoRetroativa = true;
+                              saldoInicialAncora = contaMatch.saldo_inicial;
+                              dataAncora = contaMatch.conciliado_desde;
+                              
+                              diferencaEncaixe = Math.abs(extSaldoFim - saldoInicialAncora);
+                              if (diferencaEncaixe <= 0.05) {
+                                  isEncaixePerfeito = true;
+                              }
+                          }
+                      }
+                      
+                      if (isImportacaoRetroativa) {
+                          if (isEncaixePerfeito) {
+                              cenTitle = `<i class="fas fa-link"></i> Encaixe Retroativo Perfeito`;
+                              cenMsg = `<div style="line-height:1.5;">
+                                  <strong>Extrato anterior ao movimento já lançado. Saldo inicial será ajustado!</strong><br><br>
+                                  Saldo final deste período incluído: <b>R$ ${extSaldoFim.toFixed(2)}</b><br>
+                                  Saldo inicial do período seguinte já validado (${dataAncora}): <b>R$ ${saldoInicialAncora.toFixed(2)}</b><br>
+                                  <span style="color: #10b981;"><i class="fas fa-check-double"></i> Check!!! Matemática Perfeita</span><br><br>
+                                  O sistema ajustará a nova âncora de saldo inicial automaticamente.
+                              </div>`;
+                              cenColor = '#10b981';
+                          } else {
+                              cenTitle = `<i class="fas fa-unlink"></i> Falha no Encaixe Retroativo`;
+                              cenMsg = `<div style="line-height:1.5;">
+                                  <strong>Este extrato não se conecta com o seu histórico atual!</strong><br><br>
+                                  A última data desta conta conciliada é <b>${dataAncora}</b> com um Saldo Inicial de <b>R$ ${saldoInicialAncora.toFixed(2)}</b>.<br>
+                                  Porém, este extrato que você está importando termina com um Saldo Final de <b>R$ ${extSaldoFim.toFixed(2)}</b>.<br>
+                                  Diferença no encaixe: <b>R$ ${diferencaEncaixe.toFixed(2)}</b><br><br>
+                                  Só é permitido importar lançamentos anteriores se o "encaixe" dos saldos for perfeito, para não quebrar a contabilidade.
+                              </div>`;
+                              cenColor = '#ef4444';
+                              isValidadoMatematicamente = false;
+                          }
+                      } else if (isFechamentoOficial) {
                           if (isNovaConta) {
                               cenTitle = `<i class="fas fa-flag-checkered"></i> Marco Zero Estabelecido`;
                               cenMsg = `<div style="line-height:1.5;">
