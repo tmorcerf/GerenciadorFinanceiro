@@ -31,9 +31,47 @@ window.IACategorizador = (function() {
     var historicoGlobal120d = opts.historicoGlobal120d || [];
     var vocabulario = opts.vocabulario || {};
 
-    var systemPrompt = 'Você é um motor de categorização financeira semântica de alta precisão. ' +
-      'Analise as transações fornecidas e mapeie cada uma para a categoria mais apropriada, ' +
-      'baseando-se EXCLUSIVAMENTE nos padrões históricos do usuário fornecidos. Retorne APENAS JSON válido.';
+    function sanitizeForLLM(str) {
+        if (typeof str !== 'string') return str;
+        return str
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+            .replace(/\s+/g, ' ')
+            .replace(/[\u200B-\u200D\uFEFF\uFFFD]/g, '')
+            .trim();
+    }
+
+    function extractKeywords(text) {
+        if (!text) return [];
+        return text.toLowerCase()
+                   .replace(/[^a-z0-9à-ÿ]/g, ' ')
+                   .split(/\s+/)
+                   .filter(w => w.length > 3 && !['para', 'com', 'dos', 'das'].includes(w));
+    }
+
+    var systemPrompt = `Você é um motor de categorização financeira de precisão militar. 
+Sua única função é mapear um array de entrada para um array de saída 1-para-1, sem perder ou omitir NENHUM item.
+
+REGRAS ESTABELECIDAS:
+1. O array de saída "data" DEVE ter EXATAMENTE o mesmo número de itens do array de entrada.
+2. O campo "cod" deve ser copiado exatamente como recebido.
+3. Valores negativos = despesas. Positivos = receitas, transferências ou ESTORNOS.
+4. REGRA DE ESTORNO: Estornos devem manter a categoria da despesa original.
+5. Para transações novas, deduza a natureza real do gasto por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Casa, "Brasilprev" -> Seguros/Previdência).
+6. Use APENAS as categorias da lista fornecida no Prompt do Usuário.
+
+FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
+Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
+{
+  "status": "success",
+  "data": [
+    {
+      "cod": "ID_COPIADO_DA_ENTRADA",
+      "categoria": "Categoria Principal",
+      "subcategoria": "Subcategoria",
+      "descricao_limpa": "Descrição amigável sem lixo"
+    }
+  ]
+}`;
 
     function formatHistory(arr) {
         return arr.map(function(l) {
@@ -49,39 +87,47 @@ window.IACategorizador = (function() {
         .join('\n');
 
     let allData = [];
-    let analiseFinal = "Classifiquei seus gastos mais rápido que um golpe de shuriken!";
+    let analiseFinal = "Classifiquei seus gastos e escapei das armadilhas da preguiça!";
     const CHUNK_SIZE = 15;
 
-    console.groupCollapsed(`[Ninja Categorizador] Iniciando Processamento IA - Total: ${transacoesAll.length} transações`);
+    var transacoesLimpas = transacoesAll.map(t => ({
+        ...t,
+        descricao: sanitizeForLLM(t.descricao),
+        conta: sanitizeForLLM(t.conta)
+    }));
+
+    var allHistory = [...historicoConta360d, ...historicoTransferencias360d, ...historicoGlobal120d];
+    var uniqueHistory = new Map();
+    allHistory.forEach(t => {
+        var cleanDesc = sanitizeForLLM(t.descricao || '').toUpperCase().replace(/[0-9]/g, '').trim();
+        var key = cleanDesc + '|' + (t.categoria||'') + '|' + (t.subcategoria||'');
+        if (!uniqueHistory.has(key)) uniqueHistory.set(key, t);
+    });
+    var deduplicatedHistory = Array.from(uniqueHistory.values());
+
+    console.groupCollapsed(`[Ninja Categorizador] Iniciando Processamento IA - Total: ${transacoesLimpas.length} transações`);
     console.log("Categorias Tree:", categoriasTree);
-    console.log("Histórico 360d:", historicoConta360d.length, "itens");
-    console.log("Transferências 30d:", historicoTransferencias360d.length, "itens");
-    console.log("Global 120d:", historicoGlobal120d.length, "itens");
+    console.log("Histórico Dedup Total:", deduplicatedHistory.length, "itens únicos de um total de", allHistory.length);
     console.log("Vocabulário:", vocabEntries.length, "itens");
 
-    for (let i = 0; i < transacoesAll.length; i += CHUNK_SIZE) {
-        let chunk = transacoesAll.slice(i, i + CHUNK_SIZE);
+    for (let i = 0; i < transacoesLimpas.length; i += CHUNK_SIZE) {
+        let chunk = transacoesLimpas.slice(i, i + CHUNK_SIZE);
         console.groupCollapsed(`[Ninja Categorizador] Processando Lote ${Math.floor(i/CHUNK_SIZE)+1} (Tamanho do Lote: ${chunk.length})`);
 
+        let chunkKeywords = new Set();
+        chunk.forEach(t => { extractKeywords(t.descricao).forEach(w => chunkKeywords.add(w)); });
+
+        let relevantHistory = deduplicatedHistory.filter(h => {
+            let hWords = extractKeywords(h.descricao);
+            return hWords.some(w => chunkKeywords.has(w));
+        }).slice(0, 30);
+
         var userContent = 
-          '<vocabulario_usuario>\n' + (vocabCompacto || 'Sem vocabulario.') + '\n</vocabulario_usuario>\n\n' +
-          '<historico_conta_atual_360d>\n' + (formatHistory(historicoConta360d) || 'Sem historico.') + '\n</historico_conta_atual_360d>\n\n' +
-          '<historico_transferencias_30>\n' + (formatHistory(historicoTransferencias360d) || 'Sem transferencias.') + '\n</historico_transferencias_30>\n\n' +
-          '<historico_global_recentes_120d>\n' + (formatHistory(historicoGlobal120d) || 'Sem historico global.') + '\n</historico_global_recentes_120d>\n\n' +
-          '<novas_transacoes>\n' + JSON.stringify(chunk) + '\n</novas_transacoes>\n\n' +
-          '<instrucoes_finais>\n' +
-          'Você é um cientista de dados financeiro Ninja. Siga estas regras estritas:\n' +
-          '1. Priorize <historico_conta_atual_360d> e <vocabulario_usuario> para decidir a categoria.\n' +
-          '2. Para transações novas, aja analiticamente: deduza a natureza real do gasto por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Casa, "Brasilprev" -> Seguros/Previdência).\n' +
-          '3. Valores negativos = despesas. Valores positivos = receitas, transferências ou ESTORNOS.\n' +
-          '4. REGRA DE ESTORNO: Se for um estorno ou devolução (ex: "Estorno de Débito SEGURO DE VIDA"), a categoria DEVE SER EXATAMENTE A MESMA da despesa original. Nunca classifique estornos de despesas como Receitas.\n' +
-          '5. Use APENAS categorias da lista: ' + JSON.stringify(categoriasTree) + '.\n' +
-          '6. PARCELAMENTO: Busque "1/6", "01/06", "1-6". Se achar, is_parcelado=true e preencha as parcelas.\n' +
-          '7. Campo "analise_ia" NO INICIO do JSON - MAX 1 FRASE CURTA sendo bem direto, em tom cômico de um mestre Ninja cortador de gastos. SEM QUEBRAS DE LINHA, sem acento.\n' +
-          '8. CRÍTICO: array "data" contem EXATAMENTE ' + chunk.length + ' elementos - um para cada item de <novas_transacoes>. PROIBIDO incluir histórico. OBRIGATÓRIO manter o valor "cod" original exato (copie igual da entrada).\n' +
-          'RETORNE EXATAMENTE (com ' + chunk.length + ' itens no array data):\n' +
-          '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"(copie o cod original)","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
-          '</instrucoes_finais>';
+          '[CATEGORIAS VALIDAS]\n' + JSON.stringify(categoriasTree) + '\n\n' +
+          '[REFERENCIA: VOCABULARIO]\n' + (vocabCompacto || 'Vazio') + '\n\n' +
+          '[REFERENCIA: HISTORICO JIT]\n' + (formatHistory(relevantHistory) || 'Vazio') + '\n\n' +
+          `[TAREFA: NOVAS TRANSACOES (TOTAL: ${chunk.length} ITENS)]\n` + JSON.stringify(chunk) + '\n\n' +
+          `Lembrete: O array "data" no seu JSON de resposta DEVE conter exatamente ${chunk.length} itens correspondentes aos itens acima. Mantenha os "cod" idênticos.`;
 
         console.log("User Content Completo enviado à API:", userContent);
         
@@ -97,8 +143,31 @@ window.IACategorizador = (function() {
             if (resultCat.data.length < chunk.length) {
                 console.error(`🚨 ALERTA DE PREGUIÇA IA: Faltaram ${chunk.length - resultCat.data.length} itens neste lote!`);
             }
-            allData = allData.concat(resultCat.data);
-            if (resultCat.analise_ia) analiseFinal = resultCat.analise_ia;
+            
+            let parsedData = resultCat.data.map(item => {
+                let originalTx = chunk.find(t => t.cod === item.cod);
+                let is_parcelado = false;
+                let parcela_atual = null;
+                let total_parcelas = null;
+                
+                if (originalTx && originalTx.descricao) {
+                    let pMatch = originalTx.descricao.match(/(\d{1,2})\/(\d{1,2})/);
+                    if (pMatch) {
+                        is_parcelado = true;
+                        parcela_atual = parseInt(pMatch[1], 10);
+                        total_parcelas = parseInt(pMatch[2], 10);
+                    }
+                }
+                
+                return {
+                    ...item,
+                    is_parcelado,
+                    parcela_atual,
+                    total_parcelas
+                };
+            });
+            
+            allData = allData.concat(parsedData);
         } else if (resultCat && Array.isArray(resultCat)) {
             console.warn("API retornou um array puro em vez de objeto status:", resultCat);
             allData = allData.concat(resultCat);
