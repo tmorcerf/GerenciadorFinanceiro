@@ -2917,6 +2917,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         }
 
         let lockHtml = l.conciliado ? `<i class="fas fa-lock" style="color: var(--text-muted); font-size: 0.75rem; margin-right: 5px;" title="Lançamento Conciliado (Protegido)"></i>` : '';
+        lockHtml = `<span class="left-lock-${l.cod}">${lockHtml}</span>`;
 
         row.id = `tr-${l.cod}`;
         row.innerHTML = `
@@ -5916,14 +5917,20 @@ window.toggleInlineEdit = function(cod, iconElement) {
     const tr = document.getElementById(`tr-${cod}`);
     if (!tr) return;
     
-    // Change icon to red padlock and point to openEditTransactionModal
-    iconElement.className = "fas fa-lock";
-    iconElement.style.color = "#ef4444"; // red
+    // Transform pencil into green checkmark
+    iconElement.className = "fas fa-check";
+    iconElement.style.color = "var(--color-income)";
     iconElement.style.opacity = "1";
-    iconElement.title = "Abrir modal completo (Campos protegidos)";
+    iconElement.title = "Salvar Informações";
     iconElement.onmouseover = null;
     iconElement.onmouseout = null;
-    iconElement.onclick = function() { window.openEditTransactionModal(cod); };
+    iconElement.onclick = function() { window.saveInlineEdit(cod); };
+    
+    // Put red padlock on the far left column
+    const leftLockSpan = tr.querySelector(`.left-lock-${cod}`);
+    if (leftLockSpan) {
+        leftLockSpan.innerHTML = `<i class="fas fa-lock" style="color: #ef4444; font-size: 0.85rem; margin-right: 5px; cursor: pointer;" title="Abrir modal completo (Campos protegidos e Desconciliação futura)" onclick="window.openEditTransactionModal('${cod}')"></i>`;
+    }
     
     // Find TDs
     const tdVenc = tr.querySelector('.td-vencimento');
