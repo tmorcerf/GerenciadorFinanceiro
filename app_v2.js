@@ -2757,40 +2757,18 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
       // 4. Calculate Running Balance
       let runningBalance = 0;
-      if (window.dadosFinanceiros && Array.isArray(window.dadosFinanceiros.contas)) {
+      if (dadosFinanceiros && Array.isArray(dadosFinanceiros.contas)) {
           if (txAccountFilter !== 'all') {
-              const c = window.dadosFinanceiros.contas.find(acc => acc && acc.nome && acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
+              const c = dadosFinanceiros.contas.find(acc => acc && acc.nome && acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
               if (c) {
-                  runningBalance = parseFloat(c.saldo_inicial || 0) || 0;
+                  // Se has_saldo_tx for verdadeiro, o loop abaixo ja vai somar a transacao, 
+                  // entao evitamos duplicidade iniciando com 0.
+                  runningBalance = c._has_saldo_tx ? 0 : (parseFloat(c.saldo_inicial || 0) || 0);
               }
           } else {
-              runningBalance = window.dadosFinanceiros.contas.reduce((sum, acc) => sum + (parseFloat(acc.saldo_inicial || 0) || 0), 0);
+              runningBalance = dadosFinanceiros.contas.reduce((sum, acc) => sum + (acc._has_saldo_tx ? 0 : (parseFloat(acc.saldo_inicial || 0) || 0)), 0);
           }
       }
-      
-      // DEBUG VISUAL SEGURO - SEMPRE EXECUTA
-      setTimeout(() => {
-          const tableDiv = document.querySelector('#transactions-table');
-          if (tableDiv && tableDiv.parentElement) {
-              let debugBanner = document.getElementById('debug-banner-saldo');
-              if (!debugBanner) {
-                  debugBanner = document.createElement('div');
-                  debugBanner.id = 'debug-banner-saldo';
-                  debugBanner.style = "background: #ffaa00; color: #000; padding: 10px; font-size: 14px; font-family: monospace; z-index: 9999; margin-bottom: 10px; border-radius: 4px; font-weight: bold;";
-                  tableDiv.parentElement.insertBefore(debugBanner, tableDiv);
-              }
-              const foundC = window.dadosFinanceiros?.contas?.find(acc => acc && acc.nome && acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
-              const accountNames = (window.dadosFinanceiros?.contas || []).map(a => `'${a.nome}'`).join(', ');
-              
-              debugBanner.innerHTML = `Lançamentos Debug:<br>` +
-                `Filtro Selecionado na Memória: "${txAccountFilter}"<br>` +
-                `Contas no DB: ${window.dadosFinanceiros?.contas?.length || 0}<br>` + 
-                `Nomes das Contas no DB: ${accountNames}<br>` +
-                `Conta Encontrada: ${foundC ? foundC.nome : 'FALSO'}<br>` +
-                `Saldo Inicial no DB para ESTA conta: ${foundC ? foundC.saldo_inicial : 'N/A'}<br>` +
-                `Valor convertido para matematica: ${foundC ? (parseFloat(foundC.saldo_inicial || 0) || 0) : 0}`;
-          }
-      }, 100);
 
       baseTxs.forEach(tx => {
         runningBalance += (parseFloat(tx.valor) || 0);
