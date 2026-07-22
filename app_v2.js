@@ -2757,44 +2757,19 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
       // 4. Calculate Running Balance
       let runningBalance = 0;
-      if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+      if (window.dadosFinanceiros && Array.isArray(window.dadosFinanceiros.contas)) {
           if (txAccountFilter !== 'all') {
-              const c = window.dadosFinanceiros.contas.find(acc => acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
-              
-              // DEBUG VISUAL PARA O USUÁRIO VER
-              const debugEl = document.getElementById('user-points-display');
-              if (debugEl) {
-                  debugEl.textContent = `SI: ${c?.saldo_inicial} | HasTx: ${c?._has_saldo_tx}`;
-              }
-
+              const c = window.dadosFinanceiros.contas.find(acc => acc && acc.nome && acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
               if (c) {
-                  // Força o uso do saldo_inicial para testar se é o has_saldo_tx que está bloqueando
-                  runningBalance = parseFloat(c.saldo_inicial) || 0;
+                  runningBalance = parseFloat(c.saldo_inicial || 0) || 0;
               }
           } else {
-              runningBalance = window.dadosFinanceiros.contas.reduce((sum, acc) => sum + (parseFloat(acc.saldo_inicial) || 0), 0);
+              runningBalance = window.dadosFinanceiros.contas.reduce((sum, acc) => sum + (parseFloat(acc.saldo_inicial || 0) || 0), 0);
           }
-      }
-      
-      // INJEÇÃO DE DEBUG EXTREMO
-      const tableDiv = document.querySelector('#transactions-table');
-      if (tableDiv && tableDiv.parentElement) {
-          let debugBanner = document.getElementById('debug-banner-saldo');
-          if (!debugBanner) {
-              debugBanner = document.createElement('div');
-              debugBanner.id = 'debug-banner-saldo';
-              debugBanner.style = "background: red; color: white; padding: 10px; font-size: 14px; font-family: monospace; z-index: 9999;";
-              tableDiv.parentElement.insertBefore(debugBanner, tableDiv);
-          }
-          let cData = window.dadosFinanceiros.contas.find(acc => acc.nome.toLowerCase() === txAccountFilter.toLowerCase());
-          debugBanner.innerHTML = `DEBUG: txAccountFilter="${txAccountFilter}"<br>` +
-            `Conta Encontrada: ${cData ? cData.nome : 'NÃO FOUND'}<br>` + 
-            `c.saldo_inicial="${cData ? cData.saldo_inicial : 'N/A'}" (typeof: ${cData ? typeof cData.saldo_inicial : 'N/A'})<br>` +
-            `runningBalance inicial computado: ${runningBalance}`;
       }
 
       baseTxs.forEach(tx => {
-        runningBalance += tx.valor;
+        runningBalance += (parseFloat(tx.valor) || 0);
         tx._saldo_do_dia = runningBalance;
       });
 
