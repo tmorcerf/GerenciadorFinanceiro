@@ -211,7 +211,9 @@ class Database {
                               upd.saldo_inicial = conciliacaoContinua.saldo_inicial;
                               upd.conciliado_desde = conciliacaoContinua.desde;
                           }
-                          upd.conciliado_ate = upd.ultimo_mes_fechado;
+                          if (upd.ultimo_mes_fechado) {
+                              upd.conciliado_ate = upd.ultimo_mes_fechado;
+                          }
                       }
                   } else if (conciliacaoContinua.acao === 'fechamento_cartao') {
                       // Cartões fecham por fatura, registramos a última fatura validada
