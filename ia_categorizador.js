@@ -52,8 +52,16 @@ window.IACategorizador = (function() {
     let analiseFinal = "Classifiquei seus gastos mais rápido que um golpe de shuriken!";
     const CHUNK_SIZE = 15;
 
+    console.groupCollapsed(`[Ninja Categorizador] Iniciando Processamento IA - Total: ${transacoesAll.length} transações`);
+    console.log("Categorias Tree:", categoriasTree);
+    console.log("Histórico 360d:", historicoConta360d.length, "itens");
+    console.log("Transferências 30d:", historicoTransferencias360d.length, "itens");
+    console.log("Global 120d:", historicoGlobal120d.length, "itens");
+    console.log("Vocabulário:", vocabEntries.length, "itens");
+
     for (let i = 0; i < transacoesAll.length; i += CHUNK_SIZE) {
         let chunk = transacoesAll.slice(i, i + CHUNK_SIZE);
+        console.groupCollapsed(`[Ninja Categorizador] Processando Lote ${Math.floor(i/CHUNK_SIZE)+1} (Tamanho do Lote: ${chunk.length})`);
 
         var userContent = 
           '<vocabulario_usuario>\n' + (vocabCompacto || 'Sem vocabulario.') + '\n</vocabulario_usuario>\n\n' +
@@ -75,15 +83,34 @@ window.IACategorizador = (function() {
           '{"status":"success","analise_ia":"Classifiquei seus gastos mais rapido que um golpe de shuriken!","data":[{"cod":"(copie o cod original)","categoria":"...","subcategoria":"...","descricao_limpa":"...","is_parcelado":false,"parcela_atual":null,"total_parcelas":null}]}\n' +
           '</instrucoes_finais>';
 
+        console.log("User Content Completo enviado à API:", userContent);
+        
+        let t0 = performance.now();
         let resultCat = await window.IACore.chamarGemini(window.IACore.MODEL_PRO, systemPrompt, userContent, null, { _maxOutputTokens: 16384 });
+        let t1 = performance.now();
+        
+        console.log(`Tempo de resposta Gemini: ${(t1 - t0).toFixed(2)}ms`);
+        console.log("Resposta Bruta Gemini:", resultCat);
         
         if (resultCat && resultCat.status === 'success' && Array.isArray(resultCat.data)) {
+            console.log(`Sucesso no Lote! Retornados: ${resultCat.data.length} de ${chunk.length} originais.`);
+            if (resultCat.data.length < chunk.length) {
+                console.error(`🚨 ALERTA DE PREGUIÇA IA: Faltaram ${chunk.length - resultCat.data.length} itens neste lote!`);
+            }
             allData = allData.concat(resultCat.data);
             if (resultCat.analise_ia) analiseFinal = resultCat.analise_ia;
         } else if (resultCat && Array.isArray(resultCat)) {
+            console.warn("API retornou um array puro em vez de objeto status:", resultCat);
             allData = allData.concat(resultCat);
+        } else {
+            console.error("Falha bizarra no formato de resposta da API:", resultCat);
         }
+        
+        console.groupEnd();
     }
+
+    console.log("Resumo Final de Categorização compilado:", allData);
+    console.groupEnd();
 
     return { status: 'success', analise_ia: analiseFinal, data: allData };
   }
