@@ -19,15 +19,14 @@ if ($conteudo -match 'v ?(0\.\d+\.\d+)') {
   $novoMinor = [int]$partes[2] + 1
   $novaVersao = "$($partes[0]).$($partes[1]).$novoMinor"
 } else {
-  $novaVersao = "0.9.9951"
+  $novaVersao = "0.9.99716"
 }
 
-# 3. Gera timestamp
-$agora = Get-Date -Format "dd/MM/yyyy, HH:mm:ss"
-$novoTexto = "v $novaVersao - $agora"
+# 3. Formata novo texto da versao (sem data)
+$novoTexto = "v $novaVersao"
 
 # 4. Substitui no HTML
-$conteudo = $conteudo -replace 'v ?0\.\d+\.\d+(?:0)? - \d{2}/\d{2}/\d{4}, \d{2}:\d{2}(:\d{2})?', $novoTexto
+$conteudo = $conteudo -replace 'v ?0\.\d+\.\d+', $novoTexto
 Set-Content -Path $indexPath -Value $conteudo -Encoding UTF8 -NoNewline
 
 Write-Host "Versao atualizada: $novoTexto" -ForegroundColor Green

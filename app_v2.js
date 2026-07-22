@@ -2918,17 +2918,18 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
         let lockHtml = l.conciliado ? `<i class="fas fa-lock" style="color: var(--text-muted); font-size: 0.75rem; margin-right: 5px;" title="Lançamento Conciliado (Protegido)"></i>` : '';
 
+        row.id = `tr-${l.cod}`;
         row.innerHTML = `
           <td style="white-space: nowrap;">${lockHtml}${l.data || '-'}</td>
-          <td>${l.vencimento || l.data || '-'}</td>
+          <td class="td-vencimento" data-val="${l.vencimento || ''}">${l.vencimento || l.data || '-'}</td>
           <td>${l.conta || '-'}</td>
-          <td style="color:var(--text-primary); font-size:0.88rem;">${l.categoria || 'Outros'}</td>
-          <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
-          <td>${l.obs || l.descricao || '-'}</td>
+          <td class="td-categoria" data-val="${l.categoria || ''}" style="color:var(--text-primary); font-size:0.88rem;">${l.categoria || 'Outros'}</td>
+          <td class="td-subcategoria" data-val="${l.subcategoria || ''}" style="font-size: 0.85rem; color: var(--text-secondary);">${l.subcategoria || '-'}</td>
+          <td class="td-obs" data-val="${l.obs || l.descricao || ''}">${l.obs || l.descricao || '-'}</td>
           <td class="${valClass}" style="text-align: right;">${valPrefix}${formatBRL(l.valor)}</td>
           <td style="text-align: right;">${saldoDiaHtml}</td>
           <td style="text-align: center; width: 50px;">
-            <i class="fas fa-pencil-alt" style="color:var(--text-muted); cursor:pointer;" onclick="window.openEditTransactionModal('${l.cod}')" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'" title="Editar"></i>
+            <i class="fas fa-pencil-alt" id="icon-${l.cod}" style="color:var(--text-muted); cursor:pointer;" onclick="window.toggleInlineEdit('${l.cod}', this)" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'" title="Edição Rápida"></i>
           </td>
         `;
         transactionsTableBody.appendChild(row);
@@ -5910,6 +5911,182 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       }
       
     });
+
+window.toggleInlineEdit = function(cod, iconElement) {
+    const tr = document.getElementById(`tr-${cod}`);
+    if (!tr) return;
+    
+    // Change icon to red padlock and point to openEditTransactionModal
+    iconElement.className = "fas fa-lock";
+    iconElement.style.color = "#ef4444"; // red
+    iconElement.style.opacity = "1";
+    iconElement.title = "Abrir modal completo (Campos protegidos)";
+    iconElement.onmouseover = null;
+    iconElement.onmouseout = null;
+    iconElement.onclick = function() { window.openEditTransactionModal(cod); };
+    
+    // Find TDs
+    const tdVenc = tr.querySelector('.td-vencimento');
+    const tdCat = tr.querySelector('.td-categoria');
+    const tdSub = tr.querySelector('.td-subcategoria');
+    const tdObs = tr.querySelector('.td-obs');
+    
+    if (!tdVenc || !tdCat || !tdSub || !tdObs) return;
+    
+    // Get current values
+    const curVenc = tdVenc.getAttribute('data-val') || '';
+    const curCat = tdCat.getAttribute('data-val') || '';
+    const curSub = tdSub.getAttribute('data-val') || '';
+    const curObs = tdObs.getAttribute('data-val') || '';
+    
+    // Convert Venc to YYYY-MM-DD for input type="date"
+    let vencIso = '';
+    if (curVenc) {
+        const parts = curVenc.split('/');
+        if (parts.length === 3) vencIso = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    // Build category options
+    let catOptions = `<option value="">Outros</option>`;
+    const dic = window.dicionarioGeral || {};
+    Object.keys(dic).sort().forEach(c => {
+        catOptions += `<option value="${c}" ${c === curCat ? 'selected' : ''}>${c}</option>`;
+    });
+    
+    // Build subcategory options
+    let subOptions = `<option value="">-</option>`;
+    if (curCat && dic[curCat]) {
+        dic[curCat].forEach(s => {
+            subOptions += `<option value="${s}" ${s === curSub ? 'selected' : ''}>${s}</option>`;
+        });
+    }
+    
+    // Create inputs
+    tdVenc.innerHTML = `<input type="date" value="${vencIso}" class="inline-edit-input" data-field="vencimento" style="width: 110px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px 4px; border-radius: 4px; font-size: 0.85rem;">`;
+    
+    tdCat.innerHTML = `<select class="inline-edit-input" data-field="categoria" style="width: 120px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px; border-radius: 4px; font-size: 0.85rem;" onchange="window.updateInlineSubcat(this, '${cod}')">${catOptions}</select>`;
+    
+    tdSub.innerHTML = `<select class="inline-edit-input inline-subcat-${cod}" data-field="subcategoria" style="width: 120px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px; border-radius: 4px; font-size: 0.85rem;">${subOptions}</select>`;
+    
+    tdObs.innerHTML = `<input type="text" value="${curObs}" class="inline-edit-input" data-field="obs" style="width: 100%; min-width: 150px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">`;
+    
+    // Attach blur events to auto-save (with a small timeout to allow clicking options without closing immediately)
+    const inputs = tr.querySelectorAll('.inline-edit-input');
+    inputs.forEach(inp => {
+        inp.addEventListener('blur', (e) => {
+            // Need a timeout because clicking the lock or a dropdown option might trigger blur
+            setTimeout(() => {
+                // If focus moved to another inline input within the same TR, do not save yet
+                if (!tr.contains(document.activeElement)) {
+                    window.saveInlineEdit(cod);
+                }
+            }, 150);
+        });
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                inp.blur();
+            }
+        });
+    });
+    
+    // Focus the observation field
+    setTimeout(() => {
+        const obsInput = tdObs.querySelector('input');
+        if (obsInput) {
+            obsInput.focus();
+            obsInput.setSelectionRange(obsInput.value.length, obsInput.value.length);
+        }
+    }, 50);
+};
+
+window.updateInlineSubcat = function(catSelect, cod) {
+    const cat = catSelect.value;
+    const dic = window.dicionarioGeral || {};
+    const subSelect = document.querySelector(`.inline-subcat-${cod}`);
+    if (!subSelect) return;
+    
+    let subOptions = `<option value="">-</option>`;
+    if (cat && dic[cat]) {
+        dic[cat].forEach(s => {
+            subOptions += `<option value="${s}">${s}</option>`;
+        });
+    }
+    subSelect.innerHTML = subOptions;
+};
+
+window.saveInlineEdit = async function(cod) {
+    const tr = document.getElementById(`tr-${cod}`);
+    if (!tr) return;
+    
+    const tdVenc = tr.querySelector('.td-vencimento');
+    const tdCat = tr.querySelector('.td-categoria');
+    const tdSub = tr.querySelector('.td-subcategoria');
+    const tdObs = tr.querySelector('.td-obs');
+    
+    const inpVenc = tdVenc.querySelector('input');
+    const inpCat = tdCat.querySelector('select');
+    const inpSub = tdSub.querySelector('select');
+    const inpObs = tdObs.querySelector('input');
+    
+    if (!inpVenc || !inpCat || !inpSub || !inpObs) return; // already saved/closed
+    
+    const newVencIso = inpVenc.value;
+    let newVenc = '';
+    if (newVencIso) {
+        const p = newVencIso.split('-');
+        if (p.length === 3) newVenc = `${p[2]}/${p[1]}/${p[0]}`;
+    }
+    
+    const newCat = inpCat.value;
+    const newSub = inpSub.value;
+    const newObs = inpObs.value;
+    
+    const curVenc = tdVenc.getAttribute('data-val') || '';
+    const curCat = tdCat.getAttribute('data-val') || '';
+    const curSub = tdSub.getAttribute('data-val') || '';
+    const curObs = tdObs.getAttribute('data-val') || '';
+    
+    // Check if anything changed
+    if (newVenc === curVenc && newCat === curCat && newSub === curSub && newObs === curObs) {
+        // Just revert UI
+        window.renderTransactionsTable(); 
+        return;
+    }
+    
+    // Save to DB
+    const t = window.dadosFinanceiros.lancamentos.find(l => l.cod == cod);
+    if (!t) return;
+    
+    const originalCat = t.categoria;
+    const isIncome = t.valor > 0;
+    
+    const payload = {
+        cod: cod,
+        data: t.data,
+        vencimento: newVenc || t.data,
+        conta: t.conta,
+        valor: t.valor,
+        categoria: newCat,
+        subcategoria: newSub,
+        obs: newObs,
+        conciliado: !!t.conciliado
+    };
+    
+    tr.style.opacity = '0.5';
+    
+    if (window.DB && window.DB.salvarLancamentoEditado) {
+        await window.DB.salvarLancamentoEditado(payload, null, true, originalCat, isIncome);
+    }
+    
+    t.vencimento = newVenc || t.data;
+    t.categoria = newCat;
+    t.subcategoria = newSub;
+    t.obs = newObs;
+    t.descricao = newObs;
+    
+    if (window.atualizarDashboard) window.atualizarDashboard();
+    window.renderTransactionsTable();
+};
 
 window.openEditTransactionModal = function(cod) {
   const t = dadosFinanceiros.lancamentos.find(l => l.cod == cod);
