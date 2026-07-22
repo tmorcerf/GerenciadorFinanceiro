@@ -2929,8 +2929,8 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           <td class="td-obs" data-val="${l.obs || l.descricao || ''}">${l.obs || l.descricao || '-'}</td>
           <td class="${valClass}" style="text-align: right;">${valPrefix}${formatBRL(l.valor)}</td>
           <td style="text-align: right;">${saldoDiaHtml}</td>
-          <td style="text-align: center; width: 50px;">
-            <i class="fas fa-pencil-alt" id="icon-${l.cod}" style="color:var(--text-muted); cursor:pointer;" onclick="window.toggleInlineEdit('${l.cod}', this)" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'" title="Edição Rápida"></i>
+          <td style="text-align: center; width: 50px; cursor: pointer;" onclick="if(this.querySelector('.fa-check')) window.saveInlineEdit('${l.cod}'); else window.toggleInlineEdit('${l.cod}', this.querySelector('i'));">
+            <i class="fas fa-pencil-alt" id="icon-${l.cod}" style="color:var(--text-muted);" onmouseover="this.style.color='var(--color-accent)'" onmouseout="this.style.color='var(--text-muted)'" title="Edição Rápida"></i>
           </td>
         `;
         transactionsTableBody.appendChild(row);
@@ -5917,13 +5917,12 @@ window.toggleInlineEdit = function(cod, iconElement) {
     const tr = document.getElementById(`tr-${cod}`);
     if (!tr) return;
     
-    // Transform pencil into green checkmark
-    iconElement.className = "fas fa-check";
-    iconElement.style.color = "var(--color-income)";
-    iconElement.style.opacity = "1";
-    iconElement.title = "Salvar Informações";
-    iconElement.onmouseover = null;
-    iconElement.onmouseout = null;
+    if (iconElement) {
+        iconElement.className = "fas fa-check";
+        iconElement.style.color = "var(--color-income)";
+        iconElement.style.opacity = "1";
+        iconElement.title = "Salvar Informações";
+    }
     iconElement.onclick = function() { window.saveInlineEdit(cod); };
     
     // Put red padlock on the far left column
@@ -6071,11 +6070,17 @@ window.handleInlineSubcatChange = async function(subSelect, cod) {
 };
 
 window.saveInlineEdit = async function(cod) {
+    console.log("saveInlineEdit chamado para cod:", cod);
     const tr = document.getElementById(`tr-${cod}`);
     if (!tr) {
         console.error("TR não encontrado:", `tr-${cod}`);
         return;
     }
+    if (tr.dataset.saving) {
+        console.log("Já está salvando o cod:", cod);
+        return;
+    }
+    tr.dataset.saving = "true";
     
     const tdVenc = tr.querySelector('.td-vencimento');
     const tdCat = tr.querySelector('.td-categoria');
@@ -6087,7 +6092,10 @@ window.saveInlineEdit = async function(cod) {
     const inpSub = tdSub.querySelector('select');
     const inpObs = tdObs.querySelector('input');
     
-    if (!inpVenc || !inpCat || !inpSub || !inpObs) return; // already saved/closed
+    if (!inpVenc || !inpCat || !inpSub || !inpObs) {
+        console.error("Inputs não encontrados na linha. inpVenc:", !!inpVenc, "inpCat:", !!inpCat, "inpSub:", !!inpSub, "inpObs:", !!inpObs);
+        return; // already saved/closed
+    }
     
     const newVencIso = inpVenc.value;
     let newVenc = '';
