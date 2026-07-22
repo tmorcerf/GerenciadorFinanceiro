@@ -2763,29 +2763,28 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
               if (c) {
                   runningBalance = parseFloat(c.saldo_inicial || 0) || 0;
               }
-              
-              // DEBUG VISUAL SEGURO
-              setTimeout(() => {
-                  const tableDiv = document.querySelector('#transactions-table');
-                  if (tableDiv && tableDiv.parentElement) {
-                      let debugBanner = document.getElementById('debug-banner-saldo');
-                      if (!debugBanner) {
-                          debugBanner = document.createElement('div');
-                          debugBanner.id = 'debug-banner-saldo';
-                          debugBanner.style = "background: #ffaa00; color: #000; padding: 10px; font-size: 14px; font-family: monospace; z-index: 9999; margin-bottom: 10px; border-radius: 4px; font-weight: bold;";
-                          tableDiv.parentElement.insertBefore(debugBanner, tableDiv);
-                      }
-                      debugBanner.innerHTML = `Lançamentos Debug:<br>` +
-                        `Filtro Selecionado: "${txAccountFilter}"<br>` +
-                        `Conta Achada: ${c ? c.nome : 'NÃO Achou'}<br>` + 
-                        `Saldo_inicial no DB: ${c ? c.saldo_inicial : 'N/A'}<br>` +
-                        `runningBalance INICIAL ANTES DO LOOP: ${runningBalance}`;
-                  }
-              }, 100);
           } else {
               runningBalance = window.dadosFinanceiros.contas.reduce((sum, acc) => sum + (parseFloat(acc.saldo_inicial || 0) || 0), 0);
           }
       }
+      
+      // DEBUG VISUAL SEGURO - SEMPRE EXECUTA
+      setTimeout(() => {
+          const tableDiv = document.querySelector('#transactions-table');
+          if (tableDiv && tableDiv.parentElement) {
+              let debugBanner = document.getElementById('debug-banner-saldo');
+              if (!debugBanner) {
+                  debugBanner = document.createElement('div');
+                  debugBanner.id = 'debug-banner-saldo';
+                  debugBanner.style = "background: #ffaa00; color: #000; padding: 10px; font-size: 14px; font-family: monospace; z-index: 9999; margin-bottom: 10px; border-radius: 4px; font-weight: bold;";
+                  tableDiv.parentElement.insertBefore(debugBanner, tableDiv);
+              }
+              debugBanner.innerHTML = `Lançamentos Debug:<br>` +
+                `Filtro Selecionado na Memória: "${txAccountFilter}"<br>` +
+                `Contas no DB: ${window.dadosFinanceiros?.contas?.length || 0}<br>` + 
+                `runningBalance INICIAL ANTES DO LOOP: ${runningBalance}`;
+          }
+      }, 100);
 
       baseTxs.forEach(tx => {
         runningBalance += (parseFloat(tx.valor) || 0);
