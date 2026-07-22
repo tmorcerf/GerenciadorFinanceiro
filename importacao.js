@@ -1803,7 +1803,8 @@ function stopAIThinking() {
               colors: ['#FFD700', '#F59E0B', '#FBBF24'],
               scalar: 1.2,
               ticks: 300,
-              gravity: 1.2
+              gravity: 1.2,
+              zIndex: 10000
           });
       }
 
