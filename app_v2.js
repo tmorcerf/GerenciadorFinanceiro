@@ -7104,3 +7104,221 @@ window.addEventListener('scanner_result', function(e) {
     }
 });
 
+// ========== MODULO: CONCILIACAO DE TRANSFERENCIAS ==========
+
+window.createNewProvisionalAccount = async function(selectId) {
+    const nome = prompt("Digite o nome da Nova Conta Provisória (ex: Nubank, C6):");
+    if (!nome || nome.trim() === '') return;
+    
+    try {
+        const novaConta = {
+            nome: nome.trim(),
+            tipo: 'Conta Corrente',
+            saldo_inicial: 0,
+            saldo: 0,
+            groupId: window.userGroupId
+        };
+        
+        // Salvar no Firebase
+        if (window.firebaseDB) {
+            const docRef = await window.firebaseDB.collection('Contas').add(novaConta);
+            novaConta.id = docRef.id;
+        } else if (window.db) {
+            const docRef = await window.db.collection('Contas').add(novaConta);
+            novaConta.id = docRef.id;
+        }
+        
+        // Atualizar memória local
+        if(!window.dadosFinanceiros.contas) window.dadosFinanceiros.contas = [];
+        window.dadosFinanceiros.contas.push(novaConta);
+        
+        // Recarregar os selects (do formulário)
+        const el = document.getElementById(selectId);
+        if (el) {
+            const opt = document.createElement('option');
+            opt.value = novaConta.nome;
+            opt.textContent = novaConta.nome;
+            el.appendChild(opt);
+            el.value = novaConta.nome;
+        }
+
+        // Forçar renderização imediata nos cards
+        if (typeof window.loadFirebaseData === 'function') {
+            window.loadFirebaseData();
+        } else {
+            if (typeof renderAccounts === 'function') renderAccounts();
+        }
+
+        alert("Conta provisória criada com sucesso!");
+    } catch(e) {
+        console.error("Erro ao criar conta provisória", e);
+        alert("Erro ao criar conta: " + e.message);
+    }
+};
+
+window.renderTransferReconciliation = function() {
+    const leftList = document.getElementById('transfer-left-list');
+    const rightList = document.getElementById('transfer-right-list');
+    const globalBalance = document.getElementById('transfer-global-balance');
+    const globalStatus = document.getElementById('transfer-global-status');
+    const historyList = document.getElementById('transfer-history-content');
+    
+    if(!leftList || !rightList) return;
+    
+    leftList.innerHTML = '';
+    rightList.innerHTML = '';
+    historyList.innerHTML = '';
+    
+    const txs = (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) ? window.dadosFinanceiros.lancamentos : [];
+    
+    let pendingLeft = [];
+    let pendingRight = [];
+    let historyPairs = [];
+    let sumGlobal = 0;
+    
+    txs.forEach(t => {
+        if((t.categoria || '').toLowerCase().includes('transfer') || (t.subcategoria || '').toLowerCase().includes('transfer')) {
+            const val = parseFloat(t.valor) || 0;
+            if(t.transfer_match_id) {
+                historyPairs.push(t);
+            } else {
+                if(val < 0) pendingLeft.push(t);
+                else pendingRight.push(t);
+            }
+            sumGlobal += val;
+        }
+    });
+    
+    if (globalBalance) globalBalance.innerText = sumGlobal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    if (globalStatus) {
+        if(Math.abs(sumGlobal) < 0.01) {
+            globalStatus.innerText = "Perfeitamente equilibrado";
+            globalStatus.style.color = 'var(--color-income)';
+        } else {
+            globalStatus.innerText = "Desequilíbrio! Há transferências não lançadas.";
+            globalStatus.style.color = 'var(--color-warning)';
+        }
+    }
+    
+    const suggestions = {};
+    pendingLeft.forEach(l => {
+        const valL = Math.abs(parseFloat(l.valor) || 0);
+        pendingRight.forEach(r => {
+            const valR = parseFloat(r.valor) || 0;
+            if(Math.abs(valL - valR) < 0.01) {
+                suggestions[l.cod] = r.cod;
+                suggestions[r.cod] = l.cod;
+            }
+        });
+    });
+    
+    const createCard = (t) => {
+        const val = parseFloat(t.valor) || 0;
+        const isMatch = suggestions[t.cod];
+        const extraClass = isMatch ? "match-suggestion-banner" : "";
+        return `
+            <div class="glass-card transfer-card ${extraClass}" style="padding: 10px; cursor: pointer; border-left: 4px solid ${val < 0 ? 'var(--color-expense)' : 'var(--color-income)'}; display: flex; flex-direction: column; gap: 5px;" 
+                 onclick="window.selectTransferForMatch('${t.cod}')" id="transfer-card-${t.cod}">
+                <div style="display: flex; justify-content: space-between; font-weight: 500;">
+                    <span>${t.conta}</span>
+                    <span style="color: ${val < 0 ? 'var(--color-expense)' : 'var(--color-income)'}">${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                    <span>${t.data}</span>
+                    <span>${isMatch ? '<i class="fas fa-magic" style="color:var(--accent-blue);"></i> Sugestão' : ''}</span>
+                </div>
+            </div>
+        `;
+    };
+    
+    pendingLeft.forEach(t => leftList.innerHTML += createCard(t));
+    pendingRight.forEach(t => rightList.innerHTML += createCard(t));
+    
+    const historyMap = {};
+    historyPairs.forEach(t => {
+        if(!historyMap[t.transfer_match_id]) historyMap[t.transfer_match_id] = [];
+        historyMap[t.transfer_match_id].push(t);
+    });
+    
+    Object.keys(historyMap).forEach(k => {
+        const pair = historyMap[k];
+        if(pair.length >= 2) {
+            historyList.innerHTML += `
+                <div class="glass-card" style="padding: 10px; border-left: 4px solid var(--accent-blue); display: flex; justify-content: space-between;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">
+                        ${pair[0].conta} <i class="fas fa-exchange-alt"></i> ${pair[1].conta}<br>
+                        Data: ${pair[0].data}
+                    </div>
+                    <div style="font-weight: 600;">
+                        ${Math.abs(pair[0].valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                </div>
+            `;
+        }
+    });
+};
+
+window.selectedTransferMatch = null;
+window.selectTransferForMatch = function(cod) {
+    if(!window.selectedTransferMatch) {
+        window.selectedTransferMatch = cod;
+        document.getElementById(`transfer-card-${cod}`).style.border = '2px solid var(--accent-blue)';
+    } else {
+        if(window.selectedTransferMatch !== cod) {
+            const txs = window.dadosFinanceiros.lancamentos;
+            const t1 = txs.find(x => x.cod === window.selectedTransferMatch);
+            const t2 = txs.find(x => x.cod === cod);
+            if(t1 && t2) {
+                if((t1.valor < 0 && t2.valor > 0) || (t1.valor > 0 && t2.valor < 0)) {
+                    if(Math.abs(t1.valor) === Math.abs(t2.valor)) {
+                        if(confirm(`Vincular transferência de ${Math.abs(t1.valor).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} entre ${t1.conta} e ${t2.conta}?`)) {
+                            window.linkTransfers(t1.cod, t2.cod);
+                        }
+                    } else {
+                        alert("Os valores não batem!");
+                    }
+                } else {
+                    alert("Selecione uma Saída e uma Entrada para vincular.");
+                }
+            }
+        }
+        window.selectedTransferMatch = null;
+        window.renderTransferReconciliation();
+    }
+};
+
+window.linkTransfers = async function(cod1, cod2) {
+    const matchId = `match_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+    const gid = window.userGroupId;
+    
+    let dbToUse = window.firebaseDB || window.db;
+    const batch = dbToUse.batch();
+    
+    try {
+        const q1 = await dbToUse.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod1)).get();
+        const q2 = await dbToUse.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod2)).get();
+        
+        if(!q1.empty && !q2.empty) {
+            batch.update(q1.docs[0].ref, { transfer_match_id: matchId });
+            batch.update(q2.docs[0].ref, { transfer_match_id: matchId });
+            
+            await batch.commit();
+            
+            const txs = window.dadosFinanceiros.lancamentos;
+            const t1 = txs.find(x => x.cod === cod1);
+            const t2 = txs.find(x => x.cod === cod2);
+            if(t1) t1.transfer_match_id = matchId;
+            if(t2) t2.transfer_match_id = matchId;
+            
+            window.renderTransferReconciliation();
+            alert("Transferências vinculadas com sucesso!");
+        } else {
+            alert("Erro ao encontrar os lançamentos no banco de dados.");
+        }
+    } catch(e) {
+        console.error("Erro ao vincular", e);
+        alert("Falha de comunicação.");
+    }
+};
+
