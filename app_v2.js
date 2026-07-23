@@ -5823,7 +5823,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                   </div>
                   <div>
                     <label style="font-size: 0.8rem; color: var(--text-muted);">Saldo Inicial (R$)</label>
-                    <input type="number" step="0.01" value="${c.saldo_inicial || 0}" onchange="window.updateContaField(${idx}, 'saldo_inicial', parseFloat(this.value) || 0);" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                    <input type="number" step="0.01" value="${c.saldo_inicial || 0}" onchange="window.updateContaField(${idx}, 'saldo_inicial', parseFloat(this.value) || 0);" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;" ${c.conciliado_ate ? 'disabled title="Não é possível editar o saldo inicial de uma conta já conciliada."' : ''}>
                   </div>
                </div>
             </div>
