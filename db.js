@@ -104,7 +104,6 @@ class Database {
 
       const nomesContas = contas.map(c => c.nome);
       categoriasDict["Transferencia"] = nomesContas;
-      categoriasDict["Transferencias"] = nomesContas;
 
       return {
         lancamentos,
