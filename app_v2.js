@@ -5809,11 +5809,11 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
                   <div>
                     <label style="font-size: 0.8rem; color: var(--text-muted);">Instituição (Banco)</label>
-                    <input type="text" value="${c.instituicao || ''}" onchange="window.editContas[${idx}].instituicao = this.value;" placeholder="Ex: Nubank, Inter, Caixa" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                    <input type="text" value="${c.instituicao || ''}" onchange="window.updateContaField(${idx}, 'instituicao', this.value);" placeholder="Ex: Nubank, Inter, Caixa" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
                   </div>
                   <div>
                     <label style="font-size: 0.8rem; color: var(--text-muted);">Tipo de Conta</label>
-                    <select onchange="window.editContas[${idx}].tipo = this.value;" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                    <select onchange="window.updateContaField(${idx}, 'tipo', this.value);" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
                        <option value="Conta Corrente" ${c.tipo === 'Conta Corrente' || c.tipo === 'Corrente' ? 'selected' : ''}>Conta Corrente</option>
                        <option value="Investimento" ${(c.tipo||'').toLowerCase().includes('investimento') ? 'selected' : ''}>Investimento / Poupança</option>
                        <option value="Cartão de Crédito" ${(c.tipo||'').toLowerCase().includes('cart') ? 'selected' : ''}>Cartão de Crédito</option>
@@ -5823,7 +5823,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                   </div>
                   <div>
                     <label style="font-size: 0.8rem; color: var(--text-muted);">Saldo Inicial (R$)</label>
-                    <input type="number" step="0.01" value="${c.saldo_inicial || 0}" onchange="window.editContas[${idx}].saldo_inicial = parseFloat(this.value) || 0;" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                    <input type="number" step="0.01" value="${c.saldo_inicial || 0}" onchange="window.updateContaField(${idx}, 'saldo_inicial', parseFloat(this.value) || 0);" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
                   </div>
                </div>
             </div>
@@ -5866,27 +5866,75 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         }
       };
       
-      window.renameAccount = function(idx, newName) {
-        if (newName.trim()) window.editContas[idx].nome = newName.trim();
-        window.renderEditAccounts();
+      window.updateContaField = async function(idx, field, value) {
+         if (!window.firebaseDB || !window.userGroupId) return;
+         const conta = window.editContas[idx];
+         if (!conta || !conta.id) {
+             alert("Aguarde a conta ser salva no banco de dados primeiro.");
+             return;
+         }
+         conta[field] = value;
+         
+         try {
+             await window.firebaseDB.collection('Contas').doc(conta.id).update({
+                 [field]: value
+             });
+             if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+                 const memConta = window.dadosFinanceiros.contas.find(c => c.id === conta.id);
+                 if (memConta) memConta[field] = value;
+             }
+         } catch(e) {
+             console.error("Erro ao atualizar conta no Firebase", e);
+             alert("Erro ao salvar conta na nuvem: " + e.message);
+         }
       };
-      window.removeAccount = function(idx) {
-        if (confirm("Excluir esta conta?")) {
+
+      window.renameAccount = function(idx, newName) {
+        if (newName.trim()) {
+            window.editContas[idx].nome = newName.trim();
+            window.updateContaField(idx, 'nome', newName.trim());
+        }
+      };
+      window.removeAccount = async function(idx) {
+        if (confirm("Excluir esta conta definitivamente da nuvem?")) {
+          const conta = window.editContas[idx];
+          if (conta && conta.id) {
+              await window.firebaseDB.collection('Contas').doc(conta.id).delete();
+              if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+                  window.dadosFinanceiros.contas = window.dadosFinanceiros.contas.filter(c => c.id !== conta.id);
+              }
+          }
           window.editContas.splice(idx, 1);
           window.renderEditAccounts();
         }
       };
-      window.addContaConfig = function() {
+      window.addContaConfig = async function() {
         const val = document.getElementById('new-account-input').value.trim();
         if (val) {
-          window.editContas.push({nome: val});
+          document.getElementById('new-account-input').value = 'Salvando...';
+          const newConta = {
+              groupId: window.userGroupId,
+              nome: val,
+              tipo: 'Conta Corrente',
+              saldo_inicial: 0,
+              saldo: 0,
+              createdAt: new Date().toISOString()
+          };
+          const ref = window.firebaseDB.collection('Contas').doc();
+          await ref.set(newConta);
+          newConta.id = ref.id;
+          
+          window.editContas.push(newConta);
+          if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+              window.dadosFinanceiros.contas.push(newConta);
+          }
           document.getElementById('new-account-input').value = '';
           window.renderEditAccounts();
         }
       };
 
       window.saveConfigsToServer = async function(event) {
-        if (!confirm("Isso irá salvar as alterações de CATEGORIAS e CONTAS no Banco de Dados. Continuar?")) return;
+        if (!confirm("Isso irá salvar as alterações de CATEGORIAS no Banco de Dados. Continuar?")) return;
         
         const btnHtml = event.currentTarget.innerHTML;
         const btnEl = event.currentTarget;
@@ -5913,35 +5961,25 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
                 });
             });
             
-            // Apaga as contas antigas
-            const contasSnap = await window.firebaseDB.collection('Contas').where('groupId', '==', gid).get();
-            contasSnap.forEach(doc => batch.delete(doc.ref));
-            
-            // Insere as contas novas
-            window.editContas.forEach(conta => {
-                const newContaRef = window.firebaseDB.collection('Contas').doc();
-                batch.set(newContaRef, {
-                    groupId: gid,
-                    nome: conta.nome,
-                    instituicao: conta.instituicao || "Diversos",
-                    tipo: conta.tipo || "Corrente",
-                    conciliado_ate: conta.conciliado_ate || "",
-                    conciliado_desde: conta.conciliado_desde || "",
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
-            
             await batch.commit();
             
-            alert("Configurações salvas com sucesso!");
-            window.dicionarioGeral = window.editCategorias;
-            window.contasAtivas = window.editContas;
-            window.location.reload();
-        } catch(e) {
+            // Recarrega
+            alert("Categorias salvas com sucesso!");
+            
+            // Força a recarga completa do db
+            const panelMain = document.getElementById('panel-dashboard-main');
+            if (panelMain) {
+                document.querySelector('.nav-item[data-target="panel-dashboard-main"]').click();
+            } else {
+                window.location.reload();
+            }
+            
+        } catch (e) {
             console.error(e);
-            alert("Erro na conexão: " + e.message);
+            alert("Erro ao salvar: " + e.message);
+        } finally {
+            btnEl.innerHTML = btnHtml;
         }
-        btnEl.innerHTML = btnHtml;
       };
 
       document.querySelectorAll('.nav-item').forEach(el => {
