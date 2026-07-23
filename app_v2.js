@@ -2213,6 +2213,8 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             setTimeout(() => { if (typeof renderFamilyMembers === 'function') renderFamilyMembers(); }, 10);
           } else if (targetPanelId === 'panel-credit-cards') {
             setTimeout(() => { if (typeof renderCreditCardsDashboard === 'function') renderCreditCardsDashboard(); }, 10);
+          } else if (targetPanelId === 'panel-transfer-reconciliation') {
+            setTimeout(() => { if (typeof renderTransferReconciliation === 'function') renderTransferReconciliation(); }, 10);
           } else if (targetPanelId === 'panel-scanner') {
             setTimeout(() => { if (window.Scanner && !window.Scanner.iniciado) window.Scanner.iniciar('scanner-viewfinder'); }, 10);
           }

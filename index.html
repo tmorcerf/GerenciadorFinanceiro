@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -29,6 +29,16 @@
       color: var(--text-primary);
     }
   .flip-card-inner.flipped { transform: rotateY(180deg); }
+    .transfer-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      filter: brightness(1.1);
+    }
+    .match-suggestion-banner:hover {
+      background: rgba(59, 130, 246, 0.3) !important;
+      transform: scale(1.02);
+      transition: 0.2s;
+    }
   </style>
   <!-- Google Identity Services (One Tap) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -222,6 +232,11 @@
         <a class="nav-item" data-target="panel-transactions">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
           Lancamentos
+        </a>
+
+        <a class="nav-item" data-target="panel-transfer-reconciliation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.828l-5.656-5.656A4 4 0 0 1 4 2.343V2"/><path d="M12 22v-8.3a4 4 0 0 1 1.172-2.828l5.656-5.656A4 4 0 0 0 20 2.343V2"/></svg>
+          Conciliar Transferencias
         </a>
       </li>
 
@@ -977,6 +992,62 @@
       </div>
     </div>
 
+      <!-- NOVO PANEL: CONCILIACAO DE TRANSFERENCIAS -->
+      <div id="panel-transfer-reconciliation" class="dashboard-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-link" style="color: var(--accent-blue);"></i> Conciliação de Transferências
+          </h2>
+        </div>
+
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+          O saldo global de transferências deve sempre bater em <b>R$ 0,00</b>. Se não estiver zerado, há dinheiro em trânsito (transferências órfãs). Use esta tela para "casar" as saídas com as entradas.
+        </p>
+
+        <!-- KPI Global -->
+        <div class="glass-card" style="padding: 1.5rem; text-align: center; margin-bottom: 2rem;">
+          <h3 style="margin-top: 0; color: var(--text-muted); font-size: 0.9rem;">Saldo Global de Transferências</h3>
+          <div id="transfer-global-balance" style="font-size: 2.5rem; font-weight: bold; font-family: var(--font-mono); color: var(--text-primary);">R$ 0,00</div>
+          <p id="transfer-global-status" style="margin-top: 5px; font-size: 0.85rem; color: var(--color-income);">Perfeitamente equilibrado</p>
+        </div>
+
+        <!-- Colunas de Conciliação -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+          
+          <!-- Coluna Saídas (Negativas) -->
+          <div class="glass-card" style="padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--color-expense); display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-arrow-circle-up"></i> Saídas Órfãs
+            </h3>
+            <div id="transfer-left-list" style="display: flex; flex-direction: column; gap: 10px; min-height: 200px;">
+              <!-- Cards inseridos via JS -->
+            </div>
+          </div>
+
+          <!-- Coluna Entradas (Positivas) -->
+          <div class="glass-card" style="padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--color-income); display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-arrow-circle-down"></i> Entradas Órfãs
+            </h3>
+            <div id="transfer-right-list" style="display: flex; flex-direction: column; gap: 10px; min-height: 200px;">
+              <!-- Cards inseridos via JS -->
+            </div>
+          </div>
+          
+        </div>
+
+        <!-- Histórico de Conciliadas -->
+        <div class="glass-card" style="padding: 1.5rem;">
+          <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px; color: var(--text-primary); cursor: pointer;" onclick="document.getElementById('transfer-history-content').classList.toggle('active')">
+            <i class="fas fa-history"></i> Histórico de Casais (Conciliados)
+          </h3>
+          <div id="transfer-history-content" style="display: none; flex-direction: column; gap: 10px; margin-top: 1rem;">
+             <!-- Cards conciliados inseridos via JS -->
+          </div>
+        </div>
+
+      </div>
+
       <!-- 8. PANEL: SETTINGS -->
       <div id="panel-settings" class="dashboard-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -1279,7 +1350,10 @@
       </div>
       
       <div style="margin-bottom: 10px;">
-        <label style="display:block; font-size:0.85rem; color:var(--text-muted); margin-bottom:5px;">Conta</label>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+          <label style="font-size:0.85rem; color:var(--text-muted); margin:0;">Conta</label>
+          <button class="btn btn-sm" style="padding: 2px 8px; font-size: 0.75rem; background: var(--accent-blue); color: #fff;" onclick="window.createNewProvisionalAccount('edit-tx-conta')"><i class="fas fa-plus"></i> Nova</button>
+        </div>
         <select id="edit-tx-conta" class="modern-input" style="width:100%;"></select>
       </div>
 
@@ -1468,7 +1542,10 @@
       </div>
 
       <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:4px;">Conta *</label>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <label style="font-size:0.82rem; color:var(--text-muted); margin:0;">Conta *</label>
+          <button class="btn btn-sm" style="padding: 2px 8px; font-size: 0.75rem; background: var(--accent-blue); color: #fff;" onclick="window.createNewProvisionalAccount('new-tx-conta')"><i class="fas fa-plus"></i> Nova</button>
+        </div>
         <select id="new-tx-conta" class="modern-input" style="width:100%;"></select>
       </div>
 
