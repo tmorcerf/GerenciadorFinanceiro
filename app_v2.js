@@ -5781,49 +5781,60 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         }
       };
 
-      window.saveConfigsToServer = async function() {
-        if (!confirm("Isso ir sobrescrever as abas CATEGORIAS e CONTAS na sua planilha. Continuar?")) return;
-        
-        const catKeys = Object.keys(window.editCategorias);
-        let maxLen = 0;
-        catKeys.forEach(k => { if(window.editCategorias[k].length > maxLen) maxLen = window.editCategorias[k].length; });
-        
-        const cat2D = [];
-        cat2D.push(catKeys);
-        for (let i = 0; i < maxLen; i++) {
-          const row = [];
-          catKeys.forEach(k => {
-             row.push(window.editCategorias[k][i] || "");
-          });
-          cat2D.push(row);
-        }
-        
-        const contas2D = [["Contas"]];
-        window.editContas.forEach(c => contas2D.push([c.nome]));
+      window.saveConfigsToServer = async function(event) {
+        if (!confirm("Isso irá salvar as alterações de CATEGORIAS e CONTAS no Banco de Dados. Continuar?")) return;
         
         const btnHtml = event.currentTarget.innerHTML;
         const btnEl = event.currentTarget;
         btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
         
         try {
-          const response = await fetch(APPS_SCRIPT_WEBAPP_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-              action: 'salvar_configs',
-              categorias: cat2D,
-              contas: contas2D
-            })
-          });
-          const result = await response.json();
-          if (result.status === 'success') {
-            alert("Configuraes salvas com sucesso!");
+            const gid = window.userGroupId;
+            if (!gid) throw new Error("Grupo familiar não definido.");
+            const batch = window.firebaseDB.batch();
+            
+            // Apaga as categorias antigas
+            const catSnap = await window.firebaseDB.collection('Categorias').where('groupId', '==', gid).get();
+            catSnap.forEach(doc => batch.delete(doc.ref));
+            
+            // Insere as categorias novas
+            Object.keys(window.editCategorias).forEach(cat => {
+                const newCatRef = window.firebaseDB.collection('Categorias').doc();
+                batch.set(newCatRef, {
+                    groupId: gid,
+                    nome: cat,
+                    subcategorias: window.editCategorias[cat],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            
+            // Apaga as contas antigas
+            const contasSnap = await window.firebaseDB.collection('Contas').where('groupId', '==', gid).get();
+            contasSnap.forEach(doc => batch.delete(doc.ref));
+            
+            // Insere as contas novas
+            window.editContas.forEach(conta => {
+                const newContaRef = window.firebaseDB.collection('Contas').doc();
+                batch.set(newContaRef, {
+                    groupId: gid,
+                    nome: conta.nome,
+                    instituicao: conta.instituicao || "Diversos",
+                    tipo: conta.tipo || "Corrente",
+                    conciliado_ate: conta.conciliado_ate || "",
+                    conciliado_desde: conta.conciliado_desde || "",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            
+            await batch.commit();
+            
+            alert("Configurações salvas com sucesso!");
             window.dicionarioGeral = window.editCategorias;
             window.contasAtivas = window.editContas;
-          } else {
-            alert("Erro: " + result.message);
-          }
+            window.location.reload();
         } catch(e) {
-          alert("Erro na conexao: " + e.message);
+            console.error(e);
+            alert("Erro na conexão: " + e.message);
         }
         btnEl.innerHTML = btnHtml;
       };
