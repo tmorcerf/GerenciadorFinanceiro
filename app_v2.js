@@ -5718,6 +5718,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         
         let html = '';
         Object.keys(window.editCategorias).forEach(cat => {
+          if (cat.toLowerCase().includes('transferencia') || cat.toLowerCase().includes('transferência')) return;
           html += `<div style="min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem;">
             <div style="display: flex; justify-content: space-between; align-itemes: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 1rem;">
               <input type="text" value="${cat}" onchange="window.renameCategory('${cat}', this.value)" style="background:transparent; border:none; color:var(--text-primary); font-weight:bold; font-size:1.1rem; width:80%;">
@@ -5842,6 +5843,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
             
             // Insere as categorias novas
             Object.keys(window.editCategorias).forEach(cat => {
+                if (cat.toLowerCase().includes('transferencia') || cat.toLowerCase().includes('transferência')) return;
                 const newCatRef = window.firebaseDB.collection('Categorias').doc();
                 batch.set(newCatRef, {
                     groupId: gid,
