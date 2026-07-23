@@ -3548,9 +3548,9 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
     }
 
     window.getRealConciliadoDesde = function(contaNome, defaultDesde) {
-        if (window.dadosFinanceiros && window.dadosFinanceiros.transacoes) {
+        if (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) {
             const parseBr = (d) => { let p = String(d).split('/'); return new Date(p[2], p[1]-1, p[0]).getTime(); };
-            const txs = window.dadosFinanceiros.transacoes.filter(t => t.conta === contaNome && t.conciliado === true);
+            const txs = window.dadosFinanceiros.lancamentos.filter(t => t.conta === contaNome && t.conciliado === true);
             if (txs.length > 0) {
                 const datas = txs.map(t => parseBr(t.data)).filter(ts => !isNaN(ts) && ts > 0);
                 if (datas.length > 0) {
