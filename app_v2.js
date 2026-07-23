@@ -1470,6 +1470,49 @@ let txDateTypeFilter = 'vencimento';
             dadosFinanceiros.lancamentos = dbDados.lancamentos || [];
             dadosFinanceiros.contas = dbDados.contas || [];
             dadosFinanceiros.orcamento = dbDados.orcamentos || [];
+
+            // --- INICIO MIGRAÇÃO LEGADO (Rodar apenas uma vez se vazio) ---
+            if (dadosFinanceiros.orcamento.length === 0) {
+                try {
+                    const gid = window.userGroupId;
+                    const orcRes = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQLH7461ccd_LohlJm_U_4lEpG4lvALEsnwUDlfpmfJH6PLakeOt7U_0hqel8EsS_0Zt8RQF996iZEs/pub?gid=1770446607&single=true&output=csv&_t=' + Date.now());
+                    if (orcRes.ok && gid && window.Papa) {
+                        const orcText = await orcRes.text();
+                        const parsedOrc = window.Papa.parse(orcText, { header: true, skipEmptyLines: true }).data;
+                        const batch = window.firebaseDB.batch();
+                        let hasData = false;
+                        parsedOrc.forEach(o => {
+                            const cat = (o['Categorias'] || '').trim();
+                            if (cat && cat !== 'TOTAL' && cat !== 'Sobra' && cat !== 'Proventos') {
+                                const orcRaw = o['ORCAMENTO'] || o['Oramento'] || o['Orçamento'] || o['Orcamento'] || '0';
+                                // Extract raw number, preserving commas for cents before parsing
+                                const orcStr = orcRaw.replace(/[^0-9,-]+/g,"").replace(',', '.');
+                                const orcVal = parseFloat(orcStr) || 0;
+                                if (orcVal > 0) {
+                                    const ref = window.firebaseDB.collection('Orcamentos').doc();
+                                    batch.set(ref, {
+                                        groupId: gid,
+                                        categoria: cat,
+                                        orcamento: orcVal,
+                                        config_valor: orcVal,
+                                        config_periodo: 'anual',
+                                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                    });
+                                    hasData = true;
+                                }
+                            }
+                        });
+                        if (hasData) {
+                            await batch.commit();
+                            console.log("Migrado orçamentos legado com sucesso!");
+                            const freshDb = await window.DB.loadAllData();
+                            dadosFinanceiros.orcamento = freshDb.orcamentos || [];
+                        }
+                    }
+                } catch(e) { console.error("Falha ao migrar orçamentos:", e); }
+            }
+            // --- FIM MIGRAÇÃO LEGADO ---
+
             dadosFinanceiros.auditoria = dbDados.auditoria || [];
             dadosFinanceiros.importacoes = dbDados.importsInfo || [];
             dadosFinanceiros.produtos = dbDados.produtos || [];
