@@ -1513,6 +1513,43 @@ let txDateTypeFilter = 'vencimento';
             }
             // --- FIM MIGRAÇÃO LEGADO ---
 
+            // --- INICIO DEDUPLICACAO DE CONTAS ---
+            const contasNomes = new Set();
+            const contasDuplicadas = [];
+            const contasUnicas = [];
+            
+            // Ordem: contas com conciliado_ate ou saldo != 0 tem prioridade
+            const sortedContas = (dbDados.contas || []).sort((a, b) => {
+                const scoreA = (a.conciliado_ate ? 100 : 0) + (Math.abs(a.saldo) > 0 ? 10 : 0);
+                const scoreB = (b.conciliado_ate ? 100 : 0) + (Math.abs(b.saldo) > 0 ? 10 : 0);
+                return scoreB - scoreA;
+            });
+            
+            for (const c of sortedContas) {
+                const nLower = (c.nome || '').trim().toLowerCase();
+                if (nLower && contasNomes.has(nLower)) {
+                    contasDuplicadas.push(c);
+                } else {
+                    if (nLower) contasNomes.add(nLower);
+                    contasUnicas.push(c);
+                }
+            }
+            
+            if (contasDuplicadas.length > 0 && window.firebaseDB) {
+                console.log(`Encontradas ${contasDuplicadas.length} contas duplicadas. Removendo...`);
+                const batch = window.firebaseDB.batch();
+                contasDuplicadas.forEach(c => {
+                    if (c.firebaseId) batch.delete(window.firebaseDB.collection('Contas').doc(c.firebaseId));
+                });
+                try {
+                    await batch.commit();
+                    dbDados.contas = contasUnicas;
+                    console.log("Contas duplicadas removidas com sucesso.");
+                } catch(e) { console.error(e); }
+            }
+            dadosFinanceiros.contas = dbDados.contas || [];
+            // --- FIM DEDUPLICACAO DE CONTAS ---
+
             dadosFinanceiros.auditoria = dbDados.auditoria || [];
             dadosFinanceiros.importacoes = dbDados.importsInfo || [];
             dadosFinanceiros.produtos = dbDados.produtos || [];
@@ -3814,7 +3851,13 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
 
         container.querySelectorAll('[data-conta-name]').forEach(card => {
           card.addEventListener('click', () => {
-            window.showExtratoContaModal(card.dataset.contaName);
+             const cName = card.dataset.contaName;
+             const c = (dadosFinanceiros.contas || []).find(x => x.nome === cName || x.conta === cName);
+             if (c && c.id) {
+                 window.abrirModalEdicaoConta(c.id);
+             } else {
+                 window.showExtratoContaModal(cName);
+             }
           });
         });
       }, 0);
@@ -4010,7 +4053,13 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       setTimeout(() => {
         container.querySelectorAll('[data-inv-name]').forEach(card => {
           card.addEventListener('click', () => {
-            window.showExtratoContaModal(card.dataset.invName, getTabPeriod('investimentos'));
+             const cName = card.dataset.invName;
+             const c = (dadosFinanceiros.contas || []).find(x => x.nome === cName || x.conta === cName);
+             if (c && c.id) {
+                 window.abrirModalEdicaoConta(c.id, 'investimentos');
+             } else {
+                 window.showExtratoContaModal(cName, getTabPeriod('investimentos'));
+             }
           });
         });
       }, 0);
@@ -4465,6 +4514,67 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         return `${text} <button onclick="window.openNfeDetails('${item.chave_nfe}', event)" title="Ver Itens da Nota" style="background:none; border:none; cursor:pointer; color:var(--color-accent); margin-left:8px; padding:0;"><i class="fas fa-receipt"></i></button>`;
       }
       return text;
+    };
+
+    window.abrirModalEdicaoConta = function(id, tabPeriodType = null) {
+        const conta = (window.dadosFinanceiros.contas || []).find(c => c.id === id);
+        if (!conta) return;
+        
+        const temConciliacao = !!conta.conciliado_ate;
+        const disabledAttr = temConciliacao ? 'disabled title="Conta possui reconciliação. O saldo inicial não pode ser editado."' : '';
+        
+        const cNameSafe = (conta.nome || conta.conta || '').replace(/'/g, "\\'");
+        const periodArg = tabPeriodType ? `, getTabPeriod('${tabPeriodType}')` : '';
+        
+        const html = `
+            <div style="padding: 10px;">
+                <label style="color:var(--text-secondary); font-size: 0.8rem; display:block; margin-bottom: 5px;">Nome da Conta</label>
+                <input type="text" id="edit-conta-nome-modal" value="${conta.nome || conta.conta || ''}" class="modern-input" style="width: 100%; margin-bottom: 15px;">
+                
+                <label style="color:var(--text-secondary); font-size: 0.8rem; display:block; margin-bottom: 5px;">Saldo Inicial</label>
+                <input type="number" step="0.01" id="edit-conta-saldo-modal" value="${conta.saldo_inicial || 0}" class="modern-input" style="width: 100%; margin-bottom: 15px;" ${disabledAttr}>
+                ${temConciliacao ? '<small style="color:var(--text-muted); display:block; margin-bottom:15px; margin-top:-10px;">* Saldo inicial bloqueado pois j&aacute; existe concilia&ccedil;&atilde;o.</small>' : ''}
+                
+                <div style="display:flex; justify-content:space-between; gap: 10px; margin-top: 20px;">
+                    <button onclick="window.salvarEdicaoContaModal('${conta.id}')" style="background: var(--color-income); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: bold;">Salvar</button>
+                    <button onclick="document.getElementById('glassModal').classList.remove('active'); window.showExtratoContaModal('${cNameSafe}'${periodArg});" style="background: var(--accent-blue); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: bold;">Ver Extrato</button>
+                </div>
+            </div>
+        `;
+        window.showGlassModal(`Editar Conta: ${conta.nome || conta.conta}`, html);
+    };
+
+    window.salvarEdicaoContaModal = async function(id) {
+        const nome = document.getElementById('edit-conta-nome-modal').value.trim();
+        const saldoInput = document.getElementById('edit-conta-saldo-modal');
+        const saldo_inicial = parseFloat(saldoInput.value) || 0;
+        
+        if (!nome) { alert('O nome da conta obrigatorio.'); return; }
+        const conta = window.dadosFinanceiros.contas.find(c => c.id === id);
+        if (!conta) return;
+        
+        try {
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            
+            const payload = { nome };
+            if (!conta.conciliado_ate && !saldoInput.disabled) {
+                payload.saldo_inicial = saldo_inicial;
+            }
+            if (window.firebaseDB) {
+                await window.firebaseDB.collection('Contas').doc(id).update(payload);
+            }
+            
+            conta.nome = nome;
+            if (!conta.conciliado_ate && !saldoInput.disabled) conta.saldo_inicial = saldo_inicial;
+            
+            document.getElementById('glassModal').classList.remove('active');
+            if (typeof updateAllViews === 'function') updateAllViews();
+        } catch(err) {
+            console.error(err);
+            alert('Erro ao atualizar: ' + err.message);
+        }
     };
 
     window.openNfeDetails = async function(chave, e) {
@@ -5569,7 +5679,13 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         if (listContainer) {
           listContainer.querySelectorAll('[data-conta-name]').forEach(card => {
             card.addEventListener('click', () => {
-              window.showExtratoContaModal(card.dataset.contaName);
+             const cName = card.dataset.contaName;
+             const c = (dadosFinanceiros.contas || []).find(x => x.nome === cName || x.conta === cName);
+             if (c && c.id) {
+                 window.abrirModalEdicaoConta(c.id);
+             } else {
+                 window.showExtratoContaModal(cName);
+             }
             });
           });
         }

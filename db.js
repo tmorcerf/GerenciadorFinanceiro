@@ -157,7 +157,7 @@ class Database {
 
             let contaExiste = false;
             if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
-                contaExiste = window.dadosFinanceiros.contas.some(c => c.nome.toLowerCase() === nLower);
+                contaExiste = window.dadosFinanceiros.contas.some(c => (c.nome || '').toLowerCase() === nLower);
             }
             if (!contaExiste && !contasCriadasNesteBatch.has(nLower)) {
                 const newContaRef = this.db.collection('Contas').doc();
