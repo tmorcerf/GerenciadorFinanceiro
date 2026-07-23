@@ -144,7 +144,58 @@ class Database {
 
     // 1. Adicionar lançamentos novos
     if (lancamentosNovos && lancamentosNovos.length > 0) {
+      let contasCriadasNesteBatch = new Set();
+
       lancamentosNovos.forEach(lanc => {
+        // --- AUTO-CRIAÇÃO DE CONTAS ---
+        const checkAndCreateAccount = (nomeConta) => {
+            if (!nomeConta || nomeConta.trim() === '') return;
+            const nomeStr = nomeConta.trim();
+            const nLower = nomeStr.toLowerCase();
+            
+            // Ignorar categorias comuns que possam cair aqui indevidamente
+            if (nLower === 'dinheiro' || nLower === 'carteira' || nLower === 'diversos') return;
+
+            let contaExiste = false;
+            if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+                contaExiste = window.dadosFinanceiros.contas.some(c => c.nome.toLowerCase() === nLower);
+            }
+            if (!contaExiste && !contasCriadasNesteBatch.has(nLower)) {
+                const newContaRef = this.db.collection('Contas').doc();
+                batch.set(newContaRef, {
+                    groupId: gid,
+                    nome: nomeStr,
+                    tipo: 'Conta Corrente', // Provisória como corrente
+                    saldo_inicial: 0,
+                    saldo: 0,
+                    criado_automaticamente: true,
+                    createdAt: new Date().toISOString()
+                });
+                contasCriadasNesteBatch.add(nLower);
+                
+                if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+                    window.dadosFinanceiros.contas.push({
+                        id: newContaRef.id,
+                        nome: nomeStr,
+                        tipo: 'Conta Corrente',
+                        saldo_inicial: 0,
+                        saldo: 0,
+                        groupId: gid
+                    });
+                }
+            }
+        };
+
+        // Verifica a conta primária do lançamento
+        checkAndCreateAccount(lanc.conta || contaDoExtrato);
+        
+        // Verifica a subcategoria se for uma Transferência (conta destino/origem)
+        const catLower = (lanc.categoria || '').toLowerCase();
+        if (catLower.includes('transfer') || (lanc.subcategoria || '').toLowerCase().includes('transfer')) {
+            checkAndCreateAccount(lanc.subcategoria);
+        }
+        // --- FIM AUTO-CRIAÇÃO ---
+
         const docRef = this.db.collection('Lancamentos').doc();
         batch.set(docRef, {
           groupId: gid,
