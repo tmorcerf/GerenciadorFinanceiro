@@ -5787,18 +5787,46 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         }
         
         list.innerHTML = window.editContas.map((c, idx) => `
-          <li style="display: flex; justify-content: space-between; align-itemes: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 6px;">
-            <div style="display:flex; align-itemes:center; gap:1rem; flex:1;">
-              <i class="fas fa-wallet" style="color:var(--color-income);"></i>
-              <div style="display:flex; flex-direction:column; flex:1;">
-                <input type="text" value="${c.nome}" onchange="window.renameAccount(${idx}, this.value)" style="background:transparent; border:none; color:var(--text-primary); font-size:1rem; width:80%;">
-                ${(() => {
-                    let realDesde = window.getRealConciliadoDesde ? window.getRealConciliadoDesde(c.nome, c.conciliado_desde) : c.conciliado_desde;
-                    return c.conciliado_ate ? `<span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; opacity: 0.7;"><i class="fas fa-check-circle" style="font-size: 0.7rem; color: var(--color-income);"></i> Conciliado ${realDesde ? `de ${realDesde} ` : ''}ate ${c.conciliado_ate}</span>` : '';
-                })()}
+          <li style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 0.5rem; transition: background 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; cursor: pointer;" onclick="const d = document.getElementById('conta-detalhes-${idx}'); d.style.display = d.style.display === 'none' ? 'block' : 'none'">
+              <div style="display:flex; align-items:center; gap:1rem; flex:1;">
+                <i class="fas fa-wallet" style="color:var(--color-income);"></i>
+                <div style="display:flex; flex-direction:column; flex:1;" onclick="event.stopPropagation()">
+                  <input type="text" value="${c.nome}" onchange="window.renameAccount(${idx}, this.value)" style="background:transparent; border:none; color:var(--text-primary); font-size:1rem; width:80%;">
+                  ${(() => {
+                      let realDesde = window.getRealConciliadoDesde ? window.getRealConciliadoDesde(c.nome, c.conciliado_desde) : c.conciliado_desde;
+                      return c.conciliado_ate ? `<span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; opacity: 0.7;"><i class="fas fa-check-circle" style="font-size: 0.7rem; color: var(--color-income);"></i> Conciliado ${realDesde ? `de ${realDesde} ` : ''}ate ${c.conciliado_ate}</span>` : '';
+                  })()}
+                </div>
+              </div>
+              <div style="display: flex; gap: 15px; align-items: center;">
+                 <i class="fas fa-chevron-down" style="color:var(--text-muted); font-size: 0.8rem;" title="Editar"></i>
+                 <button onclick="event.stopPropagation(); window.removeAccount(${idx})" style="background:transparent; border:none; color:var(--color-expense); cursor:pointer; padding: 5px;"><i class="fas fa-trash"></i></button>
               </div>
             </div>
-            <button onclick="window.removeAccount(${idx})" style="background:transparent; border:none; color:var(--color-expense); cursor:pointer;"><i class="fas fa-trash"></i></button>
+            
+            <div id="conta-detalhes-${idx}" style="display: none; padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 5px;">
+               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                  <div>
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Instituição (Banco)</label>
+                    <input type="text" value="${c.instituicao || ''}" onchange="window.editContas[${idx}].instituicao = this.value;" placeholder="Ex: Nubank, Inter, Caixa" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Tipo de Conta</label>
+                    <select onchange="window.editContas[${idx}].tipo = this.value;" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                       <option value="Conta Corrente" ${c.tipo === 'Conta Corrente' || c.tipo === 'Corrente' ? 'selected' : ''}>Conta Corrente</option>
+                       <option value="Investimento" ${(c.tipo||'').toLowerCase().includes('investimento') ? 'selected' : ''}>Investimento / Poupança</option>
+                       <option value="Cartão de Crédito" ${(c.tipo||'').toLowerCase().includes('cart') ? 'selected' : ''}>Cartão de Crédito</option>
+                       <option value="Dinheiro" ${(c.tipo||'').toLowerCase().includes('dinheiro') ? 'selected' : ''}>Dinheiro Espécie</option>
+                       <option value="${c.tipo}" ${!['Conta Corrente', 'Corrente', 'Investimento', 'Cartão de Crédito', 'Dinheiro'].some(x => (c.tipo||'').toLowerCase().includes(x.toLowerCase())) && c.tipo ? 'selected' : 'hidden'}>${c.tipo || 'Outro'}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.8rem; color: var(--text-muted);">Saldo Inicial (R$)</label>
+                    <input type="number" step="0.01" value="${c.saldo_inicial || 0}" onchange="window.editContas[${idx}].saldo_inicial = parseFloat(this.value) || 0;" style="width: 100%; background: rgba(0,0,0,0.2); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 4px; margin-top: 4px; font-size: 0.9rem;">
+                  </div>
+               </div>
+            </div>
           </li>
         `).join('');
       };
