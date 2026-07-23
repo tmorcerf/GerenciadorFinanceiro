@@ -515,10 +515,24 @@ function stopAIThinking() {
       cabecalhoAtual = cabecalho;
       analiseExtracao = json.analise_ia || "";
 
+      // Filtra linhas que a IA extratora deixou passar e que são resumos de saldo
+      let initialLen = dadosExtrato.length;
+      dadosExtrato = dadosExtrato.filter(t => {
+          if (!t.descricao) return true;
+          let descLimpa = String(t.descricao).toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+          if (descLimpa.includes('saldo anterior') || descLimpa.includes('saldo do dia') || descLimpa.includes('saldo final') || descLimpa.includes('saldo atual') || descLimpa.match(/^s\s*a\s*l\s*d\s*o$/)) {
+              return false;
+          }
+          return true;
+      });
+
       stopAIThinking();
-      addFeedback(`Sucesso! Extra\u00eddas ${dadosExtrato.length} transa\u00e7\u00f5es.`, 'success');
-      // M5: Exibe resumo da IA para o usu\u00e1rio
-      if (analiseExtracao) addFeedback(`\uD83E\uDD16 IA: "${analiseExtracao}"`, 'ai');
+      if (initialLen - dadosExtrato.length > 0) {
+          addFeedback(`Filtradas ${initialLen - dadosExtrato.length} linhas de Saldo.`, 'system');
+      }
+      addFeedback(`Sucesso! Extraídas ${dadosExtrato.length} transações.`, 'success');
+      // M5: Exibe resumo da IA para o usuário
+      if (analiseExtracao) addFeedback(`🤖 IA: "${analiseExtracao}"`, 'ai');
 
 
 
