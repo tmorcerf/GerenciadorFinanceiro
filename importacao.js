@@ -1327,7 +1327,7 @@ function stopAIThinking() {
         const idx = e.target.getAttribute('data-index');
         const tipo = e.target.getAttribute('data-tipo');
         const trId = `${tipo}-${idx}`;
-        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : (tipo === 'Junção' ? dadosSincronizacao.juncoes : dadosSincronizacao.corretos));
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
 
         let val = e.target.value;
@@ -1370,7 +1370,7 @@ function stopAIThinking() {
         const idx = e.target.getAttribute('data-index');
         const tipo = e.target.getAttribute('data-tipo');
         const trId = `${tipo}-${idx}`;
-        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : dadosSincronizacao.corretos);
+        let txList = tipo === 'Adicionar' ? dadosSincronizacao.faltantes : (tipo === 'Excluir' ? dadosSincronizacao.sobrando : (tipo === 'Junção' ? dadosSincronizacao.juncoes : dadosSincronizacao.corretos));
         let t = (tipo === 'Correto') ? txList[idx].planilha : txList[idx];
         
         let val = e.target.value;
