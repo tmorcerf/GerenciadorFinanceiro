@@ -6245,6 +6245,55 @@ window.saveInlineEdit = async function(cod, event) {
                 obs: newObs,
                 descricao: newObs
             };
+            
+            // --- INÍCIO AUTO-CRIAÇÃO DE CONTAS NO INLINE EDIT ---
+            const checkAndCreateAccount = async (nomeConta) => {
+                if (!nomeConta || nomeConta.trim() === '') return;
+                const nomeStr = nomeConta.trim();
+                const nLower = nomeStr.toLowerCase();
+                
+                if (nLower === 'dinheiro' || nLower === 'carteira' || nLower === 'diversos') return;
+
+                let contaExiste = false;
+                if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+                    contaExiste = window.dadosFinanceiros.contas.some(c => c.nome.toLowerCase() === nLower);
+                }
+                
+                if (!contaExiste) {
+                    try {
+                        const newContaRef = window.firebaseDB.collection('Contas').doc();
+                        await newContaRef.set({
+                            groupId: window.userGroupId,
+                            nome: nomeStr,
+                            tipo: 'Conta Corrente',
+                            saldo_inicial: 0,
+                            saldo: 0,
+                            criado_automaticamente: true,
+                            createdAt: new Date().toISOString()
+                        });
+                        
+                        if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
+                            window.dadosFinanceiros.contas.push({
+                                id: newContaRef.id,
+                                nome: nomeStr,
+                                tipo: 'Conta Corrente',
+                                saldo_inicial: 0,
+                                saldo: 0,
+                                groupId: window.userGroupId
+                            });
+                        }
+                    } catch(e) {
+                        console.error("Erro ao auto-criar conta no inline edit", e);
+                    }
+                }
+            };
+            
+            // Verifica a subcategoria se for transferência
+            if ((newCat || '').toLowerCase().includes('transfer') || (newSub || '').toLowerCase().includes('transfer')) {
+                await checkAndCreateAccount(newSub);
+            }
+            // --- FIM AUTO-CRIAÇÃO ---
+
             await window.DB.editarLancamento(cod, updateData);
         }
         
