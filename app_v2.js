@@ -1530,20 +1530,15 @@ let txDateTypeFilter = 'vencimento';
 
             // Setup Reactive Listeners for UI Updates
             window.addEventListener('account_state_changed', () => {
-                if (window.atualizarResumoDashboard) window.atualizarResumoDashboard();
-                if (window.renderizarFiltrosLateral) window.renderizarFiltrosLateral();
-                if (window.renderizarOpcoesContasDashboard) window.renderizarOpcoesContasDashboard();
+                if (typeof updateAllViews === 'function') updateAllViews();
             });
 
             window.addEventListener('category_state_changed', () => {
-                // The CategoryManager automatically updates window.dicionarioGeral
-                // But we may want to trigger a UI re-render for categories if we have one
+                if (typeof updateAllViews === 'function') updateAllViews();
             });
 
             window.addEventListener('transaction_state_changed', () => {
-                if (window.renderizarExtrato) window.renderizarExtrato();
-                if (window.atualizarResumoDashboard) window.atualizarResumoDashboard();
-                if (window.atualizarGraficos) window.atualizarGraficos();
+                if (typeof updateAllViews === 'function') updateAllViews();
             });
 
             // Hide loading screen
