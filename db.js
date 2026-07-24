@@ -2,7 +2,8 @@
 
 class Database {
   constructor() {
-    this.db = window.firebaseDB;
+    const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+    this.db = win.firebaseDB;
   }
 
   // Wrapper helper para aproveitar o cache e o resume token
@@ -81,19 +82,26 @@ class Database {
         });
     }
 
-    // 1. Adicionar lançamentos novos
-    if (lancamentosNovos && lancamentosNovos.length > 0) {
+    // 1. Processar transferências para garantir contra-partidas e transfer_match_id determinísticos
+    const lancamentosProcessados = this.processDoubleEntryTransfers(lancamentosNovos);
+
+    // 2. Adicionar lançamentos novos
+    if (lancamentosProcessados && lancamentosProcessados.length > 0) {
       let contasCriadasNesteBatch = new Set();
 
-      lancamentosNovos.forEach(lanc => {
+      lancamentosProcessados.forEach(lanc => {
         // --- AUTO-CRIAÇÃO DE CONTAS ---
         const checkAndCreateAccount = (nomeConta) => {
             if (!nomeConta || nomeConta.trim() === '') return;
             const nomeStr = nomeConta.trim();
             const nLower = nomeStr.toLowerCase();
             
-            // Ignorar categorias comuns que possam cair aqui indevidamente
-            if (nLower === 'dinheiro' || nLower === 'carteira' || nLower === 'diversos') return;
+            // Ignorar categorias e pendentes comuns que possam cair aqui indevidamente
+            if (nLower === 'dinheiro' || nLower === 'carteira' || nLower === 'diversos' ||
+                nLower === 'pendente de destino' || nLower === 'pendente' || 
+                nLower === 'unassigned' || nLower === 'desconhecido' || 
+                nLower === 'desconhecida' || nLower === 'indefinido' || 
+                nLower === 'indefinida' || nLower === 'sem destino') return;
 
             let contaExiste = false;
             if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
@@ -130,10 +138,16 @@ class Database {
         
         // Verifica a subcategoria se for uma Transferência (conta destino/origem)
         const catLower = (lanc.categoria || '').toLowerCase();
-        if (catLower.includes('transfer') || (lanc.subcategoria || '').toLowerCase().includes('transfer')) {
+        const subLower = (lanc.subcategoria || '').toLowerCase();
+        const isTransfer = catLower.includes('transfer') || subLower.includes('transfer');
+        if (isTransfer && !lanc.pendente_destino && subLower !== 'pendente de destino') {
             checkAndCreateAccount(lanc.subcategoria);
         }
         // --- FIM AUTO-CRIAÇÃO ---
+
+        const isPendingTx = lanc.pendente_destino || subLower === 'pendente de destino' || (isTransfer && (!lanc.subcategoria || subLower === 'pendente' || subLower === 'unassigned' || subLower === 'desconhecido' || subLower === 'desconhecida'));
+        const subCatVal = isPendingTx ? 'Pendente de Destino' : (lanc.subcategoria || '');
+        const pendenteVal = isPendingTx ? true : (lanc.pendente_destino || false);
 
         const docRef = this.db.collection('Lancamentos').doc();
         batch.set(docRef, {
@@ -144,12 +158,14 @@ class Database {
           conta: lanc.conta || contaDoExtrato || '',
           valor: parseFloat(lanc.valor) || 0,
           categoria: lanc.categoria || '',
-          subcategoria: lanc.subcategoria || '',
+          subcategoria: subCatVal,
           parcelamento: lanc.parcelamento || '',
           vencimento: lanc.vencimento || '',
           criado_em: new Date().toISOString(),
-          conciliado: extratoPayload ? true : false,
-          extrato_id: novoExtratoId
+          conciliado: lanc.conciliado !== undefined ? lanc.conciliado : (extratoPayload ? true : false),
+          extrato_id: lanc.extrato_id !== undefined ? lanc.extrato_id : novoExtratoId,
+          transfer_match_id: pendenteVal ? null : (lanc.transfer_match_id || null),
+          pendente_destino: pendenteVal
         });
       });
     }
@@ -545,6 +561,118 @@ class Database {
     
     await batch.commit();
   }
+
+  processDoubleEntryTransfers(lancamentosNovos) {
+    if (!lancamentosNovos || lancamentosNovos.length === 0) return [];
+
+    const isTransferCategory = (cat) => {
+        if (!cat) return false;
+        const c = String(cat).trim().toLowerCase();
+        return c === 'transferencia' || c === 'transferência' || c.includes('transfer');
+    };
+
+    const isPendingSub = (subStr) => {
+        if (!subStr) return true;
+        const s = String(subStr).trim().toLowerCase();
+        return s === '' || s === 'pendente de destino' || s === 'pendente' || s === 'unassigned' || 
+               s === 'desconhecido' || s === 'desconhecida' || s === 'indefinido' || 
+               s === 'indefinida' || s === 'sem destino';
+    };
+
+    const result = [];
+    const processedIndices = new Set();
+
+    for (let i = 0; i < lancamentosNovos.length; i++) {
+        if (processedIndices.has(i)) continue;
+        const lanc = { ...lancamentosNovos[i] };
+
+        const catIsTransfer = isTransferCategory(lanc.categoria);
+        const sub = (lanc.subcategoria || '').trim();
+        const hasValidSub = !isPendingSub(sub);
+
+        if (catIsTransfer && !hasValidSub) {
+            lanc.pendente_destino = true;
+            lanc.subcategoria = 'Pendente de Destino';
+            lanc.transfer_match_id = null;
+            result.push(lanc);
+            processedIndices.add(i);
+            continue;
+        }
+
+        if (catIsTransfer && hasValidSub) {
+            let pairedIndex = -1;
+            for (let j = i + 1; j < lancamentosNovos.length; j++) {
+                if (processedIndices.has(j)) continue;
+                const other = lancamentosNovos[j];
+
+                const sameMatchId = lanc.transfer_match_id && other.transfer_match_id && lanc.transfer_match_id === other.transfer_match_id;
+                const isPairAccounts = (other.conta || '').trim().toLowerCase() === sub.toLowerCase() &&
+                                       (other.subcategoria || '').trim().toLowerCase() === (lanc.conta || '').trim().toLowerCase();
+                const isOppositeValue = Math.abs(parseFloat(other.valor || 0) + parseFloat(lanc.valor || 0)) < 0.01;
+
+                if (sameMatchId || (isPairAccounts && isOppositeValue)) {
+                    pairedIndex = j;
+                    break;
+                }
+            }
+
+            if (pairedIndex !== -1) {
+                const otherLanc = { ...lancamentosNovos[pairedIndex] };
+                const sharedMatchId = lanc.transfer_match_id || otherLanc.transfer_match_id || ('match_' + Date.now() + '_' + Math.floor(Math.random()*100000));
+
+                lanc.transfer_match_id = sharedMatchId;
+                otherLanc.transfer_match_id = sharedMatchId;
+                lanc.pendente_destino = false;
+                otherLanc.pendente_destino = false;
+
+                result.push(lanc);
+                result.push(otherLanc);
+
+                processedIndices.add(i);
+                processedIndices.add(pairedIndex);
+            } else {
+                const matchId = lanc.transfer_match_id || ('match_' + Date.now() + '_' + Math.floor(Math.random()*100000));
+                lanc.transfer_match_id = matchId;
+                lanc.pendente_destino = false;
+
+                result.push(lanc);
+                processedIndices.add(i);
+
+                if (!lanc._isCounterparty && !lanc._skipCounterparty) {
+                    const origDesc = lanc.descricao || '';
+                    const cpDesc = origDesc.startsWith('Contra-partida: ') ? origDesc : ('Contra-partida: ' + origDesc);
+
+                    const counterpartyLeg = {
+                        cod: lanc.cod ? `${lanc.cod}_cp` : `TX_${Date.now()}_${Math.floor(Math.random()*1000)}_cp`,
+                        data: lanc.data || lanc.vencimento || '',
+                        vencimento: lanc.vencimento || lanc.data || '',
+                        conta: sub,
+                        subcategoria: lanc.conta ? String(lanc.conta).trim() : '',
+                        valor: -1 * (parseFloat(lanc.valor) || 0),
+                        descricao: cpDesc,
+                        categoria: lanc.categoria || 'Transferência',
+                        transfer_match_id: matchId,
+                        pendente_destino: false,
+                        conciliado: lanc.conciliado || false,
+                        extrato_id: null,
+                        _isCounterparty: true
+                    };
+                    result.push(counterpartyLeg);
+                }
+            }
+        } else {
+            result.push(lanc);
+            processedIndices.add(i);
+        }
+    }
+
+    return result;
+  }
 }
 
-window.DB = new Database();
+if (typeof window !== 'undefined') {
+    window.DB = new Database();
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { Database };
+}

@@ -11,14 +11,23 @@ class AccountManager extends window.StoreManager {
   }
 
   async checkAndCreateAccount(nome, tipo, saldo_inicial = 0, conciliado_ate = null) {
-      if (!nome) return null;
-      const nLower = nome.trim().toLowerCase();
+      if (!nome || nome.trim() === '') return null;
+      const nomeStr = nome.trim();
+      const nLower = nomeStr.toLowerCase();
+
+      // R2: Do not auto-create pending destination or generic placeholder accounts
+      if (nLower === 'pendente de destino' || nLower === 'pendente' || nLower === 'unassigned' || 
+          nLower === 'desconhecido' || nLower === 'desconhecida' || nLower === 'indefinido' || 
+          nLower === 'indefinida' || nLower === 'sem destino' || nLower === 'dinheiro' || 
+          nLower === 'carteira' || nLower === 'diversos') {
+          return null;
+      }
       
-      const contaExistente = this.data.find(c => (c.nome || '').toLowerCase() === nLower);
+      const contaExistente = (this.data || []).find(c => (c.nome || '').toLowerCase() === nLower);
       if (contaExistente) return contaExistente.id;
       
       return await this.createAccount({
-          nome: nome.trim(),
+          nome: nomeStr,
           tipo: tipo || 'Conta Corrente',
           saldo_inicial: saldo_inicial,
           saldo: saldo_inicial,
@@ -26,11 +35,54 @@ class AccountManager extends window.StoreManager {
       });
   }
 
+  recalcularSaldo(nomeConta, lancamentos = null) {
+      const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+      const txs = lancamentos || (win.dadosFinanceiros ? win.dadosFinanceiros.lancamentos : []) || (win.transactionManager ? win.transactionManager.data : []) || [];
+      
+      if (nomeConta) {
+          const nLower = String(nomeConta).trim().toLowerCase();
+          const contaObj = (this.data || []).find(c => (c.nome || '').trim().toLowerCase() === nLower);
+          const saldoInicial = contaObj ? (parseFloat(contaObj.saldo_inicial) || 0) : 0;
+          let hasSaldoTx = false;
+          let total = 0;
+          
+          txs.forEach(l => {
+              const lContaLower = (l.conta || '').trim().toLowerCase();
+              if (lContaLower === nLower) {
+                  if ((l.categoria || '').toLowerCase().trim() === 'saldo inicial') {
+                      hasSaldoTx = true;
+                  }
+                  total += (parseFloat(l.valor) || 0);
+              }
+          });
+          return hasSaldoTx ? total : total + saldoInicial;
+      }
+
+      (this.data || []).forEach(c => {
+          const nLower = (c.nome || '').trim().toLowerCase();
+          const saldoInicial = parseFloat(c.saldo_inicial) || 0;
+          let hasSaldoTx = false;
+          let total = 0;
+          
+          txs.forEach(l => {
+              const lContaLower = (l.conta || '').trim().toLowerCase();
+              if (lContaLower === nLower) {
+                  if ((l.categoria || '').toLowerCase().trim() === 'saldo inicial') {
+                      hasSaldoTx = true;
+                  }
+                  total += (parseFloat(l.valor) || 0);
+              }
+          });
+          c.saldo = hasSaldoTx ? total : total + saldoInicial;
+      });
+  }
+
   async createAccount(payload) {
-      if (!window.firebaseDB || !window.userGroupId) throw new Error("Sistema nÃ£o inicializado.");
-      const docRef = window.firebaseDB.collection(this.collectionName).doc();
+      const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+      if (!win.firebaseDB || !win.userGroupId) throw new Error("Sistema não inicializado.");
+      const docRef = win.firebaseDB.collection(this.collectionName).doc();
       await docRef.set({
-          groupId: window.userGroupId,
+          groupId: win.userGroupId,
           createdAt: new Date().toISOString(),
           ...payload
       });
@@ -38,22 +90,33 @@ class AccountManager extends window.StoreManager {
   }
 
   async updateAccount(id, payload) {
-      if (!window.firebaseDB) return;
+      const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+      if (!win.firebaseDB) return;
       
-      // ValidaÃ§Ã£o de seguranÃ§a: Saldo inicial nÃ£o pode ser editado em contas conciliadas
+      // Validação de segurança: Saldo inicial não pode ser editado em contas conciliadas
       if (payload.saldo_inicial !== undefined) {
-          const acc = this.data.find(c => c.id === id);
+          const acc = (this.data || []).find(c => c.id === id);
           if (acc && acc.conciliado_ate) {
-              throw new Error("NÃ£o Ã© possÃ­vel alterar o saldo inicial de uma conta com conciliaÃ§Ã£o ativa.");
+              throw new Error("Não é possível alterar o saldo inicial de uma conta com conciliação ativa.");
           }
       }
       
-      await window.firebaseDB.collection(this.collectionName).doc(id).update(payload);
+      await win.firebaseDB.collection(this.collectionName).doc(id).update(payload);
   }
 
   async deleteAccount(id) {
-      if (!window.firebaseDB) return;
-      await window.firebaseDB.collection(this.collectionName).doc(id).delete();
+      const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+      if (!win.firebaseDB) return;
+      await win.firebaseDB.collection(this.collectionName).doc(id).delete();
   }
 }
-window.accountManager = new AccountManager();
+
+const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+win.AccountManager = AccountManager;
+if (!win.accountManager) {
+    win.accountManager = new AccountManager();
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AccountManager };
+}
+

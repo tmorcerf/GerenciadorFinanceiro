@@ -863,6 +863,15 @@ let txDateTypeFilter = 'vencimento';
       setTimeout(() => {
         const saveTransactions = async (transacoes, updatesDb = []) => {
           if (transacoes.length === 0 && updatesDb.length === 0) return true;
+          if (window.USE_FIREBASE && window.DB && window.DB.sincronizarPeriodo) {
+            try {
+              await window.DB.sincronizarPeriodo(transacoes, [], null, null);
+              return true;
+            } catch (err) {
+              console.error("Erro ao salvar no Firebase via sincronizarPeriodo:", err);
+              return false;
+            }
+          }
           try {
             const webhookUrl = APPS_SCRIPT_WEBAPP_URL; 
             const response = await fetch(webhookUrl, {
@@ -1052,28 +1061,59 @@ let txDateTypeFilter = 'vencimento';
           window.transacoesProcessadasStep4 = [];
           if (transacoesTransferencias.length > 0) {
             transacoesTransferencias.forEach(t => {
-                // Perna 1: Original
-                let contraValor = Number(t.valor) * -1;
-                let contraConta = guessContraPartidaConta(t.conta);
+                let subStr = (t.subcategoria || '').trim();
+                let contraConta = subStr || guessContraPartidaConta(t.conta);
+                const subLower = (contraConta || '').toLowerCase();
+                const isPending = !contraConta || 
+                                  subLower === 'pendente de destino' || 
+                                  subLower === 'pendente' || 
+                                  subLower === 'unassigned' || 
+                                  subLower === 'desconhecido' || 
+                                  subLower === 'desconhecida' || 
+                                  subLower === 'indefinido' || 
+                                  subLower === 'indefinida' || 
+                                  subLower === 'sem destino';
 
-                window.transacoesProcessadasStep4.push({
-                   data: t.data || t.vencimento,
-                   conta: t.conta,
-                   descricao: t.descricao,
-                   categoria: t.categoria,
-                   subcategoria: contraConta || '',
-                   valor: t.valor
-                });
-                
-                // Perna 2: Contra-partida com pre-selecao inteligente
-                window.transacoesProcessadasStep4.push({
-                   data: t.data || t.vencimento,
-                   conta: contraConta,
-                   descricao: "Contra-partida: " + t.descricao,
-                   categoria: t.categoria,
-                   subcategoria: t.conta || '',
-                   valor: contraValor
-                });
+                if (isPending) {
+                    window.transacoesProcessadasStep4.push({
+                       data: t.data || t.vencimento,
+                       conta: t.conta,
+                       descricao: t.descricao,
+                       categoria: t.categoria || 'Transferência',
+                       subcategoria: 'Pendente de Destino',
+                       valor: t.valor,
+                       pendente_destino: true,
+                       transfer_match_id: null
+                    });
+                } else {
+                    let matchId = t.transfer_match_id || ('match_' + Date.now() + '_' + Math.floor(Math.random()*100000));
+                    let contraValor = Number(t.valor) * -1;
+
+                    // Perna 1: Original
+                    window.transacoesProcessadasStep4.push({
+                       data: t.data || t.vencimento,
+                       conta: t.conta,
+                       descricao: t.descricao,
+                       categoria: t.categoria || 'Transferência',
+                       subcategoria: contraConta,
+                       valor: t.valor,
+                       pendente_destino: false,
+                       transfer_match_id: matchId
+                    });
+                    
+                    // Perna 2: Contra-partida com pre-selecao inteligente
+                    window.transacoesProcessadasStep4.push({
+                       data: t.data || t.vencimento,
+                       conta: contraConta,
+                       descricao: t.descricao ? (t.descricao.startsWith('Contra-partida: ') ? t.descricao : 'Contra-partida: ' + t.descricao) : 'Contra-partida: ',
+                       categoria: t.categoria || 'Transferência',
+                       subcategoria: t.conta || '',
+                       valor: contraValor,
+                       pendente_destino: false,
+                       transfer_match_id: matchId,
+                       _isCounterparty: true
+                    });
+                }
             });
           }
 
@@ -1296,8 +1336,15 @@ let txDateTypeFilter = 'vencimento';
                        continue;
                      }
                    }
-                   // Zera a subcategoria caso tenha ficado solitária
-                   tx.subcategoria = '';
+                   // Trata transferências solitárias como Pendente de Destino
+                   const isCatTransfer = (tx.categoria || '').toLowerCase().includes('transfer');
+                   if (isCatTransfer || tx.pendente_destino || (tx.subcategoria || '').toLowerCase() === 'pendente de destino') {
+                       tx.subcategoria = 'Pendente de Destino';
+                       tx.pendente_destino = true;
+                       tx.transfer_match_id = null;
+                   } else if (!tx.subcategoria) {
+                       tx.subcategoria = '';
+                   }
                    finalTransacoes.push(tx);
                  }
                }
@@ -6377,11 +6424,15 @@ window.saveInlineEdit = async function(cod, event) {
                 const nomeStr = nomeConta.trim();
                 const nLower = nomeStr.toLowerCase();
                 
-                if (nLower === 'dinheiro' || nLower === 'carteira' || nLower === 'diversos') return;
+                if (nLower === 'dinheiro' || nLower === 'carteira' || nLower === 'diversos' ||
+                    nLower === 'pendente de destino' || nLower === 'pendente' || 
+                    nLower === 'unassigned' || nLower === 'desconhecido' || 
+                    nLower === 'desconhecida' || nLower === 'indefinido' || 
+                    nLower === 'indefinida' || nLower === 'sem destino') return;
 
                 let contaExiste = false;
                 if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
-                    contaExiste = window.dadosFinanceiros.contas.some(c => c.nome.toLowerCase() === nLower);
+                    contaExiste = window.dadosFinanceiros.contas.some(c => (c.nome || '').toLowerCase() === nLower);
                 }
                 
                 if (!contaExiste) {
@@ -6414,8 +6465,21 @@ window.saveInlineEdit = async function(cod, event) {
             };
             
             // Verifica a subcategoria se for transferência
-            if ((newCat || '').toLowerCase().includes('transfer') || (newSub || '').toLowerCase().includes('transfer')) {
-                await checkAndCreateAccount(newSub);
+            const catIsTransfer = (newCat || '').toLowerCase().includes('transfer') || (newSub || '').toLowerCase().includes('transfer');
+            if (catIsTransfer) {
+                const subLower = (newSub || '').trim().toLowerCase();
+                const isPendingSub = !subLower || subLower === 'pendente de destino' || subLower === 'pendente' || subLower === 'unassigned' || subLower === 'desconhecido' || subLower === 'desconhecida' || subLower === 'indefinido' || subLower === 'indefinida' || subLower === 'sem destino';
+                if (isPendingSub) {
+                    updateData.pendente_destino = true;
+                    updateData.subcategoria = 'Pendente de Destino';
+                    updateData.transfer_match_id = null;
+                    t.pendente_destino = true;
+                    t.subcategoria = 'Pendente de Destino';
+                } else {
+                    updateData.pendente_destino = false;
+                    t.pendente_destino = false;
+                    await checkAndCreateAccount(newSub);
+                }
             }
             // --- FIM AUTO-CRIAÇÃO ---
 
@@ -6958,6 +7022,15 @@ window.saveNewTransaction = function() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
   btn.disabled = true;
 
+  const catIsTransfer = (cat || '').toLowerCase().includes('transfer') || (sub || '').toLowerCase().includes('transfer');
+  if (catIsTransfer) {
+      const subLower = (sub || '').trim().toLowerCase();
+      const isPendingSub = !subLower || subLower === 'pendente de destino' || subLower === 'pendente' || subLower === 'unassigned' || subLower === 'desconhecido' || subLower === 'desconhecida' || subLower === 'indefinido' || subLower === 'indefinida' || subLower === 'sem destino';
+      if (isPendingSub) {
+          sub = 'Pendente de Destino';
+      }
+  }
+
   const novoLanc = { data: dataStr, conta, valor, categoria: cat, subcategoria: sub, obs, vencimento: dataStr };
 
   let savePromise;
@@ -7333,30 +7406,44 @@ window.createNewProvisionalAccount = async function(selectId) {
 window.renderTransferReconciliation = function() {
     const leftList = document.getElementById('transfer-left-list');
     const rightList = document.getElementById('transfer-right-list');
+    const pendingList = document.getElementById('transfer-pending-destination-list');
+    const conflictsList = document.getElementById('transfer-conflicts-list');
+    const aiSuggestionsList = document.getElementById('transfer-ai-suggestions-list');
     const globalBalance = document.getElementById('transfer-global-balance');
     const globalStatus = document.getElementById('transfer-global-status');
     const historyList = document.getElementById('transfer-history-content');
     
-    if(!leftList || !rightList) return;
-    
-    leftList.innerHTML = '';
-    rightList.innerHTML = '';
-    historyList.innerHTML = '';
-    
-    const txs = (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) ? window.dadosFinanceiros.lancamentos : [];
+    const txs = (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos && window.dadosFinanceiros.lancamentos.length > 0)
+        ? window.dadosFinanceiros.lancamentos
+        : ((window.transactionManager && window.transactionManager.data) ? window.transactionManager.data : []);
+
+    const contas = (window.dadosFinanceiros && window.dadosFinanceiros.contas && window.dadosFinanceiros.contas.length > 0)
+        ? window.dadosFinanceiros.contas
+        : ((window.accountManager && window.accountManager.data) ? window.accountManager.data : []);
     
     let pendingLeft = [];
     let pendingRight = [];
     let historyPairs = [];
     let sumGlobal = 0;
+
+    // Execute IAConciliador analysis if available
+    const aiAnalysis = (window.IAConciliador && typeof window.IAConciliador.analisarTransferencias === 'function')
+        ? window.IAConciliador.analisarTransferencias(txs, contas)
+        : { pendentesDestino: [], conflitos: [], sugestoesIA: [] };
+
+    window._activeAISuggestions = aiAnalysis.sugestoesIA || [];
     
     txs.forEach(t => {
-        if((t.categoria || '').toLowerCase().includes('transfer') || (t.subcategoria || '').toLowerCase().includes('transfer')) {
+        const cat = (t.categoria || '').toLowerCase();
+        const sub = (t.subcategoria || '').toLowerCase();
+        const isPending = t.pendente_destino === true || sub === 'pendente de destino' || sub === 'pendente';
+
+        if (cat.includes('transfer') || sub.includes('transfer') || isPending) {
             const val = parseFloat(t.valor) || 0;
-            if(t.transfer_match_id) {
+            if (t.transfer_match_id) {
                 historyPairs.push(t);
-            } else {
-                if(val < 0) pendingLeft.push(t);
+            } else if (!isPending) {
+                if (val < 0) pendingLeft.push(t);
                 else pendingRight.push(t);
             }
             sumGlobal += val;
@@ -7366,7 +7453,7 @@ window.renderTransferReconciliation = function() {
     if (globalBalance) globalBalance.innerText = sumGlobal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
     if (globalStatus) {
-        if(Math.abs(sumGlobal) < 0.01) {
+        if (Math.abs(sumGlobal) < 0.01) {
             globalStatus.innerText = "Perfeitamente equilibrado";
             globalStatus.style.color = 'var(--color-income)';
         } else {
@@ -7375,25 +7462,25 @@ window.renderTransferReconciliation = function() {
         }
     }
     
-    const suggestions = {};
+    const sugestoesMatch = [];
     pendingLeft.forEach(l => {
         const valL = Math.abs(parseFloat(l.valor) || 0);
         pendingRight.forEach(r => {
             const valR = parseFloat(r.valor) || 0;
-            if(Math.abs(valL - valR) < 0.01) {
-                suggestions[l.cod] = r.cod;
-                suggestions[r.cod] = l.cod;
+            if (Math.abs(valL - valR) < 0.01) {
+                sugestoesMatch.push({ out: l, inTx: r, diff: 0 });
             }
         });
     });
     
     const createCard = (t) => {
         const val = parseFloat(t.valor) || 0;
-        const isMatch = suggestions[t.cod];
+        const isMatch = sugestoesMatch.some(s => (s.out.cod || s.out.id) === (t.cod || t.id) || (s.inTx.cod || s.inTx.id) === (t.cod || t.id));
         const extraClass = isMatch ? "match-suggestion-banner" : "";
+        const cardId = t.cod || t.id || `card_${Math.floor(Math.random()*10000)}`;
         return `
             <div class="glass-card transfer-card ${extraClass}" style="padding: 10px; cursor: pointer; border-left: 4px solid ${val < 0 ? 'var(--color-expense)' : 'var(--color-income)'}; display: flex; flex-direction: column; gap: 5px;" 
-                 onclick="window.selectTransferForMatch('${t.cod}')" id="transfer-card-${t.cod}">
+                 onclick="window.selectTransferForMatch('${cardId}')" id="transfer-card-${cardId}">
                 <div style="display: flex; justify-content: space-between; font-weight: 500;">
                     <span>${t.conta}</span>
                     <span style="color: ${val < 0 ? 'var(--color-expense)' : 'var(--color-income)'}">${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
@@ -7406,48 +7493,214 @@ window.renderTransferReconciliation = function() {
         `;
     };
     
-    pendingLeft.forEach(t => leftList.innerHTML += createCard(t));
-    pendingRight.forEach(t => rightList.innerHTML += createCard(t));
-    
-    const historyMap = {};
-    historyPairs.forEach(t => {
-        if(!historyMap[t.transfer_match_id]) historyMap[t.transfer_match_id] = [];
-        historyMap[t.transfer_match_id].push(t);
-    });
-    
-    Object.keys(historyMap).forEach(k => {
-        const pair = historyMap[k];
-        if(pair.length >= 2) {
-            historyList.innerHTML += `
-                <div class="glass-card" style="padding: 10px; border-left: 4px solid var(--accent-blue); display: flex; justify-content: space-between;">
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">
-                        ${pair[0].conta} <i class="fas fa-exchange-alt"></i> ${pair[1].conta}<br>
-                        Data: ${pair[0].data}
+    if (leftList) {
+        leftList.innerHTML = '';
+        pendingLeft.forEach(t => leftList.innerHTML += createCard(t));
+    }
+    if (rightList) {
+        rightList.innerHTML = '';
+        pendingRight.forEach(t => rightList.innerHTML += createCard(t));
+    }
+
+    // Render Pending Destination Transfers list
+    if (pendingList) {
+        pendingList.innerHTML = '';
+        if (aiAnalysis.pendentesDestino.length === 0) {
+            pendingList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; padding: 10px;">Nenhuma transferência pendente de destino.</div>';
+        } else {
+            aiAnalysis.pendentesDestino.forEach(pt => {
+                const val = parseFloat(pt.valor) || 0;
+                const ptId = pt.cod || pt.id;
+                pendingList.innerHTML += `
+                    <div class="glass-card pending-card" style="padding: 12px; border-left: 4px solid #f59e0b; display: flex; justify-content: space-between; align-items: center;" id="pending-card-${ptId}">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary);">${pt.conta} <span style="font-size:0.75rem; background:rgba(245,158,11,0.2); color:#f59e0b; padding:2px 6px; border-radius:4px; margin-left:6px;">Pendente</span></div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Data: ${pt.data} | Desc: ${pt.descricao || 'Sem descrição'}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: ${val < 0 ? 'var(--color-expense)' : 'var(--color-income)'};">
+                                ${val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </div>
+                        </div>
                     </div>
-                    <div style="font-weight: 600;">
-                        ${Math.abs(pair[0].valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </div>
-                </div>
-            `;
+                `;
+            });
         }
-    });
+    }
+
+    // Render Conflicting Transfers list (Gold Rule)
+    if (conflictsList) {
+        conflictsList.innerHTML = '';
+        if (aiAnalysis.conflitos.length === 0) {
+            conflictsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; padding: 10px;">Nenhum conflito de conciliação detectado.</div>';
+        } else {
+            aiAnalysis.conflitos.forEach(conf => {
+                conflictsList.innerHTML += `
+                    <div class="glass-card conflict-card" style="padding: 12px; border-left: 4px solid var(--color-expense); background: rgba(239,68,68,0.05); display: flex; flex-direction: column; gap: 6px;" id="conflict-card-${conf.id}">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; color: var(--color-expense); font-size: 0.85rem;">
+                                <i class="fas fa-lock"></i> Verdade Absoluta: ${conf.contaBloqueada}
+                            </span>
+                            <span style="font-size: 0.75rem; background: rgba(239,68,68,0.2); color: var(--color-expense); padding: 2px 6px; border-radius: 4px;">Regra de Ouro</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-primary);">${conf.descricao}</div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    // Render Visual AI Suggestion Cards
+    if (aiSuggestionsList) {
+        aiSuggestionsList.innerHTML = '';
+        if (aiAnalysis.sugestoesIA.length === 0) {
+            aiSuggestionsList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; padding: 10px;">Nenhuma sugestão de IA pendente no momento.</div>';
+        } else {
+            aiAnalysis.sugestoesIA.forEach(sug => {
+                aiSuggestionsList.innerHTML += `
+                    <div class="glass-card ai-suggestion-card" style="padding: 14px; border: 1px solid rgba(59,130,246,0.3); background: rgba(59,130,246,0.06); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px;" id="suggestion-card-${sug.id}">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <i class="fas fa-robot" style="color: var(--accent-blue);"></i>
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">${sug.titulo}</strong>
+                                <span style="font-size: 0.7rem; background: rgba(59,130,246,0.2); color: var(--accent-blue); padding: 2px 8px; border-radius: 10px; font-weight: 600;">Confiança: ${Math.round((sug.confianca||0.9)*100)}%</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">${sug.descricao}</div>
+                        </div>
+                        <button class="btn btn-primary btn-accept-suggestion" 
+                                style="background: linear-gradient(135deg, var(--accent-blue), #2563eb); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"
+                                onclick="window.acceptTransferSuggestion('${sug.id}')">
+                            <i class="fas fa-check"></i> ${sug.actionLabel || 'Aceitar Sugestão'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+    }
+    
+    if (historyList) {
+        historyList.innerHTML = '';
+        const historyMap = {};
+        historyPairs.forEach(t => {
+            if(!historyMap[t.transfer_match_id]) historyMap[t.transfer_match_id] = [];
+            historyMap[t.transfer_match_id].push(t);
+        });
+        
+        Object.keys(historyMap).forEach(k => {
+            const pair = historyMap[k];
+            if(pair.length >= 2) {
+                historyList.innerHTML += `
+                    <div class="glass-card" style="padding: 10px; border-left: 4px solid var(--accent-blue); display: flex; justify-content: space-between;">
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                            ${pair[0].conta} <i class="fas fa-exchange-alt"></i> ${pair[1].conta}<br>
+                            Data: ${pair[0].data}
+                        </div>
+                        <div style="font-weight: 600;">
+                            ${Math.abs(pair[0].valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    return {
+        saidasOrfas: pendingLeft,
+        entradasOrfas: pendingRight,
+        sumGlobal: sumGlobal,
+        sugestoesMatch: sugestoesMatch,
+        pendentesDestino: aiAnalysis.pendentesDestino,
+        conflitos: aiAnalysis.conflitos,
+        sugestoesIA: aiAnalysis.sugestoesIA
+    };
+};
+
+window.acceptTransferSuggestion = async function(suggestionId) {
+    const list = window._activeAISuggestions || [];
+    const sug = list.find(s => s.id === suggestionId);
+    if (!sug) {
+        console.error("Sugestão não encontrada:", suggestionId);
+        return false;
+    }
+
+    try {
+        if (sug.tipo === 'match') {
+            const code1 = sug.txOut.cod || sug.txOut.id;
+            const code2 = sug.txIn.cod || sug.txIn.id;
+            await window.linkTransfers(code1, code2);
+        } else if (sug.tipo === 'gold_rule_correction') {
+            const targetTx = sug.targetTx;
+            const targetId = targetTx.id || targetTx.cod;
+            const updateData = sug.updateData;
+
+            if (targetTx.conciliado) {
+                throw new Error("Lançamento conciliado está bloqueado pela Regra de Ouro (âncora bancária).");
+            }
+
+            if (window.transactionManager && typeof window.transactionManager.updateTransaction === 'function') {
+                await window.transactionManager.updateTransaction(targetId, updateData);
+            } else if (window.DB && typeof window.DB.editarLancamento === 'function') {
+                await window.DB.editarLancamento(targetId, updateData);
+            }
+
+            if (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) {
+                const inMem = window.dadosFinanceiros.lancamentos.find(t => (t.cod || t.id) === targetId);
+                if (inMem) {
+                    Object.assign(inMem, updateData);
+                }
+            }
+            if (window.transactionManager && window.transactionManager.data) {
+                const tmMem = window.transactionManager.data.find(t => (t.cod || t.id) === targetId);
+                if (tmMem) {
+                    Object.assign(tmMem, updateData);
+                }
+            }
+        } else if (sug.tipo === 'pending_resolution') {
+            const targetTx = sug.targetTx;
+            const targetId = targetTx.id || targetTx.cod;
+
+            if (window.transactionManager && typeof window.transactionManager.resolvePendingDestination === 'function') {
+                await window.transactionManager.resolvePendingDestination(targetId, sug.targetAccount);
+            } else if (sug.updateData) {
+                if (window.transactionManager && typeof window.transactionManager.updateTransaction === 'function') {
+                    await window.transactionManager.updateTransaction(targetId, sug.updateData);
+                } else if (window.DB && typeof window.DB.editarLancamento === 'function') {
+                    await window.DB.editarLancamento(targetId, sug.updateData);
+                }
+                if (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) {
+                    const inMem = window.dadosFinanceiros.lancamentos.find(t => (t.cod || t.id) === targetId);
+                    if (inMem) Object.assign(inMem, sug.updateData);
+                }
+            }
+        }
+
+        window.renderTransferReconciliation();
+        return true;
+    } catch (err) {
+        console.error("Erro ao aceitar sugestão:", err);
+        if (typeof alert === 'function') {
+            alert("Erro ao aplicar sugestão: " + err.message);
+        }
+        throw err;
+    }
 };
 
 window.selectedTransferMatch = null;
 window.selectTransferForMatch = function(cod) {
     if(!window.selectedTransferMatch) {
         window.selectedTransferMatch = cod;
-        document.getElementById(`transfer-card-${cod}`).style.border = '2px solid var(--accent-blue)';
+        const el = document.getElementById(`transfer-card-${cod}`);
+        if (el) el.style.border = '2px solid var(--accent-blue)';
     } else {
         if(window.selectedTransferMatch !== cod) {
-            const txs = window.dadosFinanceiros.lancamentos;
-            const t1 = txs.find(x => x.cod === window.selectedTransferMatch);
-            const t2 = txs.find(x => x.cod === cod);
+            const txs = (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) ? window.dadosFinanceiros.lancamentos : (window.transactionManager ? window.transactionManager.data : []);
+            const t1 = txs.find(x => (x.cod || x.id) === window.selectedTransferMatch);
+            const t2 = txs.find(x => (x.cod || x.id) === cod);
             if(t1 && t2) {
                 if((t1.valor < 0 && t2.valor > 0) || (t1.valor > 0 && t2.valor < 0)) {
                     if(Math.abs(t1.valor) === Math.abs(t2.valor)) {
                         if(confirm(`Vincular transferência de ${Math.abs(t1.valor).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} entre ${t1.conta} e ${t2.conta}?`)) {
-                            window.linkTransfers(t1.cod, t2.cod);
+                            window.linkTransfers(t1.cod || t1.id, t2.cod || t2.id);
                         }
                     } else {
                         alert("Os valores não batem!");
@@ -7467,32 +7720,46 @@ window.linkTransfers = async function(cod1, cod2) {
     const gid = window.userGroupId;
     
     let dbToUse = window.firebaseDB || window.db;
+    if (!dbToUse) {
+        const txs = (window.transactionManager && window.transactionManager.data) ? window.transactionManager.data : (window.dadosFinanceiros ? window.dadosFinanceiros.lancamentos : []);
+        const t1 = txs.find(x => (x.cod || x.id) === cod1);
+        const t2 = txs.find(x => (x.cod || x.id) === cod2);
+        if (t1) { t1.transfer_match_id = matchId; t1.pendente_destino = false; }
+        if (t2) { t2.transfer_match_id = matchId; t2.pendente_destino = false; }
+        window.renderTransferReconciliation();
+        return matchId;
+    }
+
     const batch = dbToUse.batch();
     
     try {
-        const q1 = await dbToUse.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod1)).get();
-        const q2 = await dbToUse.collection('Lancamentos').where('groupId', '==', gid).where('cod', '==', String(cod2)).get();
+        const q1 = await dbToUse.collection('Lancamentos').where('groupId', '==', gid).get();
+        let doc1 = null, doc2 = null;
+        q1.forEach(d => {
+            const data = d.data();
+            if (data.cod === String(cod1) || d.id === String(cod1)) doc1 = d;
+            if (data.cod === String(cod2) || d.id === String(cod2)) doc2 = d;
+        });
         
-        if(!q1.empty && !q2.empty) {
-            batch.update(q1.docs[0].ref, { transfer_match_id: matchId });
-            batch.update(q2.docs[0].ref, { transfer_match_id: matchId });
+        if (doc1 && doc2) {
+            batch.update(doc1.ref, { transfer_match_id: matchId, pendente_destino: false });
+            batch.update(doc2.ref, { transfer_match_id: matchId, pendente_destino: false });
             
             await batch.commit();
             
-            const txs = window.dadosFinanceiros.lancamentos;
-            const t1 = txs.find(x => x.cod === cod1);
-            const t2 = txs.find(x => x.cod === cod2);
-            if(t1) t1.transfer_match_id = matchId;
-            if(t2) t2.transfer_match_id = matchId;
+            const txs = (window.dadosFinanceiros && window.dadosFinanceiros.lancamentos) ? window.dadosFinanceiros.lancamentos : (window.transactionManager ? window.transactionManager.data : []);
+            const t1 = txs.find(x => (x.cod || x.id) === cod1);
+            const t2 = txs.find(x => (x.cod || x.id) === cod2);
+            if (t1) { t1.transfer_match_id = matchId; t1.pendente_destino = false; }
+            if (t2) { t2.transfer_match_id = matchId; t2.pendente_destino = false; }
             
             window.renderTransferReconciliation();
-            alert("Transferências vinculadas com sucesso!");
+            return matchId;
         } else {
-            alert("Erro ao encontrar os lançamentos no banco de dados.");
+            console.error("Lançamentos para vincular não encontrados no banco.");
         }
     } catch(e) {
         console.error("Erro ao vincular", e);
-        alert("Falha de comunicação.");
     }
 };
 
