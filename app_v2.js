@@ -5961,39 +5961,6 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
           if (el.dataset.target === 'panel-accounts-edit') window.renderEditAccounts();
         });
       });
-      // --- LISTENERS DOS GRUPOS FAMILIARES ---
-      const groupSelect = document.getElementById('group-switcher-select');
-      if (groupSelect) {
-         groupSelect.addEventListener('change', async (e) => {
-            const newGroupId = e.target.value;
-            if (newGroupId && newGroupId !== window.userGroupId) {
-               try {
-                  await window.firebaseDB.collection('Users').doc(window.firebaseAuth.currentUser.uid).update({
-                     groupId: newGroupId
-                  });
-                  window.location.reload();
-               } catch(err) {
-                  console.error("Erro ao trocar de grupo", err);
-                  alert("Erro ao trocar de grupo: " + err.message);
-               }
-            }
-         });
-      }
-
-      const btnCreateGroup = document.getElementById('btn-create-group');
-      if (btnCreateGroup) {
-         btnCreateGroup.addEventListener('click', async () => {
-            const groupName = prompt("Digite um nome para o seu novo Grupo (ex: 'Família Silva' ou 'Casa'):");
-            if (!groupName || groupName.trim() === '') return;
-            
-            // Gera um ID simulando UUID
-            const newGroupId = 'grp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            
-            try {
-               let sg = window.userSavedGroups || [];
-               sg.push({ id: newGroupId, name: groupName.trim() });
-      }
-      
     });
 
 window.toggleInlineEdit = function(cod, iconElement) {
