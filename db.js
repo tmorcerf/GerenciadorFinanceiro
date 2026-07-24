@@ -40,10 +40,7 @@ class Database {
 
       // Em vez de usar .get() (que custa milhares de leituras toda vez), 
       // delegamos para o getCollectionData que usa .onSnapshot() (custa quase zero com cache ativado).
-      const [lancamentos, contas, categorias, orcamentos, auditoria, importsInfo, produtos, extratos] = await Promise.all([
-        this.getCollectionData(this.db.collection('Lancamentos').where('groupId', '==', gid)),
-        this.getCollectionData(this.db.collection('Contas').where('groupId', '==', gid)),
-        this.getCollectionData(this.db.collection('Categorias').where('groupId', '==', gid)),
+      const [orcamentos, auditoria, importsInfo, produtos, extratos] = await Promise.all([
         this.getCollectionData(this.db.collection('Orcamentos').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Auditoria').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Imports').where('groupId', '==', gid)),
@@ -51,64 +48,7 @@ class Database {
         this.getCollectionData(this.db.collection('Extratos').where('groupId', '==', gid))
       ]);
 
-      let categoriasDict = {};
-      if (categorias.length === 0) {
-        console.log("Usuário novo sem categorias. Injetando categorias padrão...");
-        let defaultCategoriasDict = {
-            "Habitação": ["Aluguel", "Condomínio", "Energia", "Água", "Gás", "Internet", "IPTU", "Manutenção"],
-            "Alimentação": ["Supermercado", "Padaria", "Restaurante", "Delivery", "Lanches"],
-            "Transporte": ["Combustível", "Estacionamento", "Pedágio", "IPVA", "Seguro Auto", "Manutenção Veículo", "Aplicativo", "Transporte Público"],
-            "Saúde": ["Plano de Saúde", "Farmácia", "Consultas", "Exames", "Dentista", "Terapia"],
-            "Lazer & Viagem": ["Assinaturas", "Cinema/Teatro", "Bares/Baladas", "Hobbies", "Passagens", "Hospedagem", "Passeios"],
-            "Cuidados Pessoais": ["Salão/Barbearia", "Cosméticos", "Academia"],
-            "Serviços": ["Pets", "Educação", "Bancos/Taxas", "Doações", "Seguros", "Impostos"],
-            "Investimentos": ["Renda Fixa", "Ações", "FIIs", "Criptomoedas", "Previdencia Privatda", "Reserva de Emergência"],
-            "Outros": ["Presentes", "Vestuário", "Eletrônicos", "Móveis", "Diversos"]
-        };
-
-        try {
-          const sysDoc = await this.db.collection('System').doc('default_categories').get();
-          if (sysDoc.exists) {
-            defaultCategoriasDict = sysDoc.data();
-          }
-        } catch (e) {
-          console.warn("Falha ao carregar categorias padrão do System. Usando fallback.", e);
-        }
-
-        categoriasDict = defaultCategoriasDict;
-        
-        try {
-          const batch = this.db.batch();
-          Object.keys(defaultCategoriasDict).forEach(catName => {
-            const newCatRef = this.db.collection('Categorias').doc();
-            batch.set(newCatRef, {
-              groupId: gid,
-              nome: catName,
-              subcategorias: defaultCategoriasDict[catName],
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          });
-          await batch.commit();
-          console.log("Categorias padrão salvas no Firebase para o novo usuário.");
-        } catch (e) {
-          console.error("Erro ao salvar categorias no Firebase:", e);
-        }
-      } else {
-        categorias.forEach(cat => {
-           if (!categoriasDict[cat.nome]) categoriasDict[cat.nome] = [];
-           if (cat.subcategorias && Array.isArray(cat.subcategorias)) {
-              categoriasDict[cat.nome] = cat.subcategorias;
-           }
-        });
-      }
-
-      const nomesContas = contas.map(c => c.nome);
-      categoriasDict["Transferencia"] = nomesContas;
-
       return {
-        lancamentos,
-        contas,
-        categoriasDict,
         orcamentos,
         auditoria,
         importsInfo,

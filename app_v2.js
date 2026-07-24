@@ -1463,12 +1463,22 @@ let txDateTypeFilter = 'vencimento';
     // --- FIREBASE INTEGRATION ---
     async function loadDataFromFirebase() {
         try {
-            console.log("Carregando dados do Firebase...");
+            console.log("Inicializando Managers Reativos...");
+            const gid = window.userGroupId;
+            
+            window.accountManager.listen(gid);
+            window.categoryManager.listen(gid);
+            window.transactionManager.listen(gid);
+            
+            await Promise.all([
+                window.accountManager.waitForInitialLoad(),
+                window.categoryManager.waitForInitialLoad(),
+                window.transactionManager.waitForInitialLoad()
+            ]);
+
+            console.log("Carregando restante dos dados (legado)...");
             const dbDados = await window.DB.loadAllData();
             
-            // Map Firebase data to existing in-memory structure
-            dadosFinanceiros.lancamentos = dbDados.lancamentos || [];
-            dadosFinanceiros.contas = dbDados.contas || [];
             dadosFinanceiros.orcamento = dbDados.orcamentos || [];
 
             // --- INICIO MIGRAÇÃO LEGADO (Rodar apenas uma vez se vazio) ---
@@ -1513,49 +1523,28 @@ let txDateTypeFilter = 'vencimento';
             }
             // --- FIM MIGRAÇÃO LEGADO ---
 
-            // --- INICIO DEDUPLICACAO DE CONTAS ---
-            const contasNomes = new Set();
-            const contasDuplicadas = [];
-            const contasUnicas = [];
-            
-            // Ordem: contas com conciliado_ate ou saldo != 0 tem prioridade
-            const sortedContas = (dbDados.contas || []).sort((a, b) => {
-                const scoreA = (a.conciliado_ate ? 100 : 0) + (Math.abs(a.saldo) > 0 ? 10 : 0);
-                const scoreB = (b.conciliado_ate ? 100 : 0) + (Math.abs(b.saldo) > 0 ? 10 : 0);
-                return scoreB - scoreA;
-            });
-            
-            for (const c of sortedContas) {
-                const nLower = (c.nome || '').trim().toLowerCase();
-                if (nLower && contasNomes.has(nLower)) {
-                    contasDuplicadas.push(c);
-                } else {
-                    if (nLower) contasNomes.add(nLower);
-                    contasUnicas.push(c);
-                }
-            }
-            
-            if (contasDuplicadas.length > 0 && window.firebaseDB) {
-                console.log(`Encontradas ${contasDuplicadas.length} contas duplicadas. Removendo...`);
-                const batch = window.firebaseDB.batch();
-                contasDuplicadas.forEach(c => {
-                    if (c.firebaseId) batch.delete(window.firebaseDB.collection('Contas').doc(c.firebaseId));
-                });
-                try {
-                    await batch.commit();
-                    dbDados.contas = contasUnicas;
-                    console.log("Contas duplicadas removidas com sucesso.");
-                } catch(e) { console.error(e); }
-            }
-            dadosFinanceiros.contas = dbDados.contas || [];
-            // --- FIM DEDUPLICACAO DE CONTAS ---
-
             dadosFinanceiros.auditoria = dbDados.auditoria || [];
             dadosFinanceiros.importacoes = dbDados.importsInfo || [];
             dadosFinanceiros.produtos = dbDados.produtos || [];
             window.appData = dadosFinanceiros; // Ensure appData is globally accessible early
-            
-            window.dicionarioGeral = dbDados.categoriasDict || {};
+
+            // Setup Reactive Listeners for UI Updates
+            window.addEventListener('account_state_changed', () => {
+                if (window.atualizarResumoDashboard) window.atualizarResumoDashboard();
+                if (window.renderizarFiltrosLateral) window.renderizarFiltrosLateral();
+                if (window.renderizarOpcoesContasDashboard) window.renderizarOpcoesContasDashboard();
+            });
+
+            window.addEventListener('category_state_changed', () => {
+                // The CategoryManager automatically updates window.dicionarioGeral
+                // But we may want to trigger a UI re-render for categories if we have one
+            });
+
+            window.addEventListener('transaction_state_changed', () => {
+                if (window.renderizarExtrato) window.renderizarExtrato();
+                if (window.atualizarResumoDashboard) window.atualizarResumoDashboard();
+                if (window.atualizarGraficos) window.atualizarGraficos();
+            });
 
             // Hide loading screen
             const loading = document.getElementById('loading-screen');
@@ -5983,7 +5972,6 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
       };
       
       window.updateContaField = async function(idx, field, value) {
-         if (!window.firebaseDB || !window.userGroupId) return;
          const conta = window.editContas[idx];
          if (!conta || !conta.id) {
              alert("Aguarde a conta ser salva no banco de dados primeiro.");
@@ -5992,15 +5980,9 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
          conta[field] = value;
          
          try {
-             await window.firebaseDB.collection('Contas').doc(conta.id).update({
-                 [field]: value
-             });
-             if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
-                 const memConta = window.dadosFinanceiros.contas.find(c => c.id === conta.id);
-                 if (memConta) memConta[field] = value;
-             }
+             await window.accountManager.updateAccount(conta.id, { [field]: value });
          } catch(e) {
-             console.error("Erro ao atualizar conta no Firebase", e);
+             console.error("Erro ao atualizar conta", e);
              alert("Erro ao salvar conta na nuvem: " + e.message);
          }
       };
@@ -6015,10 +5997,7 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         if (confirm("Excluir esta conta definitivamente da nuvem?")) {
           const conta = window.editContas[idx];
           if (conta && conta.id) {
-              await window.firebaseDB.collection('Contas').doc(conta.id).delete();
-              if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
-                  window.dadosFinanceiros.contas = window.dadosFinanceiros.contas.filter(c => c.id !== conta.id);
-              }
+              await window.accountManager.deleteAccount(conta.id);
           }
           window.editContas.splice(idx, 1);
           window.renderEditAccounts();
@@ -6028,22 +6007,17 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         const val = document.getElementById('new-account-input').value.trim();
         if (val) {
           document.getElementById('new-account-input').value = 'Salvando...';
-          const newConta = {
-              groupId: window.userGroupId,
+          const newId = await window.accountManager.checkAndCreateAccount(val, 'Conta Corrente', 0);
+          
+          const newConta = window.accountManager.data.find(c => c.id === newId) || {
+              id: newId,
               nome: val,
               tipo: 'Conta Corrente',
               saldo_inicial: 0,
-              saldo: 0,
-              createdAt: new Date().toISOString()
+              saldo: 0
           };
-          const ref = window.firebaseDB.collection('Contas').doc();
-          await ref.set(newConta);
-          newConta.id = ref.id;
           
           window.editContas.push(newConta);
-          if (window.dadosFinanceiros && window.dadosFinanceiros.contas) {
-              window.dadosFinanceiros.contas.push(newConta);
-          }
           document.getElementById('new-account-input').value = '';
           window.renderEditAccounts();
         }
@@ -6057,39 +6031,13 @@ window.USE_FIREBASE = true; // Firebase ativado permanentemente
         btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
         
         try {
-            const gid = window.userGroupId;
-            if (!gid) throw new Error("Grupo familiar não definido.");
-            const batch = window.firebaseDB.batch();
-            
-            // Apaga as categorias antigas
-            const catSnap = await window.firebaseDB.collection('Categorias').where('groupId', '==', gid).get();
-            catSnap.forEach(doc => batch.delete(doc.ref));
-            
-            // Insere as categorias novas
-            Object.keys(window.editCategorias).forEach(cat => {
-                if (cat.toLowerCase().includes('transferencia') || cat.toLowerCase().includes('transferência')) return;
-                const newCatRef = window.firebaseDB.collection('Categorias').doc();
-                batch.set(newCatRef, {
-                    groupId: gid,
-                    nome: cat,
-                    subcategorias: window.editCategorias[cat],
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
-            
-            await batch.commit();
+            await window.categoryManager.replaceAllCategories(window.editCategorias);
             
             // Recarrega
             alert("Categorias salvas com sucesso!");
             
-            // Força a recarga completa do db
-            const panelMain = document.getElementById('panel-dashboard-main');
-            if (panelMain) {
-                document.querySelector('.nav-item[data-target="panel-dashboard-main"]').click();
-            } else {
-                window.location.reload();
-            }
-            
+            // Não precisamos recarregar a página ou fazer query novamente, pois o onSnapshot cuidará disso!
+            // E o window.dicionarioGeral é reconstruído automaticamente.
         } catch (e) {
             console.error(e);
             alert("Erro ao salvar: " + e.message);
