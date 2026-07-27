@@ -19,9 +19,8 @@ class CategoryManager extends window.StoreManager {
     
     if (!window.dadosFinanceiros) window.dadosFinanceiros = {};
     window.dadosFinanceiros.categoriasDict = dict;
-    if (typeof window.dicionarioGeral !== 'undefined') {
-        window.dicionarioGeral = dict;
-    }
+    window.dicionarioGeral = dict;
+    window.dicionarioCategorias = dict;
   }
 
   async checkAndCreateCategory(nome) {
