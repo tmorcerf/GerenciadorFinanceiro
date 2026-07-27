@@ -1245,13 +1245,31 @@ function stopAIThinking() {
       
       let catOptions = '<option value="">-- Selecione --</option>';
       let catFound = false;
-      catKeys.forEach(k => {
+      
+      const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+      const userKeys = catKeys.filter(k => !systemCats.includes(k));
+      const sysKeys = catKeys.filter(k => systemCats.includes(k));
+
+      catOptions += '<optgroup label="Suas Categorias">';
+      userKeys.forEach(k => {
         const selected = (t.categoria === k) ? 'selected' : '';
         if (selected) catFound = true;
         catOptions += `<option value="${k}" ${selected}>${k}</option>`;
       });
+      catOptions += '</optgroup>';
+
+      if (sysKeys.length > 0) {
+          catOptions += '<optgroup label="Sistema">';
+          sysKeys.forEach(k => {
+            const selected = (t.categoria === k) ? 'selected' : '';
+            if (selected) catFound = true;
+            catOptions += `<option value="${k}" ${selected}>${k}</option>`;
+          });
+          catOptions += '</optgroup>';
+      }
+
       if (t.categoria && !catFound) {
-        catOptions += `<option value="${t.categoria}" selected>✨ ${t.categoria} (Nova)</option>`;
+        catOptions += `<option value="${t.categoria}" selected>+ ${t.categoria} (Nova)</option>`;
       }
 
       let subcatOptions = '<option value="">-- Selecione --</option>';

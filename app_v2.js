@@ -6553,12 +6553,34 @@ window.openEditTransactionModal = function(cod) {
 
   const catSelect = document.getElementById('edit-tx-categoria');
   catSelect.innerHTML = '';
-  Object.keys(window.dicionarioGeral || window.dadosFinanceiros.categoriasDict).forEach(c => {
+  const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict || {};
+  const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
+  
+  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+  const userKeys = catKeys.filter(k => !systemCats.includes(k));
+  const sysKeys = catKeys.filter(k => systemCats.includes(k));
+
+  const optGroupUser = document.createElement('optgroup');
+  optGroupUser.label = "Suas Categorias";
+  userKeys.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c; opt.textContent = c;
     if(c.toLowerCase() === (t.categoria||'').toLowerCase()) opt.selected = true;
-    catSelect.appendChild(opt);
+    optGroupUser.appendChild(opt);
   });
+  catSelect.appendChild(optGroupUser);
+
+  if (sysKeys.length > 0) {
+      const optGroupSys = document.createElement('optgroup');
+      optGroupSys.label = "Sistema";
+      sysKeys.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        if(c.toLowerCase() === (t.categoria||'').toLowerCase()) opt.selected = true;
+        optGroupSys.appendChild(opt);
+      });
+      catSelect.appendChild(optGroupSys);
+  }
   
   const optNewCat = document.createElement('option');
   optNewCat.value = '__NEW__';
@@ -6960,7 +6982,15 @@ window.openNewTransactionModal = function() {
   const catSelect = document.getElementById('new-tx-categoria');
   catSelect.innerHTML = '';
   const dict = window.dicionarioGeral || {};
-  Object.keys(dict).sort().forEach(cat => {
+  const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
+  
+  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+  const userKeys = catKeys.filter(k => !systemCats.includes(k));
+  const sysKeys = catKeys.filter(k => systemCats.includes(k));
+
+  const optGroupUser = document.createElement('optgroup');
+  optGroupUser.label = "Suas Categorias";
+  userKeys.forEach(cat => {
     const opt = document.createElement('option');
     opt.value = cat; opt.textContent = cat;
     catSelect.appendChild(opt);
