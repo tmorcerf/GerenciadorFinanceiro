@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -1613,6 +1613,41 @@
         <button class="btn btn-primary" id="new-tx-save" onclick="window.saveNewTransaction()">
           <i class="fas fa-check"></i> Salvar
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Onboarding -->
+  <div id="modal-onboarding" class="modal-overlay" style="z-index: 9999; backdrop-filter: blur(8px); background: rgba(0,0,0,0.85); display: none;">
+    <div class="modal-content" style="max-width: 600px; padding: 2rem; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.5); text-align: center;">
+      <h2 style="color: var(--color-accent); font-size: 1.8rem; margin-top: 0; margin-bottom: 10px;"><i class="fas fa-rocket"></i> Bem-vindo ao Corta Gastos!</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5;">Vimos que sua conta é novinha em folha. Para começar com o pé direito, escolha o seu <b>Perfil Financeiro</b>. Nós vamos configurar a estrutura de categorias ideal para você automaticamente.</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left;">
+        
+        <button onclick="window.inicializarBancoNovoUsuario('Assalariado')" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.borderColor='#3b82f6'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)'">
+          <h3 style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 1.1rem;"><i class="fas fa-briefcase" style="color: #3b82f6; width: 24px;"></i> Assalariado</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Salário, Vale Refeição, Transporte, Moradia, Saúde, Lazer...</p>
+        </button>
+        
+        <button onclick="window.inicializarBancoNovoUsuario('Informal')" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.1)'; this.style.borderColor='#10b981'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)'">
+          <h3 style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 1.1rem;"><i class="fas fa-tools" style="color: #10b981; width: 24px;"></i> Trabalhador Informal</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Serviços, Vendas, Insumos, Moradia, Transporte...</p>
+        </button>
+
+        <button onclick="window.inicializarBancoNovoUsuario('Motorista')" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(245, 158, 11, 0.1)'; this.style.borderColor='#f59e0b'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)'">
+          <h3 style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 1.1rem;"><i class="fas fa-car" style="color: #f59e0b; width: 24px;"></i> Motorista de App</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Corridas, Combustível, Manutenção, Alimentação na rua...</p>
+        </button>
+        
+        <button onclick="window.inicializarBancoNovoUsuario('Branco')" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.borderColor='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='var(--border-color)'">
+          <h3 style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 1.1rem;"><i class="fas fa-file-alt" style="color: #ef4444; width: 24px;"></i> Em Branco</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Cria apenas as categorias obrigatórias.</p>
+        </button>
+        
+      </div>
+      <div id="onboarding-loading" style="display: none; margin-top: 20px; color: var(--color-accent); font-weight: bold;">
+        <i class="fas fa-spinner fa-spin"></i> Preparando seu ambiente...
       </div>
     </div>
   </div>

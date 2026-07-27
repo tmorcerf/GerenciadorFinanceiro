@@ -1523,6 +1523,16 @@ let txDateTypeFilter = 'vencimento';
                 window.transactionManager.waitForInitialLoad()
             ]);
 
+            // --- ONBOARDING VERIFICATION ---
+            if (window.accountManager.data.length === 0 && window.categoryManager.data.length === 0) {
+                const modalOnboarding = document.getElementById('modal-onboarding');
+                if (modalOnboarding) {
+                    modalOnboarding.style.display = 'flex';
+                    // Pare o carregamento do restante do app e espere a ação do modal.
+                    return;
+                }
+            }
+
             console.log("Carregando restante dos dados (legado)...");
             const dbDados = await window.DB.loadAllData();
             
@@ -7813,6 +7823,75 @@ window.linkTransfers = async function(cod1, cod2) {
     }
 };
 
+window.inicializarBancoNovoUsuario = async function(perfil) {
+    try {
+        const loading = document.getElementById('onboarding-loading');
+        if (loading) loading.style.display = 'block';
+        
+        const db = window.firebaseDB || window.db;
+        const gid = window.userGroupId;
+        if (!db || !gid) {
+            alert("Sua sessão expirou ou não está autenticada. Recarregue a página.");
+            return;
+        }
+        
+        const catSistemas = ['Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+        let catEspecificas = [];
+        
+        if (perfil === 'Assalariado') {
+            catEspecificas = ['Salário', 'Vale Refeição', 'Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Educação'];
+        } else if (perfil === 'Informal') {
+            catEspecificas = ['Receita de Serviços', 'Vendas de Produtos', 'Insumos/Materiais', 'Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Lazer'];
+        } else if (perfil === 'Motorista') {
+            catEspecificas = ['Corridas App', 'Entregas', 'Combustível', 'Manutenção Veículo', 'Alimentação na Rua', 'IPVA/Seguro', 'Moradia', 'Saúde'];
+        } // "Branco" fica vazio
+        
+        const catBase = [...catEspecificas, ...catSistemas];
+        
+        // 1. Criar Carteira
+        const accRef = db.collection('Contas').doc();
+        await accRef.set({
+            groupId: gid,
+            nome: 'Carteira',
+            instituicao: 'Dinheiro',
+            tipo: 'Carteira Física',
+            saldo_inicial: 0,
+            saldo: 0,
+            conciliado_ate: '',
+            criadoEm: firebase.firestore.FieldValue.serverTimestamp() || new Date()
+        });
+        
+        // 2. Injetar Categorias e Orcamento
+        const batch = db.batch();
+        catBase.forEach(c => {
+            const catRef = db.collection('Categorias').doc();
+            batch.set(catRef, {
+                groupId: gid,
+                nome: c,
+                subcategorias: [],
+                createdAt: new Date().toISOString()
+            });
+            const orcRef = db.collection('Orcamento').doc();
+            batch.set(orcRef, {
+                groupId: gid,
+                categoria: c,
+                inicio: '01/01/' + new Date().getFullYear(),
+                fim: '31/12/' + new Date().getFullYear(),
+                orcamento: 0
+            });
+        });
+        await batch.commit();
+        
+        alert(`Seu perfil "${perfil}" foi configurado com sucesso! Vamos lá!`);
+        window.location.reload();
+    } catch (error) {
+        console.error("Erro ao inicializar perfil:", error);
+        alert("Erro ao configurar perfil. Tente novamente.");
+        const loading = document.getElementById('onboarding-loading');
+        if (loading) loading.style.display = 'none';
+    }
+};
+
 window.resetarBancoParaNovoUsuario = async function() {
     if(!confirm('ATENÇÃO: Isso apagará TODOS os seus lançamentos e contas atuais para criar um usuário zerado de fábrica. Tem certeza?')) return;
     
@@ -7848,48 +7927,7 @@ window.resetarBancoParaNovoUsuario = async function() {
         catSnap.forEach(doc => batchCat.delete(doc.ref));
         await batchCat.commit();
         
-        // 5. Injetar Nova Conta Padrão
-        await db.collection('Contas').add({
-            groupId: gid,
-            nome: 'Carteira',
-            instituicao: 'Dinheiro',
-            tipo: 'Dinheiro',
-            saldo_inicial: 0,
-            saldo: 0,
-            conciliado_ate: ''
-        });
-        
-        // 6. Injetar Orçamento Base e Categorias
-        const catBase = [
-            'Salário', 'Rendimentos', 'Cashback', 
-            'Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Lazer',
-            'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'
-        ];
-        const batch4 = db.batch();
-        const batch5 = db.batch();
-        catBase.forEach(c => {
-            // Orcamento
-            const docRefOrc = db.collection('Orcamento').doc();
-            batch4.set(docRefOrc, {
-                groupId: gid,
-                categoria: c,
-                inicio: '01/01/' + new Date().getFullYear(),
-                fim: '31/12/' + new Date().getFullYear(),
-                orcamento: 0
-            });
-            // Categoria
-            const docRefCat = db.collection('Categorias').doc();
-            batch5.set(docRefCat, {
-                groupId: gid,
-                nome: c,
-                subcategorias: [],
-                createdAt: new Date().toISOString()
-            });
-        });
-        await batch4.commit();
-        await batch5.commit();
-        
-        alert('Reset concluído com sucesso! A página será recarregada.');
+        alert('Reset concluído com sucesso! O assistente de perfil financeiro será aberto em seguida.');
         window.location.reload();
     } catch(err) {
         console.error('Erro no factory reset:', err);
