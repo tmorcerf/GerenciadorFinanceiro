@@ -1515,7 +1515,7 @@ let txDateTypeFilter = 'vencimento';
             
             window.accountManager.listen(gid);
             window.categoryManager.listen(gid);
-            window.transactionManager.listen(gid);
+                 window.transactionManager.listen(gid);
             
             await Promise.all([
                 window.accountManager.waitForInitialLoad(),
@@ -1527,7 +1527,11 @@ let txDateTypeFilter = 'vencimento';
             if (window.accountManager.data.length === 0 && window.categoryManager.data.length === 0) {
                 const modalOnboarding = document.getElementById('modal-onboarding');
                 if (modalOnboarding) {
-                    modalOnboarding.classList.add('active');
+                    modalOnboarding.style.display = 'flex';
+                    // We need a small timeout for the transition to trigger after display flex
+                    setTimeout(() => {
+                        modalOnboarding.classList.add('active');
+                    }, 10);
                     // Pare o carregamento do restante do app e espere a ação do modal.
                     return;
                 }
