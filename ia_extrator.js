@@ -134,7 +134,8 @@ window.IAExtrator = (function() {
       '- "Pagamento de fatura": para pagamentos de cartão de crédito.\n' +
       '- "Investimento": para envios a corretoras ou poupança.\n' +
       '- "Saque": para saques em caixas eletrônicos (dinheiro físico).\n' +
-      '- "Estorno": para valores que saíram e foram devolvidos/reembolsados na mesma conta.\n\n' +
+      '- "Estorno": para valores que saíram e foram devolvidos/reembolsados na mesma conta.\n' +
+      '8. IGNORE COMPLETAMENTE linhas informativas ou de bloqueio judicial onde o valor termina com um asterisco (ex: 5.735,39 *), pois elas não afetam o saldo real.\n\n' +
       'RETORNE EXATAMENTE NESTE FORMATO JSON (coloque analise_ia PRIMEIRO, no máximo 1 frase curta sendo bem direto, em tom cômico de um mestre Ninja cortador de gastos. Nada de bom dia):\n' +
       '{"status":"success","analise_ia":"Cortei as gorduras do PDF como uma katana! Extrato validado.","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00,"periodo_inicio":"01/06/2026","periodo_fim":"30/06/2026"},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 
