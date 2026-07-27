@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -295,6 +295,9 @@
           <span id="user-profile-name" style="font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Visitante</span>
           <span id="user-profile-email" style="font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Faca login para usar</span>
         </div>
+        <button onclick="window.resetarBancoParaNovoUsuario()" title="Factory Reset" style="background: transparent; border: none; color: var(--color-warning); cursor: pointer; padding: 5px;">
+          <i class="fas fa-trash-restore"></i>
+        </button>
         <button id="btn-logout" title="Sair" style="background: transparent; border: none; color: var(--color-expense); cursor: pointer; padding: 5px; display: none;">
           <i class="fas fa-sign-out-alt"></i>
         </button>
