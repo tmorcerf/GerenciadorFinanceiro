@@ -7842,7 +7842,13 @@ window.resetarBancoParaNovoUsuario = async function() {
         orcSnap.forEach(doc => batch3.delete(doc.ref));
         await batch3.commit();
         
-        // 4. Injetar Nova Conta Padrão
+        // 4. Apagar Categorias
+        const catSnap = await db.collection('Categorias').where('groupId', '==', gid).get();
+        const batchCat = db.batch();
+        catSnap.forEach(doc => batchCat.delete(doc.ref));
+        await batchCat.commit();
+        
+        // 5. Injetar Nova Conta Padrão
         await db.collection('Contas').add({
             groupId: gid,
             nome: 'Carteira',
@@ -7853,24 +7859,35 @@ window.resetarBancoParaNovoUsuario = async function() {
             conciliado_ate: ''
         });
         
-        // 5. Injetar Orçamento Base (e Categorias por consequência)
+        // 6. Injetar Orçamento Base e Categorias
         const catBase = [
             'Salário', 'Rendimentos', 'Cashback', 
             'Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Lazer',
             'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'
         ];
         const batch4 = db.batch();
+        const batch5 = db.batch();
         catBase.forEach(c => {
-            const docRef = db.collection('Orcamento').doc();
-            batch4.set(docRef, {
+            // Orcamento
+            const docRefOrc = db.collection('Orcamento').doc();
+            batch4.set(docRefOrc, {
                 groupId: gid,
                 categoria: c,
                 inicio: '01/01/' + new Date().getFullYear(),
                 fim: '31/12/' + new Date().getFullYear(),
                 orcamento: 0
             });
+            // Categoria
+            const docRefCat = db.collection('Categorias').doc();
+            batch5.set(docRefCat, {
+                groupId: gid,
+                nome: c,
+                subcategorias: [],
+                createdAt: new Date().toISOString()
+            });
         });
         await batch4.commit();
+        await batch5.commit();
         
         alert('Reset concluído com sucesso! A página será recarregada.');
         window.location.reload();
