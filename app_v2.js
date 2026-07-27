@@ -7869,18 +7869,48 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             return;
         }
         
-        const catSistemas = ['Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+        const catSistemas = [
+            { nome: 'Transferência entre contas', subcategorias: [] },
+            { nome: 'Pagamento de fatura', subcategorias: [] },
+            { nome: 'Investimento', subcategorias: [] },
+            { nome: 'Saque', subcategorias: [] },
+            { nome: 'Estorno', subcategorias: [] }
+        ];
+
+        let catGerais = [];
+        if (perfil !== 'Branco') {
+            catGerais = [
+                { nome: 'Alimentação', subcategorias: [] },
+                { nome: 'Lazer', subcategorias: [] },
+                { nome: 'Viagens', subcategorias: [] },
+                { nome: 'Transporte', subcategorias: [] },
+                { nome: 'Serviços', subcategorias: [] },
+                { nome: 'Veículos', subcategorias: [] },
+                { nome: 'Seguros', subcategorias: [] },
+                { nome: 'Moradia', subcategorias: [] }
+            ];
+        }
+        
         let catEspecificas = [];
         
         if (perfil === 'Assalariado') {
-            catEspecificas = ['Salário', 'Vale Refeição', 'Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Lazer', 'Educação'];
+            catEspecificas = [
+                { nome: 'Proventos', subcategorias: ['Salário', 'Férias', '13º Salário'] },
+                { nome: 'Rendimentos', subcategorias: ['Aluguel', 'Juros'] }
+            ];
         } else if (perfil === 'Informal') {
-            catEspecificas = ['Receita de Serviços', 'Vendas de Produtos', 'Insumos/Materiais', 'Moradia', 'Alimentação', 'Transporte', 'Saúde', 'Lazer'];
+            catEspecificas = [
+                { nome: 'Receitas de Negócio', subcategorias: ['Vendas', 'Serviços'] },
+                { nome: 'Despesas de Negócio', subcategorias: ['Insumos', 'Marketing', 'Taxas'] }
+            ];
         } else if (perfil === 'Motorista') {
-            catEspecificas = ['Corridas App', 'Entregas', 'Combustível', 'Manutenção Veículo', 'Alimentação na Rua', 'IPVA/Seguro', 'Moradia', 'Saúde'];
-        } // "Branco" fica vazio
+            catEspecificas = [
+                { nome: 'Receitas (Corridas)', subcategorias: [] },
+                { nome: 'Despesas do Veículo', subcategorias: ['Combustível', 'App/Taxas', 'Manutenção', 'IPVA/Seguro'] }
+            ];
+        }
         
-        const catBase = [...catEspecificas, ...catSistemas];
+        const catBase = [...catEspecificas, ...catGerais, ...catSistemas];
         
         // 1. Criar Carteira
         const accRef = db.collection('Contas').doc();
@@ -7901,14 +7931,14 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             const catRef = db.collection('Categorias').doc();
             batch.set(catRef, {
                 groupId: gid,
-                nome: c,
-                subcategorias: [],
+                nome: c.nome,
+                subcategorias: c.subcategorias,
                 createdAt: new Date().toISOString()
             });
             const orcRef = db.collection('Orcamento').doc();
             batch.set(orcRef, {
                 groupId: gid,
-                categoria: c,
+                categoria: c.nome,
                 inicio: '01/01/' + new Date().getFullYear(),
                 fim: '31/12/' + new Date().getFullYear(),
                 orcamento: 0
