@@ -6556,7 +6556,29 @@ window.openEditTransactionModal = function(cod) {
   const updateSubcats = () => {
     subSelect.innerHTML = '<option value="">Sem Subcategoria</option>';
     const cat = catSelect.value;
-    const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict;
+    
+    const catLower = (cat || '').toLowerCase();
+    let filterType = null;
+    if (catLower.includes('transferência entre contas') || catLower === 'transferência') filterType = 'Corrente';
+    else if (catLower.includes('pagamento de fatura')) filterType = 'Cartão de Crédito';
+    else if (catLower.includes('investimento')) filterType = 'Investimento';
+    else if (catLower.includes('saque')) filterType = 'Dinheiro';
+
+    if (filterType || catLower.includes('estorno')) {
+        let contas = window.dadosFinanceiros?.contas || [];
+        if (filterType) {
+            contas = contas.filter(c => c.tipo === filterType);
+        }
+        contas.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.nome; opt.textContent = c.nome;
+            if(c.nome.toLowerCase() === (t.subcategoria||'').toLowerCase()) opt.selected = true;
+            subSelect.appendChild(opt);
+        });
+        return;
+    }
+
+    const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict || {};
     if(dict[cat]) {
       dict[cat].forEach(sub => {
         const opt = document.createElement('option');
@@ -6945,6 +6967,27 @@ window._updateNewTxSubcats = function() {
   const subSel = document.getElementById('new-tx-subcategoria');
   if (!subSel) return;
   subSel.innerHTML = '<option value="">-- Nenhuma --</option>';
+  
+  const catLower = (cat || '').toLowerCase();
+  let filterType = null;
+  if (catLower.includes('transferência entre contas') || catLower === 'transferência') filterType = 'Corrente';
+  else if (catLower.includes('pagamento de fatura')) filterType = 'Cartão de Crédito';
+  else if (catLower.includes('investimento')) filterType = 'Investimento';
+  else if (catLower.includes('saque')) filterType = 'Dinheiro';
+
+  if (filterType || catLower.includes('estorno')) {
+      let contas = window.dadosFinanceiros?.contas || [];
+      if (filterType) {
+          contas = contas.filter(c => c.tipo === filterType);
+      }
+      contas.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.nome; opt.textContent = c.nome;
+          subSel.appendChild(opt);
+      });
+      return;
+  }
+
   const dict = window.dicionarioGeral || {};
   (dict[cat] || []).forEach(sub => {
     const opt = document.createElement('option');
@@ -7438,7 +7481,14 @@ window.renderTransferReconciliation = function() {
         const sub = (t.subcategoria || '').toLowerCase();
         const isPending = t.pendente_destino === true || sub === 'pendente de destino' || sub === 'pendente';
 
-        if (cat.includes('transfer') || sub.includes('transfer') || isPending) {
+        const isTransferType = cat.includes('transferência entre contas') || 
+                               cat.includes('pagamento de fatura') || 
+                               cat.includes('investimento') || 
+                               cat.includes('saque') || 
+                               cat.includes('estorno') || 
+                               cat.includes('transfer');
+        
+        if (isTransferType || sub.includes('transfer') || isPending) {
             const val = parseFloat(t.valor) || 0;
             if (t.transfer_match_id) {
                 historyPairs.push(t);
@@ -7763,3 +7813,70 @@ window.linkTransfers = async function(cod1, cod2) {
     }
 };
 
+window.resetarBancoParaNovoUsuario = async function() {
+    if(!confirm('ATENÇÃO: Isso apagará TODOS os seus lançamentos e contas atuais para criar um usuário zerado de fábrica. Tem certeza?')) return;
+    
+    const db = window.firebaseDB || window.db;
+    const gid = window.userGroupId;
+    if(!db || !gid) return alert('Banco de dados não conectado!');
+    
+    document.body.style.opacity = '0.5';
+    alert('Iniciando o Factory Reset... Por favor aguarde sem fechar a página.');
+    
+    try {
+        // 1. Apagar Lancamentos
+        const lancSnap = await db.collection('Lancamentos').where('groupId', '==', gid).get();
+        const batch1 = db.batch();
+        lancSnap.forEach(doc => batch1.delete(doc.ref));
+        await batch1.commit();
+        
+        // 2. Apagar Contas
+        const contaSnap = await db.collection('Contas').where('groupId', '==', gid).get();
+        const batch2 = db.batch();
+        contaSnap.forEach(doc => batch2.delete(doc.ref));
+        await batch2.commit();
+        
+        // 3. Apagar Orcamento
+        const orcSnap = await db.collection('Orcamento').where('groupId', '==', gid).get();
+        const batch3 = db.batch();
+        orcSnap.forEach(doc => batch3.delete(doc.ref));
+        await batch3.commit();
+        
+        // 4. Injetar Nova Conta Padrão
+        await db.collection('Contas').add({
+            groupId: gid,
+            nome: 'Carteira',
+            instituicao: 'Dinheiro',
+            tipo: 'Dinheiro',
+            saldo_inicial: 0,
+            saldo: 0,
+            conciliado_ate: ''
+        });
+        
+        // 5. Injetar Orçamento Base (e Categorias por consequência)
+        const catBase = [
+            'Salário', 'Rendimentos', 'Cashback', 
+            'Alimentação', 'Moradia', 'Transporte', 'Saúde', 'Lazer',
+            'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'
+        ];
+        const batch4 = db.batch();
+        catBase.forEach(c => {
+            const docRef = db.collection('Orcamento').doc();
+            batch4.set(docRef, {
+                groupId: gid,
+                categoria: c,
+                inicio: '01/01/' + new Date().getFullYear(),
+                fim: '31/12/' + new Date().getFullYear(),
+                orcamento: 0
+            });
+        });
+        await batch4.commit();
+        
+        alert('Reset concluído com sucesso! A página será recarregada.');
+        window.location.reload();
+    } catch(err) {
+        console.error('Erro no factory reset:', err);
+        alert('Erro no reset: ' + err.message);
+        document.body.style.opacity = '1';
+    }
+};

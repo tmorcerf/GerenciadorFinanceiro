@@ -50,7 +50,13 @@ window.IAConciliador = (function() {
     var isTransfer = function(t) {
       var cat = (t.categoria || '').toLowerCase();
       var sub = (t.subcategoria || '').toLowerCase();
-      return cat.includes('transfer') || sub.includes('transfer') || t.pendente_destino === true || sub === 'pendente de destino';
+      var isTransferType = cat.includes('transferência entre contas') || 
+                           cat.includes('pagamento de fatura') || 
+                           cat.includes('investimento') || 
+                           cat.includes('saque') || 
+                           cat.includes('estorno') || 
+                           cat.includes('transfer');
+      return isTransferType || sub.includes('transfer') || t.pendente_destino === true || sub === 'pendente de destino';
     };
 
     var isLockedTx = function(t) {
@@ -73,10 +79,10 @@ window.IAConciliador = (function() {
     var pendentesDestino = allTransfers.filter(isPendingDest);
 
     var orphanOutflows = allTransfers.filter(function(t) {
-      return (parseFloat(t.valor) || 0) < 0 && !t.transfer_match_id && !isPendingDest(t);
+      return (parseFloat(t.valor) || 0) < 0 && !t.transfer_match_id;
     });
     var orphanInflows = allTransfers.filter(function(t) {
-      return (parseFloat(t.valor) || 0) > 0 && !t.transfer_match_id && !isPendingDest(t);
+      return (parseFloat(t.valor) || 0) > 0 && !t.transfer_match_id;
     });
 
     var conflitos = [];
@@ -97,11 +103,18 @@ window.IAConciliador = (function() {
           matchedOuts.add(outKey);
           matchedIns.add(inKey);
 
+          var isEstorno = (out.conta || '').trim().toLowerCase() === (inTx.conta || '').trim().toLowerCase();
+          var titulo = isEstorno ? 'Estorno Detectado' : 'Sugestão de Junção (Match de Transferência)';
+          var descricao = isEstorno 
+            ? 'Vincular saída e entrada (Estorno) na mesma conta ' + out.conta + ' no valor de ' + formatCurrency(valOut) + '.'
+            : 'Vincular saída de ' + out.conta + ' (' + formatCurrency(valOut) + ') com entrada em ' + inTx.conta + ' (' + formatCurrency(valIn) + ').';
+
           sugestoesIA.push({
             id: 'sug_match_' + outKey + '_' + inKey,
             tipo: 'match',
-            titulo: 'Sugestão de Junção (Match de Transferência)',
-            descricao: 'Vincular saída de ' + out.conta + ' (' + formatCurrency(valOut) + ') com entrada em ' + inTx.conta + ' (' + formatCurrency(valIn) + ').',
+            titulo: titulo,
+            descricao: descricao,
+
             txOut: out,
             txIn: inTx,
             confianca: 0.95,

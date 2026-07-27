@@ -128,7 +128,13 @@ window.IAExtrator = (function() {
       '3. Encontre as datas exatas de início e fim que o extrato compreende e retorne como periodo_inicio e periodo_fim (formato DD/MM/AAAA obrigatoriamente).\n' +
       '4. Extraia a lista de transações com data (DD/MM/AAAA obrigatoriamente 4 dígitos no ano), descricao original bruta, e valor numérico (negativo para débitos, positivo para créditos).\n' +
       '5. Para conta corrente, vencimento = data. Para cartão de crédito, procure e extraia a data de vencimento da fatura.\n' +
-      '6. IGNORE transferências internas de pagamento de fatura do próprio usuário se explicitamente marcadas assim.\n\n' +
+      '6. IGNORE transferências internas de pagamento de fatura do próprio usuário se explicitamente marcadas assim.\n' +
+      '7. CLASSIFICAÇÃO DE TRANSFERÊNCIAS: Se um lançamento for uma transferência de dinheiro, utilize OBRIGATORIAMENTE uma destas 5 categorias:\n' +
+      '- "Transferência entre contas": para DOC/TED/PIX comuns entre contas correntes.\n' +
+      '- "Pagamento de fatura": para pagamentos de cartão de crédito.\n' +
+      '- "Investimento": para envios a corretoras ou poupança.\n' +
+      '- "Saque": para saques em caixas eletrônicos (dinheiro físico).\n' +
+      '- "Estorno": para valores que saíram e foram devolvidos/reembolsados na mesma conta.\n\n' +
       'RETORNE EXATAMENTE NESTE FORMATO JSON (coloque analise_ia PRIMEIRO, no máximo 1 frase curta sendo bem direto, em tom cômico de um mestre Ninja cortador de gastos. Nada de bom dia):\n' +
       '{"status":"success","analise_ia":"Cortei as gorduras do PDF como uma katana! Extrato validado.","data":{"cabecalho":{"Nome da conta":"BB Conta Corrente 1234-5","banco":"Banco do Brasil","Vencimento da fatura":null,"saldo_inicial":1500.00,"saldo_final":2300.00,"periodo_inicio":"01/06/2026","periodo_fim":"30/06/2026"},"lancamentos":[{"data":"DD/MM/AAAA","vencimento":"DD/MM/AAAA","descricao":"...","valor":-100.00,"conta":"..."}]}}';
 

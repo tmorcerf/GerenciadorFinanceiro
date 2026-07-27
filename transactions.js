@@ -19,7 +19,11 @@ class TransactionManager extends BaseStore {
       if (!win.firebaseDB || !win.userGroupId) throw new Error("Sistema não inicializado.");
       
       const catLower = (payload.categoria || '').toLowerCase();
-      const isTransfer = catLower.includes('transfer') || (payload.subcategoria || '').toLowerCase().includes('transfer');
+      const isTransfer = catLower.includes('transferência entre contas') || 
+                         catLower.includes('pagamento de fatura') || 
+                         catLower.includes('investimento') || 
+                         catLower.includes('saque') || 
+                         (catLower.includes('transfer') && !catLower.includes('estorno'));
 
       if (isTransfer) {
           const sub = (payload.subcategoria || '').trim();
