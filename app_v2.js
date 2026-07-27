@@ -1527,7 +1527,7 @@ let txDateTypeFilter = 'vencimento';
             if (window.accountManager.data.length === 0 && window.categoryManager.data.length === 0) {
                 const modalOnboarding = document.getElementById('modal-onboarding');
                 if (modalOnboarding) {
-                    modalOnboarding.style.display = 'flex';
+                    modalOnboarding.classList.add('active');
                     // Pare o carregamento do restante do app e espere a ação do modal.
                     return;
                 }
