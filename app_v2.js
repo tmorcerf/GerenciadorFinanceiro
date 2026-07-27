@@ -361,7 +361,7 @@ let txDateTypeFilter = 'vencimento';
     }
 
     function renderizarRevisaoIA(resultadoIA) {
-      const dicionario = window.dicionarioCategorias || {};
+      const dicionario = window.dicionarioGeral || (window.dadosFinanceiros && window.dadosFinanceiros.categoriasDict) || {};
       const opcoesCategoria = Object.keys(dicionario);
 
       // 1. Preparar dados com ID nico e Semforo de Confiana
@@ -633,7 +633,7 @@ let txDateTypeFilter = 'vencimento';
             if (jsonCat.status !== 'success') throw new Error(jsonCat.message);
             
             // Re-injeta na tabela principal
-            const dicionario = window.dicionarioCategorias || {};
+            const dicionario = window.dicionarioGeral || (window.dadosFinanceiros && window.dadosFinanceiros.categoriasDict) || {};
             const novosItensUI = jsonCat.data.map((d, i) => {
               let confianca = 'verde';
               let statusIcon = '<div style="width:12px; height:12px; border-radius:50%; background:#10b981; margin:auto;"></div>';

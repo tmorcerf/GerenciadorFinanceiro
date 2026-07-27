@@ -955,7 +955,9 @@ function stopAIThinking() {
               };
               
               // Bloqueia APENAS se a matemática não bater e não for falta de dados
-              window._blockImport = (!isValidadoMatematicamente && !isMissingBalances);
+              window._blockImport = false;
+              window._isMathValid = isValidadoMatematicamente;
+              window._isMissingBalances = isMissingBalances;
 
           } else {
               alertaConciliacao.innerHTML = `
@@ -1042,11 +1044,11 @@ function stopAIThinking() {
           btnProsseguir.style.width = '100%';
           btnProsseguir.style.marginTop = '10px';
           
-          if (window._blockImport) {
-              btnProsseguir.disabled = true;
-              btnProsseguir.style.opacity = '0.5';
-              btnProsseguir.style.cursor = 'not-allowed';
-              btnProsseguir.innerHTML = '<i class="fas fa-lock"></i> Importação Bloqueada (Matemática Inválida)';
+          if (!window._isMathValid && !window._isMissingBalances) {
+              btnProsseguir.disabled = false;
+              btnProsseguir.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
+              btnProsseguir.style.boxShadow = '0 8px 25px rgba(239, 68, 68, 0.4)';
+              btnProsseguir.innerHTML = 'Prosseguir e Ajustar Manualmente <i class="fas fa-tools"></i>';
           }
           
           confContainer.appendChild(btnProsseguir);
@@ -1333,6 +1335,49 @@ function stopAIThinking() {
     }
 
     document.getElementById('unified-table-body').innerHTML = tbodyHtml;
+    
+    // INÍCIO: Resumo Matemático ao Vivo
+    let containerResumo = document.getElementById('resumo-matematico-container');
+    if (!containerResumo) {
+        containerResumo = document.createElement('div');
+        containerResumo.id = 'resumo-matematico-container';
+        containerResumo.style = 'margin-top: 15px; padding: 15px; border-radius: 8px; font-weight: bold; transition: all 0.3s; display: flex; align-items: center; justify-content: space-between;';
+        document.getElementById('unified-table').parentNode.appendChild(containerResumo);
+    }
+    
+    window.atualizarResumoMatematico = () => {
+        let saldoInicial = window.payloadConciliacaoGlobal?.saldo_inicial || 0;
+        let saldoFinal = window.payloadConciliacaoGlobal?.saldo_final || 0;
+        let soma = 0;
+        
+        [...dadosSincronizacao.faltantes, ...dadosSincronizacao.juncoes].forEach(t => {
+            if (!t.ignorar) soma += parseFloat(t.valor || 0);
+        });
+        dadosSincronizacao.corretos.forEach(c => {
+            if (!c.extrato.ignorar) soma += parseFloat(c.extrato.valor || 0);
+        });
+        
+        let diff = saldoFinal - saldoInicial - soma;
+        const cont = document.getElementById('resumo-matematico-container');
+        const bSalvar = document.getElementById('btnSalvarImportacaoNova');
+        
+        if (window._isMissingBalances || Math.abs(diff) < 0.05) {
+            cont.style.background = 'rgba(16, 185, 129, 0.1)';
+            cont.style.border = '1px solid #10b981';
+            cont.style.color = '#10b981';
+            cont.innerHTML = `<div><i class="fas fa-check-circle"></i> <b>Matemática Validada!</b> O Saldo Final bate perfeitamente com os lançamentos.</div><div>Diferença: R$ ${Math.abs(diff).toFixed(2)}</div>`;
+            if (bSalvar) bSalvar.disabled = false;
+        } else {
+            cont.style.background = 'rgba(239, 68, 68, 0.1)';
+            cont.style.border = '1px solid #ef4444';
+            cont.style.color = '#ef4444';
+            cont.innerHTML = `<div><i class="fas fa-exclamation-triangle"></i> <b>Atenção: Os valores não batem.</b> Marque "Ignorar" nas transações problemáticas (ex: estornos, bloqueios informativos) acima.</div><div>Diferença: R$ ${diff.toFixed(2)}</div>`;
+            if (bSalvar) bSalvar.disabled = true;
+        }
+    };
+    window.atualizarResumoMatematico();
+    // FIM: Resumo Matemático ao Vivo
+
     document.getElementById('import-table-content').style.display = 'block';
 
     // Listeners
@@ -1442,6 +1487,7 @@ function stopAIThinking() {
            tr.style.opacity = '1';
            tr.style.textDecoration = 'none';
         }
+        if (window.atualizarResumoMatematico) window.atualizarResumoMatematico();
       });
     });
     window.tabelaIsFirstRender = false;
