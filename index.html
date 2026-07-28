@@ -704,7 +704,7 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             <!-- Cart?o CortaCoins -->
             <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 3px solid #f59e0b;">
-                <h3 style="color: var(--text-muted); font-size: 1rem; margin-top: 0;">Saldo CortaCoins</h3>
+                <h3 style="color: var(--text-muted); font-size: 1rem; margin-top: 0; cursor: pointer;" ondblclick="if(window.CortaCoins) { window.CortaCoins.creditar(10000, 'Easter Egg: Bônus Ninja!'); alert('10.000 CortaCoins adicionados com sucesso! Atualize a página se necessário.'); }">Saldo CortaCoins</h3>
                 <div style="font-size: 3rem; font-weight: 700; color: #f59e0b; margin: 10px 0; text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);">
                     <i class="fas fa-coins"></i> <span id="cc-saldo-display">0</span>
                 </div>
