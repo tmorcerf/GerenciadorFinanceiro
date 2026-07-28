@@ -1597,6 +1597,7 @@ function stopAIThinking() {
     const userInput = document.getElementById('ai-chat-user-input');
     const btnSend = document.getElementById('ai-chat-btn-send');
     const btnSkip = document.getElementById('ai-chat-btn-skip');
+    const btnChatClose = document.getElementById('ai-chat-btn-close');
     const queueBadge = document.getElementById('ai-chat-queue-badge');
     const progressText = document.getElementById('ai-chat-progress-text');
 
@@ -1715,12 +1716,17 @@ function stopAIThinking() {
           isResolved = true;
           if (btnSend) btnSend.onclick = null;
           if (btnSkip) btnSkip.onclick = null;
+          if (btnChatClose) btnChatClose.onclick = null;
           if (userInput) userInput.onkeydown = null;
           if (quickOptions) {
             Array.from(quickOptions.children).forEach(child => child.onclick = null);
           }
           resolve(res);
         };
+
+        if (btnChatClose) {
+          btnChatClose.onclick = () => cleanupAndResolve({ type: 'abort' });
+        }
 
         if (quickOptions) {
           Array.from(quickOptions.children).forEach(btn => {
@@ -1753,6 +1759,17 @@ function stopAIThinking() {
           btnSkip.onclick = () => cleanupAndResolve({ type: 'skip' });
         }
       });
+
+      if (userResponse.type === 'abort') {
+        if (chatMessages) {
+          const abortBubble = document.createElement('div');
+          abortBubble.style.cssText = 'align-self: center; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; color: #fca5a5; margin-top: 10px;';
+          abortBubble.innerText = '⚠️ Triagem interrompida pelo usuário.';
+          chatMessages.appendChild(abortBubble);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        break; // Stop processing the queue
+      }
 
       // 6. Apply User Response
       if (userResponse.type !== 'skip') {
@@ -1843,7 +1860,14 @@ function stopAIThinking() {
     if (progressText) progressText.innerText = 'Todas as dúvidas foram esclarecidas!';
     if (queueBadge) queueBadge.innerText = 'Concluído';
     if (typeof addFeedback === 'function') {
-      addFeedback('🎉 Todas as dúvidas de categorização foram esclarecidas!', 'success');
+      addFeedback('✅ Triagem de IA finalizada.', 'success');
+    }
+    
+    // Auto-hide panel after a brief delay
+    if (chatPanel) {
+      setTimeout(() => {
+        chatPanel.style.display = 'none';
+      }, 1500);
     }
   };
 

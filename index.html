@@ -962,8 +962,13 @@
                   <span id="ai-chat-progress-text" style="font-size: 0.78rem; color: var(--text-muted);">Esclarecendo dúvidas de categorização...</span>
                 </div>
               </div>
-              <div id="ai-chat-queue-badge" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
-                0 dúvidas
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="ai-chat-queue-badge" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c4b5fd; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.8rem;">
+                  0 dúvidas
+                </div>
+                <button id="ai-chat-btn-close" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; transition: all 0.2s; margin-left: 5px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='var(--text-muted)'" title="Cancelar triagem">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
 
