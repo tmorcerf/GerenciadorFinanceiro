@@ -7019,7 +7019,13 @@ window._updateNewTxSubcats = function() {
   else if (cat === 'Investimentos') filterType = 'Investimento';
   else if (cat === 'Saques') filterType = 'Dinheiro';
 
-  if (filterType) {
+  if (cat === 'Estorno') {
+      const contaAtual = document.getElementById('new-tx-conta')?.value || '';
+      const opt = document.createElement('option');
+      opt.value = contaAtual; opt.textContent = contaAtual;
+      subSel.appendChild(opt);
+      return;
+  } else if (filterType) {
       let contas = window.dadosFinanceiros?.contas || [];
       if (filterType) {
           contas = contas.filter(c => c.tipo === filterType);

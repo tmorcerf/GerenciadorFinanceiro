@@ -1283,7 +1283,11 @@ function stopAIThinking() {
 
       const isSystemCat = systemCats.includes(t.categoria);
 
-      if (filterType) {
+      if (t.categoria === 'Estorno') {
+          const estornoConta = t.conta || (typeof contaDoExtrato !== 'undefined' ? contaDoExtrato : '');
+          subcatFound = true;
+          subcatOptions += `<option value="${estornoConta}" selected>${estornoConta}</option>`;
+      } else if (filterType) {
           let contas = window.dadosFinanceiros?.contas || [];
           if (filterType) contas = contas.filter(c => c.tipo === filterType);
           contas.forEach(c => {
