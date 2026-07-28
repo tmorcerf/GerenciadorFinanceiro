@@ -1246,11 +1246,11 @@ function stopAIThinking() {
       let catOptions = '<option value="">-- Selecione --</option>';
       let catFound = false;
       
-      const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+      const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques', 'Estorno'];
       const userKeys = catKeys.filter(k => !systemCats.includes(k));
       const sysKeys = catKeys.filter(k => systemCats.includes(k));
 
-      catOptions += '<optgroup label="Suas Categorias">';
+      catOptions += '<optgroup label="CATEGORIAS">';
       userKeys.forEach(k => {
         const selected = (t.categoria === k) ? 'selected' : '';
         if (selected) catFound = true;
@@ -1259,7 +1259,7 @@ function stopAIThinking() {
       catOptions += '</optgroup>';
 
       if (sysKeys.length > 0) {
-          catOptions += '<optgroup label="Sistema">';
+          catOptions += '<optgroup label="TRANSFERÊNCIAS">';
           sysKeys.forEach(k => {
             const selected = (t.categoria === k) ? 'selected' : '';
             if (selected) catFound = true;

@@ -57,9 +57,9 @@ REGRAS ESTABELECIDAS:
 3. Valores negativos = despesas. Positivos = receitas, transferências ou ESTORNOS.
 4. CATEGORIAS DE SISTEMA (PRIORIDADE MÁXIMA):
    - Se for estorno, devolução ou reembolso (ex: "Estorno de Débito", "Pix devolvido"), use a categoria "Estorno".
-   - Se for pagamento de fatura de cartão de crédito, use a categoria "Pagamento de fatura".
-   - Se for transferência entre contas próprias, envio/recebimento de mesmo titular, use a categoria "Transferência entre contas".
-   - Se for aplicação, CDB, Tesouro, ou corretora, use a categoria "Investimento".
+   - Se for pagamento de fatura de cartão de crédito, use a categoria "Pagamento de Cartão".
+   - Se for transferência entre contas próprias, envio/recebimento de mesmo titular, use a categoria "Transf. entre Contas".
+   - Se for aplicação, CDB, Tesouro, ou corretora, use a categoria "Investimentos".
 5. Para demais gastos, deduza a natureza real por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Casa, "Brasilprev" -> Seguros).
 6. Use APENAS as categorias da lista fornecida no Prompt do Usuário. NUNCA invente categorias novas.
 

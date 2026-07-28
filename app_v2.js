@@ -6556,12 +6556,12 @@ window.openEditTransactionModal = function(cod) {
   const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict || {};
   const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
   
-  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques', 'Estorno'];
   const userKeys = catKeys.filter(k => !systemCats.includes(k));
   const sysKeys = catKeys.filter(k => systemCats.includes(k));
 
   const optGroupUser = document.createElement('optgroup');
-  optGroupUser.label = "Suas Categorias";
+  optGroupUser.label = "CATEGORIAS";
   userKeys.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c; opt.textContent = c;
@@ -6572,7 +6572,7 @@ window.openEditTransactionModal = function(cod) {
 
   if (sysKeys.length > 0) {
       const optGroupSys = document.createElement('optgroup');
-      optGroupSys.label = "Sistema";
+      optGroupSys.label = "TRANSFERÊNCIAS";
       sysKeys.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c; opt.textContent = c;
@@ -7870,10 +7870,10 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
         }
         
         const catSistemas = [
-            { nome: 'Transferência entre contas', subcategorias: [] },
-            { nome: 'Pagamento de fatura', subcategorias: [] },
-            { nome: 'Investimento', subcategorias: [] },
-            { nome: 'Saque', subcategorias: [] },
+            { nome: 'Transf. entre Contas', subcategorias: [] },
+            { nome: 'Pagamento de Cartão', subcategorias: [] },
+            { nome: 'Investimentos', subcategorias: [] },
+            { nome: 'Saques', subcategorias: [] },
             { nome: 'Estorno', subcategorias: [] }
         ];
 
@@ -7882,35 +7882,38 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             if (perfil === 'Assalariado') {
                 catGerais = [
                     { nome: 'Alimentação', subcategorias: ['Supermercado', 'Padaria/Açougue', 'Vale Refeição/Marmita', 'Delivery'] },
+                    { nome: 'Educação', subcategorias: ['Escola', 'Cursos', 'Material Escolar'] },
                     { nome: 'Lazer', subcategorias: ['Passeios em Família', 'Assinaturas', 'Churrasco/Amigos', 'Cinema'] },
-                    { nome: 'Viagens', subcategorias: ['Férias Anuais', 'Visita a Parentes', 'Poupança Férias'] },
-                    { nome: 'Transporte', subcategorias: ['Vale Transporte/Ônibus', 'Uber/99', 'Combustível'] },
-                    { nome: 'Serviços', subcategorias: ['Internet/TV', 'Celular Conta Família', 'Escola/Creche', 'Academia'] },
-                    { nome: 'Veículos', subcategorias: ['Financiamento', 'Manutenção/Oficina', 'Lavagem', 'IPVA/Seguro'] },
+                    { nome: 'Moradia', subcategorias: ['Prestação da Casa/Aluguel', 'Contas Água/Luz/Gás', 'Condomínio/IPTU', 'Manutenção da Casa'] },
                     { nome: 'Seguros', subcategorias: ['Plano de Saúde Familiar', 'Seguro de Vida', 'Seguro Auto'] },
-                    { nome: 'Moradia', subcategorias: ['Prestação da Casa/Aluguel', 'Contas Água/Luz/Gás', 'Condomínio/IPTU', 'Manutenção da Casa'] }
+                    { nome: 'Serviços', subcategorias: ['Internet/TV', 'Celular Conta Família', 'Escola/Creche', 'Academia'] },
+                    { nome: 'Transporte', subcategorias: ['Vale Transporte/Ônibus', 'Uber/99', 'Combustível'] },
+                    { nome: 'Veículos', subcategorias: ['Financiamento', 'Manutenção/Oficina', 'Lavagem', 'IPVA/Seguro'] },
+                    { nome: 'Viagens', subcategorias: ['Férias Anuais', 'Visita a Parentes', 'Poupança Férias'] }
                 ];
             } else if (perfil === 'Informal') {
                 catGerais = [
                     { nome: 'Alimentação', subcategorias: ['Supermercado', 'Refeições na Rua', 'Café com Clientes', 'Delivery'] },
+                    { nome: 'Educação', subcategorias: ['Cursos Profissionalizantes', 'Treinamentos', 'Livros'] },
                     { nome: 'Lazer', subcategorias: ['Networking/Happy Hour', 'Hobbies/Esportes', 'Streamings'] },
-                    { nome: 'Viagens', subcategorias: ['Viagens de Trabalho', 'Hospedagem de Negócios'] },
-                    { nome: 'Transporte', subcategorias: ['Aplicativos', 'Fretamento/Carretos'] },
-                    { nome: 'Serviços', subcategorias: ['Celular/Internet', 'Assinaturas Profissionais', 'Contabilidade/MEI'] },
-                    { nome: 'Veículos', subcategorias: ['Combustível', 'Manutenção e Peças', 'Estacionamento/Zona Azul'] },
+                    { nome: 'Moradia', subcategorias: ['Aluguel', 'Manutenção do Espaço', 'Produtos de Limpeza'] },
                     { nome: 'Seguros', subcategorias: ['Seguro de Equipamentos', 'Seguro de Vida/Acidentes'] },
-                    { nome: 'Moradia', subcategorias: ['Aluguel', 'Manutenção do Espaço', 'Produtos de Limpeza'] }
+                    { nome: 'Serviços', subcategorias: ['Celular/Internet', 'Assinaturas Profissionais', 'Contabilidade/MEI'] },
+                    { nome: 'Transporte', subcategorias: ['Aplicativos', 'Fretamento/Carretos'] },
+                    { nome: 'Veículos', subcategorias: ['Combustível', 'Manutenção e Peças', 'Estacionamento/Zona Azul'] },
+                    { nome: 'Viagens', subcategorias: ['Viagens de Trabalho', 'Hospedagem de Negócios'] }
                 ];
             } else if (perfil === 'Motorista') {
                 catGerais = [
                     { nome: 'Alimentação', subcategorias: ['Refeições na Rua', 'Supermercado', 'Bebidas/Energéticos'] },
+                    { nome: 'Educação', subcategorias: ['Cursos Especializados', 'Renovação CNH'] },
                     { nome: 'Lazer', subcategorias: ['Passeios Fim de Semana', 'Streamings', 'Encontro com Parceiros'] },
-                    { nome: 'Viagens', subcategorias: ['Viagem de Férias'] },
-                    { nome: 'Transporte', subcategorias: ['Aluguel de Veículo'] },
-                    { nome: 'Serviços', subcategorias: ['Plano de Celular', 'Contas da Casa', 'Contabilidade/DAS MEI'] },
-                    { nome: 'Veículos', subcategorias: ['Lava-rápido/Limpeza Diária', 'Estacionamento', 'Multas de Trânsito'] },
+                    { nome: 'Moradia', subcategorias: ['Aluguel/Financiamento', 'Contas de Consumo'] },
                     { nome: 'Seguros', subcategorias: ['Seguro Auto/Moto', 'Rastreador', 'Seguro de Vida'] },
-                    { nome: 'Moradia', subcategorias: ['Aluguel/Financiamento', 'Contas de Consumo'] }
+                    { nome: 'Serviços', subcategorias: ['Plano de Celular', 'Contas da Casa', 'Contabilidade/DAS MEI'] },
+                    { nome: 'Transporte', subcategorias: ['Aluguel de Veículo'] },
+                    { nome: 'Veículos', subcategorias: ['Lava-rápido/Limpeza Diária', 'Estacionamento', 'Multas de Trânsito'] },
+                    { nome: 'Viagens', subcategorias: ['Viagem de Férias'] }
                 ];
             }
         }
