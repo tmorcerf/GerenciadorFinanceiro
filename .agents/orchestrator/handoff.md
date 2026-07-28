@@ -1,53 +1,67 @@
-# Final Handoff Report — Transfer Reconciliation System
+# Project Handoff Report — Conversational AI Categorizer ("Grill-Me")
 
 **Orchestrator**: Project Orchestrator
-**Date**: 2026-07-24
-**Working Directory**: `c:/Corta Gastos/App/.agents/orchestrator`
+**Target System**: Corta Gastos App
+**Status**: **COMPLETED & VERIFIED**
+**Total Spawns**: 11
+**Test Pass Rate**: 106 / 106 passed (100% pass across 20 test suites)
+**Forensic Audit Verdict**: **CLEAN**
 
 ---
 
-## 1. Observation
-- All user requirements and acceptance criteria specified in `c:/Corta Gastos/App/.agents/ORIGINAL_REQUEST.md` (R1: Lógica de Contra-partida Automática, R2: Tratamento de Destinos Pendentes, R3: Central Visual de Conciliação de Transferências with Gold Rule & 1-Click AI Suggestions) have been implemented, tested, and verified.
-- **Test Infrastructure & Execution**:
-  - Main test runner: `node tests/run_tests.js` (also executable via `npm test`).
-  - Total test suites: 12 (covering R1 unit, R2 unit, R3 unit, 4-Tier E2E, and Challenger stress test suites).
-  - Total test cases: **82**.
-  - **Pass Rate**: **100% (82 Passed, 0 Failed)** in ~100ms.
-- **Verification Team Verdicts**:
-  - **Code Reviewer 1 (`reviewer_1`)**: APPROVE
-  - **Code Reviewer 2 (`reviewer_2`)**: APPROVE
-  - **Adversarial Challenger 1 (`challenger_1`)**: PASSED (100% stress test pass rate)
-  - **Adversarial Challenger 2 (`challenger_2`)**: PASSED (100% Gold Rule immutability pass rate)
-  - **Forensic Auditor (`auditor_1`)**: **CLEAN** (All 6 forensic checks passed; no hardcoding, facade, or integrity violations).
+## 1. Summary of Accomplishments
+
+All requirements specified in `ORIGINAL_REQUEST.md` under `## Follow-up — 2026-07-27T22:36:35Z` have been fully designed, implemented, and verified:
+
+### R1. AI Categorizer Backend Update (`ia_categorizador.js`)
+- Updated system prompt to evaluate AI confidence (`confianca` >= 0.80 for `"certeza"`, < 0.80 for `"duvida"`).
+- Hybrid output JSON format emits `status`, `categoria`, `subcategoria`, `confianca`, `pergunta`, and `opcoes_sugeridas`.
+- Defensive post-processing normalization guarantees that best-guess `categoria` and `subcategoria` are always present, maintaining 100% backward compatibility with existing table renderers.
+
+### R2. Interactive Chat UI (`importacao.html` & `importacao.js`)
+- Injected `#ai-chat-categorizer-panel` glassmorphic UI component into `#import-table-content` directly above `#unified-table`.
+- Implemented `processarDuvidasAIChat(duvidasQueue)` async queue processor with `Promise`-based sequential pause/resume execution.
+- Dynamically highlights target table row (`.chat-focused-row`), scrolls row into view, renders question cards and quick-category buttons, handles custom user category responses or selects, and updates table rows live.
+
+### R3. Continuous Learning (Personal Rules `RegrasIA`)
+- Added `salvarRegraIA(regra)` and `carregarRegrasIA(groupId)` in `db.js` supporting Cloud Firestore `RegrasIA` collection persistence with multi-tenant `groupId` filtering and in-memory cache sync.
+- Pre-LLM local short-circuiting in `importacao.js` matches transaction descriptions against learned user rules with 100% confidence, skipping Gemini API calls.
+- High-priority prompt context block `[REGRAS APRENDIDAS DO USUÁRIO (PRIORIDADE MÁXIMA)]` injected into `ia_categorizador.js`.
+- User answers in the Chat UI automatically save rules to prevent asking twice about the same entity.
 
 ---
 
-## 2. Logic Chain
-1. **R1 Engine Verification**: `TransactionManager.createTransaction()` in `transactions.js` and `processDoubleEntryTransfers()` in `db.js` dynamically detect transfers with a destination subcategory, create Leg 1 (-X) and Leg 2 (+X) with `conta`, `subcategoria`, inverted value, `descricao = 'Contra-partida: ' + original`, and link both via a shared `transfer_match_id`.
-2. **R2 Handler Verification**: `createTransaction()`, `db.js`, and `app_v2.js` tag transfers missing a destination with `pendente_destino: true`, `subcategoria: 'Pendente de Destino'`, and `transfer_match_id: null`. `checkAndCreateAccount()` explicitly ignores pending placeholders, preventing dummy account creation in `Contas`. Account balance calculations process primary account entries only, keeping secondary physical account balances uncorrupted.
-3. **R3 Central UI & AI Suggestions Verification**: `#panel-transfer-reconciliation` in `index.html` and `renderTransferReconciliation()` in `app_v2.js` provide dedicated containers for Pending Destinations (`#transfer-pending-destination-list`), Gold Rule Conflicts (`#transfer-conflicts-list`), and AI Suggestions (`#transfer-ai-suggestions-list`). `acceptTransferSuggestion()` enables 1-click suggestion acceptance, updating subcategory/account, clearing alerts, and persisting to Firestore.
-4. **Gold Rule Conflict Resolution**: `IAConciliador.analisarTransferencias()` treats locked Account X (`conciliado === true` or active `conciliado_ate`) as "Verdade Absoluta", enforcing immutability on Account X and proposing corrections strictly on unlocked transaction `T_Y` (Account Y).
-5. **Integrity & Rigor**: All 82 tests pass deterministically. The Forensic Auditor verified zero facade code or hardcoded test outputs.
+## 2. Milestone Execution Record
+
+| Milestone | Status | Key Deliverable | Verified Result |
+|-----------|--------|-----------------|-----------------|
+| M5 Exploration | DONE | Analysis of AI categorizer, import screen, and DB rules | 3 Explorers complete |
+| M6 R1 Backend | DONE | Hybrid JSON schema (`"certeza"` vs `"duvida"`) in `ia_categorizador.js` | 94/94 tests pass |
+| M7 R2 Chat UI | DONE | `#ai-chat-categorizer-panel` & `processarDuvidasAIChat` in `importacao.js`/`html` | 101/101 tests pass |
+| M8 R3 Learning | DONE | Firebase `RegrasIA` collection, pre-LLM short-circuit & prompt injection | 106/106 tests pass |
+| M9 Verification | DONE | E2E verification, Challenger stress testing & Forensic Integrity Audit | 2 Reviewers APPROVE, 2 Challengers PASS, Auditor CLEAN |
 
 ---
 
-## 3. Caveats
-- None. System is 100% operational, self-contained, and tested against all boundary conditions.
+## 3. Verification Method
 
----
-
-## 4. Conclusion
-The Transfer Reconciliation system for Corta Gastos is fully implemented, verified, and complete.
-
----
-
-## 5. Verification Method
-To independently verify the complete system:
-```bash
+To verify the project execution independently:
+```powershell
 node tests/run_tests.js
 ```
-or
-```bash
-npm test
+
+**Output**:
+```text
+=============================================================
+ 📊 TEST EXECUTION SUMMARY
+=============================================================
+ Total Suites  : 20
+ Total Tests   : 106
+ Passed        : 106
+ Failed        : 0
+ Execution Time: 1356ms
+ Status        : ✅ ALL TESTS PASSED
+=============================================================
 ```
-Expected output: `Status: ✅ ALL TESTS PASSED` with 82/82 passing tests.
+
+All acceptance criteria met. Implementation complete.
