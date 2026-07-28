@@ -771,6 +771,7 @@ function stopAIThinking() {
       });
 
       dadosSincronizacao = { corretos, faltantes, sobrando, juncoes: [] };
+      window.dadosSincronizacao = dadosSincronizacao;
       
       addFeedback(`Cruzamento finalizado! Faltantes (novos): ${faltantes.length} | Corretos: ${corretos.length} | Sobrando (excluir): ${sobrando.length}.\n`, 'system');
 
@@ -1607,7 +1608,7 @@ function stopAIThinking() {
     }
 
     if (chatPanel) {
-      chatPanel.style.display = 'block';
+      chatPanel.style.display = 'flex';
       chatPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
