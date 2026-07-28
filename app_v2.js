@@ -7019,7 +7019,7 @@ window._updateNewTxSubcats = function() {
   else if (cat === 'Investimentos') filterType = 'Investimento';
   else if (cat === 'Saques') filterType = 'Dinheiro';
 
-  if (filterType || cat === 'Estorno') {
+  if (filterType) {
       let contas = window.dadosFinanceiros?.contas || [];
       if (filterType) {
           contas = contas.filter(c => c.tipo === filterType);

@@ -1283,7 +1283,7 @@ function stopAIThinking() {
 
       const isSystemCat = systemCats.includes(t.categoria);
 
-      if (filterType || t.categoria === 'Estorno') {
+      if (filterType) {
           let contas = window.dadosFinanceiros?.contas || [];
           if (filterType) contas = contas.filter(c => c.tipo === filterType);
           contas.forEach(c => {
