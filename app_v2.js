@@ -7879,10 +7879,24 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
         ];
 
         let catGerais = [];
-        if (perfil !== 'Enxuto' && perfil !== 'Branco') {
+        if (perfil === 'Enxuto' || perfil === 'Branco') {
+            catGerais = [
+                { nome: 'Alimentação', subcategorias: [] },
+                { nome: 'Diversos', subcategorias: ['Diversos'] },
+                { nome: 'Educação', subcategorias: [] },
+                { nome: 'Lazer', subcategorias: [] },
+                { nome: 'Moradia', subcategorias: [] },
+                { nome: 'Seguros', subcategorias: [] },
+                { nome: 'Serviços', subcategorias: [] },
+                { nome: 'Transporte', subcategorias: [] },
+                { nome: 'Veículos', subcategorias: [] },
+                { nome: 'Viagens', subcategorias: [] }
+            ];
+        } else {
             if (perfil === 'Assalariado') {
                 catGerais = [
                     { nome: 'Alimentação', subcategorias: ['Supermercado', 'Padaria/Açougue', 'Vale Refeição/Marmita', 'Delivery'] },
+                    { nome: 'Diversos', subcategorias: ['Diversos'] },
                     { nome: 'Educação', subcategorias: ['Escola', 'Cursos', 'Material Escolar'] },
                     { nome: 'Lazer', subcategorias: ['Passeios em Família', 'Assinaturas', 'Churrasco/Amigos', 'Cinema'] },
                     { nome: 'Moradia', subcategorias: ['Prestação da Casa/Aluguel', 'Contas Água/Luz/Gás', 'Condomínio/IPTU', 'Manutenção da Casa'] },
@@ -7895,6 +7909,7 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             } else if (perfil === 'Informal') {
                 catGerais = [
                     { nome: 'Alimentação', subcategorias: ['Supermercado', 'Refeições na Rua', 'Café com Clientes', 'Delivery'] },
+                    { nome: 'Diversos', subcategorias: ['Diversos'] },
                     { nome: 'Educação', subcategorias: ['Cursos Profissionalizantes', 'Treinamentos', 'Livros'] },
                     { nome: 'Lazer', subcategorias: ['Networking/Happy Hour', 'Hobbies/Esportes', 'Streamings'] },
                     { nome: 'Moradia', subcategorias: ['Aluguel', 'Manutenção do Espaço', 'Produtos de Limpeza'] },
@@ -7907,6 +7922,7 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             } else if (perfil === 'Motorista') {
                 catGerais = [
                     { nome: 'Alimentação', subcategorias: ['Refeições na Rua', 'Supermercado', 'Bebidas/Energéticos'] },
+                    { nome: 'Diversos', subcategorias: ['Diversos'] },
                     { nome: 'Educação', subcategorias: ['Cursos Especializados', 'Renovação CNH'] },
                     { nome: 'Lazer', subcategorias: ['Passeios Fim de Semana', 'Streamings', 'Encontro com Parceiros'] },
                     { nome: 'Moradia', subcategorias: ['Aluguel/Financiamento', 'Contas de Consumo'] },
