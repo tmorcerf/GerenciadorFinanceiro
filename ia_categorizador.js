@@ -1,3 +1,78 @@
+// ia_categorizador.js v1 — O Ninja Analítico
+// Corta Gastos
+
+window.IACategorizador = (function() {
+
+  async function categorizar(opts) {
+    if (localStorage.getItem('gemini_mock') === 'true') {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const mockedData = (opts.transacoes || []).map(t => {
+                    let is_parcelado = false;
+                    let parcela_atual = null;
+                    let total_parcelas = null;
+                    if (t.descricao) {
+                        let pMatch = t.descricao.match(/(\d{1,2})\/(\d{1,2})/);
+                        if (pMatch) {
+                            is_parcelado = true;
+                            parcela_atual = parseInt(pMatch[1], 10);
+                            total_parcelas = parseInt(pMatch[2], 10);
+                        }
+                    }
+                    return {
+                        ...t,
+                        status: 'certeza',
+                        categoria: 'DIVERSOS',
+                        subcategoria: 'DIVERSOS',
+                        confianca: 1.0,
+                        pergunta: null,
+                        opcoes_sugeridas: null,
+                        descricao_limpa: t.descricao || '',
+                        is_parcelado,
+                        parcela_atual,
+                        total_parcelas
+                    };
+                });
+                resolve({
+                    status: 'success',
+                    analise_ia: 'Categorização simulada (Modo Batata 🥔)',
+                    data: mockedData
+                });
+            }, 800);
+        });
+    }
+
+    if (!window.IACore) throw new Error('IACore não carregado!');
+
+    var transacoesAll = opts.transacoes;
+    var categoriasTree = opts.categoriasTree;
+    var regrasIA = opts.regrasIA || [];
+    
+    var historicoConta360d = opts.historicoConta360d || [];
+    var historicoTransferencias360d = opts.historicoTransferencias360d || [];
+    var historicoGlobal120d = opts.historicoGlobal120d || [];
+    var vocabulario = opts.vocabulario || {};
+
+    function sanitizeForLLM(str) {
+        if (typeof str !== 'string') return str;
+        return str
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+            .replace(/\s+/g, ' ')
+            .replace(/[\u200B-\u200D\uFEFF\uFFFD]/g, '')
+            .trim();
+    }
+
+    function extractKeywords(text) {
+        if (!text) return [];
+        return text.toLowerCase()
+                   .replace(/[^a-z0-9à-ÿ]/g, ' ')
+                   .split(/\s+/)
+                   .filter(w => w.length > 3 && !['para', 'com', 'dos', 'das'].includes(w));
+    }
+
+    var systemPrompt = `Você é um motor de categorização financeira de precisão militar com avaliação de certeza.
+Sua única função é mapear um array de entrada para um array de saída 1-para-1, sem perder ou omitir NENHUM item.
+
 REGRAS DE AVALIAÇÃO DE CERTEZA E DÚVIDA (MUITO IMPORTANTE):
 1. Para cada transação, avalie o nível de confiança na categorização (escore de 0.0 a 1.0).
 2. STATUS "certeza": APENAS se a confiança for muito alta (>= 0.85) ou houver histórico/regras claras.
@@ -9,20 +84,7 @@ REGRAS DE AVALIAÇÃO DE CERTEZA E DÚVIDA (MUITO IMPORTANTE):
    - "categoria" e "subcategoria": Preencha com seu MELHOR PALPITE (ex: "Diversos").
    - "pergunta": FORMULE UMA PERGUNTA DIRETA ao usuário. Ex: "Você fez um Pix para JOAO SILVA. Isso foi pagamento de algum serviço, empréstimo, ou rachou a conta?"
    - "opcoes_sugeridas": Array com 3 palpites prováveis (ex: ["Serviço", "Empréstimo", "Rachar Conta", "Outro"]).
-   - É preferível perguntar e ter status="duvida" do que classificar errado silenciosamente.REGRAS DE AVALIAÇÃO DE CERTEZA E DÚVIDA:
-1. Para cada transação, avalie o nível de confiança na categorização (escore de 0.0 a 1.0).
-2. STATUS "certeza": Se a confiança for alta (>= 0.80) ou houver histórico/regras claras:
-   - "status": "certeza"
-   - "categoria" e "subcategoria": Preencha com a categoria exata da lista.
-   - "confianca": valor entre 0.80 e 1.00.
-   - "pergunta": null
-   - "opcoes_sugeridas": null
-3. STATUS "duvida": Se a descrição for ambígua, genérica (ex: "PAGTO PIX", "MERCADO", "COMPRA SP", "ZAMP S.A.") ou puder pertencer a múltiplas categorias:
-   - "status": "duvida"
-   - "categoria" e "subcategoria": Preencha OBRIGATORIAMENTE com seu MELHOR PALPITE da lista (NUNCA deixe em branco ou nulo).
-   - "confianca": valor entre 0.30 e 0.79.
-   - "pergunta": Formula uma pergunta clara, curta e amigável para o usuário esclarecer a despesa.
-   - "opcoes_sugeridas": Array com 2 a 4 opções curtas de resposta (ex: ["Refeição", "Corporativo", "Outro"]).
+   - É preferível perguntar e ter status="duvida" do que classificar errado silenciosamente.
 
 REGRAS ESTABELECIDAS:
 1. O array de saída "data" DEVE ter EXATAMENTE o mesmo número de itens do array de entrada.
