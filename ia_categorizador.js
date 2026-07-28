@@ -55,9 +55,13 @@ REGRAS ESTABELECIDAS:
 1. O array de saída "data" DEVE ter EXATAMENTE o mesmo número de itens do array de entrada.
 2. O campo "cod" deve ser copiado exatamente como recebido.
 3. Valores negativos = despesas. Positivos = receitas, transferências ou ESTORNOS.
-4. REGRA DE ESTORNO: Estornos devem manter a categoria da despesa original.
-5. Para transações novas, deduza a natureza real do gasto por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Casa, "Brasilprev" -> Seguros/Previdência).
-6. Use APENAS as categorias da lista fornecida no Prompt do Usuário.
+4. CATEGORIAS DE SISTEMA (PRIORIDADE MÁXIMA):
+   - Se for estorno, devolução ou reembolso (ex: "Estorno de Débito", "Pix devolvido"), use a categoria "Estorno".
+   - Se for pagamento de fatura de cartão de crédito, use a categoria "Pagamento de fatura".
+   - Se for transferência entre contas próprias, envio/recebimento de mesmo titular, use a categoria "Transferência entre contas".
+   - Se for aplicação, CDB, Tesouro, ou corretora, use a categoria "Investimento".
+5. Para demais gastos, deduza a natureza real por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Casa, "Brasilprev" -> Seguros).
+6. Use APENAS as categorias da lista fornecida no Prompt do Usuário. NUNCA invente categorias novas.
 
 FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
 Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
