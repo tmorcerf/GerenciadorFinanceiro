@@ -1274,19 +1274,37 @@ function stopAIThinking() {
 
       let subcatOptions = '<option value="">-- Selecione --</option>';
       let subcatFound = false;
-      if (t.categoria && dic[t.categoria]) {
+      
+      let filterType = null;
+      if (t.categoria === 'Transf. entre Contas') filterType = 'Corrente';
+      else if (t.categoria === 'Pagamento de Cartão') filterType = 'Cartão de Crédito';
+      else if (t.categoria === 'Investimentos') filterType = 'Investimento';
+      else if (t.categoria === 'Saques') filterType = 'Dinheiro';
+
+      const isSystemCat = systemCats.includes(t.categoria);
+
+      if (filterType || t.categoria === 'Estorno') {
+          let contas = window.dadosFinanceiros?.contas || [];
+          if (filterType) contas = contas.filter(c => c.tipo === filterType);
+          contas.forEach(c => {
+              const selected = (t.subcategoria === c.nome) ? 'selected' : '';
+              if (selected) subcatFound = true;
+              subcatOptions += `<option value="${c.nome}" ${selected}>${c.nome}</option>`;
+          });
+      } else if (t.categoria && dic[t.categoria]) {
         dic[t.categoria].sort((a, b) => a.localeCompare(b)).forEach(sub => {
           const selected = (t.subcategoria === sub) ? 'selected' : '';
           if (selected) subcatFound = true;
           subcatOptions += `<option value="${sub}" ${selected}>${sub}</option>`;
         });
       }
+      
       if (t.subcategoria && !subcatFound) {
         subcatOptions += `<option value="${t.subcategoria}" selected>✨ ${t.subcategoria} (Nova)</option>`;
       }
       catOptions += `<option value="__NEW__" style="font-weight:bold; color:var(--color-accent);">➕ Adicionar Nova...</option>`;
-      const isTransferencia = t.categoria && ['transferência', 'transferencias', 'transferências', 'transferencia'].includes(String(t.categoria).toLowerCase());
-      if (t.categoria && !isTransferencia) {
+      
+      if (t.categoria && !isSystemCat) {
          subcatOptions += `<option value="__NEW__" style="font-weight:bold; color:var(--color-accent);">➕ Adicionar Nova...</option>`;
       }
 

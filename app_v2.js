@@ -7013,14 +7013,13 @@ window._updateNewTxSubcats = function() {
   if (!subSel) return;
   subSel.innerHTML = '<option value="">-- Nenhuma --</option>';
   
-  const catLower = (cat || '').toLowerCase();
   let filterType = null;
-  if (catLower.includes('transferência entre contas') || catLower === 'transferência') filterType = 'Corrente';
-  else if (catLower.includes('pagamento de fatura')) filterType = 'Cartão de Crédito';
-  else if (catLower.includes('investimento')) filterType = 'Investimento';
-  else if (catLower.includes('saque')) filterType = 'Dinheiro';
+  if (cat === 'Transf. entre Contas') filterType = 'Corrente';
+  else if (cat === 'Pagamento de Cartão') filterType = 'Cartão de Crédito';
+  else if (cat === 'Investimentos') filterType = 'Investimento';
+  else if (cat === 'Saques') filterType = 'Dinheiro';
 
-  if (filterType || catLower.includes('estorno')) {
+  if (filterType || cat === 'Estorno') {
       let contas = window.dadosFinanceiros?.contas || [];
       if (filterType) {
           contas = contas.filter(c => c.tipo === filterType);
