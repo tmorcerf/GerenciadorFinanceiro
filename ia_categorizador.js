@@ -7,11 +7,32 @@ window.IACategorizador = (function() {
     if (localStorage.getItem('gemini_mock') === 'true') {
         return new Promise((resolve) => {
             setTimeout(() => {
-                const mockedData = (opts.transacoes || []).map(t => ({
-                    ...t,
-                    categoria: 'DIVERSOS',
-                    subcategoria: 'DIVERSOS'
-                }));
+                const mockedData = (opts.transacoes || []).map(t => {
+                    let is_parcelado = false;
+                    let parcela_atual = null;
+                    let total_parcelas = null;
+                    if (t.descricao) {
+                        let pMatch = t.descricao.match(/(\d{1,2})\/(\d{1,2})/);
+                        if (pMatch) {
+                            is_parcelado = true;
+                            parcela_atual = parseInt(pMatch[1], 10);
+                            total_parcelas = parseInt(pMatch[2], 10);
+                        }
+                    }
+                    return {
+                        ...t,
+                        status: 'certeza',
+                        categoria: 'DIVERSOS',
+                        subcategoria: 'DIVERSOS',
+                        confianca: 1.0,
+                        pergunta: null,
+                        opcoes_sugeridas: null,
+                        descricao_limpa: t.descricao || '',
+                        is_parcelado,
+                        parcela_atual,
+                        total_parcelas
+                    };
+                });
                 resolve({
                     status: 'success',
                     analise_ia: 'Categorização simulada (Modo Batata 🥔)',
@@ -25,6 +46,7 @@ window.IACategorizador = (function() {
 
     var transacoesAll = opts.transacoes;
     var categoriasTree = opts.categoriasTree;
+    var regrasIA = opts.regrasIA || [];
     
     var historicoConta360d = opts.historicoConta360d || [];
     var historicoTransferencias360d = opts.historicoTransferencias360d || [];
@@ -48,18 +70,33 @@ window.IACategorizador = (function() {
                    .filter(w => w.length > 3 && !['para', 'com', 'dos', 'das'].includes(w));
     }
 
-    var systemPrompt = `Você é um motor de categorização financeira de precisão militar. 
+    var systemPrompt = `Você é um motor de categorização financeira de precisão militar com avaliação de certeza.
 Sua única função é mapear um array de entrada para um array de saída 1-para-1, sem perder ou omitir NENHUM item.
+
+REGRAS DE AVALIAÇÃO DE CERTEZA E DÚVIDA:
+1. Para cada transação, avalie o nível de confiança na categorização (escore de 0.0 a 1.0).
+2. STATUS "certeza": Se a confiança for alta (>= 0.80) ou houver histórico/regras claras:
+   - "status": "certeza"
+   - "categoria" e "subcategoria": Preencha com a categoria exata da lista.
+   - "confianca": valor entre 0.80 e 1.00.
+   - "pergunta": null
+   - "opcoes_sugeridas": null
+3. STATUS "duvida": Se a descrição for ambígua, genérica (ex: "PAGTO PIX", "MERCADO", "COMPRA SP", "ZAMP S.A.") ou puder pertencer a múltiplas categorias:
+   - "status": "duvida"
+   - "categoria" e "subcategoria": Preencha OBRIGATORIAMENTE com seu MELHOR PALPITE da lista (NUNCA deixe em branco ou nulo).
+   - "confianca": valor entre 0.30 e 0.79.
+   - "pergunta": Formula uma pergunta clara, curta e amigável para o usuário esclarecer a despesa.
+   - "opcoes_sugeridas": Array com 2 a 4 opções curtas de resposta (ex: ["Refeição", "Corporativo", "Outro"]).
 
 REGRAS ESTABELECIDAS:
 1. O array de saída "data" DEVE ter EXATAMENTE o mesmo número de itens do array de entrada.
 2. O campo "cod" deve ser copiado exatamente como recebido.
 3. Valores negativos = despesas. Positivos = receitas, transferências ou ESTORNOS.
 4. CATEGORIAS DE SISTEMA (PRIORIDADE MÁXIMA):
-   - Se for estorno, devolução ou reembolso (ex: "Estorno de Débito", "Pix devolvido"), use a categoria "Estorno".
-   - Se for pagamento de fatura de cartão de crédito, use a categoria "Pagamento de Cartão".
-   - Se for transferência entre contas próprias, envio/recebimento de mesmo titular, use a categoria "Transf. entre Contas".
-   - Se for aplicação, CDB, Tesouro, ou corretora, use a categoria "Investimentos".
+   - Se for estorno, devolução ou reembolso (ex: "Estorno de Débito", "Pix devolvido"), use a categoria "Estorno" (status: "certeza").
+   - Se for pagamento de fatura de cartão de crédito, use a categoria "Pagamento de Cartão" (status: "certeza").
+   - Se for transferência entre contas próprias, envio/recebimento de mesmo titular, use a categoria "Transf. entre Contas" (status: "certeza").
+   - Se for aplicação, CDB, Tesouro, ou corretora, use a categoria "Investimentos" (status: "certeza").
 5. Para demais gastos, deduza a natureza real por trás do nome (Ex: "ZAMP S.A." -> Alimentação, "Energisa" -> Moradia, "Brasilprev" -> Seguros).
 6. Use APENAS as categorias da lista fornecida no Prompt do Usuário. NUNCA invente categorias novas.
 
@@ -70,9 +107,23 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
   "data": [
     {
       "cod": "ID_COPIADO_DA_ENTRADA",
-      "categoria": "Categoria Principal",
-      "subcategoria": "Subcategoria",
+      "status": "certeza",
+      "categoria": "Alimentação",
+      "subcategoria": "Restaurante",
+      "confianca": 0.95,
+      "pergunta": null,
+      "opcoes_sugeridas": null,
       "descricao_limpa": "Descrição amigável sem lixo"
+    },
+    {
+      "cod": "ID_COPIADO_DA_ENTRADA_2",
+      "status": "duvida",
+      "categoria": "Alimentação",
+      "subcategoria": "Restaurante",
+      "confianca": 0.60,
+      "pergunta": "Sua compra na ZAMP S.A. foi refeição individual ou compra corporativa?",
+      "opcoes_sugeridas": ["Refeição", "Corporativo", "Outro"],
+      "descricao_limpa": "Zamp S.A."
     }
   ]
 }`;
@@ -100,6 +151,50 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
         conta: sanitizeForLLM(t.conta)
     }));
 
+    const normalizeDesc = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[\x00-\x1F\x7F-\x9F]/g, '').replace(/\s+/g, ' ').trim();
+
+    let transacoesParaLLM = [];
+    let transacoesShortCircuited = [];
+
+    (transacoesLimpas || []).forEach(t => {
+        const normT = normalizeDesc(t.descricao);
+        const matchingRule = (Array.isArray(regrasIA) ? regrasIA : []).find(r => {
+            const normR = normalizeDesc(r.descricao_padrao || r.descricao);
+            return normR && normT === normR;
+        });
+
+        if (matchingRule) {
+            let is_parcelado = false;
+            let parcela_atual = null;
+            let total_parcelas = null;
+            if (t.descricao) {
+                let pMatch = t.descricao.match(/(\d{1,2})\/(\d{1,2})/);
+                if (pMatch) {
+                    is_parcelado = true;
+                    parcela_atual = parseInt(pMatch[1], 10);
+                    total_parcelas = parseInt(pMatch[2], 10);
+                }
+            }
+
+            transacoesShortCircuited.push({
+                ...t,
+                cod: t.cod,
+                status: 'certeza',
+                categoria: matchingRule.categoria,
+                subcategoria: matchingRule.subcategoria || '',
+                confianca: 1.0,
+                pergunta: null,
+                opcoes_sugeridas: null,
+                descricao_limpa: t.descricao || '',
+                is_parcelado,
+                parcela_atual,
+                total_parcelas
+            });
+        } else {
+            transacoesParaLLM.push(t);
+        }
+    });
+
     var allHistory = [...historicoConta360d, ...historicoTransferencias360d, ...historicoGlobal120d];
     var uniqueHistory = new Map();
     allHistory.forEach(t => {
@@ -109,13 +204,13 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
     });
     var deduplicatedHistory = Array.from(uniqueHistory.values());
 
-    console.groupCollapsed(`[Ninja Categorizador] Iniciando Processamento IA - Total: ${transacoesLimpas.length} transações`);
+    console.groupCollapsed(`[Ninja Categorizador] Iniciando Processamento IA - Total: ${transacoesLimpas.length} transações (${transacoesShortCircuited.length} via regras, ${transacoesParaLLM.length} via LLM)`);
     console.log("Categorias Tree:", categoriasTree);
     console.log("Histórico Dedup Total:", deduplicatedHistory.length, "itens únicos de um total de", allHistory.length);
     console.log("Vocabulário:", vocabEntries.length, "itens");
 
-    for (let i = 0; i < transacoesLimpas.length; i += CHUNK_SIZE) {
-        let chunk = transacoesLimpas.slice(i, i + CHUNK_SIZE);
+    for (let i = 0; i < transacoesParaLLM.length; i += CHUNK_SIZE) {
+        let chunk = transacoesParaLLM.slice(i, i + CHUNK_SIZE);
         console.groupCollapsed(`[Ninja Categorizador] Processando Lote ${Math.floor(i/CHUNK_SIZE)+1} (Tamanho do Lote: ${chunk.length})`);
 
         let chunkKeywords = new Set();
@@ -126,8 +221,15 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
             return hWords.some(w => chunkKeywords.has(w));
         }).slice(0, 30);
 
+        var regrasFormatadas = (Array.isArray(regrasIA) && regrasIA.length > 0)
+            ? '[REGRAS APRENDIDAS DO USUÁRIO (PRIORIDADE MÁXIMA)]\n' + regrasIA.map(function(r) {
+                return '- "' + (r.descricao_padrao || r.descricao || '') + '" → Categoria: "' + (r.categoria || '') + '", Subcategoria: "' + (r.subcategoria || '') + '" (FORÇAR CERTEZA)';
+              }).join('\n') + '\n\n'
+            : '';
+
         var userContent = 
           '[CATEGORIAS VALIDAS]\n' + JSON.stringify(categoriasTree) + '\n\n' +
+          regrasFormatadas +
           '[REFERENCIA: VOCABULARIO]\n' + (vocabCompacto || 'Vazio') + '\n\n' +
           '[REFERENCIA: HISTORICO JIT]\n' + (formatHistory(relevantHistory) || 'Vazio') + '\n\n' +
           `[TAREFA: NOVAS TRANSACOES (TOTAL: ${chunk.length} ITENS)]\n` + JSON.stringify(chunk) + '\n\n' +
@@ -142,14 +244,29 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
         console.log(`Tempo de resposta Gemini: ${(t1 - t0).toFixed(2)}ms`);
         console.log("Resposta Bruta Gemini:", resultCat);
         
+        let rawItems = null;
         if (resultCat && resultCat.status === 'success' && Array.isArray(resultCat.data)) {
-            console.log(`Sucesso no Lote! Retornados: ${resultCat.data.length} de ${chunk.length} originais.`);
-            if (resultCat.data.length < chunk.length) {
-                console.error(`🚨 ALERTA DE PREGUIÇA IA: Faltaram ${chunk.length - resultCat.data.length} itens neste lote!`);
+            rawItems = resultCat.data;
+        } else if (resultCat && Array.isArray(resultCat)) {
+            console.warn("API retornou um array puro em vez de objeto status:", resultCat);
+            rawItems = resultCat;
+        }
+
+        if (rawItems) {
+            console.log(`Sucesso no Lote! Retornados: ${rawItems.length} de ${chunk.length} originais.`);
+            if (rawItems.length < chunk.length) {
+                console.error(`🚨 ALERTA DE PREGUIÇA IA: Faltaram ${chunk.length - rawItems.length} itens neste lote!`);
             }
             
-            let parsedData = resultCat.data.map(item => {
+            let parsedData = rawItems.map(item => {
                 let originalTx = chunk.find(t => t.cod === item.cod);
+                let status = item.status === 'duvida' ? 'duvida' : 'certeza';
+                let confianca = typeof item.confianca === 'number' ? item.confianca : (status === 'duvida' ? 0.60 : 0.95);
+                let pergunta = status === 'duvida' ? (item.pergunta || `Como deseja categorizar "${item.descricao_limpa || (originalTx ? originalTx.descricao : '')}"?`) : null;
+                let opcoes = status === 'duvida'
+                    ? (Array.isArray(item.opcoes_sugeridas) && item.opcoes_sugeridas.length > 0 ? item.opcoes_sugeridas : ['Confirmar', 'Alterar'])
+                    : null;
+
                 let is_parcelado = false;
                 let parcela_atual = null;
                 let total_parcelas = null;
@@ -165,6 +282,13 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
                 
                 return {
                     ...item,
+                    status: status,
+                    categoria: item.categoria || 'DIVERSOS',
+                    subcategoria: item.subcategoria || 'Diversos',
+                    confianca: confianca,
+                    pergunta: pergunta,
+                    opcoes_sugeridas: opcoes,
+                    descricao_limpa: item.descricao_limpa || (originalTx ? originalTx.descricao : ''),
                     is_parcelado,
                     parcela_atual,
                     total_parcelas
@@ -172,9 +296,6 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
             });
             
             allData = allData.concat(parsedData);
-        } else if (resultCat && Array.isArray(resultCat)) {
-            console.warn("API retornou um array puro em vez de objeto status:", resultCat);
-            allData = allData.concat(resultCat);
         } else {
             console.error("Falha bizarra no formato de resposta da API:", resultCat);
         }
@@ -182,10 +303,11 @@ Retorne APENAS um objeto JSON válido seguindo exatamente esta estrutura:
         console.groupEnd();
     }
 
-    console.log("Resumo Final de Categorização compilado:", allData);
+    const finalCombinedData = [...transacoesShortCircuited, ...allData];
+    console.log("Resumo Final de Categorização compilado:", finalCombinedData);
     console.groupEnd();
 
-    return { status: 'success', analise_ia: analiseFinal, data: allData };
+    return { status: 'success', analise_ia: analiseFinal, data: finalCombinedData };
   }
 
   async function categorizarProduto(nomeProduto, codigoProduto) {

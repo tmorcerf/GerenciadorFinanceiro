@@ -4,6 +4,7 @@ class Database {
   constructor() {
     const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
     this.db = win.firebaseDB;
+    this.regrasCache = new Map();
   }
 
   // Wrapper helper para aproveitar o cache e o resume token
@@ -34,6 +35,53 @@ class Database {
   }
 
   // --- LEITURA ---
+  async carregarRegrasIA(groupId) {
+    const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+    const gid = groupId || win.userGroupId;
+    if (!gid) return [];
+
+    if (!this.regrasCache) this.regrasCache = new Map();
+    let localRules = this.regrasCache.get(gid) || [];
+
+    if (this.db) {
+      try {
+        const queryRef = this.db.collection('RegrasIA').where('groupId', '==', gid);
+        const docs = await this.getCollectionData(queryRef);
+
+        if (Array.isArray(docs)) {
+          const mergedMap = new Map();
+          localRules.forEach(r => {
+            const key = (r.descricao_padrao || '').toUpperCase().trim();
+            if (key) mergedMap.set(key, r);
+          });
+          docs.forEach(doc => {
+            const key = (doc.descricao_padrao || '').toUpperCase().trim();
+            if (key) {
+              mergedMap.set(key, {
+                id: doc.firebaseId || doc.id,
+                groupId: doc.groupId || gid,
+                descricao_padrao: doc.descricao_padrao,
+                categoria: doc.categoria,
+                subcategoria: doc.subcategoria || '',
+                pergunta_original: doc.pergunta_original || '',
+                resposta_usuario: doc.resposta_usuario || '',
+                criado_em: doc.criado_em || new Date().toISOString(),
+                atualizado_em: doc.atualizado_em || doc.criado_em || new Date().toISOString()
+              });
+            }
+          });
+          const result = Array.from(mergedMap.values());
+          this.regrasCache.set(gid, result);
+          return result;
+        }
+      } catch (err) {
+        console.warn("[Database] Erro ao carregar RegrasIA do Firestore, retornando cache local:", err);
+      }
+    }
+
+    return localRules;
+  }
+
   async loadAllData() {
     try {
       const gid = window.userGroupId;
@@ -41,12 +89,13 @@ class Database {
 
       // Em vez de usar .get() (que custa milhares de leituras toda vez), 
       // delegamos para o getCollectionData que usa .onSnapshot() (custa quase zero com cache ativado).
-      const [orcamentos, auditoria, importsInfo, produtos, extratos] = await Promise.all([
+      const [orcamentos, auditoria, importsInfo, produtos, extratos, regrasIA] = await Promise.all([
         this.getCollectionData(this.db.collection('Orcamentos').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Auditoria').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Imports').where('groupId', '==', gid)),
         this.getCollectionData(this.db.collection('Produtos').where('groupId', '==', gid)),
-        this.getCollectionData(this.db.collection('Extratos').where('groupId', '==', gid))
+        this.getCollectionData(this.db.collection('Extratos').where('groupId', '==', gid)),
+        this.carregarRegrasIA(gid)
       ]);
 
       return {
@@ -54,12 +103,92 @@ class Database {
         auditoria,
         importsInfo,
         produtos,
-        extratos
+        extratos,
+        regrasIA
       };
     } catch (err) {
       console.error("Erro ao carregar dados do Firebase:", err);
       throw err;
     }
+  }
+
+  // --- GRAVAÇÃO ---
+
+  async salvarRegraIA(regra) {
+    if (!regra) throw new Error("Payload da regra é obrigatório.");
+    const win = typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : {});
+    const gid = regra.groupId || win.userGroupId;
+    if (!gid) throw new Error("Grupo de usuário não definido.");
+
+    const descPadrao = (regra.descricao_padrao || regra.descricao || '').trim();
+    if (!descPadrao) throw new Error("Descrição padrão da regra é obrigatória.");
+
+    const now = new Date().toISOString();
+    const ruleId = regra.id || `rule_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+
+    const ruleData = {
+      id: ruleId,
+      groupId: gid,
+      descricao_padrao: descPadrao,
+      categoria: regra.categoria || 'DIVERSOS',
+      subcategoria: regra.subcategoria || '',
+      pergunta_original: regra.pergunta_original || '',
+      resposta_usuario: regra.resposta_usuario || '',
+      criado_em: regra.criado_em || now,
+      atualizado_em: now
+    };
+
+    // 1. Atualiza cache em memória
+    if (!this.regrasCache) this.regrasCache = new Map();
+    let groupRules = this.regrasCache.get(gid) || [];
+    const normNewDesc = descPadrao.toUpperCase().trim();
+    const existingIdx = groupRules.findIndex(r => r.id === ruleId || (r.descricao_padrao && r.descricao_padrao.toUpperCase().trim() === normNewDesc));
+    if (existingIdx !== -1) {
+      ruleData.id = groupRules[existingIdx].id;
+      ruleData.criado_em = groupRules[existingIdx].criado_em || now;
+      groupRules[existingIdx] = ruleData;
+    } else {
+      groupRules.push(ruleData);
+    }
+    this.regrasCache.set(gid, groupRules);
+
+    // 2. Persiste no Firestore
+    if (this.db) {
+      try {
+        const coll = this.db.collection('RegrasIA');
+        const querySnap = await coll.where('groupId', '==', gid).where('descricao_padrao', '==', descPadrao).get();
+
+        if (querySnap && !querySnap.empty) {
+          const docItem = querySnap.docs[0];
+          ruleData.id = docItem.id;
+          if (docItem.ref && typeof docItem.ref.update === 'function') {
+            await docItem.ref.update({
+              categoria: ruleData.categoria,
+              subcategoria: ruleData.subcategoria,
+              pergunta_original: ruleData.pergunta_original,
+              resposta_usuario: ruleData.resposta_usuario,
+              atualizado_em: now
+            });
+          } else if (docItem.ref && typeof docItem.ref.set === 'function') {
+            await docItem.ref.set(ruleData, { merge: true });
+          } else {
+            const docRef = coll.doc(docItem.id);
+            if (docRef && typeof docRef.set === 'function') {
+              await docRef.set(ruleData, { merge: true });
+            }
+          }
+        } else {
+          const newDocRef = coll.doc(ruleId);
+          if (newDocRef && typeof newDocRef.set === 'function') {
+            await newDocRef.set(ruleData);
+          }
+        }
+      } catch (err) {
+        console.warn("[Database] Erro ao salvar regra no Firestore (mantida no cache local):", err);
+      }
+    }
+
+    return ruleData;
   }
 
   // --- GRAVAÇÃO ---

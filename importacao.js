@@ -2,6 +2,7 @@
 // Lógica para a aba de Sincronização de Período Fechado (agora unificado na Importação Principal)
 
 let dadosSincronizacao = { corretos: [], faltantes: [], sobrando: [], juncoes: [] };
+window.dadosSincronizacao = dadosSincronizacao;
 let isCategorizado = false;
 let analiseExtracao = "";
 let analiseCategorizacao = "";
@@ -1197,6 +1198,7 @@ function stopAIThinking() {
   function renderizarTabelaUnificada() {
     let tbodyHtml = '';
     window.todasLinhasRenderizadas = [];
+    const ds = window.dadosSincronizacao || dadosSincronizacao || { sobrando: [], faltantes: [], juncoes: [], corretos: [] };
 
     const dic = window.dicionarioGeral || {};
     const catKeys = Object.keys(dic).sort((a, b) => a.localeCompare(b));
@@ -1335,7 +1337,7 @@ function stopAIThinking() {
           </td>
           <td class="col-data" style="padding:10px; white-space: nowrap;">${t.data || ''}</td>
           <td class="col-desc" style="padding:10px;">${t.descricao || ''}</td>
-          <td class="col-conta" style="padding:10px;">${t.conta || contaDoExtrato || ''}</td>
+          <td class="col-conta" style="padding:10px;">${t.conta || (typeof contaDoExtrato !== 'undefined' ? contaDoExtrato : '')}</td>
           <td class="col-valor" style="padding:10px; white-space: nowrap; text-align:right; color: ${valColor}; font-weight: 600;">${formatValor}</td>
           <td class="col-cat" style="padding:10px;">
             <select class="import-sel-cat" data-index="${index}" data-tipo="${tipo}" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); border-radius:4px; padding:6px; width: 150px; font-size:0.8rem;">
@@ -1357,20 +1359,20 @@ function stopAIThinking() {
       `;
     };
 
-    dadosSincronizacao.sobrando.forEach((item, i) => {
+    (ds.sobrando || []).forEach((item, i) => {
        tbodyHtml += criarLinha("Excluir", item, i, false);
     });
-    dadosSincronizacao.faltantes.forEach((item, i) => {
+    (ds.faltantes || []).forEach((item, i) => {
        tbodyHtml += criarLinha("Adicionar", item, i, true);
     });
-    dadosSincronizacao.juncoes.forEach((item, i) => {
+    (ds.juncoes || []).forEach((item, i) => {
        tbodyHtml += criarLinha("Junção", item, i, true);
     });
-    dadosSincronizacao.corretos.forEach((item, i) => {
+    (ds.corretos || []).forEach((item, i) => {
        tbodyHtml += criarLinha("Correto", item, i, false);
     });
 
-    if (dadosSincronizacao.sobrando.length === 0 && dadosSincronizacao.faltantes.length === 0 && dadosSincronizacao.corretos.length === 0) {
+    if ((!ds.sobrando || ds.sobrando.length === 0) && (!ds.faltantes || ds.faltantes.length === 0) && (!ds.corretos || ds.corretos.length === 0)) {
        tbodyHtml += '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">Nenhum lançamento processado.</td></tr>';
     }
 
@@ -1390,10 +1392,10 @@ function stopAIThinking() {
         let saldoFinal = window.payloadConciliacaoGlobal?.saldo_final || 0;
         let soma = 0;
         
-        [...dadosSincronizacao.faltantes, ...dadosSincronizacao.juncoes].forEach(t => {
+        [...(ds.faltantes || []), ...(ds.juncoes || [])].forEach(t => {
             if (!t.ignorar) soma += parseFloat(t.valor || 0);
         });
-        dadosSincronizacao.corretos.forEach(c => {
+        (ds.corretos || []).forEach(c => {
             if (!c.extrato.ignorar) soma += parseFloat(c.extrato.valor || 0);
         });
         
@@ -1582,6 +1584,269 @@ function stopAIThinking() {
     renderizarTabelaUnificada();
   };
 
+  // =========================================================================
+  // MILESTONE 7: PROCESSADOR SEQUENCIAL DE DÚVIDAS DO CHAT (AI CHAT CATEGORIZER)
+  // =========================================================================
+  window.processarDuvidasAIChat = async function(duvidasQueue) {
+    const chatPanel = document.getElementById('ai-chat-categorizer-panel');
+    const chatMessages = document.getElementById('ai-chat-messages');
+    const questionText = document.getElementById('ai-chat-question-text');
+    const quickOptions = document.getElementById('ai-chat-quick-options');
+    const selCat = document.getElementById('ai-chat-sel-cat');
+    const selSubcat = document.getElementById('ai-chat-sel-subcat');
+    const userInput = document.getElementById('ai-chat-user-input');
+    const btnSend = document.getElementById('ai-chat-btn-send');
+    const btnSkip = document.getElementById('ai-chat-btn-skip');
+    const queueBadge = document.getElementById('ai-chat-queue-badge');
+    const progressText = document.getElementById('ai-chat-progress-text');
+
+    if (!duvidasQueue || duvidasQueue.length === 0) {
+      if (chatPanel) chatPanel.style.display = 'none';
+      return;
+    }
+
+    if (chatPanel) {
+      chatPanel.style.display = 'block';
+      chatPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Helper to populate category selects in Chat UI
+    const popularCategoriasChat = (targetItem) => {
+      if (!selCat || !selSubcat) return;
+      const dic = window.dicionarioGeral || {};
+      const catKeys = Object.keys(dic).sort((a, b) => a.localeCompare(b));
+      
+      let htmlCat = '<option value="">-- Selecione Categoria --</option>';
+      catKeys.forEach(k => {
+        const sel = (targetItem.categoria === k) ? 'selected' : '';
+        htmlCat += `<option value="${k}" ${sel}>${k}</option>`;
+      });
+      selCat.innerHTML = htmlCat;
+
+      const popularSubcats = (catName) => {
+        let htmlSub = '<option value="">-- Selecione Subcategoria --</option>';
+        if (catName && dic[catName]) {
+          dic[catName].sort((a, b) => a.localeCompare(b)).forEach(s => {
+            const sel = (targetItem.subcategoria === s) ? 'selected' : '';
+            htmlSub += `<option value="${s}" ${sel}>${s}</option>`;
+          });
+        }
+        selSubcat.innerHTML = htmlSub;
+      };
+
+      popularSubcats(selCat.value || targetItem.categoria);
+
+      selCat.onchange = () => {
+        popularSubcats(selCat.value);
+      };
+    };
+
+    const totalDuvidas = duvidasQueue.length;
+    let resolvedCount = 0;
+
+    for (let i = 0; i < duvidasQueue.length; i++) {
+      const item = duvidasQueue[i];
+      resolvedCount++;
+
+      if (queueBadge) queueBadge.innerText = `${resolvedCount} de ${totalDuvidas} dúvidas`;
+      if (progressText) progressText.innerText = `Processando dúvida ${resolvedCount} de ${totalDuvidas}...`;
+
+      // 0. Live render unified table on item focus before awaiting user interaction
+      if (typeof renderizarTabelaUnificada === 'function') {
+        renderizarTabelaUnificada();
+      }
+
+      // 1. Highlight target row in unified table
+      const faltantesArr = (dadosSincronizacao && dadosSincronizacao.faltantes) ? dadosSincronizacao.faltantes : [];
+      const faltanteIdx = faltantesArr.findIndex(f => (f.cod && f.cod === item.cod) || (f.descricao === item.descricao && f.valor === item.valor && f.data === item.data));
+      
+      const trId = (faltanteIdx !== -1) ? `tr-Adicionar-${faltanteIdx}` : null;
+      document.querySelectorAll('#unified-table-body tr').forEach(r => r.classList.remove('chat-focused-row'));
+      
+      let trEl = trId ? document.getElementById(trId) : null;
+      if (!trEl && item.cod) {
+        trEl = document.querySelector(`[data-trid*="${item.cod}"]`) || document.querySelector(`tr[data-cod="${item.cod}"]`);
+      }
+      if (trEl) {
+        trEl.classList.add('chat-focused-row');
+        trEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // 2. Populate Active Question Card Meta & AI Question
+      const elDate = document.getElementById('ai-chat-tx-date');
+      const elDesc = document.getElementById('ai-chat-tx-desc');
+      const elVal = document.getElementById('ai-chat-tx-val');
+      if (elDate) elDate.innerText = item.data || '';
+      if (elDesc) elDesc.innerText = item.descricao || '';
+      if (elVal) {
+        const valNum = parseFloat(item.valor || 0);
+        elVal.innerText = isNaN(valNum) ? (item.valor || '') : valNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      }
+      if (questionText) {
+        questionText.innerText = item.pergunta || `Como você deseja categorizar "${item.descricao}"?`;
+      }
+
+      // 3. Populate Category Dropdowns
+      popularCategoriasChat(item);
+
+      // 4. Render Quick Options Buttons
+      if (quickOptions) {
+        quickOptions.innerHTML = '';
+        const opcoes = (item.opcoes_sugeridas && item.opcoes_sugeridas.length > 0)
+          ? item.opcoes_sugeridas
+          : ['Confirmar Categoria', 'Outra Categoria'];
+
+        opcoes.forEach(opText => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-chat-opt';
+          btn.innerText = opText;
+          quickOptions.appendChild(btn);
+        });
+      }
+
+      if (userInput) userInput.value = '';
+
+      // 5. Pause processing via Promise resolution until user interacts
+      const userResponse = await new Promise((resolve) => {
+        let isResolved = false;
+
+        const cleanupAndResolve = (res) => {
+          if (isResolved) return;
+          isResolved = true;
+          if (btnSend) btnSend.onclick = null;
+          if (btnSkip) btnSkip.onclick = null;
+          if (userInput) userInput.onkeydown = null;
+          if (quickOptions) {
+            Array.from(quickOptions.children).forEach(child => child.onclick = null);
+          }
+          resolve(res);
+        };
+
+        if (quickOptions) {
+          Array.from(quickOptions.children).forEach(btn => {
+            btn.onclick = () => cleanupAndResolve({ type: 'quick', value: btn.innerText });
+          });
+        }
+
+        if (btnSend) {
+          btnSend.onclick = () => {
+            const cat = selCat ? selCat.value : '';
+            const sub = selSubcat ? selSubcat.value : '';
+            const text = userInput ? userInput.value.trim() : '';
+            cleanupAndResolve({ type: 'custom', categoria: cat, subcategoria: sub, text: text });
+          };
+        }
+
+        if (userInput) {
+          userInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const cat = selCat ? selCat.value : '';
+              const sub = selSubcat ? selSubcat.value : '';
+              const text = userInput ? userInput.value.trim() : '';
+              cleanupAndResolve({ type: 'custom', categoria: cat, subcategoria: sub, text: text });
+            }
+          };
+        }
+
+        if (btnSkip) {
+          btnSkip.onclick = () => cleanupAndResolve({ type: 'skip' });
+        }
+      });
+
+      // 6. Apply User Response
+      if (userResponse.type !== 'skip') {
+        if (userResponse.type === 'quick') {
+          // Check if quick button matches existing category or subcategory name
+          const dic = window.dicionarioGeral || {};
+          let matchedCat = null;
+          let matchedSub = null;
+
+          for (const cKey in dic) {
+            if (cKey.toLowerCase() === userResponse.value.toLowerCase()) {
+              matchedCat = cKey;
+              break;
+            }
+            const foundSub = (dic[cKey] || []).find(s => s.toLowerCase() === userResponse.value.toLowerCase());
+            if (foundSub) {
+              matchedCat = cKey;
+              matchedSub = foundSub;
+              break;
+            }
+          }
+
+          if (matchedCat) {
+            item.categoria = matchedCat;
+            if (matchedSub) item.subcategoria = matchedSub;
+          } else {
+            item.obs = userResponse.value;
+            if (selCat && selCat.value) {
+              item.categoria = selCat.value;
+              if (selSubcat && selSubcat.value) item.subcategoria = selSubcat.value;
+            }
+          }
+        } else if (userResponse.type === 'custom') {
+          if (userResponse.categoria) item.categoria = userResponse.categoria;
+          if (userResponse.subcategoria) item.subcategoria = userResponse.subcategoria;
+          if (userResponse.text) item.obs = userResponse.text;
+        }
+
+        item.confianca = 1.0;
+        item.status = 'certeza';
+
+        // 7. Rule Persistence Hook (Milestone 8 requirement)
+        if (window.DB && typeof window.DB.salvarRegraIA === 'function') {
+          try {
+            await window.DB.salvarRegraIA({
+              descricao_padrao: item.descricao,
+              categoria: item.categoria,
+              subcategoria: item.subcategoria || '',
+              pergunta_original: item.pergunta || '',
+              resposta_usuario: userResponse.text || userResponse.value || ''
+            });
+          } catch (errRule) {
+            console.warn('[ChatUI] Erro ao salvar regra IA:', errRule);
+          }
+        }
+
+        // 8. Append confirmation bubble to thread
+        if (chatMessages) {
+          const qBubble = document.createElement('div');
+          qBubble.style.cssText = 'align-self: flex-start; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); padding: 8px 12px; border-radius: 12px; border-top-left-radius: 2px; font-size: 0.82rem; color: var(--text-primary); max-width: 85%;';
+          qBubble.innerText = `❓ ${item.descricao}: ${item.pergunta || 'Categorização?'}`;
+          chatMessages.appendChild(qBubble);
+
+          const aBubble = document.createElement('div');
+          aBubble.style.cssText = 'align-self: flex-end; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 8px 12px; border-radius: 12px; border-bottom-right-radius: 2px; font-size: 0.82rem; color: #93c5fd; max-width: 85%;';
+          aBubble.innerText = `✅ Definido: ${item.categoria}${item.subcategoria ? ' > ' + item.subcategoria : ''}${item.obs ? ' (' + item.obs + ')' : ''}`;
+          chatMessages.appendChild(aBubble);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+      } else {
+        if (chatMessages) {
+          const skipBubble = document.createElement('div');
+          skipBubble.style.cssText = 'align-self: flex-end; background: rgba(156, 163, 175, 0.2); border: 1px solid rgba(156, 163, 175, 0.4); padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; color: var(--text-muted);';
+          skipBubble.innerText = `⏭️ Pulado: ${item.descricao}`;
+          chatMessages.appendChild(skipBubble);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+      }
+
+      // 9. Live Update Row in Table
+      if (typeof renderizarTabelaUnificada === 'function') {
+        renderizarTabelaUnificada();
+      }
+    }
+
+    // Restore table & UI state
+    document.querySelectorAll('#unified-table-body tr').forEach(r => r.classList.remove('chat-focused-row'));
+    if (progressText) progressText.innerText = 'Todas as dúvidas foram esclarecidas!';
+    if (queueBadge) queueBadge.innerText = 'Concluído';
+    if (typeof addFeedback === 'function') {
+      addFeedback('🎉 Todas as dúvidas de categorização foram esclarecidas!', 'success');
+    }
+  };
+
   // FLUXO DE CATEGORIZACAO
   if (btnCategorizar) {
     btnCategorizar.addEventListener('click', async () => {
@@ -1615,45 +1880,83 @@ function stopAIThinking() {
            }
            const historico180dias = [...histConta, ...histGeral];
 
-           // M9: Cache local — pré-categoriza com base no histórico exato (reduz tokens e custo)
-           const descParaCat = {}; // mapa descricao -> {categoria, subcategoria}
-           historico180dias.forEach(l => {
-             if (l.descricao && l.categoria && l.categoria !== 'DIVERSOS') {
-               descParaCat[l.descricao.toLowerCase()] = { categoria: l.categoria, subcategoria: l.subcategoria || '' };
-             }
-           });
+            // M8 / R3 Continuous Learning: Carrega regras aprendidas do usuário do Firestore / Cache
+            let regrasIA = [];
+            if (window.DB && typeof window.DB.carregarRegrasIA === 'function') {
+              try {
+                regrasIA = await window.DB.carregarRegrasIA(window.userGroupId);
+              } catch (errRegras) {
+                console.warn('[Importacao] Erro ao carregar RegrasIA:', errRegras);
+              }
+            }
 
-           let faltantesParaIA = [];
-           let preCategorizados = 0;
-           dadosSincronizacao.faltantes.forEach(t => {
-             const hit = descParaCat[(t.descricao || '').toLowerCase()];
-             if (hit) {
-               t.categoria    = hit.categoria;
-               t.subcategoria = hit.subcategoria;
-               preCategorizados++;
-             } else {
-               faltantesParaIA.push(t);
-             }
-           });
+            const normStr = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[\x00-\x1F\x7F-\x9F]/g, '').replace(/\s+/g, ' ').trim();
 
-           faltantesParaIA.sort((a, b) => {
-            const descA = (a.descricao || '').toLowerCase();
-            const descB = (b.descricao || '').toLowerCase();
-            if (descA < descB) return -1;
-            if (descA > descB) return 1;
-            return 0;
-           });
+            // M9: Cache local — pré-categoriza com base no histórico exato (reduz tokens e custo)
+            const descParaCat = {}; // mapa descricao -> {categoria, subcategoria}
+            historico180dias.forEach(l => {
+              if (l.descricao && l.categoria && l.categoria !== 'DIVERSOS') {
+                descParaCat[l.descricao.toLowerCase()] = { categoria: l.categoria, subcategoria: l.subcategoria || '' };
+              }
+            });
 
-           if (preCategorizados > 0) {
-             addFeedback(`💾 Cache local: ${preCategorizados} já conhecidos pré-categorizados. Enviando ${faltantesParaIA.length} novos para a IA...`, 'system');
-           }
+            let faltantesParaIA = [];
+            let preCategorizados = 0;
+            let regrasMatchedCount = 0;
+
+            dadosSincronizacao.faltantes.forEach(t => {
+              const normTxDesc = normStr(t.descricao);
+
+              // 1. Pre-LLM Local Short-Circuiting via RegrasIA (100% confiança, status "certeza", pula Gemini)
+              const matchingRule = (regrasIA || []).find(r => {
+                const normRuleDesc = normStr(r.descricao_padrao || r.descricao);
+                return normRuleDesc && (normTxDesc === normRuleDesc || (normRuleDesc.length >= 3 && normTxDesc.startsWith(normRuleDesc)));
+              });
+
+              if (matchingRule) {
+                t.categoria = matchingRule.categoria;
+                t.subcategoria = matchingRule.subcategoria || '';
+                t.confianca = 1.0;
+                t.status = 'certeza';
+                t.pergunta = null;
+                t.opcoes_sugeridas = null;
+                regrasMatchedCount++;
+                preCategorizados++;
+              } else {
+                // 2. Cache local histórico secundário
+                const hit = descParaCat[(t.descricao || '').toLowerCase()];
+                if (hit) {
+                  t.categoria = hit.categoria;
+                  t.subcategoria = hit.subcategoria;
+                  preCategorizados++;
+                } else {
+                  faltantesParaIA.push(t);
+                }
+              }
+            });
+
+            faltantesParaIA.sort((a, b) => {
+             const descA = (a.descricao || '').toLowerCase();
+             const descB = (b.descricao || '').toLowerCase();
+             if (descA < descB) return -1;
+             if (descA > descB) return 1;
+             return 0;
+            });
+
+            if (regrasMatchedCount > 0) {
+              addFeedback(`🤖 Regras Aprendidas (R3): ${regrasMatchedCount} transação(ões) categorizadas instantaneamente (100% certeza, sem Gemini).`, 'success');
+            }
+            if (preCategorizados > regrasMatchedCount) {
+              const histCacheCount = preCategorizados - regrasMatchedCount;
+              addFeedback(`💾 Cache histórico: ${histCacheCount} conhecidos pré-categorizados. Enviando ${faltantesParaIA.length} novos para a IA...`, 'system');
+            }
 
            // Captura o total original ANTES de projetar parcelas (para cobrar moedas correto)
            const _qtdOriginalCateg = faltantesParaIA.length;
 
            if (faltantesParaIA.length === 0) {
-             // Todos já categorizados pelo cache — pula chamada à IA
-             analiseCategorizacao = `${preCategorizados} transações categorizadas via cache local (sem custo de IA).`;
+             // Todos já categorizados pelo cache/regras — pula chamada à IA
+             analiseCategorizacao = `${preCategorizados} transações categorizadas via cache/regras (sem custo de IA).`;
              stopAIThinking();
              addFeedback(`✅ ${analiseCategorizacao}`, 'success');
              renderizarTabelaUnificada();
@@ -1755,11 +2058,19 @@ function stopAIThinking() {
            
            // Renderizar a tabela com os selects
            renderizarTabelaUnificada();
+
+           // Milestone 7: Processar fila de dúvidas no Chat UI interativo
+           const duvidasQueue = (dadosSincronizacao.faltantes || []).filter(t => t.status === 'duvida');
+           if (duvidasQueue.length > 0 && typeof window.processarDuvidasAIChat === 'function') {
+             addFeedback(`💬 AI Chat: ${duvidasQueue.length} dúvida(s) requerem confirmação do usuário...`, 'ai');
+             await window.processarDuvidasAIChat(duvidasQueue);
+           }
            
            btnSalvar.innerHTML = 'Confirmar Sincronização <i class="fas fa-check-double"></i>';
            btnSalvar.disabled = false;
            btnCategorizar.style.display = 'none'; // Ocultar o botão depois de categorizar
            return; 
+ 
 
          } catch (err) {
            alert("Erro na IA: " + err.message);
