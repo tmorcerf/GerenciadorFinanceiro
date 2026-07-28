@@ -205,6 +205,7 @@ let txDateTypeFilter = 'vencimento';
 
         // Populate global dicionarioGeral
         window.dicionarioGeral = {};
+        window.dicionarioGeral['Educação'] = []; // Garante que a categoria Educação apareça como base
         parsedCat.forEach(row => {
           const cat = row['Categoria'];
           const sub = row['Subcategoria'];
