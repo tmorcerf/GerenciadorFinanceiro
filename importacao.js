@@ -85,12 +85,6 @@ function addFeedback(message, type = 'system') {
           chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
-  } else if (window.currentNinja === 'categorizador') {
-    if (ninjaCategorizadorContainer) {
-      ninjaCategorizadorContainer.style.display = 'flex';
-      if (ninjaCategorizadorText) ninjaCategorizadorText.innerHTML = cleanMsg;
-    }
-  }
 }
 
 function startAIThinking() {
