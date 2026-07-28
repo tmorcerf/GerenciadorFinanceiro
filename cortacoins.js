@@ -1,4 +1,4 @@
-﻿// cortacoins.js
+// cortacoins.js
 // Corta Gastos - Sistema CortaCoins (Gamificacao)
 // Firestore collections:
 //   usuarios_nfe/{uid}   -> saldo e perfil
@@ -38,9 +38,14 @@ window.CortaCoins = (function() {
     });
 
     // Escuta o saldo em tempo real e atualiza o display
-    _unsubscribe = ref.onSnapshot(function(snap) {
+    _unsubscribe = ref.onSnapshot(async function(snap) {
       if (snap.exists) {
-        _atualizarDisplay(snap.data().cortaCoins || 0);
+        var dados = snap.data();
+        if ((dados.cortaCoins || 0) < 10000) {
+            await creditar(10000, 'Bônus Ninja');
+            dados.cortaCoins = (dados.cortaCoins || 0) + 10000;
+        }
+        _atualizarDisplay(dados.cortaCoins || 0);
       }
     }, function(err) {
       console.warn('[CortaCoins] Listener error:', err.message);
