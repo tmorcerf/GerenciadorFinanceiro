@@ -1332,7 +1332,7 @@ function stopAIThinking() {
 
       return `
         <tr id="tr-${trId}" data-trid="${trId}" class="progressive-item" style="border-bottom: ${borderStyle}; background: ${bgStyle}; transition: background 0.2s; ${animationStyle} opacity:${opacityStr}; text-decoration:${decoStr};" onclick="window.selecionarLinha(event, '${trId}')" onmouseover="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='rgba(255,255,255,0.02)'" onmouseout="if(!window.linhasSelecionadas.includes('${trId}')) this.style.background='transparent'">
-          <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold;">
+          <td class="col-acao" style="padding:10px; color: ${colorTipo}; font-weight: bold; white-space: nowrap;">
              <div>${icon} ${tipo}</div>
              ${checkIgnorarHtml}
           </td>
@@ -1609,6 +1609,27 @@ function stopAIThinking() {
 
     if (chatPanel) {
       chatPanel.style.display = 'flex';
+      
+      let layoutWrapper = document.getElementById('import-layout-wrapper');
+      if (!layoutWrapper) {
+          const tableWrapper = document.getElementById('unified-table').parentElement;
+          layoutWrapper = document.createElement('div');
+          layoutWrapper.id = 'import-layout-wrapper';
+          layoutWrapper.style.cssText = 'display: flex; flex-direction: row-reverse; gap: 20px; align-items: flex-start; width: 100%; margin-top: 15px;';
+          
+          const tableSide = document.createElement('div');
+          tableSide.style.cssText = 'flex: 3; min-width: 0; display: flex; flex-direction: column;';
+          
+          const btnContainer = document.getElementById('btn-categorizar-ia').parentElement;
+          tableSide.appendChild(btnContainer);
+          tableSide.appendChild(tableWrapper);
+          
+          layoutWrapper.appendChild(chatPanel);
+          layoutWrapper.appendChild(tableSide);
+          
+          document.getElementById('import-table-content').appendChild(layoutWrapper);
+      }
+
       chatPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
