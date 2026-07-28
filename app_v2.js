@@ -7878,17 +7878,41 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
         ];
 
         let catGerais = [];
-        if (perfil !== 'Branco') {
-            catGerais = [
-                { nome: 'Alimentação', subcategorias: [] },
-                { nome: 'Lazer', subcategorias: [] },
-                { nome: 'Viagens', subcategorias: [] },
-                { nome: 'Transporte', subcategorias: [] },
-                { nome: 'Serviços', subcategorias: [] },
-                { nome: 'Veículos', subcategorias: [] },
-                { nome: 'Seguros', subcategorias: [] },
-                { nome: 'Moradia', subcategorias: [] }
-            ];
+        if (perfil !== 'Enxuto' && perfil !== 'Branco') {
+            if (perfil === 'Assalariado') {
+                catGerais = [
+                    { nome: 'Alimentação', subcategorias: ['Supermercado', 'Padaria/Açougue', 'Vale Refeição/Marmita', 'Delivery'] },
+                    { nome: 'Lazer', subcategorias: ['Passeios em Família', 'Assinaturas', 'Churrasco/Amigos', 'Cinema'] },
+                    { nome: 'Viagens', subcategorias: ['Férias Anuais', 'Visita a Parentes', 'Poupança Férias'] },
+                    { nome: 'Transporte', subcategorias: ['Vale Transporte/Ônibus', 'Uber/99', 'Combustível'] },
+                    { nome: 'Serviços', subcategorias: ['Internet/TV', 'Celular Conta Família', 'Escola/Creche', 'Academia'] },
+                    { nome: 'Veículos', subcategorias: ['Financiamento', 'Manutenção/Oficina', 'Lavagem', 'IPVA/Seguro'] },
+                    { nome: 'Seguros', subcategorias: ['Plano de Saúde Familiar', 'Seguro de Vida', 'Seguro Auto'] },
+                    { nome: 'Moradia', subcategorias: ['Prestação da Casa/Aluguel', 'Contas Água/Luz/Gás', 'Condomínio/IPTU', 'Manutenção da Casa'] }
+                ];
+            } else if (perfil === 'Informal') {
+                catGerais = [
+                    { nome: 'Alimentação', subcategorias: ['Supermercado', 'Refeições na Rua', 'Café com Clientes', 'Delivery'] },
+                    { nome: 'Lazer', subcategorias: ['Networking/Happy Hour', 'Hobbies/Esportes', 'Streamings'] },
+                    { nome: 'Viagens', subcategorias: ['Viagens de Trabalho', 'Hospedagem de Negócios'] },
+                    { nome: 'Transporte', subcategorias: ['Aplicativos', 'Fretamento/Carretos'] },
+                    { nome: 'Serviços', subcategorias: ['Celular/Internet', 'Assinaturas Profissionais', 'Contabilidade/MEI'] },
+                    { nome: 'Veículos', subcategorias: ['Combustível', 'Manutenção e Peças', 'Estacionamento/Zona Azul'] },
+                    { nome: 'Seguros', subcategorias: ['Seguro de Equipamentos', 'Seguro de Vida/Acidentes'] },
+                    { nome: 'Moradia', subcategorias: ['Aluguel', 'Manutenção do Espaço', 'Produtos de Limpeza'] }
+                ];
+            } else if (perfil === 'Motorista') {
+                catGerais = [
+                    { nome: 'Alimentação', subcategorias: ['Refeições na Rua', 'Supermercado', 'Bebidas/Energéticos'] },
+                    { nome: 'Lazer', subcategorias: ['Passeios Fim de Semana', 'Streamings', 'Encontro com Parceiros'] },
+                    { nome: 'Viagens', subcategorias: ['Viagem de Férias'] },
+                    { nome: 'Transporte', subcategorias: ['Aluguel de Veículo'] },
+                    { nome: 'Serviços', subcategorias: ['Plano de Celular', 'Contas da Casa', 'Contabilidade/DAS MEI'] },
+                    { nome: 'Veículos', subcategorias: ['Lava-rápido/Limpeza Diária', 'Estacionamento', 'Multas de Trânsito'] },
+                    { nome: 'Seguros', subcategorias: ['Seguro Auto/Moto', 'Rastreador', 'Seguro de Vida'] },
+                    { nome: 'Moradia', subcategorias: ['Aluguel/Financiamento', 'Contas de Consumo'] }
+                ];
+            }
         }
         
         let catEspecificas = [];
@@ -7905,8 +7929,8 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             ];
         } else if (perfil === 'Motorista') {
             catEspecificas = [
-                { nome: 'Receitas (Corridas)', subcategorias: [] },
-                { nome: 'Despesas do Veículo', subcategorias: ['Combustível', 'App/Taxas', 'Manutenção', 'IPVA/Seguro'] }
+                { nome: 'Receitas (Corridas)', subcategorias: ['Corridas', 'Entregas'] },
+                { nome: 'Despesas do Veículo', subcategorias: ['Combustível', 'Taxas de App', 'Manutenção da Frota', 'IPVA/Documentação'] }
             ];
         }
         
