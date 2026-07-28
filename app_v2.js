@@ -6556,7 +6556,7 @@ window.openEditTransactionModal = function(cod) {
   const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict || {};
   const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
   
-  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques', 'Estorno'];
+  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques'];
   const userKeys = catKeys.filter(k => !systemCats.includes(k));
   const sysKeys = catKeys.filter(k => systemCats.includes(k));
 
@@ -6984,7 +6984,7 @@ window.openNewTransactionModal = function() {
   const dict = window.dicionarioGeral || {};
   const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
   
-  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Pagamento de fatura', 'Investimento', 'Saque', 'Estorno'];
+  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques'];
   const userKeys = catKeys.filter(k => !systemCats.includes(k));
   const sysKeys = catKeys.filter(k => systemCats.includes(k));
 
@@ -7873,8 +7873,7 @@ window.inicializarBancoNovoUsuario = async function(perfil) {
             { nome: 'Transf. entre Contas', subcategorias: [] },
             { nome: 'Pagamento de Cartão', subcategorias: [] },
             { nome: 'Investimentos', subcategorias: [] },
-            { nome: 'Saques', subcategorias: [] },
-            { nome: 'Estorno', subcategorias: [] }
+            { nome: 'Saques', subcategorias: [] }
         ];
 
         let catGerais = [];
