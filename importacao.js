@@ -59,11 +59,31 @@ let aiThinkingInterval = null;
 window.currentNinja = 'extrator';
 
 function addFeedback(message, type = 'system') {
-  let cleanMsg = message.replace(/^\\n|^\n/, '').replace(/\\n$|\n$/, '');
-  if (window.currentNinja === 'extrator') {
-    if (ninjaExtratorContainer) {
-      ninjaExtratorContainer.style.display = 'flex';
-      if (ninjaExtratorText) ninjaExtratorText.innerHTML = cleanMsg;
+    let cleanMsg = message.replace(/^\n|^\n/, '').replace(/\n$|\n$/, '');
+    if (window.currentNinja === 'extrator') {
+      if (ninjaExtratorContainer) {
+        ninjaExtratorContainer.style.display = 'flex';
+        if (ninjaExtratorText) ninjaExtratorText.innerHTML = cleanMsg;
+      }
+    } else if (window.currentNinja === 'categorizador') {
+      // Route it to the chat lateral instead of the old container
+      if (typeof window.abrirLayoutChatIA === 'function') window.abrirLayoutChatIA();
+      const chatMessages = document.getElementById('ai-chat-messages');
+      const qText = document.getElementById('ai-chat-question-text');
+      if (type === 'ai thinking' && qText) {
+          qText.innerHTML = '<i class="fas fa-robot fa-bounce" style="color: #8b5cf6;"></i> ' + cleanMsg;
+      } else if (chatMessages) {
+          const bubble = document.createElement('div');
+          bubble.style.cssText = 'align-self: flex-start; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); padding: 12px 16px; border-radius: 12px 12px 12px 2px; font-size: 0.9rem; color: #e2e8f0; line-height: 1.5; margin-bottom: 10px; max-width: 90%;';
+          if (type === 'success') {
+              bubble.style.background = 'rgba(16, 185, 129, 0.15)';
+              bubble.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+              bubble.style.color = '#a7f3d0';
+          }
+          bubble.innerHTML = cleanMsg;
+          chatMessages.appendChild(bubble);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
     }
   } else if (window.currentNinja === 'categorizador') {
     if (ninjaCategorizadorContainer) {
@@ -1588,6 +1608,34 @@ function stopAIThinking() {
   // =========================================================================
   // MILESTONE 7: PROCESSADOR SEQUENCIAL DE DÚVIDAS DO CHAT (AI CHAT CATEGORIZER)
   // =========================================================================
+  
+  window.abrirLayoutChatIA = function() {
+    const chatPanel = document.getElementById('ai-chat-categorizer-panel');
+    if (!chatPanel) return;
+    chatPanel.style.display = 'flex';
+      
+    let layoutWrapper = document.getElementById('import-layout-wrapper');
+    if (!layoutWrapper) {
+        const tableWrapper = document.getElementById('unified-table').parentElement;
+        layoutWrapper = document.createElement('div');
+        layoutWrapper.id = 'import-layout-wrapper';
+        layoutWrapper.style.cssText = 'display: flex; flex-direction: row-reverse; gap: 20px; align-items: flex-start; width: 100%; margin-top: 15px;';
+        
+        const tableSide = document.createElement('div');
+        tableSide.style.cssText = 'flex: 3; min-width: 0; display: flex; flex-direction: column;';
+        
+        const btnContainer = document.getElementById('btn-categorizar-ia').parentElement;
+        tableSide.appendChild(btnContainer);
+        tableSide.appendChild(tableWrapper);
+        
+        layoutWrapper.appendChild(chatPanel);
+        layoutWrapper.appendChild(tableSide);
+        
+        document.getElementById('import-table-content').appendChild(layoutWrapper);
+    }
+    chatPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
   window.processarDuvidasAIChat = async function(duvidasQueue) {
     const chatPanel = document.getElementById('ai-chat-categorizer-panel');
     const chatMessages = document.getElementById('ai-chat-messages');
@@ -1644,6 +1692,7 @@ function stopAIThinking() {
         const sel = (targetItem.categoria === k) ? 'selected' : '';
         htmlCat += `<option value="${k}" ${sel}>${k}</option>`;
       });
+      htmlCat += '<option value="__NOVA_CATEGORIA__">+ Nova Categoria...</option>';
       selCat.innerHTML = htmlCat;
 
       const popularSubcats = (catName) => {
@@ -1653,6 +1702,7 @@ function stopAIThinking() {
             const sel = (targetItem.subcategoria === s) ? 'selected' : '';
             htmlSub += `<option value="${s}" ${sel}>${s}</option>`;
           });
+          htmlSub += '<option value="__NOVA_SUBCATEGORIA__">+ Nova Subcategoria...</option>';
         }
         selSubcat.innerHTML = htmlSub;
       };
@@ -1660,7 +1710,43 @@ function stopAIThinking() {
       popularSubcats(selCat.value || targetItem.categoria);
 
       selCat.onchange = () => {
+        if (selCat.value === '__NOVA_CATEGORIA__') {
+            const newCat = prompt('Digite o nome da nova Categoria:');
+            if (newCat && newCat.trim() !== '') {
+                const upperNewCat = newCat.trim().toUpperCase();
+                if (!window.dicionarioGeral[upperNewCat]) {
+                    window.dicionarioGeral[upperNewCat] = [];
+                    // Update global UI or DB if needed here...
+                    // For now, it stays in session until save
+                }
+                targetItem.categoria = upperNewCat;
+                popularCategoriasChat(targetItem);
+            } else {
+                selCat.value = '';
+                popularSubcats('');
+            }
+            return;
+        }
         popularSubcats(selCat.value);
+      };
+      
+      selSubcat.onchange = () => {
+         if (selSubcat.value === '__NOVA_SUBCATEGORIA__') {
+             const newSub = prompt('Digite o nome da nova Subcategoria:');
+             if (newSub && newSub.trim() !== '') {
+                 const trimmedSub = newSub.trim();
+                 if (selCat.value && window.dicionarioGeral[selCat.value]) {
+                     if (!window.dicionarioGeral[selCat.value].includes(trimmedSub)) {
+                         window.dicionarioGeral[selCat.value].push(trimmedSub);
+                     }
+                 }
+                 targetItem.subcategoria = trimmedSub;
+                 targetItem.categoria = selCat.value;
+                 popularCategoriasChat(targetItem);
+             } else {
+                 selSubcat.value = '';
+             }
+         }
       };
     };
 
@@ -1668,7 +1754,10 @@ function stopAIThinking() {
     let resolvedCount = 0;
 
     for (let i = 0; i < duvidasQueue.length; i++) {
-      const item = duvidasQueue[i];
+      const groupItem = duvidasQueue[i];
+      const isGroup = groupItem.group === true;
+      const item = isGroup ? groupItem.sample : groupItem;
+      const groupCount = isGroup ? groupItem.items.length : 1;
       resolvedCount++;
 
       if (queueBadge) queueBadge.innerText = `${resolvedCount} de ${totalDuvidas} dúvidas`;
@@ -1700,7 +1789,7 @@ function stopAIThinking() {
       const elDesc = document.getElementById('ai-chat-tx-desc');
       const elVal = document.getElementById('ai-chat-tx-val');
       if (elDate) elDate.innerText = item.data || '';
-      if (elDesc) elDesc.innerText = item.descricao || '';
+      if (elDesc) elDesc.innerText = (item.descricao || '') + (isGroup && groupCount > 1 ? ' (' + groupCount + ' transações similares)' : '');
       if (elVal) {
         const valNum = parseFloat(item.valor || 0);
         elVal.innerText = isNaN(valNum) ? (item.valor || '') : valNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1725,6 +1814,17 @@ function stopAIThinking() {
           btn.innerText = opText;
           quickOptions.appendChild(btn);
         });
+
+        if (isGroup && groupCount > 1) {
+            const btnUngroup = document.createElement('button');
+            btnUngroup.className = 'btn-chat-opt';
+            btnUngroup.style.background = 'rgba(239, 68, 68, 0.2)';
+            btnUngroup.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+            btnUngroup.style.color = '#fca5a5';
+            btnUngroup.innerHTML = '<i class="fas fa-layer-group"></i> Desagrupar (' + groupCount + ')';
+            btnUngroup.id = 'ai-chat-btn-ungroup';
+            quickOptions.appendChild(btnUngroup);
+        }
       }
 
       if (userInput) userInput.value = '';
@@ -1782,6 +1882,19 @@ function stopAIThinking() {
         }
       });
 
+      if (userResponse.type === 'ungroup') {
+        if (chatMessages) {
+          const ungroupBubble = document.createElement('div');
+          ungroupBubble.style.cssText = 'align-self: flex-end; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; color: #93c5fd; margin-top: 10px; margin-bottom: 10px;';
+          ungroupBubble.innerText = 'Desagrupando...';
+          chatMessages.appendChild(ungroupBubble);
+        }
+        duvidasQueue.splice(i, 1, ...groupItem.items);
+        i--;
+        resolvedCount--;
+        continue;
+      }
+
       if (userResponse.type === 'abort') {
         if (chatMessages) {
           const abortBubble = document.createElement('div');
@@ -1793,8 +1906,11 @@ function stopAIThinking() {
         break; // Stop processing the queue
       }
 
-      // 6. Apply User Response
+            // 6. Apply User Response
       if (userResponse.type !== 'skip') {
+        const itemsToUpdate = isGroup ? groupItem.items : [groupItem];
+        let newCat = null, newSub = null, newObs = null;
+
         if (userResponse.type === 'quick') {
           // Check if quick button matches existing category or subcategory name
           const dic = window.dicionarioGeral || {};
@@ -1815,25 +1931,30 @@ function stopAIThinking() {
           }
 
           if (matchedCat) {
-            item.categoria = matchedCat;
-            if (matchedSub) item.subcategoria = matchedSub;
+            newCat = matchedCat;
+            if (matchedSub) newSub = matchedSub;
           } else {
-            item.obs = userResponse.value;
+            newObs = userResponse.value;
             if (selCat && selCat.value) {
-              item.categoria = selCat.value;
-              if (selSubcat && selSubcat.value) item.subcategoria = selSubcat.value;
+              newCat = selCat.value;
+              if (selSubcat && selSubcat.value) newSub = selSubcat.value;
             }
           }
         } else if (userResponse.type === 'custom') {
-          if (userResponse.categoria) item.categoria = userResponse.categoria;
-          if (userResponse.subcategoria) item.subcategoria = userResponse.subcategoria;
-          if (userResponse.text) item.obs = userResponse.text;
+          if (userResponse.categoria) newCat = userResponse.categoria;
+          if (userResponse.subcategoria) newSub = userResponse.subcategoria;
+          if (userResponse.text) newObs = userResponse.text;
         }
 
-        item.confianca = 1.0;
-        item.status = 'certeza';
+        itemsToUpdate.forEach(targetItem => {
+          if (newCat) targetItem.categoria = newCat;
+          if (newSub) targetItem.subcategoria = newSub;
+          if (newObs) targetItem.obs = newObs;
+          targetItem.confianca = 1.0;
+          targetItem.status = 'certeza';
+        });
 
-        // 7. Rule Persistence Hook (Milestone 8 requirement)
+        // 7. Rule Persistence Hook (Milestone 8 requirement) (Milestone 8 requirement)
         if (window.DB && typeof window.DB.salvarRegraIA === 'function') {
           try {
             await window.DB.salvarRegraIA({
@@ -1902,6 +2023,15 @@ function stopAIThinking() {
            btnCategorizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Categorizando (IA)...';
            window.currentNinja = 'categorizador';
            addFeedback(`Enviando ${dadosSincronizacao.faltantes.length} transações para a IA Categorizar...`, 'ai'); startAIThinking();
+             if (typeof window.abrirLayoutChatIA === 'function') window.abrirLayoutChatIA();
+             const qText = document.getElementById('ai-chat-question-text');
+             const qMessages = document.getElementById('ai-chat-messages');
+             if (qText) qText.innerHTML = '<i class="fas fa-robot fa-bounce" style="color: #8b5cf6;"></i> Analisando suas transações...';
+             if (qMessages) qMessages.innerHTML = '';
+             if (document.getElementById('ai-chat-tx-date')) document.getElementById('ai-chat-tx-date').innerText = '';
+             if (document.getElementById('ai-chat-tx-desc')) document.getElementById('ai-chat-tx-desc').innerText = '';
+             if (document.getElementById('ai-chat-tx-val')) document.getElementById('ai-chat-tx-val').innerText = '';
+             if (document.getElementById('ai-chat-quick-options')) document.getElementById('ai-chat-quick-options').innerHTML = '';
            
            const categoriasTree = Object.assign({}, window.dicionarioGeral || {});
            // Garante que DIVERSOS sempre existe como fallback para a IA
@@ -2106,7 +2236,20 @@ function stopAIThinking() {
            renderizarTabelaUnificada();
 
            // Milestone 7: Processar fila de dúvidas no Chat UI interativo
-           const duvidasQueue = (dadosSincronizacao.faltantes || []).filter(t => t.status === 'duvida');
+           const rawDuvidas = (dadosSincronizacao.faltantes || []).filter(t => t.status === 'duvida');
+           const duvidasQueue = [];
+           const groupMap = {};
+           
+           rawDuvidas.forEach(t => {
+               // Normalizar descrição para agrupar (remover números finais etc)
+               let key = (t.descricao || '').trim().toLowerCase().replace(/\d+$/, '').trim();
+               if (!groupMap[key]) {
+                   groupMap[key] = { group: true, items: [], sample: t, key: key };
+                   duvidasQueue.push(groupMap[key]);
+               }
+               groupMap[key].items.push(t);
+           });
+
            if (duvidasQueue.length > 0 && typeof window.processarDuvidasAIChat === 'function') {
              addFeedback(`💬 AI Chat: ${duvidasQueue.length} dúvida(s) requerem confirmação do usuário...`, 'ai');
              await window.processarDuvidasAIChat(duvidasQueue);
