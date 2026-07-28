@@ -6557,7 +6557,7 @@ window.openEditTransactionModal = function(cod) {
   const dict = window.dicionarioGeral || window.dadosFinanceiros.categoriasDict || {};
   const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
   
-  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques', 'Estorno'];
+  const systemCats = ['Transf. entre Contas', 'Pagamento de Cartão', 'Investimentos', 'Saques', 'Estorno'];
   const userKeys = catKeys.filter(k => !systemCats.includes(k));
   const sysKeys = catKeys.filter(k => systemCats.includes(k));
 
@@ -6985,7 +6985,7 @@ window.openNewTransactionModal = function() {
   const dict = window.dicionarioGeral || {};
   const catKeys = Object.keys(dict).sort((a,b) => a.localeCompare(b));
   
-  const systemCats = ['Transferencia', 'Transferência', 'Transferencia entre contas', 'Transferência entre contas', 'Transf. entre Contas', 'Pagamento de fatura', 'Pagamento de Cartão', 'Investimento', 'Investimentos', 'Saque', 'Saques', 'Estorno'];
+  const systemCats = ['Transf. entre Contas', 'Pagamento de Cartão', 'Investimentos', 'Saques', 'Estorno'];
   const userKeys = catKeys.filter(k => !systemCats.includes(k));
   const sysKeys = catKeys.filter(k => systemCats.includes(k));
 
