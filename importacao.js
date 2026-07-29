@@ -2244,13 +2244,16 @@ function stopAIThinking() {
                groupMap[key].items.push(t);
            });
 
-           if (duvidasQueue.length > 0 && typeof window.processarDuvidasAIChat === 'function') {
-             addFeedback(`💬 AI Chat: ${duvidasQueue.length} dúvida(s) requerem confirmação do usuário...`, 'ai');
+           if (typeof window.processarDuvidasAIChat === 'function') {
+             if (duvidasQueue.length > 0) {
+               addFeedback(`💬 AI Chat: ${duvidasQueue.length} dúvida(s) requerem confirmação do usuário...`, 'ai');
+             }
              await window.processarDuvidasAIChat(duvidasQueue);
            }
            
            btnSalvar.innerHTML = 'Confirmar Sincronização <i class="fas fa-check-double"></i>';
            btnSalvar.disabled = false;
+           btnSalvar.style.display = 'inline-flex';
            btnCategorizar.style.display = 'none'; // Ocultar o botão depois de categorizar
            return; 
  
