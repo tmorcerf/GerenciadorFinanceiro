@@ -703,13 +703,16 @@
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
             <!-- Cart?o CortaCoins -->
-            <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 3px solid #f59e0b;">
-                <h3 style="color: var(--text-muted); font-size: 1rem; margin-top: 0; cursor: pointer;" ondblclick="if(window.CortaCoins) { window.CortaCoins.creditar(10000, 'Easter Egg: Bônus Ninja!'); alert('10.000 CortaCoins adicionados com sucesso! Atualize a página se necessário.'); }">Saldo CortaCoins</h3>
-                <div style="font-size: 3rem; font-weight: 700; color: #f59e0b; margin: 10px 0; text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);">
-                    <i class="fas fa-coins"></i> <span id="cc-saldo-display">0</span>
-                </div>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">Obrigado por ajudar a comunidade!</p>
-            </div>
+              <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 3px solid #f59e0b;">
+                  <h3 style="color: var(--text-muted); font-size: 1rem; margin-top: 0; cursor: pointer;" ondblclick="if(window.CortaCoins) { window.CortaCoins.creditar(10000, 'Easter Egg: Bônus Ninja!'); alert('10.000 CortaCoins adicionados com sucesso! Atualize a página se necessário.'); }">Saldo CortaCoins</h3>
+                  <div style="font-size: 3rem; font-weight: 700; color: #f59e0b; margin: 10px 0; text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);">
+                      <i class="fas fa-coins"></i> <span id="cc-saldo-display">0</span>
+                  </div>
+                  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Obrigado por ajudar a comunidade!</p>
+                  <button onclick="if(window.CortaCoins) { window.CortaCoins.creditar(10000, 'Recarga Manual (Teste)'); alert('10.000 CortaCoins adicionados com sucesso!'); } else { alert('Erro: Módulo CortaCoins não carregado.'); }" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;" onmouseover="this.style.background='rgba(245, 158, 11, 0.2)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.1)'">
+                    <i class="fas fa-plus-circle"></i> Adicionar CortaCoins
+                  </button>
+              </div>
 
             <!-- Cart?o Notas -->
             <div class="glass-card" style="padding: 1.5rem; text-align: center; border-top: 3px solid #3b82f6;">
